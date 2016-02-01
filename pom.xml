@@ -3,46 +3,107 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>gov.vha.isaac</groupId>
-		<artifactId>va-isaac-parent</artifactId>
-		<version>1.11-SNAPSHOT</version>
+		<groupId>gov.vha.isaac.ochre</groupId>
+		<artifactId>isaac-parent</artifactId>
+		<version>3.01-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>va-isaac-rest</artifactId>
+	<groupId>gov.vha.isaac.rest</groupId>
+	<artifactId>isaac-rest</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>war</packaging>
+	
+	<name>ISAAC REST Server</name>
+	
+	<description>
+		A REST server with a simple data model for accessing ISAAC functionality.  Primarily supports
+		the ISAAC web GUI.
+	</description>
 
-	<!--scm> <url>https://github.com/VA-CTT/va-expression-service.git</url> 
-		</scm -->
+	<scm>
+		<url>https://github.com/VA-CTT/ISAAC-rest.git</url> 
+	</scm>
 
 	<properties>
-		<newtons-cradle.version>1.25-SNAPSHOT</newtons-cradle.version>
-		<query.version>2.19-SNAPSHOT</query.version>
-		<logic.version>1.19-SNAPSHOT</logic.version>
-		<solor.version>1.15-SNAPSHOT</solor.version>
-		<isaac-gui.version>23.7-SNAPSHOT</isaac-gui.version>
+		<isaac.version>3.01-SNAPSHOT</isaac.version>
+		<jersey.version>2.22.1</jersey.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
-			<groupId>gov.vha.isaac.newtons-cradle.modules</groupId>
-			<artifactId>newtons-cradle-extension</artifactId>
-			<version>${newtons-cradle.version}</version>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>ochre-api</artifactId>
+			<version>${isaac.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>gov.vha.isaac.query-service.modules</groupId>
-			<artifactId>query-implementation</artifactId>
-			<version>${query.version}</version>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>ochre-model</artifactId>
+			<version>${isaac.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>gov.vha.isaac.logic.modules</groupId>
-			<artifactId>logic</artifactId>
-			<version>${logic.version}</version>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>ibdf-provider</artifactId>
+			<version>${isaac.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>gov.vha.isaac.gui.modules</groupId>
-			<artifactId>otf-util</artifactId>
-			<version>${isaac-gui.version}</version>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>commit-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>stamp-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>identifier-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>concept-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>sememe-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>progress-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>coordinate-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>path-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>logic-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>query-provider</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>ochre-mojo</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>metadata</artifactId>
+			<version>${isaac.version}</version>
 		</dependency>
 		<!-- Need to override the scope on these 3 logging packages -->
 		<dependency>
@@ -77,42 +138,10 @@
 
 	<build>
 		<plugins>
-			<!--plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.4.2</version>
-				<configuration>
-					<createDependencyReducedPom>false</createDependencyReducedPom>
-					<transformers>
-						<transformer
-							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-							<mainClass>gov.vha.isaac.rest.Main</mainClass>
-						</transformer>
-					</transformers>
-					<filters>
-						<filter>
-							<artifact>*:*</artifact>
-							<excludes>
-								<exclude>META-INF/*.SF</exclude>
-								<exclude>META-INF/*.DSA</exclude>
-								<exclude>META-INF/*.RSA</exclude>
-							</excludes>
-						</filter>
-					</filters>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin-->
 			<plugin>
 				<groupId>com.webcohesion.enunciate</groupId>
 				<artifactId>enunciate-maven-plugin</artifactId>
-				<version>2.1.1</version>
+				<version>2.2.0</version>
 				<executions>
 					<execution>
 						<goals>
@@ -122,5 +151,40 @@
 				</executions>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											com.webcohesion.enunciate
+										</groupId>
+										<artifactId>
+											enunciate-maven-plugin
+										</artifactId>
+										<versionRange>
+											[2.2.0,)
+										</versionRange>
+										<goals>
+											<goal>assemble</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 </project>

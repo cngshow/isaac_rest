@@ -12,8 +12,6 @@ public class RestConceptVersion
 	RestConceptChronology conChronology;
 	@XmlElement
 	RestStampedVersion conVersion;
-	@XmlElement
-	String foo = "fred";
 	
 	protected RestConceptVersion()
 	{

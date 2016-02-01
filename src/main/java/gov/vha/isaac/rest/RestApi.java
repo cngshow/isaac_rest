@@ -11,19 +11,19 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.glassfish.hk2.api.MultiException;
-import gov.vha.isaac.metadata.coordinates.StampCoordinates;
-import gov.vha.isaac.metadata.source.IsaacMetadataAuxiliaryBinding;
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.collections.SememeSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.index.SearchResult;
-import gov.vha.isaac.ochre.collections.SememeSequenceSet;
 import gov.vha.isaac.ochre.model.concept.ConceptChronologyImpl;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
 import gov.vha.isaac.rest.restClasses.RestSearchResult;
 import gov.vha.isaac.rest.restClasses.concept.RestConceptVersion;
@@ -35,7 +35,7 @@ public class RestApi
 
 	/**
 	 * A simple search interface which is evaluated across all indexed descriptions in the terminology.   
-	 * @param query The query to be evaluted.  Will be parsed by the Lucene Query Parser: 
+	 * @param query The query to be evaluated.  Will be parsed by the Lucene Query Parser: 
 	 * http://lucene.apache.org/core/5_3_1/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Overview
 	 * @return the list of descriptions that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
@@ -96,7 +96,7 @@ public class RestApi
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 
 		SememeSequenceSet sequences = Get.sememeService().getSememeSequencesForComponentFromAssemblage(Get.identifierService().getNidForUuids(UUID.fromString(conUUID)),
-				IsaacMetadataAuxiliaryBinding.DESCRIPTION_ASSEMBLAGE.getConceptSequence());
+				MetaData.DESCRIPTION_ASSEMBLAGE.getConceptSequence());
 		@SuppressWarnings("unchecked") IntFunction<SememeChronology<? extends DescriptionSememe<?>>> mapToDescChronology = (int sememeSequence) -> {
 			return (SememeChronology<? extends DescriptionSememe<?>>) Get.sememeService().getSememe(sememeSequence);
 		};

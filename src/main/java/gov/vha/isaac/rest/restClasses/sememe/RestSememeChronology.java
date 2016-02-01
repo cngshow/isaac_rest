@@ -22,7 +22,8 @@ public class RestSememeChronology
 		//For Jaxb
 	}
 
-	public RestSememeChronology(@SuppressWarnings("rawtypes") SememeVersion sv)
+	@SuppressWarnings("rawtypes") 
+	public RestSememeChronology(SememeVersion sv)
 	{
 		identifiers = new RestIdentifiedObject(sv.getChronology().getUuidList());
 		sememeSequence = sv.getSememeSequence();

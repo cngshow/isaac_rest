@@ -1,9 +1,8 @@
 package gov.vha.isaac.rest.restClasses.sememe;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 
 @XmlRootElement
