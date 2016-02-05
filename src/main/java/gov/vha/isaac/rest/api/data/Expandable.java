@@ -16,28 +16,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.jerseyConfig;
+package gov.vha.isaac.rest.api.data;
 
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
-import org.glassfish.grizzly.utils.Exceptions;
-import org.slf4j.LoggerFactory;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  * 
- * {@link MyExceptionMapper}
+ * {@link Expandable}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Provider
-public class MyExceptionMapper implements ExceptionMapper<Exception>
+public class Expandable
 {
-	@Override
-	public Response toResponse(Exception ex)
+	/**
+	 * The name of the item that is expandable (pass this to have this value expanded directly by the call that produced this)
+	 */
+	@XmlElement
+	String name;
+	
+	/**
+	 * The url to call to get the expanded item separately
+	 */
+	@XmlElement
+	String url;
+	
+	public Expandable(String name, String url)
 	{
-		LoggerFactory.getLogger("web").error("oops", ex);
-		return Response.status(500).entity(Exceptions.getStackTraceAsString(ex)).type("text/plain").build();
+		this.name = name;
+		this.url = url;
 	}
 }

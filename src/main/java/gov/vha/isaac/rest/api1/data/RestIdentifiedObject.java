@@ -16,28 +16,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.jerseyConfig;
+package gov.vha.isaac.rest.api1.data;
 
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
-import org.glassfish.grizzly.utils.Exceptions;
-import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.UUID;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  * 
- * {@link MyExceptionMapper}
+ * {@link RestIdentifiedObject}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Provider
-public class MyExceptionMapper implements ExceptionMapper<Exception>
+public class RestIdentifiedObject
 {
-	@Override
-	public Response toResponse(Exception ex)
+	/**
+	 * The globally unique, fixed, stable set of identifiers for the object
+	 */
+	@XmlElement
+	List<UUID> uuids;
+	
+	public RestIdentifiedObject(List<UUID> uuids)
 	{
-		LoggerFactory.getLogger("web").error("oops", ex);
-		return Response.status(500).entity(Exceptions.getStackTraceAsString(ex)).type("text/plain").build();
+		this.uuids = uuids;
 	}
 }

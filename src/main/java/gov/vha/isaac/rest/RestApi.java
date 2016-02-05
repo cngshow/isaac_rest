@@ -16,20 +16,18 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.SememeSequenceSet;
-import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.index.SearchResult;
-import gov.vha.isaac.ochre.model.concept.ConceptChronologyImpl;
-import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
-import gov.vha.isaac.rest.restClasses.RestSearchResult;
-import gov.vha.isaac.rest.restClasses.concept.RestConceptVersion;
-import gov.vha.isaac.rest.restClasses.sememe.RestSememeDescriptionVersion;
+import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 
-@Path("/ts")
+//TODO make this class go away when these ops get moved
+
+@Path("ts/1.0")
 public class RestApi
 {
 
@@ -69,22 +67,6 @@ public class RestApi
 			e.printStackTrace();
 		}
 		return temp;
-	}
-
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path("/getCon")
-	public RestConceptVersion getCon(@QueryParam("uuid") String uuid)
-	{
-		ConceptService conceptService = Get.conceptService();
-		ConceptChronologyImpl concept = (ConceptChronologyImpl) conceptService.getConcept(UUID.fromString(uuid));
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
-
-		if (cv.isPresent())
-		{
-			return new RestConceptVersion(cv.get().value());
-		}
-		return null;
 	}
 
 	@SuppressWarnings("rawtypes")

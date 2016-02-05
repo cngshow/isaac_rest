@@ -16,28 +16,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.jerseyConfig;
+package gov.vha.isaac.rest.api1.data.sememe;
 
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
-import org.glassfish.grizzly.utils.Exceptions;
-import org.slf4j.LoggerFactory;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 /**
  * 
- * {@link MyExceptionMapper}
+ * {@link RestSememeVersion}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Provider
-public class MyExceptionMapper implements ExceptionMapper<Exception>
+@XmlRootElement
+public class RestSememeVersion 
 {
-	@Override
-	public Response toResponse(Exception ex)
+	@XmlElement
+	RestSememeChronology sememeChronology;
+	@XmlElement
+	RestStampedVersion sememeVersion;
+
+	protected RestSememeVersion()
 	{
-		LoggerFactory.getLogger("web").error("oops", ex);
-		return Response.status(500).entity(Exceptions.getStackTraceAsString(ex)).type("text/plain").build();
+		//For jaxb
+	}
+	
+	public RestSememeVersion(@SuppressWarnings("rawtypes") SememeVersion sv)
+	{
+		sememeChronology = new RestSememeChronology(sv);
+		sememeVersion = new RestStampedVersion(sv);
 	}
 }
