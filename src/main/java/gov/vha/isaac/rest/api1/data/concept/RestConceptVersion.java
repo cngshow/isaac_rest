@@ -62,13 +62,13 @@ public class RestConceptVersion
 	 * The parent concepts(s) of the concept at this point in time (is a relationships)
 	 */
 	@XmlElement
-	List<RestConceptVersion> parent;
+	List<RestConceptVersion> parents;
 	
 	/**
 	 * The child concepts(s) of the concept at this point in time (is a relationships)
 	 */
 	@XmlElement
-	List<RestConceptVersion> child;
+	List<RestConceptVersion> children;
 	
 	protected RestConceptVersion()
 	{
@@ -99,7 +99,7 @@ public class RestConceptVersion
 			if (includeParents)
 			{
 				//TODO populate parents
-				parent = new ArrayList<>();
+				parents = new ArrayList<>();
 			}
 			else
 			{
@@ -114,7 +114,7 @@ public class RestConceptVersion
 			if (includeChildren)
 			{
 				//TODO populate children
-				child = new ArrayList<>();
+				children = new ArrayList<>();
 			}
 			else
 			{
@@ -146,18 +146,18 @@ public class RestConceptVersion
 				expandables = null;
 			}
 			conChronology = null;
-			parent = null;
-			child = null;
+			parents = null;
+			children = null;
 		}
 	}
 	
 	public void addChild(RestConceptVersion child)
 	{
-		if (this.child == null)
+		if (this.children == null)
 		{
-			this.child = new ArrayList<>();
+			this.children = new ArrayList<>();
 		}
-		this.child.add(child);
+		this.children.add(child);
 		if (expandables != null)
 		{
 			expandables.remove(ExpandUtil.childrenExpandable);
@@ -166,11 +166,11 @@ public class RestConceptVersion
 	
 	public void addParent(RestConceptVersion parent)
 	{
-		if (this.parent == null)
+		if (this.parents == null)
 		{
-			this.parent = new ArrayList<>();
+			this.parents = new ArrayList<>();
 		}
-		this.parent.add(parent);
+		this.parents.add(parent);
 		if (expandables != null)
 		{
 			expandables.remove(ExpandUtil.parentsExpandable);
