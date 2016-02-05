@@ -20,15 +20,21 @@ package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
@@ -57,6 +63,13 @@ public class RestConceptChronology
 	@XmlElement
 	List<RestConceptVersion> versions;
 	
+	/**
+	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
+	 * stamp and language coordinates - or - if none present - the server default.
+	 */
+	@XmlElement
+	String description;
+	
 	protected RestConceptChronology()
 	{
 		//for JaxB
@@ -66,6 +79,30 @@ public class RestConceptChronology
 	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion)
 	{
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
+		
+		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
+		
+		if (RequestInfo.get().useFSN())
+		{
+			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
+				Get.sememeService().getDescriptionsForComponent(cc.getNid()).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
+		}
+		
+		if (!descriptionOptional.isPresent())
+		{
+			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
+				Get.sememeService().getDescriptionsForComponent(cc.getNid()).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
+		}
+		
+		if (descriptionOptional.isPresent())
+		{
+			description = descriptionOptional.get().value().getText();
+		}
+		else
+		{
+			description = "-ERROR finding description_";
+		}
+		
 		if (includeAllVersions || includeLatestVersion)
 		{
 			expandables = null;
@@ -86,11 +123,18 @@ public class RestConceptChronology
 		else
 		{
 			versions = null;
-			expandables = new Expandables(
+			if (RequestInfo.get().returnExpandableLinks())
+			{
+				expandables = new Expandables(
 					new Expandable(ExpandUtil.versionsAllExpandable,
-							RestPaths.conceptVersionsAppPathComponent + cc.getConceptSequence() + "/"), 
+						RestPaths.conceptVersionsAppPathComponent + cc.getConceptSequence() + "/"),
 					new Expandable(ExpandUtil.versionsLatestOnlyExpandable,
-							RestPaths.conceptVersionComponent + cc.getConceptSequence() + "/"));
+						RestPaths.conceptVersionComponent + cc.getConceptSequence() + "/"));
+			}
+			else
+			{
+				expandables = null;
+			}
 		}
 	}
 }

@@ -40,6 +40,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 
 /**
@@ -69,11 +70,11 @@ public class ConceptAPIs
 		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
 		if (cv.isPresent())
 		{
-			Set<String> expandables = ExpandUtil.read(expand);
+			RequestInfo ri = RequestInfo.init(expand);
 			return new RestConceptVersion(cv.get().value(), 
-					expandables.contains(ExpandUtil.chronologyExpandable), 
-					expandables.contains(ExpandUtil.parentsExpandable), 
-					expandables.contains(ExpandUtil.childrenExpandable));
+					ri.shouldExpand(ExpandUtil.chronologyExpandable), 
+					ri.shouldExpand(ExpandUtil.parentsExpandable), 
+					ri.shouldExpand(ExpandUtil.childrenExpandable));
 		}
 		throw new RestException("id", id, "No concept was found");
 	}
@@ -92,9 +93,9 @@ public class ConceptAPIs
 	public RestConceptChronology getConceptChronology(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
 	{
 		ConceptChronologyImpl concept = findConceptChronology(id);
-		Set<String> expandables = ExpandUtil.read(expand);
-		return new RestConceptChronology(concept, expandables.contains(ExpandUtil.versionsAllExpandable), 
-				expandables.contains(ExpandUtil.versionsLatestOnlyExpandable));
+		RequestInfo ri = RequestInfo.init(expand);
+		return new RestConceptChronology(concept, ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
+				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 		
 	}
 	

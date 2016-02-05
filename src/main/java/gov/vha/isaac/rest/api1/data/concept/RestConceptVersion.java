@@ -22,12 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import com.sun.research.ws.wadl.Request;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
@@ -87,8 +89,12 @@ public class RestConceptVersion
 			else
 			{
 				conChronology = null;
-				expandables.add(
-						new Expandable(ExpandUtil.chronologyExpandable,  RestPaths.conceptChronologyAppPathComponent + cv.getChronology().getConceptSequence()));
+				if (RequestInfo.get().returnExpandableLinks())
+				{
+					expandables
+						.add(new Expandable(ExpandUtil.chronologyExpandable, RestPaths.conceptChronologyAppPathComponent + cv.getChronology().getConceptSequence()));
+				}
+						
 			}
 			if (includeParents)
 			{
@@ -97,9 +103,12 @@ public class RestConceptVersion
 			}
 			else
 			{
-				expandables.add(
+				if (RequestInfo.get().returnExpandableLinks())
+				{
+					expandables.add(
 						new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-								+ "?expand=" + ExpandUtil.parentsExpandable));
+							+ "?expand=" + ExpandUtil.parentsExpandable));
+				}
 			}
 			
 			if (includeChildren)
@@ -109,9 +118,12 @@ public class RestConceptVersion
 			}
 			else
 			{
-				expandables.add(
+				if (RequestInfo.get().returnExpandableLinks())
+				{
+					expandables.add(
 						new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-								+ "?expand=" + ExpandUtil.childrenExpandable));
+							+ "?expand=" + ExpandUtil.childrenExpandable));
+				}
 			}
 			if (expandables.size() == 0)
 			{
@@ -120,12 +132,19 @@ public class RestConceptVersion
 		}
 		else
 		{
-			expandables = new Expandables(
+			if (RequestInfo.get().returnExpandableLinks())
+			{
+				expandables = new Expandables(
 					new Expandable(ExpandUtil.chronologyExpandable,  RestPaths.conceptChronologyAppPathComponent + cv.getChronology().getConceptSequence()),
 					new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionComponent + cv.getChronology().getConceptSequence() 
 							+ "?expand=" + ExpandUtil.parentsExpandable),
 					new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionComponent + cv.getChronology().getConceptSequence() 
 							+ "?expand=" + ExpandUtil.childrenExpandable));
+			}
+			else
+			{
+				expandables = null;
+			}
 			conChronology = null;
 			parent = null;
 			child = null;

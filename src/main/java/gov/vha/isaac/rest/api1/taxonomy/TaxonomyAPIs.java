@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.api1.taxonomy;
 
 import java.util.Optional;
-import java.util.Set;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -28,18 +27,16 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.model.concept.ConceptChronologyImpl;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
-import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
-import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * {@link TaxonomyAPIs}
@@ -54,7 +51,8 @@ public class TaxonomyAPIs
 	 * Returns a single version of a concept, with parents and children expanded to the specified levels.
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
-	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.
+	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
+	 * is the UUID for the ISAAC_ROOT concept.
 	 * @param parentHeight - How far to walk up the parent tree (this is applicable whether parents are expanded or not)
 	 * @param childDepth - How far to walk up down the tree (this is applicable whether childrent are expanded or not)
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children'
@@ -66,7 +64,8 @@ public class TaxonomyAPIs
 	@Path(RestPaths.conceptVersionComponent)
 	public RestConceptVersion getConceptVersionTaxonomy(
 			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
-			@QueryParam("id") @DefaultValue("cc0b2455-f546-48fa-90e8-e214cc8478d6") String id, 
+			@QueryParam("id") @DefaultValue("cc0b2455-f546-48fa-90e8-e214cc8478d6") String id,
+			@QueryParam("stated") @DefaultValue("true") String stated, 
 			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight, 
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth, 
 			@QueryParam("expand") String expand) throws RestException
@@ -75,29 +74,27 @@ public class TaxonomyAPIs
 		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
 		if (cv.isPresent())
 		{
-			Set<String> expandables = ExpandUtil.read(expand);
+			RequestInfo ri = RequestInfo.init(expand);
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
-					expandables.contains(ExpandUtil.chronologyExpandable), 
-					expandables.contains(ExpandUtil.parentsExpandable), 
-					expandables.contains(ExpandUtil.childrenExpandable));
+					ri.shouldExpand(ExpandUtil.chronologyExpandable), 
+					ri.shouldExpand(ExpandUtil.parentsExpandable), 
+					ri.shouldExpand(ExpandUtil.childrenExpandable));
 			
-			TaxonomyCoordinate tc = TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate());
-			Tree tree = Get.taxonomyService().getTaxonomyTree(tc);
+			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(Boolean.parseBoolean(stated.trim()) ));
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, expandables.contains(ExpandUtil.parentsExpandable), parentHeight - 1);
+				addParents(concept.getConceptSequence(), rcv, tree, parentHeight - 1);
 			}
 			if (childDepth > 0)
 			{
-				addChildren(concept.getConceptSequence(), rcv, tree, expandables.contains(ExpandUtil.chronologyExpandable), 
-						expandables.contains(ExpandUtil.childrenExpandable), childDepth - 1);
+				addChildren(concept.getConceptSequence(), rcv, tree, childDepth - 1);
 			}
 			return rcv;
 		}
 		throw new RestException("id", id, "No concept was found");
 	}
 
-	private void addChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean includeChronology, boolean expandParents, int remainingChildDepth)
+	private void addChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingChildDepth)
 	{
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
@@ -110,30 +107,44 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
+			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
 			{
-				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), includeChronology, false, false);
+				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
+					false, false);
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
-					addChildren(childConcept.getConceptSequence(), childVersion, tree, includeChronology, expandParents, remainingChildDepth - 1);
+					addChildren(childConcept.getConceptSequence(), childVersion, tree, remainingChildDepth - 1);
 				}
 			}
 		}
 	}
 
-	private void addParents(int conceptSequence, RestConceptVersion rcv, boolean expandChildren, int remainingParentDepth)
+	private void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingParentDepth)
 	{
-		//TODO implement lookup parents (psuedocode)
-//		for (X parent : conceptSequence.getParents())
-//		{
-//			rcv.addParent(parent);
-//			if (remainingParentDepth > 0)
-//			{
-//				addChildren(child, remainingParentDepth - 1);
-//			}
-//		}
-		
+		for (int parentSequence : tree.getParentSequences(conceptSequence))
+		{
+			ConceptChronologyImpl parentConceptChronlogy;
+			try
+			{
+				parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
+			}
+			catch (RestException e)
+			{
+				throw new RuntimeException("Internal Error!", e);
+			}
+			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			if (cv.isPresent())
+			{
+				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
+					false, false);
+				rcv.addParent(parentVersion);
+				if (remainingParentDepth > 0)
+				{
+					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, remainingParentDepth - 1);
+				}
+			}
+		}
 	}
 }
