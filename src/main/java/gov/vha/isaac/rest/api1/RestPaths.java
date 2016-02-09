@@ -30,7 +30,7 @@ public class RestPaths
 	public static final String apiVersionComponent = "1/";
 
 	public static final String conceptPathComponent = apiVersionComponent + "concept/";
-	public static final String conceptAppPathComponent = appPathComponent + conceptPathComponent;
+//	public static final String conceptAppPathComponent = appPathComponent + conceptPathComponent;
 	
 	public static final String conceptChronologyComponent = "chronology/";
 	public static final String conceptChronologyAppPathComponent = appPathComponent + conceptPathComponent + conceptChronologyComponent;
@@ -45,4 +45,9 @@ public class RestPaths
 	public static final String searchAppPathComponent = appPathComponent + searchPathComponent;
 	
 	public static final String taxonomyPathComponent = apiVersionComponent + "taxonomy/";
+	
+	public static final String idPathComponent = apiVersionComponent + "id/";
+	public static final String idTranslateComponent = "translate/";
+//	public static final String idAppPathComponent = appPathComponent + idPathComponent + idTranslateComponent;
+	public static final String idTypesComponent = "types/";
 }

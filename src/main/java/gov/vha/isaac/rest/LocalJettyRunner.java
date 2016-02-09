@@ -26,8 +26,10 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.server.ResourceConfig;
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
+import gov.vha.isaac.rest.api1.id.IdAPIs;
 import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
 import gov.vha.isaac.rest.jerseyConfig.MyExceptionMapper;
 import gov.vha.isaac.rest.jerseyConfig.MyJacksonMapperConfig;
@@ -50,6 +52,7 @@ public class LocalJettyRunner
 		final ResourceConfig resourceConfig = new ResourceConfig(ApplicationConfig.class, 
 				ConceptAPIs.class,
 				TaxonomyAPIs.class,
+				IdAPIs.class,
 				RestExceptionMapper.class,
 				MyExceptionMapper.class, 
 				JacksonFeature.class, 
@@ -70,8 +73,9 @@ public class LocalJettyRunner
 		}));
 		server.start();
 
-		System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C", BASE_URI, 
-				RestPaths.searchAppPathComponent + "q=h*"));
+		System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C", 
+			BASE_URI.toString().substring(0, BASE_URI.toString().length() - 5), 
+				RestPaths.conceptVersionAppPathComponent + MetaData.CONCRETE_DOMAIN_OPERATOR.getNid()));
 		Thread.currentThread().join();
 	}
 }
