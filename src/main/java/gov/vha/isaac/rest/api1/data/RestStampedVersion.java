@@ -20,7 +20,7 @@ package gov.vha.isaac.rest.api1.data;
 
 import javax.xml.bind.annotation.XmlElement;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.chronicle.StampedVersion;
+import gov.vha.isaac.ochre.api.identity.StampedVersion;
 
 /**
  * 
