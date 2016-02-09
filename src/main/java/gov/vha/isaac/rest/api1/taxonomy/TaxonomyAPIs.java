@@ -53,8 +53,9 @@ public class TaxonomyAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.
+	 * @param stated - true for stated, false for inferred
 	 * @param parentHeight - How far to walk up the parent tree (this is applicable whether parents are expanded or not)
-	 * @param childDepth - How far to walk up down the tree (this is applicable whether childrent are expanded or not)
+	 * @param childDepth - How far to walk down the tree (this is applicable whether children are expanded or not)
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children'
 	 * @return the concept version object
 	 * @throws RestException 
@@ -77,10 +78,11 @@ public class TaxonomyAPIs
 			RequestInfo ri = RequestInfo.init(expand);
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					ri.shouldExpand(ExpandUtil.chronologyExpandable), 
-					ri.shouldExpand(ExpandUtil.parentsExpandable), 
-					ri.shouldExpand(ExpandUtil.childrenExpandable));
+					parentHeight > 0 ? false : ri.shouldExpand(ExpandUtil.parentsExpandable),   //when height / depth > 0, this is handled below
+					childDepth > 0 ? false : ri.shouldExpand(ExpandUtil.childrenExpandable), 
+					Boolean.parseBoolean(stated.trim()));
 			
-			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(Boolean.parseBoolean(stated.trim()) ));
+			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(Boolean.parseBoolean(stated.trim())));
 			
 			if (parentHeight > 0)
 			{
@@ -95,7 +97,7 @@ public class TaxonomyAPIs
 		throw new RestException("id", id, "No concept was found");
 	}
 
-	private void addChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingChildDepth)
+	public static void addChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingChildDepth)
 	{
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
@@ -112,7 +114,7 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false);
+				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, true);
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
@@ -122,7 +124,7 @@ public class TaxonomyAPIs
 		}
 	}
 
-	private void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingParentDepth)
+	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingParentDepth)
 	{
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
 		{
@@ -139,7 +141,7 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false);
+				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, true);
 				rcv.addParent(parentVersion);
 				if (remainingParentDepth > 0)
 				{

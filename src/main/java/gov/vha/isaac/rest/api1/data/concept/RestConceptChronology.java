@@ -111,7 +111,7 @@ public class RestConceptChronology
 			{
 				for (ConceptVersion cv : cc.getVersionList())
 				{
-					versions.add(new RestConceptVersion(cv, false, false, false));
+					versions.add(new RestConceptVersion(cv, false, false, false, false));
 				}
 			}
 			else 

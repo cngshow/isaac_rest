@@ -23,13 +23,16 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.sun.research.ws.wadl.Request;
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
 
 /**
  * 
@@ -76,7 +79,7 @@ public class RestConceptVersion
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean includeChildren)
+	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean includeChildren, boolean stated)
 	{
 		conVersion = new RestStampedVersion(cv);
 		if (includeChronology || includeParents || includeChildren)
@@ -96,10 +99,14 @@ public class RestConceptVersion
 				}
 						
 			}
+			Tree tree = null;
+			if (includeParents || includeChildren)
+			{
+				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
+			}
 			if (includeParents)
 			{
-				//TODO populate parents
-				parents = new ArrayList<>();
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, 0);
 			}
 			else
 			{
@@ -107,14 +114,13 @@ public class RestConceptVersion
 				{
 					expandables.add(
 						new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.parentsExpandable));
+							+ "?expand=" + ExpandUtil.parentsExpandable + "&stated=" + stated));
 				}
 			}
 			
 			if (includeChildren)
 			{
-				//TODO populate children
-				children = new ArrayList<>();
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, 0);
 			}
 			else
 			{
@@ -122,7 +128,7 @@ public class RestConceptVersion
 				{
 					expandables.add(
 						new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.childrenExpandable));
+							+ "?expand=" + ExpandUtil.childrenExpandable + "&stated=" + stated));
 				}
 			}
 			if (expandables.size() == 0)
@@ -136,10 +142,10 @@ public class RestConceptVersion
 			{
 				expandables = new Expandables(
 					new Expandable(ExpandUtil.chronologyExpandable,  RestPaths.conceptChronologyAppPathComponent + cv.getChronology().getConceptSequence()),
-					new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.parentsExpandable),
-					new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.childrenExpandable));
+					new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
+							+ "?expand=" + ExpandUtil.parentsExpandable + "&stated=" + stated),
+					new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
+							+ "?expand=" + ExpandUtil.childrenExpandable + "&stated=" + stated));
 			}
 			else
 			{

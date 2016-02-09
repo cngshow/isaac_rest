@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.concept;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -58,13 +59,15 @@ public class ConceptAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children'
+	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.conceptVersionComponent + "{id}")
-	public RestConceptVersion getConceptVersion(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
+	public RestConceptVersion getConceptVersion(@PathParam("id") String id, @QueryParam("expand") String expand, 
+		@QueryParam("stated") @DefaultValue("true") String stated) throws RestException
 	{
 		ConceptChronologyImpl concept = findConceptChronology(id);
 		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
@@ -74,7 +77,8 @@ public class ConceptAPIs
 			return new RestConceptVersion(cv.get().value(), 
 					ri.shouldExpand(ExpandUtil.chronologyExpandable), 
 					ri.shouldExpand(ExpandUtil.parentsExpandable), 
-					ri.shouldExpand(ExpandUtil.childrenExpandable));
+					ri.shouldExpand(ExpandUtil.childrenExpandable),
+					Boolean.parseBoolean(stated.trim()));
 		}
 		throw new RestException("id", id, "No concept was found");
 	}
