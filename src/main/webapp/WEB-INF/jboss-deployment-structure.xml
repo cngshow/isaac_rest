@@ -1,0 +1,61 @@
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.3">
+<!-- Need all of this mess to make JBoss provide JavaFX to the classpath -->
+	<deployment>
+		<exclusions>
+			<module name="org.jboss.resteasy.resteasy-jackson-provider" />
+		</exclusions>
+		<dependencies>
+			<module name="org.jboss.resteasy.resteasy-jackson2-provider" services="import" />
+			<system export="true">
+				<paths>
+					<path name="com/sun/javafx/animation" />
+					<path name="com/sun/javafx/application" />
+					<path name="com/sun/javafx/beans" />
+					<path name="com/sun/javafx/beans/binding" />
+					<path name="com/sun/javafx/beans/property" />
+					<path name="com/sun/javafx/beans/property/adapter" />
+					<path name="com/sun/javafx/beans/value" />
+					<path name="com/sun/javafx/collections" />
+					<path name="com/sun/javafx/collections/transformation" />
+					<path name="com/sun/javafx/concurrent" />
+					<path name="com/sun/javafx/css" />
+					<path name="com/sun/javafx/embed" />
+					<path name="com/sun/javafx/embed/swing" />
+					<path name="com/sun/javafx/event" />
+					<path name="com/sun/javafx/fxml" />
+					<path name="com/sun/javafx/geometry" />
+					<path name="com/sun/javafx/print" />
+					<!--path name="com/sun/javafx/scene" /> not complete -->
+					<path name="com/sun/javafx/print" />
+					<path name="com/sun/javafx/scene" />
+					<path name="com/sun/javafx/stage" />
+					<path name="com/sun/javafx/util" />
+					<path name="com/sun/javafx/util/converter" />
+
+					<path name="javafx/animation" />
+					<path name="javafx/application" />
+					<path name="javafx/beans" />
+					<path name="javafx/beans/binding" />
+					<path name="javafx/beans/property" />
+					<path name="javafx/beans/property/adapter" />
+					<path name="javafx/beans/value" />
+					<path name="javafx/beans" />
+					<path name="javafx/collections" />
+					<path name="javafx/collections/transformation" />
+					<path name="javafx/concurrent" />
+					<path name="javafx/css" />
+					<path name="javafx/embed/swing" />
+					<path name="javafx/event" />
+					<path name="javafx/fxml" />
+					<path name="javafx/geometry" />
+					<path name="javafx/print" />
+					<!--path name="javafx/scene" /> not complete -->
+					<path name="javafx/stage" />
+					<path name="javafx/util" />
+					<path name="javafx/util/converter" />
+
+				</paths>
+			</system>
+		</dependencies>
+	</deployment>
+</jboss-deployment-structure>
