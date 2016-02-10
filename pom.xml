@@ -138,28 +138,10 @@
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-grizzly2-http</artifactId>
 			<version>${jersey.version}</version>
+			<scope>test</scope> <!-- This is just for testing in eclipse -->
 		</dependency>
 
-		<!-- For weblogic -->
-		<!-- dependency>
-			<groupId>org.glassfish.jersey.ext.cdi</groupId>
-			<artifactId>jersey-cdi1x</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.glassfish.jersey.ext.cdi</groupId>
-			<artifactId>jersey-cdi1x-servlet</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.glassfish.jersey.ext.cdi</groupId>
-			<artifactId>jersey-cdi1x-transaction</artifactId>
-			<version>${jersey.version}</version>
-		</dependency-->
-
-		<!-- For tomcat / WebLogic -->
+		<!-- For tomcat  -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet-core</artifactId>
