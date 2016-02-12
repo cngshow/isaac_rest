@@ -19,21 +19,24 @@
 package gov.vha.isaac.rest;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.server.ResourceConfig;
+import eu.infomas.annotation.AnnotationDetector;
+import gov.va.oia.HK2Utilities.AnnotatedClasses;
+import gov.va.oia.HK2Utilities.AnnotationReporter;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
-import gov.vha.isaac.rest.api1.id.IdAPIs;
-import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
-import gov.vha.isaac.rest.jerseyConfig.MyExceptionMapper;
-import gov.vha.isaac.rest.jerseyConfig.MyJacksonMapperConfig;
-import gov.vha.isaac.rest.jerseyConfig.RestExceptionMapper;
 
 /**
  * 
@@ -48,16 +51,17 @@ public class LocalJettyRunner
 	public static void main(String[] args) throws Exception
 	{
 		System.out.println("Launching Jetty Server");
+		
+		//Find all classes with the specified annotations:
+		AnnotatedClasses ac = new AnnotatedClasses();
 
-		final ResourceConfig resourceConfig = new ResourceConfig(ApplicationConfig.class, 
-				ConceptAPIs.class,
-				TaxonomyAPIs.class,
-				IdAPIs.class,
-				RestExceptionMapper.class,
-				MyExceptionMapper.class, 
-				JacksonFeature.class, 
-				MyJacksonMapperConfig.class, 
-				RestApi.class);
+		@SuppressWarnings("unchecked") AnnotationDetector cf = new AnnotationDetector(new AnnotationReporter(ac, 
+				new Class[] {Path.class, ApplicationPath.class, Provider.class}));
+		cf.detect(new String[] {"gov.vha.isaac.rest"});
+		
+		Set<Class<?>> temp = new HashSet<Class<?>>(Arrays.asList(ac.getAnnotatedClasses()));
+		temp.add(JacksonFeature.class);  //No annotations in this class
+		final ResourceConfig resourceConfig = new ResourceConfig(temp);
 
 		Map<String, Object> properties = new HashMap<>();
 		properties.put(MessageProperties.XML_FORMAT_OUTPUT, true);
