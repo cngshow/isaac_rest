@@ -46,6 +46,13 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 public class RestConceptChronology 
 {
 	/**
+	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
+	 * stamp and language coordinates - or - if none present - the server default.
+	 */
+	@XmlElement
+	String description;
+	
+	/**
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
@@ -62,13 +69,6 @@ public class RestConceptChronology
 	 */
 	@XmlElement
 	List<RestConceptVersion> versions;
-	
-	/**
-	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
-	 * stamp and language coordinates - or - if none present - the server default.
-	 */
-	@XmlElement
-	String description;
 	
 	protected RestConceptChronology()
 	{

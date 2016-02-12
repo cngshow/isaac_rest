@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.api1.concept;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;

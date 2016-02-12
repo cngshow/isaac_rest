@@ -32,12 +32,30 @@ import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 @XmlRootElement
 public class RestSememeDescriptionVersion extends RestSememeVersion
 {
+	/**
+	 * The concept sequence of the concept that represents the case significance flag on the description .
+	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
+	 */
 	@XmlElement
 	int caseSignificanceConceptSequence;
+	
+	/**
+	 * The concept sequence of the concept that represents the language of the description (note, this is NOT 
+	 * the dialect)
+	 */
 	@XmlElement
 	int languageConceptSequence;
+	
+	/**
+	 * The text of the description
+	 */
 	@XmlElement
 	String text;
+	
+	/**
+	 * The concept sequence of the concept that represents the type of the description.  
+	 * This should be FSN, Synonym, or Definition.
+	 */
 	@XmlElement
 	int descriptionTypeConceptSequence;
 
@@ -46,7 +64,7 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		//for Jaxb
 	}
 	
-	public RestSememeDescriptionVersion(@SuppressWarnings("rawtypes") DescriptionSememe dsv)
+	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv)
 	{
 		super(dsv);
 		caseSignificanceConceptSequence = dsv.getCaseSignificanceConceptSequence();

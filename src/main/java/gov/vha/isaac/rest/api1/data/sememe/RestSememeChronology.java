@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 
 /**
@@ -32,12 +33,34 @@ import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 @XmlRootElement
 public class RestSememeChronology
 {
+	
+	/**
+	 * The data that was not expanded as part of this call (but can be)
+	 */
+	@XmlElement
+	Expandables expandables;
+	
+	/**
+	 * The sememe sequence identifier of this sememe instance
+	 */
 	@XmlElement
 	int sememeSequence;
+	
+	/**
+	 * The concept sequence identifier of the concept that represents the type of this sememe
+	 */
 	@XmlElement
 	int assemblageSequence;
+	
+	/**
+	 * The NID identifier of the object that is referenced by this sememe instance.  This could represent a concept or a sememe.
+	 */
 	@XmlElement
 	int referencedComponentNid;
+	
+	/**
+	 * The permanent identifier object(s) attached to this sememe instance
+	 */
 	@XmlElement
 	RestIdentifiedObject identifiers;
 	

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import com.sun.research.ws.wadl.Request;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.tree.Tree;
@@ -50,7 +49,7 @@ public class RestConceptVersion
 	Expandables expandables;
 	
 	/**
-	 * The concept chronology for this concept.  Depending on the expand paramter, may be empty.
+	 * The concept chronology for this concept.  Depending on the expand parameter, may be empty.
 	 */
 	@XmlElement
 	RestConceptChronology conChronology;
@@ -62,13 +61,13 @@ public class RestConceptVersion
 	RestStampedVersion conVersion;
 	
 	/**
-	 * The parent concepts(s) of the concept at this point in time (is a relationships)
+	 * The parent concepts(s) of the concept at this point in time (is a relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
 	List<RestConceptVersion> parents;
 	
 	/**
-	 * The child concepts(s) of the concept at this point in time (is a relationships)
+	 * The child concepts(s) of the concept at this point in time (is a relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
 	List<RestConceptVersion> children;

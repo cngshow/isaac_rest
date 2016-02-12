@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 /**
@@ -32,8 +33,22 @@ import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 @XmlRootElement
 public class RestSememeVersion 
 {
+	/**
+	 * The data that was not expanded as part of this call (but can be)
+	 */
+	@XmlElement
+	Expandables expandables;
+	
+	/**
+	 * The sememe chronology for this concept.  Depending on the expand parameter, may be empty.
+	 */
 	@XmlElement
 	RestSememeChronology sememeChronology;
+	
+	
+	/**
+	 * The StampedVersion details for this version of this sememe.
+	 */
 	@XmlElement
 	RestStampedVersion sememeVersion;
 
@@ -42,7 +57,7 @@ public class RestSememeVersion
 		//For jaxb
 	}
 	
-	public RestSememeVersion(@SuppressWarnings("rawtypes") SememeVersion sv)
+	public RestSememeVersion(SememeVersion<?> sv)
 	{
 		sememeChronology = new RestSememeChronology(sv);
 		sememeVersion = new RestStampedVersion(sv);
