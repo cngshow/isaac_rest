@@ -90,7 +90,7 @@ public class RequestInfo
 	 */
 	public StampCoordinate getStampCoordinate()
 	{
-		//TODO implement
+		//TODO implement stamp coord from request info
 		return StampCoordinates.getDevelopmentLatest();
 	}
 
@@ -99,7 +99,7 @@ public class RequestInfo
 	 */
 	public LanguageCoordinate getLanguageCoordinate()
 	{
-		//TODO implement
+		//TODO implement lang coord from request inf
 		return LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
 	}
 

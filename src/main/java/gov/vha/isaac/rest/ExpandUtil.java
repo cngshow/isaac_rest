@@ -36,6 +36,7 @@ public class ExpandUtil
 	public static final String chronologyExpandable = "chronology";
 	public static final String parentsExpandable = "parents";
 	public static final String childrenExpandable = "children";
+	public static final String nestedSememesExpandable = "nestedSememes";
 	
 	public static Set<String> read(String expandableString)
 	{

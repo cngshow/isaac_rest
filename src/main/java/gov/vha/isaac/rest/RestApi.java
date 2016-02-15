@@ -3,27 +3,21 @@ package gov.vha.isaac.rest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.function.IntFunction;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.glassfish.hk2.api.MultiException;
-import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.collections.SememeSequenceSet;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
-import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.index.SearchResult;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 
 //TODO make this class go away when these ops get moved
 
@@ -69,37 +63,5 @@ public class RestApi
 		return temp;
 	}
 
-	@SuppressWarnings("rawtypes")
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path("/getFullDescriptions")
-	public List<RestSememeDescriptionVersion> getFullDesc(@QueryParam("conUUID") String conUUID)
-	{
-		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 
-		SememeSequenceSet sequences = Get.sememeService().getSememeSequencesForComponentFromAssemblage(Get.identifierService().getNidForUuids(UUID.fromString(conUUID)),
-				MetaData.DESCRIPTION_ASSEMBLAGE.getConceptSequence());
-		@SuppressWarnings("unchecked") IntFunction<SememeChronology<? extends DescriptionSememe<?>>> mapToDescChronology = (int sememeSequence) -> {
-			return (SememeChronology<? extends DescriptionSememe<?>>) Get.sememeService().getSememe(sememeSequence);
-		};
-
-		sequences.stream().filter((int sememeSequence) -> Get.sememeService().getOptionalSememe(sememeSequence).isPresent()).mapToObj(mapToDescChronology)
-				.forEach(descSememeChronology -> {
-					@SuppressWarnings({ "unchecked" }) Optional<LatestVersion<DescriptionSememe>> ds = (((SememeChronology) descSememeChronology)
-							.getLatestVersion(DescriptionSememeImpl.class, StampCoordinates.getDevelopmentLatest()));
-					if (ds.isPresent())
-					{
-						try
-						{
-							result.add(new RestSememeDescriptionVersion(ds.get().value(), true));
-						}
-						catch (Exception e)
-						{
-							throw new RuntimeException("Should have been impossible", e);
-						}
-					}
-				});
-
-		return result;
-	}
 }

@@ -32,14 +32,23 @@ public class RestPaths
 	public static final String chronologyComponent = "chronology/";
 	public static final String versionsComponent = "versions/";	
 	public static final String versionComponent = "version/";
+	public static final String idTranslateComponent = "translate/";
+	public static final String idTypesComponent = "types/";
+	public static final String descriptionsComponent = "descriptions/";
+	public static final String byAssemblageComponent = "byAssemblage/";
+	public static final String byReferencedComponentComponent = "byReferencedComponent/";
 	
 	public static final String conceptPathComponent = apiVersionComponent + "concept/";
-	
 	public static final String conceptChronologyAppPathComponent = appPathComponent + conceptPathComponent + chronologyComponent;
-	
 	public static final String conceptVersionsAppPathComponent = appPathComponent + conceptPathComponent + versionsComponent;
-	
 	public static final String conceptVersionAppPathComponent = appPathComponent + conceptPathComponent +versionComponent;
+	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptPathComponent +descriptionsComponent;
+
+	public static final String sememePathComponent = apiVersionComponent + "sememe/";
+	public static final String sememeChronologyAppPathComponent = appPathComponent + sememePathComponent + chronologyComponent;
+	public static final String sememeVersionsAppPathComponent = appPathComponent + sememePathComponent + versionsComponent;
+	public static final String sememeVersionAppPathComponent = appPathComponent + sememePathComponent +versionComponent;
+
 	
 	public static final String searchPathComponent = apiVersionComponent + "search/";
 	public static final String searchAppPathComponent = appPathComponent + searchPathComponent;
@@ -47,11 +56,5 @@ public class RestPaths
 	public static final String taxonomyPathComponent = apiVersionComponent + "taxonomy/";
 	
 	public static final String idPathComponent = apiVersionComponent + "id/";
-	public static final String idTranslateComponent = "translate/";
-	public static final String idTypesComponent = "types/";
-	
-	public static final String sememePathComponent = apiVersionComponent + "sememe/";
-	public static final String sememeChronologyAppPathComponent = appPathComponent + sememePathComponent + chronologyComponent;
-	public static final String sememeVersionsAppPathComponent = appPathComponent + sememePathComponent + versionsComponent;
-	public static final String sememeVersionAppPathComponent = appPathComponent + sememePathComponent +versionComponent;
+
 }

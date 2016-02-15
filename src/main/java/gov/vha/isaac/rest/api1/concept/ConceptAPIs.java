@@ -18,7 +18,10 @@
  */
 package gov.vha.isaac.rest.api1.concept;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -27,6 +30,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -34,6 +38,7 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -41,6 +46,9 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 
@@ -52,6 +60,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 @Path(RestPaths.conceptPathComponent)
 public class ConceptAPIs
 {
+	private Set<Integer> allDescriptionAssemblageTypes = null;
 	
 	/**
 	 * Returns a single version of a concept.
@@ -141,5 +150,38 @@ public class ConceptAPIs
 				throw new RestException("id", id, "Is not a concept identifier.  Must be a UUID or an integer");
 			}
 		}
+	}
+	
+
+	/**
+	 * @param id - A UUID, nid, or concept sequence of a CONCEPT
+	 * @param includeDialects - true to include the (nested) dialect information, false to ommit
+	 * @return The descriptions associated with the concept
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.descriptionsComponent + "{id}")
+	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam("id") String id, @QueryParam("includeDialects") @DefaultValue("true") String includeDialects) throws RestException
+	{
+		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
+		
+		List<RestSememeVersion> descriptions = SememeAPIs.get(findConceptChronology(id).getNid() + "", getAllDescriptionTypes(), true, 
+				Boolean.parseBoolean(includeDialects.trim()));
+		for (RestSememeVersion d : descriptions)
+		{
+			//This cast is expected to be safe, if not, the data model is messed up
+			result.add((RestSememeDescriptionVersion) d);
+		}
+		return result;
+	}
+	
+	private Set<Integer> getAllDescriptionTypes()
+	{
+		if (allDescriptionAssemblageTypes == null)
+		{
+			allDescriptionAssemblageTypes = Frills.getAllChildrenOfConcept(MetaData.DESCRIPTION_ASSEMBLAGE.getConceptSequence(), false, true);
+		}
+		return allDescriptionAssemblageTypes;
 	}
 }

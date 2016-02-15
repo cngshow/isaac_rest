@@ -83,7 +83,8 @@ public class RestSememeChronology
 		//For Jaxb
 	}
 
-	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion) throws RestException
+	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeNested) 
+			throws RestException
 	{
 		identifiers = new RestIdentifiedObject(sc.getUuidList());
 		sememeSequence = sc.getSememeSequence();
@@ -97,7 +98,7 @@ public class RestSememeChronology
 			{
 				for (SememeVersion<?> sv : sc.getVersionList())
 				{
-					versions.add(RestSememeVersion.buildRestSememeVersion(sv, false));
+					versions.add(RestSememeVersion.buildRestSememeVersion(sv, false, includeNested));
 				}
 			}
 			else if (includeLatestVersion)

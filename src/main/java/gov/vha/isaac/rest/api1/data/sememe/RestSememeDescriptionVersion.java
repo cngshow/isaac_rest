@@ -18,9 +18,12 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
+import gov.vha.isaac.MetaData;
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
@@ -59,15 +62,35 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	 */
 	@XmlElement
 	int descriptionTypeConceptSequence;
+	
+	/**
+	 * The dialects attached to this sememe.  Not populated by default, include expand=nestedSememes to expand this.
+	 */
+	@XmlElement
+	List<RestDynamicSememeVersion> dialects;
 
 	protected RestSememeDescriptionVersion()
 	{
 		//for Jaxb
 	}
 	
-	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology) throws RestException
+	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested) throws RestException
 	{
-		super(dsv, includeChronology);
+		super();
+		if (expandNested)
+		{
+			dialects = new ArrayList<>();
+		}
+		setup(dsv, includeChronology, expandNested, (restSememeVersion ->
+		{
+			//If the assemblage is a dialect, put it in our list.
+			if (Get.taxonomyService().wasEverKindOf(restSememeVersion.sememeChronology.assemblageSequence, MetaData.DIALECT_ASSEMBLAGE.getConceptSequence()))
+			{
+				dialects.add((RestDynamicSememeVersion) restSememeVersion);
+				return false;
+			}
+			return true;
+		}));
 		caseSignificanceConceptSequence = dsv.getCaseSignificanceConceptSequence();
 		languageConceptSequence = dsv.getLanguageConceptSequence();
 		text = dsv.getText();

@@ -18,18 +18,27 @@
  */
 package gov.vha.isaac.rest.api1.sememe;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.codehaus.plexus.util.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeService;
+import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
@@ -55,7 +64,7 @@ public class SememeAPIs
 	/**
 	 * Returns the chronology of a sememe.  
 	 * @param id - A UUID, nid or sememe sequence
-	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly'
+	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
 	 * @return the sememe chronology object
 	 * @throws RestException
@@ -66,7 +75,8 @@ public class SememeAPIs
 	public RestSememeChronology getSememeChronology(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
 	{
 		RequestInfo ri = RequestInfo.init(expand);
-		return new RestSememeChronology(findSememeChronology(id), ri.shouldExpand(ExpandUtil.versionsAllExpandable), ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+		return new RestSememeChronology(findSememeChronology(id), ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
+				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
 	}
 	
 	/**
@@ -74,8 +84,9 @@ public class SememeAPIs
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'
-	 * @return the sememe version object
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes'
+	 * @return the sememe version object.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
+	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * @throws RestException 
 	 */
 	@GET
@@ -90,7 +101,8 @@ public class SememeAPIs
 		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, StampCoordinates.getDevelopmentLatest());
 		if (sv.isPresent())
 		{
-			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), ri.shouldExpand(ExpandUtil.chronologyExpandable));
+			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), ri.shouldExpand(ExpandUtil.chronologyExpandable), 
+					ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
 		}
 		else
 		{
@@ -133,5 +145,171 @@ public class SememeAPIs
 			}
 		}
 		throw new RestException("id", id, "Is not a sememe identifier.  Must be a UUID or an integer");
+	}
+	
+	/**
+	 * Returns all sememe instances with the given assemblage
+	 * TODO still need to define how to pass in a version parameter
+	 * If no version parameter is specified, returns the latest version.
+	 * @param id - A UUID, nid, or concept sequence of an assemblage concept
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested'
+	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
+	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
+	 * TODO this needs to be paged 
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.byAssemblageComponent + "{id}")
+	public List<RestSememeVersion> getByAssemblage(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
+	{
+		RequestInfo ri = RequestInfo.init(expand);
+		
+		HashSet<Integer> temp = new HashSet<>();
+		temp.add(convertToSequence(id));
+		
+		//we don't have a referenced component - our id is assemblage
+		return get(null, temp, ri.shouldExpand(ExpandUtil.chronologyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+	}
+	
+	/**
+	 * Returns all sememe instances attached to the specified referenced component
+	 * TODO still need to define how to pass in a version parameter
+	 * If no version parameter is specified, returns the latest version.
+	 * @param id - A UUID or nid of a component.  Note that this could be a concept or a sememe reference, hence, sequences are not allowed here.
+	 * @param assemblage - An optional assemblage UUID, nid or concept sequence to restrict the type of sememes returned.  If ommitted, assemblages
+	 * of all types will be returned.  May be specified multiple times to allow multiple assemblages
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested'
+	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
+	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.byReferencedComponentComponent + "{id}")
+	public List<RestSememeVersion> getByReferencedComponent(@PathParam("id") String id, @QueryParam("assemblage") Set<String> assemblage, @QueryParam("expand") String expand) 
+			throws RestException
+	{
+		RequestInfo ri = RequestInfo.init(expand);
+		
+		HashSet<Integer> allowedAssemblages = new HashSet<>();
+		for (String a : assemblage)
+		{
+			allowedAssemblages.add(convertToSequence(a));
+		}
+		
+		return get(id, allowedAssemblages, ri.shouldExpand(ExpandUtil.chronologyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+	}
+	
+	/**
+	 * @param referencedComponent - optional - if provided - takes precedence
+	 * @param assemblage - optional - if provided, either limits the referencedComponent search by this type, or, if 
+	 * referencedComponent is not provided - focuses the search on just this assemblage
+	 * @param expandChronology
+	 * @param expandNested
+	 * @return
+	 * @throws RestException
+	 */
+	public static List<RestSememeVersion> get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested) 
+			throws RestException
+	{
+		final ArrayList<RestSememeVersion> results = new ArrayList<>();
+		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
+		{
+			@Override
+			public void accept(@SuppressWarnings("rawtypes") SememeChronology sc)
+			{
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+				if (sv.isPresent() && sv.get().value().getChronology().getSememeType() != SememeType.LOGIC_GRAPH 
+						&& sv.get().value().getChronology().getSememeType() != SememeType.RELATIONSHIP_ADAPTOR)
+				{
+					try
+					{
+						results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested));
+					}
+					catch (RestException e)
+					{
+						throw new RuntimeException("Unexpected error", e);
+					}
+				}
+			}
+		};
+
+		if (StringUtils.isNotBlank(referencedComponent))
+		{
+			Optional<UUID> uuidId = UUIDUtil.getUUID(referencedComponent);
+			Optional<Integer> refCompNid = Optional.empty();
+			if (uuidId.isPresent())
+			{
+				if (Get.identifierService().hasUuid(uuidId.get()))
+				{
+					refCompNid = Optional.of(Get.identifierService().getNidForUuids(uuidId.get()));
+				}
+				else
+				{
+					throw new RestException("referencedComponent", referencedComponent, "Is not known by the system");
+				}
+			}
+			else
+			{
+				refCompNid = NumericUtils.getInt(referencedComponent);
+			}
+			
+			if (refCompNid.isPresent() && refCompNid.get() < 0)
+			{
+				Stream<SememeChronology<? extends SememeVersion<?>>> sememes = Get.sememeService().getSememesForComponentFromAssemblages(refCompNid.get(), allowedAssemblages);
+				sememes.forEach(consumer);
+			}
+			else
+			{
+				throw new RestException("referencedComponent", referencedComponent, "Must be a NID or a UUID");
+			}
+		}
+		else
+		{
+			if (allowedAssemblages == null || allowedAssemblages.size() == 0)
+			{
+				throw new RestException("If a referenced component is not provided, then an allowedAssemblage must be provided");
+			}
+			for (int assemblageId : allowedAssemblages)
+			{
+				Get.sememeService().getSememesFromAssemblage(assemblageId).forEach(consumer);
+			}
+		}
+		return results;
+	}
+	
+	public static int convertToSequence(String id) throws RestException
+	{
+		Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+		Optional<Integer> sequence = Optional.empty();
+		if (uuidId.isPresent())
+		{
+			if (Get.identifierService().hasUuid(uuidId.get()))
+			{
+				Optional<? extends ConceptChronology<?>> con = Get.conceptService().getOptionalConcept(uuidId.get());
+				sequence = Optional.of(con.get().getConceptSequence());
+			}
+			else
+			{
+				throw new RestException("The UUID '" + id + "' Is not known by the system");
+			}
+		}
+		else
+		{
+			sequence = NumericUtils.getInt(id);
+			if (sequence.isPresent() && sequence.get() < 0)
+			{
+				sequence = Optional.of(Get.identifierService().getConceptSequence(sequence.get()));
+			}
+		}
+		
+		if (!sequence.isPresent())
+		{
+			throw new RestException("The value '" + id + "' does not appear to be a UUID or a nid");
+		}
+		
+		return sequence.get();
 	}
 }
