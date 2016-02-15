@@ -29,10 +29,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
-import gov.vha.isaac.ochre.model.concept.ConceptChronologyImpl;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -64,11 +65,13 @@ public class ConceptAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.conceptVersionComponent + "{id}")
+	@Path(RestPaths.versionComponent + "{id}")
 	public RestConceptVersion getConceptVersion(@PathParam("id") String id, @QueryParam("expand") String expand, 
 		@QueryParam("stated") @DefaultValue("true") String stated) throws RestException
 	{
-		ConceptChronologyImpl concept = findConceptChronology(id);
+		@SuppressWarnings("rawtypes")
+		ConceptChronology concept = findConceptChronology(id);
+		@SuppressWarnings("unchecked")
 		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
 		if (cv.isPresent())
 		{
@@ -92,30 +95,46 @@ public class ConceptAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.conceptChronologyComponent + "{id}")
+	@Path(RestPaths.chronologyComponent + "{id}")
 	public RestConceptChronology getConceptChronology(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
 	{
-		ConceptChronologyImpl concept = findConceptChronology(id);
+		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
 		RequestInfo ri = RequestInfo.init(expand);
 		return new RestConceptChronology(concept, ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
 				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 		
 	}
 	
-	public static ConceptChronologyImpl findConceptChronology(String id) throws RestException
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException
 	{
 		ConceptService conceptService = Get.conceptService();
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
 		{
-			return (ConceptChronologyImpl) conceptService.getConcept(intId.get());
+			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService.getOptionalConcept(intId.get());
+			if (c.isPresent())
+			{
+				return c.get();
+			}
+			else
+			{
+				throw new RestException("id", id, "No concept is available with the specified id");
+			}
 		}
 		else
 		{
 			Optional<UUID> uuidId = UUIDUtil.getUUID(id);
 			if (uuidId.isPresent())
 			{
-				return (ConceptChronologyImpl) conceptService.getConcept(uuidId.get());
+				Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService.getOptionalConcept(uuidId.get());
+				if (c.isPresent())
+				{
+					return c.get();
+				}
+				else
+				{
+					throw new RestException("id", id, "No concept is available with the specified id");
+				}
 			}
 			else
 			{

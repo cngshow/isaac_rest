@@ -89,7 +89,14 @@ public class RestApi
 							.getLatestVersion(DescriptionSememeImpl.class, StampCoordinates.getDevelopmentLatest()));
 					if (ds.isPresent())
 					{
-						result.add(new RestSememeDescriptionVersion(ds.get().value()));
+						try
+						{
+							result.add(new RestSememeDescriptionVersion(ds.get().value(), true));
+						}
+						catch (Exception e)
+						{
+							throw new RuntimeException("Should have been impossible", e);
+						}
 					}
 				});
 

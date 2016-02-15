@@ -116,7 +116,7 @@ public class RestConceptChronology
 			}
 			else 
 			{
-				//TODO implement
+				//TODO implement latest version
 				throw new RuntimeException("Latest version not yet implemented");
 			}
 		}
@@ -129,7 +129,7 @@ public class RestConceptChronology
 					new Expandable(ExpandUtil.versionsAllExpandable,
 						RestPaths.conceptVersionsAppPathComponent + cc.getConceptSequence() + "/"),
 					new Expandable(ExpandUtil.versionsLatestOnlyExpandable,
-						RestPaths.conceptVersionComponent + cc.getConceptSequence() + "/"));
+						RestPaths.conceptVersionAppPathComponent + cc.getConceptSequence() + "/"));
 			}
 			else
 			{

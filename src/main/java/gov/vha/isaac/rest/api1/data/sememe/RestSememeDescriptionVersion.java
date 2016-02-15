@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -64,9 +65,9 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		//for Jaxb
 	}
 	
-	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv)
+	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology) throws RestException
 	{
-		super(dsv);
+		super(dsv, includeChronology);
 		caseSignificanceConceptSequence = dsv.getCaseSignificanceConceptSequence();
 		languageConceptSequence = dsv.getLanguageConceptSequence();
 		text = dsv.getText();

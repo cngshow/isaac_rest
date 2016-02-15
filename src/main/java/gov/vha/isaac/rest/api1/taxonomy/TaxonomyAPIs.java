@@ -27,8 +27,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.tree.Tree;
-import gov.vha.isaac.ochre.model.concept.ConceptChronologyImpl;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -62,7 +62,7 @@ public class TaxonomyAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.conceptVersionComponent)
+	@Path(RestPaths.versionComponent)
 	public RestConceptVersion getConceptVersionTaxonomy(
 			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
 			@QueryParam("id") @DefaultValue("cc0b2455-f546-48fa-90e8-e214cc8478d6") String id,
@@ -71,7 +71,9 @@ public class TaxonomyAPIs
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth, 
 			@QueryParam("expand") String expand) throws RestException
 	{
-		ConceptChronologyImpl concept = ConceptAPIs.findConceptChronology(id);
+		@SuppressWarnings("rawtypes")
+		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);
+		@SuppressWarnings("unchecked")
 		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
 		if (cv.isPresent())
 		{
@@ -101,7 +103,8 @@ public class TaxonomyAPIs
 	{
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
-			ConceptChronologyImpl childConcept;
+			@SuppressWarnings("rawtypes")
+			ConceptChronology childConcept;
 			try
 			{
 				childConcept = ConceptAPIs.findConceptChronology(childSequence + "");
@@ -110,6 +113,7 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
+			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
 			{
@@ -128,7 +132,8 @@ public class TaxonomyAPIs
 	{
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
 		{
-			ConceptChronologyImpl parentConceptChronlogy;
+			@SuppressWarnings("rawtypes")
+			ConceptChronology parentConceptChronlogy;
 			try
 			{
 				parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
@@ -137,6 +142,7 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
+			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
 			{

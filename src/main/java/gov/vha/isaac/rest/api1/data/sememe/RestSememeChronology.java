@@ -18,11 +18,19 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
+import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
@@ -64,17 +72,55 @@ public class RestSememeChronology
 	@XmlElement
 	RestIdentifiedObject identifiers;
 	
+	/**
+	 * The list of sememe versions.  Depending on the expand parameter, may be empty, the latest only, or all versions.
+	 */
+	@XmlElement
+	List<RestSememeVersion> versions;
+	
 	protected RestSememeChronology()
 	{
 		//For Jaxb
 	}
 
-	@SuppressWarnings("rawtypes") 
-	public RestSememeChronology(SememeVersion sv)
+	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion) throws RestException
 	{
-		identifiers = new RestIdentifiedObject(sv.getChronology().getUuidList());
-		sememeSequence = sv.getSememeSequence();
-		assemblageSequence = sv.getAssemblageSequence();
-		referencedComponentNid = sv.getReferencedComponentNid();
+		identifiers = new RestIdentifiedObject(sc.getUuidList());
+		sememeSequence = sc.getSememeSequence();
+		assemblageSequence = sc.getAssemblageSequence();
+		referencedComponentNid = sc.getReferencedComponentNid();
+		if (includeAllVersions || includeLatestVersion)
+		{
+			expandables = null;
+			versions = new ArrayList<>();
+			if (includeAllVersions)
+			{
+				for (SememeVersion<?> sv : sc.getVersionList())
+				{
+					versions.add(RestSememeVersion.buildRestSememeVersion(sv, false));
+				}
+			}
+			else if (includeLatestVersion)
+			{
+				//TODO implement latest version
+				throw new RuntimeException("Latest version not yet implemented");
+			}
+		}
+		else
+		{
+			versions = null;
+			if (RequestInfo.get().returnExpandableLinks())
+			{
+				expandables = new Expandables(
+						new Expandable(ExpandUtil.versionsAllExpandable, 
+								RestPaths.sememeVersionsAppPathComponent + sc.getSememeSequence() + "/"), 
+						new Expandable(ExpandUtil.versionsLatestOnlyExpandable, 
+								RestPaths.sememeVersionAppPathComponent + sc.getSememeSequence() + "/"));
+			}
+			else
+			{
+				expandables = null;
+			}
+		}
 	}
 }
