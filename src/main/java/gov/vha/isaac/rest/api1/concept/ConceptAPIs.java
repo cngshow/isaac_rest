@@ -30,6 +30,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -61,6 +63,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 public class ConceptAPIs
 {
 	private Set<Integer> allDescriptionAssemblageTypes = null;
+	private static Logger log = LogManager.getLogger();
 	
 	/**
 	 * Returns a single version of a concept.
@@ -171,7 +174,14 @@ public class ConceptAPIs
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up
-			result.add((RestSememeDescriptionVersion) d);
+			if (!(d instanceof RestSememeDescriptionVersion))
+			{
+				log.warn("SememeAPIs.get(...) didn't filter properly!  Is the DB broken again?");
+			}
+			else
+			{
+				result.add((RestSememeDescriptionVersion) d);
+			}
 		}
 		return result;
 	}
