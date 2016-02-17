@@ -15,3 +15,5 @@ with a current version of JAX-RS.  Issues with Array type support (due to old ve
 
 - WebLogic - Better than WildFly - but still issues with using an old version of JAX-RS.  See commit history for (unsuccessful) attempts
 to upgrade it. 
+
+- To run in Eclipse, set a system property called -DisaacDatabaseLocation pointing to the location of the .data file. For example, on my system the path is -DisaacDatabaseLocation=c:\temp\database\vhat-2016.01.07-1.0-SNAPSHOT-all.data. In Eclipse, put this in the VM Argument tab under the Run Configurations menu.
