@@ -28,32 +28,10 @@ import gov.vha.isaac.ochre.api.component.sememe.version.LongSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeArray;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeBoolean;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeByteArray;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeDouble;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeFloat;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeInteger;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeLong;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeSequence;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeDouble;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeFloat;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 
 /**
  * 
@@ -113,51 +91,10 @@ public class RestDynamicSememeVersion extends RestSememeVersion
 			List<RestDynamicSememeData> translatedData = new ArrayList<>();
 			for (int i = 0; i < data.length; i++)
 			{
-				translatedData.add(translate(i, data[i]));
+				translatedData.add(RestDynamicSememeData.translate(i, data[i]));
 			}
 			return translatedData;
 		}
 		return null;
-	}
-	
-	private static RestDynamicSememeData translate(Integer columnNumber, DynamicSememeData data)
-	{
-		if (data == null)
-		{
-			return null;
-		}
-		switch (data.getDynamicSememeDataType())
-		{
-			case ARRAY:
-				List<RestDynamicSememeData> nested = new ArrayList<>();
-				for (DynamicSememeData nestedDataItem : ((DynamicSememeArray<?>)data).getDataArray())
-				{
-					nested.add(translate(null, nestedDataItem));
-				}
-				return new RestDynamicSememeArray(columnNumber, nested.toArray(new RestDynamicSememeData[nested.size()]));
-			case BOOLEAN:
-				return new RestDynamicSememeBoolean(columnNumber, ((DynamicSememeBoolean)data).getDataBoolean());
-			case BYTEARRAY:
-				return new RestDynamicSememeByteArray(columnNumber, ((DynamicSememeByteArray)data).getDataByteArray());
-			case DOUBLE:
-				return new RestDynamicSememeDouble(columnNumber, ((DynamicSememeDouble)data).getDataDouble());
-			case FLOAT:
-				return new RestDynamicSememeFloat(columnNumber, ((DynamicSememeFloat)data).getDataFloat());
-			case INTEGER:
-				return new RestDynamicSememeInteger(columnNumber, ((DynamicSememeInteger)data).getDataInteger());
-			case LONG:
-				return new RestDynamicSememeLong(columnNumber, ((DynamicSememeLong)data).getDataLong());
-			case NID:
-				return new RestDynamicSememeNid(columnNumber, ((DynamicSememeNid)data).getDataNid());
-			case SEQUENCE:
-				return new RestDynamicSememeSequence(columnNumber, ((DynamicSememeSequence)data).getDataSequence());
-			case STRING:
-				return new RestDynamicSememeString(columnNumber, ((DynamicSememeString)data).getDataString());
-			case UUID:
-				return new RestDynamicSememeUUID(columnNumber, ((DynamicSememeUUID)data).getDataUUID());
-			case POLYMORPHIC: case UNKNOWN:
-			default :
-				throw new RuntimeException("Programmer error");
-		}
 	}
 }

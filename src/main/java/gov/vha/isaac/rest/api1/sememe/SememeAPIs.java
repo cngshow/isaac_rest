@@ -43,10 +43,12 @@ import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
@@ -166,7 +168,7 @@ public class SememeAPIs
 		RequestInfo ri = RequestInfo.init(expand);
 		
 		HashSet<Integer> temp = new HashSet<>();
-		temp.add(convertToSequence(id));
+		temp.add(convertToConceptSequence(id));
 		
 		//we don't have a referenced component - our id is assemblage
 		return get(null, temp, ri.shouldExpand(ExpandUtil.chronologyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
@@ -195,10 +197,40 @@ public class SememeAPIs
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
 		for (String a : assemblage)
 		{
-			allowedAssemblages.add(convertToSequence(a));
+			allowedAssemblages.add(convertToConceptSequence(a));
 		}
 		
 		return get(id, allowedAssemblages, ri.shouldExpand(ExpandUtil.chronologyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+	}
+	
+
+	/**
+	 * Return the full description of a particular sememe - including its intended use, the types of any data columns that will be attached, etc.
+	 * @param id - The UUID, nid or concept sequence of the concept that represents the sememe assemblage.
+	 * @return - the full description
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.sememeDefinitionComponent + "{id}")
+	public RestDynamicSememeDefinition getSememeDefinition(@PathParam("id") String id) throws RestException
+	{
+		int conceptSequence = convertToConceptSequence(id);
+		if (DynamicSememeUsageDescriptionImpl.isDynamicSememe(conceptSequence))
+		{
+			return new RestDynamicSememeDefinition(DynamicSememeUsageDescriptionImpl.read(conceptSequence));
+		}
+		else
+		{
+			//Not annotated as a dynamic sememe.  We have to find a real value to determine if this is used as a static sememe.
+			//TODO someday, we will fix the underlying APIs to allow us to know the static sememe typing up front....
+			Optional<SememeChronology<? extends SememeVersion<?>>> sc = Get.sememeService().getSememesFromAssemblage(conceptSequence).findAny();
+			if (sc.isPresent())
+			{
+				return new RestDynamicSememeDefinition(DynamicSememeUsageDescriptionImpl.mockOrRead(sc.get()));
+			}
+		}
+		throw new RestException("The specified concept identifier is not configured as a dynamic sememe, and it is not used as a static sememe");
 	}
 	
 	/**
@@ -280,9 +312,9 @@ public class SememeAPIs
 		return results;
 	}
 	
-	public static int convertToSequence(String id) throws RestException
+	public static int convertToConceptSequence(String conceptId) throws RestException
 	{
-		Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+		Optional<UUID> uuidId = UUIDUtil.getUUID(conceptId);
 		Optional<Integer> sequence = Optional.empty();
 		if (uuidId.isPresent())
 		{
@@ -293,12 +325,12 @@ public class SememeAPIs
 			}
 			else
 			{
-				throw new RestException("The UUID '" + id + "' Is not known by the system");
+				throw new RestException("The UUID '" + conceptId + "' Is not known by the system");
 			}
 		}
 		else
 		{
-			sequence = NumericUtils.getInt(id);
+			sequence = NumericUtils.getInt(conceptId);
 			if (sequence.isPresent() && sequence.get() < 0)
 			{
 				sequence = Optional.of(Get.identifierService().getConceptSequence(sequence.get()));
@@ -307,7 +339,7 @@ public class SememeAPIs
 		
 		if (!sequence.isPresent())
 		{
-			throw new RestException("The value '" + id + "' does not appear to be a UUID or a nid");
+			throw new RestException("The value '" + conceptId + "' does not appear to be a UUID or a nid");
 		}
 		
 		return sequence.get();
