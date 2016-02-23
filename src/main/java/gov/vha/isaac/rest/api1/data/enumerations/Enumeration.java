@@ -53,11 +53,16 @@ public abstract class Enumeration
 	 * The identifier of this enumeration.  This would be passed back to a call that requested an enum type.
 	 */
 	@XmlElement
-	int id;
+	int enumId;
 	
 	protected Enumeration(String name, int id)
 	{
 		this.name = name;
-		this.id = id;
+		this.enumId = id;
+	}
+	
+	protected Enumeration()
+	{
+		//for jaxb
 	}
 }

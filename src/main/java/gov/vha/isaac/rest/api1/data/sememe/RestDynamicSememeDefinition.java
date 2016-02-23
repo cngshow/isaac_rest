@@ -34,6 +34,11 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 @XmlRootElement
 public class RestDynamicSememeDefinition 
 {
+	protected RestDynamicSememeDefinition()
+	{
+		//for jaxb
+	}
+	
 	public RestDynamicSememeDefinition(DynamicSememeUsageDescription dsud)
 	{
 		this.assemblageConceptId = dsud.getDynamicSememeUsageDescriptorSequence();
@@ -46,7 +51,7 @@ public class RestDynamicSememeDefinition
 		int i = 0;
 		for (DynamicSememeColumnInfo dsci : dsud.getColumnInfo())
 		{
-			this.columnInfo[i] = new RestDynamicSememeColumnInfo(dsci);
+			this.columnInfo[i++] = new RestDynamicSememeColumnInfo(dsci);
 		}
 	}
 
@@ -76,8 +81,7 @@ public class RestDynamicSememeDefinition
 	 * 
 	 * If there is a restriction, the nid set for the referenced component in an instance of this sememe must be of the type listed here.
 	 * 
-	 * See {@value gov.vha.isaac.rest.api1.RestPaths#appPathComponent}{@value gov.vha.isaac.rest.api1.RestPaths#apiVersionComponent}{@value gov.vha.isaac.rest.api1.RestPaths#enumerationRestObjectChronologyTypeComponent}
-	 * for a list of potential object types returned.
+	 * See rest/1/enumeration/restObjectChronologyType for a list of potential object types returned.
 	 * 
 	 */
 	@XmlElement
@@ -90,10 +94,8 @@ public class RestDynamicSememeDefinition
 	 * 
 	 * This is only applicable when {@link #referencedComponentTypeRestriction} returns {@link RestObjectChronologyType#SEMEME}
 	 * 
-	 * See {@value gov.vha.isaac.rest.api1.RestPaths#appPathComponent}{@value gov.vha.isaac.rest.api1.RestPaths#apiVersionComponent}{@value gov.vha.isaac.rest.api1.RestPaths#enumerationRestSememeTypeComponent}
-	 * for a list of potential object types returned.
+	 * See rest/1/enumeration/restSememeType for a list of potential object types returned.
 	 */
 	@XmlElement
 	RestSememeType referencedComponentTypeSubRestriction;
-
 }

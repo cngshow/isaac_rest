@@ -30,6 +30,11 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 @XmlRootElement
 public class RestDynamicSememeDataType extends Enumeration
 {
+	protected RestDynamicSememeDataType()
+	{
+		//for jaxb
+	}
+	
 	public RestDynamicSememeDataType(DynamicSememeDataType dt)
 	{
 		super(dt.getDisplayName(), dt.ordinal());

@@ -32,6 +32,11 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 @XmlRootElement
 public class RestDynamicSememeValidatorType extends Enumeration
 {
+	protected RestDynamicSememeValidatorType()
+	{
+		//for jaxb
+	}
+	
 	public RestDynamicSememeValidatorType(DynamicSememeValidatorType vt)
 	{
 		super(vt.getDisplayName(), vt.ordinal());

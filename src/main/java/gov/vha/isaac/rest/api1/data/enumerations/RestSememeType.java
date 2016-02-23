@@ -33,6 +33,11 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 @XmlRootElement
 public class RestSememeType extends Enumeration
 {
+	protected RestSememeType()
+	{
+		//for jaxb
+	}
+	
 	public RestSememeType(SememeType st)
 	{
 		super(st.toString(), st.ordinal());

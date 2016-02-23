@@ -34,6 +34,11 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
 @XmlRootElement
 public class RestDynamicSememeColumnInfo
 {
+	protected RestDynamicSememeColumnInfo()
+	{
+		//for jaxb
+	}
+	
 	public RestDynamicSememeColumnInfo(DynamicSememeColumnInfo dsci)
 	{
 		this.columnConceptSequence = Get.identifierService().getConceptSequenceForUuids(dsci.getColumnDescriptionConcept());
@@ -87,8 +92,7 @@ public class RestDynamicSememeColumnInfo
 	
 	/**
 	 * The type of data that will be found in this column.  String, Integer, etc.  See 
-	 * {@value gov.vha.isaac.rest.api1.RestPaths#appPathComponent}{@value gov.vha.isaac.rest.api1.RestPaths#apiVersionComponent}{@value gov.vha.isaac.rest.api1.RestPaths#enumerationRestDynamicSememeDataTypeComponent}
-	 * for a list of all of the possible data types.
+	 * rest/1/enumeration/restDynamicSememeDataType for a list of all of the possible data types.
 	 */
 	@XmlElement
 	RestDynamicSememeDataType columnDataType;
@@ -108,8 +112,7 @@ public class RestDynamicSememeColumnInfo
 	
 	/**
 	 * The validators types that are attached to this sememe (if any).  Interval, <, etc.  See 
-	 * {@value gov.vha.isaac.rest.api1.RestPaths#appPathComponent}{@value gov.vha.isaac.rest.api1.RestPaths#apiVersionComponent}{@value gov.vha.isaac.rest.api1.RestPaths#enumerationRestDynamicSememeValidatorTypeComponent}
-	 * for a list of all possible validator types.
+	 * rest/1/enumeration/restDynamicSememeValidatorType for a list of all possible validator types.
 	 */
 	@XmlElement
 	RestDynamicSememeValidatorType[] columnValidatorTypes;

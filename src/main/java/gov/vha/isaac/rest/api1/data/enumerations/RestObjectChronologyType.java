@@ -32,6 +32,11 @@ import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 @XmlRootElement
 public class RestObjectChronologyType extends Enumeration
 {
+	protected RestObjectChronologyType()
+	{
+		//for jaxb
+	}
+	
 	public RestObjectChronologyType(ObjectChronologyType oct)
 	{
 		super(oct.toString(), oct.ordinal());
