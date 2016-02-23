@@ -1,0 +1,63 @@
+/**
+ * Copyright Notice
+ *
+ * This is a work of the U.S. Government and is not subject to copyright
+ * protection in the United States. Foreign copyrights may apply.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package gov.vha.isaac.rest.api1.data.enumerations;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
+
+/**
+ * 
+ * {@link Enumeration}
+ *
+ * Note that this is an abstract base class.  The actual returned type will be one of the
+ * concrete subtype classes, such as {@link RestDynamicSememeValidatorType} or {@link RestDynamicSememeDataType}
+ *
+ * @see RestSememeDescriptionVersion
+ * @see RestDynamicSememeVersion
+ * @see RestObjectChronologyType
+ * @see RestSememeType
+ * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ */
+@XmlSeeAlso ({RestDynamicSememeValidatorType.class, RestDynamicSememeDataType.class, RestObjectChronologyType.class, RestSememeType.class})
+@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
+@XmlRootElement
+public abstract class Enumeration
+{
+	/**
+	 * The name of this enumeration type
+	 */
+	@XmlElement
+	String name;
+	
+	/**
+	 * The identifier of this enumeration.  This would be passed back to a call that requested an enum type.
+	 */
+	@XmlElement
+	int id;
+	
+	protected Enumeration(String name, int id)
+	{
+		this.name = name;
+		this.id = id;
+	}
+}
