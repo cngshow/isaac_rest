@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.ComponentNidSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.LongSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
@@ -158,6 +159,8 @@ public abstract class RestSememeVersion
 			case STRING:
 				return new RestDynamicSememeVersion((StringSememe<?>) sv, includeChronology, expandNested);
 			case LOGIC_GRAPH:
+				// TODO maybe should not be passing stated here
+				return new RestSememeLogicGraphVersion((LogicGraphSememe<?>) sv, includeChronology, expandNested, true);
 			case RELATIONSHIP_ADAPTOR:
 			case UNKNOWN:
 			default :

@@ -67,4 +67,5 @@ public class RestPaths
 	
 	public static final String systemPathComponent = apiVersionComponent + "system/";
 
+	public static final String logicGraphPathComponent = apiVersionComponent + "logicGraph/";
 }

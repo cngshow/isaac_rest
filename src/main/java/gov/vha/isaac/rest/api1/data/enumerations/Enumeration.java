@@ -41,7 +41,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 @XmlSeeAlso ({RestDynamicSememeValidatorType.class, RestDynamicSememeDataType.class, RestObjectChronologyType.class, RestSememeType.class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
-public abstract class Enumeration
+public abstract class Enumeration implements Comparable<Enumeration>
 {
 	/**
 	 * The name of this enumeration type
@@ -64,5 +64,18 @@ public abstract class Enumeration
 	protected Enumeration()
 	{
 		//for jaxb
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(Enumeration o) {
+		return enumId - o.enumId;
+	}
+	
+	@Override
+	public String toString() {
+		return name;
 	}
 }
