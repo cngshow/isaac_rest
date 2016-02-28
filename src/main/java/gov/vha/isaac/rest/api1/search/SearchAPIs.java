@@ -36,6 +36,10 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.LongSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.index.SearchResult;
 import gov.vha.isaac.ochre.api.util.Interval;
@@ -44,7 +48,6 @@ import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.NumberUtilities;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
-import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
@@ -138,22 +141,55 @@ public class SearchAPIs
 		return processSearchResults(LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null));
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private List<RestSearchResult> processSearchResults(List<SearchResult> searchResults)
 	{
 		ArrayList<RestSearchResult> temp = new ArrayList<>();
 		for (SearchResult sr : searchResults)
 		{
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<DescriptionSememeImpl>> text = ((SememeChronology) Get.sememeService().getSememe(sr.getNid()))
-					.getLatestVersion(DescriptionSememeImpl.class, StampCoordinates.getDevelopmentLatest());
+			SememeChronology sc = ((SememeChronology) Get.sememeService().getSememe(sr.getNid()));
 			
-			if (text.isPresent())
+			switch(sc.getSememeType())
 			{
-				temp.add(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore()));
-			}
-			else
-			{
-				temp.add(new RestSearchResult(sr.getNid(), "", sr.getScore()));
+				case DESCRIPTION:
+					Optional<LatestVersion<DescriptionSememe>> text = sc.getLatestVersion(DescriptionSememe.class, 
+							StampCoordinates.getDevelopmentLatest());
+					if (text.isPresent())
+					{
+						temp.add(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore()));
+					}
+					break;
+				case LONG:
+					Optional<LatestVersion<LongSememe>> longSememe = sc.getLatestVersion(LongSememe.class, 
+							StampCoordinates.getDevelopmentLatest());
+					if (longSememe.isPresent())
+					{
+						temp.add(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore()));
+					}
+					break;
+				case STRING:
+					Optional<LatestVersion<StringSememe>> stringSememe = sc.getLatestVersion(StringSememe.class, 
+							StampCoordinates.getDevelopmentLatest());
+					if (stringSememe.isPresent())
+					{
+						temp.add(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore()));
+					}
+					break;
+				case DYNAMIC:
+					Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, StampCoordinates.getDevelopmentLatest());
+					if (ds.isPresent())
+					{
+						temp.add(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore()));
+					}
+					break;
+				//No point in putting details on these, they will be exactly what was searched for
+				case COMPONENT_NID: case LOGIC_GRAPH:
+				//Should never match on these, just let them fall through
+				case UNKNOWN: case MEMBER: case RELATIONSHIP_ADAPTOR:
+				default :
+					temp.add(new RestSearchResult(sr.getNid(), "", sr.getScore()));
+					break;
+				
 			}
 		}
 		return temp;
@@ -215,7 +251,7 @@ public class SearchAPIs
 	 * If the query is a mathematical interval - [4,6] or (5,10] or [4,] it will be handled as a numeric interval.  
 	 * If the query is not numeric, and is not a valid interval, it will be treated as a string and parsed by the Lucene Query Parser: 
 	 * http://lucene.apache.org/core/5_3_1/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Overview
-	 * @param treatAsId Treat the query as a string search, even if it is parseable as a number.  This is useful because 
+	 * @param treatAsString Treat the query as a string search, even if it is parseable as a number.  This is useful because 
 	 * 'id' type sememes in the data model are always represented as a string, even if they are numeric.
 	 * @param sememeAssemblageSequence (optional) restrict the search to only match on members of the provided sememe assemblage identifier(s).
 	 * This should be the sequence number of the concept that defines the sememe.  This parameter can be passed multiple times to pass
@@ -235,7 +271,7 @@ public class SearchAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememesComponent)
 	public List<RestSearchResult> sememeSearch(@QueryParam("query") String query,
-			@QueryParam("treatAsId") Boolean treatAsId,
+			@QueryParam("treatAsString") Boolean treatAsString,
 			@QueryParam("sememeAssemblageSequence") Set<Integer> sememeAssemblageSequence, 
 			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
 			@QueryParam("limit") @DefaultValue("10") int limit) throws RestException
@@ -246,7 +282,7 @@ public class SearchAPIs
 			throw new RestException("The query must contain at least one character");
 		}
 				
-		if (treatAsId != null && treatAsId.booleanValue())
+		if (treatAsString != null && treatAsString.booleanValue())
 		{
 			//We want to send in this query text as a string, even if it is parseable as a number, because 
 			//all "IDs" are stored as string sememes for consistency.
