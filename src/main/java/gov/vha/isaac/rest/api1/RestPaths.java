@@ -35,6 +35,7 @@ public class RestPaths
 	public static final String idTranslateComponent = "translate/";
 	public static final String idTypesComponent = "types/";
 	public static final String descriptionsComponent = "descriptions/";
+	public static final String sememesComponent = "sememes/";
 	public static final String prefixComponent = "prefix/";
 	public static final String byAssemblageComponent = "byAssemblage/";
 	public static final String byReferencedComponentComponent = "byReferencedComponent/";

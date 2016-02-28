@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.search;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -28,7 +29,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -37,12 +38,16 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.index.SearchResult;
+import gov.vha.isaac.ochre.api.util.Interval;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.impl.utility.NumberUtilities;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
+import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
@@ -205,5 +210,122 @@ public class SearchAPIs
 		}
 	}
 	
-	//TODO implement sememe search APIS
+	/**
+	 * @param query The query to be evaluated.  If the query is numeric (int, float, long, double) , it will be treated as a numeric search.
+	 * If the query is a mathematical interval - [4,6] or (5,10] or [4,] it will be handled as a numeric interval.  
+	 * If the query is not numeric, and is not a valid interval, it will be treated as a string and parsed by the Lucene Query Parser: 
+	 * http://lucene.apache.org/core/5_3_1/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Overview
+	 * @param treatAsId Treat the query as a string search, even if it is parseable as a number.  This is useful because 
+	 * 'id' type sememes in the data model are always represented as a string, even if they are numeric.
+	 * @param sememeAssemblageSequence (optional) restrict the search to only match on members of the provided sememe assemblage identifier(s).
+	 * This should be the sequence number of the concept that defines the sememe.  This parameter can be passed multiple times to pass
+	 *  multiple sememe assemblage identifiers.
+	 * @param dynamicSememeColumns (optional) limit the search to the specified columns of attached data.  May ONLY be provided if 
+	 * ONE and only one sememeAssemblageSequence is provided.  May not be provided if 0 or more than 1 sememeAssemblageSequence values are provided.
+	 * This parameter can be passed multiple times to pass multiple column references.  This should be a 0 indexed column number - such as 
+	 * 0 or 4.  Information about the columns for a particular sememe (and their index numbers) can be found via the 
+	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
+	 * has multiple columns of data.
+	 * @param limit The maximum number of results to return
+	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
+	 * if the sememe that matched is not active on the default path.
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.sememesComponent)
+	public List<RestSearchResult> sememeSearch(@QueryParam("query") String query,
+			@QueryParam("treatAsId") Boolean treatAsId,
+			@QueryParam("sememeAssemblageSequence") Set<Integer> sememeAssemblageSequence, 
+			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
+			@QueryParam("limit") @DefaultValue("10") int limit) throws RestException
+	{
+		String searchString = query.trim();
+		if (StringUtils.isBlank(searchString))
+		{
+			throw new RestException("The query must contain at least one character");
+		}
+				
+		if (treatAsId != null && treatAsId.booleanValue())
+		{
+			//We want to send in this query text as a string, even if it is parseable as a number, because 
+			//all "IDs" are stored as string sememes for consistency.
+			return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+					.query(new DynamicSememeStringImpl(searchString),false, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), 
+							limit, null));
+		}
+		else
+		{
+			//Try to determine the most sensible way to search.
+			//Is it a number?
+			try
+			{
+				return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
+								toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), limit, null));
+			}
+			catch (NumberFormatException e)
+			{
+				//Not a number.  Is it an interval?
+				try
+				{
+					Interval interval = new Interval(searchString);
+					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
+									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
+									toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), limit, null));
+				}
+				catch (NumberFormatException e1)
+				{
+					//nope	Run it as a string search.
+					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+							.query(new DynamicSememeStringImpl(searchString),false, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), 
+									limit, null));
+				}
+			}
+		}
+	}
+	
+	/**
+	 * @param nid The nid to search for. Note that this does NOT locate sememes that reference a component as part of the standard 
+	 * sememe triplet - (sememeID / Assemblage ID / Referenced Component Id) - those lookups are handled by the  sememe/byReferencedComponent/{id}
+	 * API or sememe/byAssemblage/{id} API.  This search locates sememe instances that have a DATA COLUMN that make reference to a sememe, 
+	 * such as a ComponentNidSememe, or a Logic Graph.  
+	 * An example usage of this API would be to locate the concept that contains a graph that references another concept.  The input value must 
+	 * be a nid, sequences and UUIDs are not supported for this operation.
+	 * @param sememeAssemblageSequence (optional) restrict the search to only match on members of the provided sememe assemblage identifier(s).
+	 * This should be the sequence number of the concept that defines the sememe.  This parameter can be passed multiple times to pass
+	 *  multiple sememe assemblage identifiers.  An example usage would be to restrict the search to static logic graphs, as opposed to 
+	 *  inferred logic graphs.  To restrict to stated, you would pass the nid for the 'EL++ stated form assemblage (ISAAC)' concept
+	 * @param dynamicSememeColumns (optional) limit the search to the specified columns of attached data.  May ONLY be provided if 
+	 * ONE and only one sememeAssemblageSequence is provided.  May not be provided if 0 or more than 1 sememeAssemblageSequence values are provided.
+	 * This parameter can be passed multiple times to pass multiple column references.  This should be a 0 indexed column number - such as 
+	 * 0 or 4.  Information about the columns for a particular sememe (and their index numbers) can be found via the 
+	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
+	 * has multiple columns of data.
+	 * @param limit The maximum number of results to return
+	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
+	 * if the sememe that matched is not active on the default path.
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.byReferencedComponentComponent)
+	public List<RestSearchResult> nidReferences(@QueryParam("nid") int nid,
+			@QueryParam("sememeAssemblageSequence") Set<Integer> sememeAssemblageSequence, 
+			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
+			@QueryParam("limit") @DefaultValue("10") int limit) throws RestException
+	{
+		return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+				.query(nid, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), limit, null));
+	}
+
+	private Integer[] toArray(Set<Integer> ints)
+	{
+		if (ints == null)
+		{
+			return null;
+		}
+		return ints.toArray(new Integer[ints.size()]);
+	}
 }
