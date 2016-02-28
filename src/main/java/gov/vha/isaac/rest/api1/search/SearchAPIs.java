@@ -30,6 +30,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -63,6 +65,8 @@ import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 @Path(RestPaths.searchPathComponent)
 public class SearchAPIs
 {
+	private static Logger log = LogManager.getLogger();
+	
 	/**
 	 * A simple search interface which is evaluated across all indexed descriptions in the terminology.   
 	 * @param query The query to be evaluated.  Will be parsed by the Lucene Query Parser: 
@@ -107,6 +111,7 @@ public class SearchAPIs
 			return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null));
 		}
 		
+		log.debug("Performing description serach for '" + query + "'");
 		return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, null));
 	}
 	
@@ -138,6 +143,7 @@ public class SearchAPIs
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
 		}
+		log.debug("Performing prefix search for '" + query + "'");
 		return processSearchResults(LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null));
 	}
 	
@@ -286,6 +292,7 @@ public class SearchAPIs
 		{
 			//We want to send in this query text as a string, even if it is parseable as a number, because 
 			//all "IDs" are stored as string sememes for consistency.
+			log.debug("Performing sememe search for '" + query + "' - treating it as a string");
 			return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 					.query(new DynamicSememeStringImpl(searchString),false, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), 
 							limit, null));
@@ -294,6 +301,8 @@ public class SearchAPIs
 		{
 			//Try to determine the most sensible way to search.
 			//Is it a number?
+			boolean wasNumber = true;
+			boolean wasInterval = true;
 			try
 			{
 				return processSearchResults(LookupService.get().getService(SememeIndexer.class)
@@ -302,6 +311,7 @@ public class SearchAPIs
 			}
 			catch (NumberFormatException e)
 			{
+				wasNumber = false;
 				//Not a number.  Is it an interval?
 				try
 				{
@@ -313,10 +323,26 @@ public class SearchAPIs
 				}
 				catch (NumberFormatException e1)
 				{
+					wasInterval = false;
 					//nope	Run it as a string search.
 					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 							.query(new DynamicSememeStringImpl(searchString),false, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), 
 									limit, null));
+				}
+			}
+			finally
+			{
+				if (wasNumber)
+				{
+					log.debug("Performed sememe search for '" + query + "' - treating it as a number");
+				}
+				else if (wasInterval)
+				{
+					log.debug("Performed sememe search for '" + query + "' - treating it as an interval");
+				}
+				else
+				{
+					log.debug("Performed sememe search for '" + query + "' - treating it as a string");
 				}
 			}
 		}
