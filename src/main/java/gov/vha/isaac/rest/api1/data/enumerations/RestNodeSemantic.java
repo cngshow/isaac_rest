@@ -19,11 +19,7 @@
 
 package gov.vha.isaac.rest.api1.data.enumerations;
 
-import java.util.UUID;
-
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
 
 /**
@@ -45,7 +41,7 @@ public class RestNodeSemantic extends Enumeration
 	{
 		super(st.toString(), st.ordinal());
 	}
-    
+
 	public static RestNodeSemantic[] getAll()
 	{
 		RestNodeSemantic[] result = new RestNodeSemantic[NodeSemantic.values().length];
