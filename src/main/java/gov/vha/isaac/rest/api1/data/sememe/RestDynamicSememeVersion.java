@@ -43,7 +43,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 public class RestDynamicSememeVersion extends RestSememeVersion
 {
 	/**
-	 * The data attached to this sememe instance (if any).  The //TODO definition of the DynamicSememe
+	 * The data attached to this sememe instance (if any).  The 'sememe/sememeDefinition/{id}'
 	 * can be read to determine the potential types and descriptions of these columns.
 	 */
 	@XmlElement
