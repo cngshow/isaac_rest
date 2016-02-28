@@ -27,6 +27,9 @@ public class ApplicationConfig extends Application implements ContainerLifecycle
 	private static final AtomicInteger startup = new AtomicInteger(1);
 	private static Logger log = LogManager.getLogger();
 	
+	//TODO implement convenience method to describe a object - concept, semeeme, etc
+	//TODO implement convenience methods for 'associations'
+	
 	public static void issacInit()
 	{
 		log.info("Rest Configuration Requested");
@@ -38,9 +41,6 @@ public class ApplicationConfig extends Application implements ContainerLifecycle
 			
 	
 			//TODO background thread this
-			//File dataStoreLocation = DBLocator.findDBFolder(new File("E:/EclipseWorkspaces/ISAAC2/ISAAC-fx-gui-pa/fx-gui-assembly/vhat-2016.01.07-1.0-SNAPSHOT-all.data"));
-			//File dataStoreLocation = DBLocator.findDBFolder(new File("E:/EclipseWorkspaces/ISAAC2/ISAAC-fx-gui-pa/fx-gui-assembly/snomed-20150731-1.0-SNAPSHOT-all.data"));
-			//File dataStoreLocation = DBLocator.findDBFolder(new File("/opt/weblogic/vhat-2016.01.07-1.0-SNAPSHOT-all.data"));
 			File dataStoreLocation = DBLocator.findDBFolder(new File(System.getProperty("isaacDatabaseLocation")));
 			
 			if (!dataStoreLocation.exists())
