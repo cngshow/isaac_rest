@@ -40,6 +40,9 @@ import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.RestId;
+import gov.vha.isaac.rest.api1.data.enumerations.IdType;
+import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 
@@ -51,18 +54,19 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 @Path(RestPaths.idPathComponent)
 public class IdAPIs
 {
-	public static enum IDType {uuid, nid, conceptSequence, sememeSequence, sctid, vuid};
 	private static Logger log = LogManager.getLogger();
 	
 	/**
 	 * Translate an ID from one type to another.  
 	 * TODO still need to define how to pass in a version parameter
 	 * @param id The id to translate
-	 * @param inputType - should be one of the types from the supportedTypes call.  Currently includes [uuid, nid, sequence, sctid, vuid]
+	 * @param inputType - should be one of the types from the supportedTypes call.  You can pass the name or enumId of the 
+	 * returned RestIdType object.  This will be something like [uuid, nid, conceptSequence, sememeSequence, sctid, vuid]
 	 * If not specified, selects the type as follows.  
 	 * UUIDs - if it is a correctly formatted UUID.  
 	 * If negative - a nid.  All other values are ambiguous, and the type must be input.  An error will be thrown.
-	 * @param outputType -  should be one of the types from the supportedTypes call.  Currently includes [uuid, nid, sequence, sctid, vuid].
+	 * @param outputType -  should be one of the types from the supportedTypes call.   You can pass the name or enumId of the 
+	 * returned RestIdType object.  Currently includes [uuid, nid, conceptSequence, sememeSequence, sctid, vuid].
 	 * Defaults to uuid.
 	 * @return the converted ID, if possible.  Otherwise, a RestException, if no translation is possible.  Note that for some id types, 
 	 * the translation may depend on the STAMP!
@@ -72,17 +76,17 @@ public class IdAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.idTranslateComponent + "{id}")  
-	public String translateId(@PathParam("id") String id, @QueryParam("inputType") String inputType, 
+	public RestId translateId(@PathParam("id") String id, @QueryParam("inputType") String inputType, 
 		@QueryParam("outputType") @DefaultValue("uuid") String outputType) throws RestException
 	{
-		IDType inputTypeFormat = read(inputType).orElse(IDType.uuid);
+		IdType inputTypeFormat = IdType.parse(inputType).orElse(IdType.UUID);
 		Optional<? extends ObjectChronology> object = Optional.empty();
 		switch (inputTypeFormat)
 		{
-			case vuid:
+			case VUID:
 				//TODO implement vuid translation
 				throw new RestException("vuid input type not yet supported");
-			case sctid:
+			case SCTID:
 				long l = NumericUtils.getLong(id).orElse(0l);
 				Optional<Integer> nid = Frills.getNidForSCTID(l);
 				if (nid.isPresent())
@@ -90,13 +94,13 @@ public class IdAPIs
 					object = Get.identifiedObjectService().getIdentifiedObjectChronology(nid.get());
 				}
 				break;
-			case conceptSequence:
+			case CONCEPT_SEQUENCE:
 				object = Get.conceptService().getOptionalConcept(NumericUtils.getInt(id).orElse(0));
 				break;
-			case sememeSequence:
+			case SEMEME_SEQUENCE:
 				object = Get.sememeService().getOptionalSememe(NumericUtils.getInt(id).orElse(0));
 				break;
-			case uuid: case nid:
+			case UUID: case NID:
 				//If not specified, we default it to uuid, even if it is a nid, so check if it is a nid
 				Optional<UUID> uuid = UUIDUtil.getUUID(id);
 				if (uuid.isPresent())
@@ -123,35 +127,35 @@ public class IdAPIs
 		
 		if (object.isPresent())
 		{
-			IDType outputTypeFormat = read(outputType).orElse(IDType.uuid);
+			IdType outputTypeFormat = IdType.parse(outputType).orElse(IdType.UUID);
 			switch (outputTypeFormat)
 			{
-				case nid:
-					return object.get().getNid() + "";
-				case sctid:
-					return "" + Frills.getSctId(object.get().getNid(), RequestInfo.get().getStampCoordinate()).
-						orElseThrow(() -> new RestException("No SCTID was found on the specified component"));
-				case conceptSequence:
+				case NID:
+					return new RestId(outputTypeFormat, object.get().getNid() + "");
+				case SCTID:
+					return new RestId(outputTypeFormat, "" + Frills.getSctId(object.get().getNid(), RequestInfo.get().getStampCoordinate()).
+						orElseThrow(() -> new RestException("No SCTID was found on the specified component")));
+				case CONCEPT_SEQUENCE:
 					if (object.get().getOchreObjectType() == OchreExternalizableObjectType.CONCEPT)
 					{
-						return ((ConceptChronology)object.get()).getConceptSequence() + "";
+						return new RestId(outputTypeFormat, ((ConceptChronology)object.get()).getConceptSequence() + "");
 					}
 					else
 					{
 						throw new RestException("The found object was of type " + object.get().getOchreObjectType() + " which cannot have a concept sequence");
 					}
-				case sememeSequence:
+				case SEMEME_SEQUENCE:
 					if (object.get().getOchreObjectType() == OchreExternalizableObjectType.SEMEME)
 					{
-						return ((SememeChronology)object.get()).getSememeSequence() + "";
+						return new RestId(outputTypeFormat, ((SememeChronology)object.get()).getSememeSequence() + "");
 					}
 					else
 					{
 						throw new RestException("The found object was of type " + object.get().getOchreObjectType() + " which cannot have a sememe sequence");
 					}
-				case uuid:
-					return object.get().getPrimordialUuid().toString();
-				case vuid:
+				case UUID:
+					return new RestId(outputTypeFormat, object.get().getPrimordialUuid().toString());
+				case VUID:
 					//TODO implement vuid translation
 					throw new RestException("Not yet implemented");
 
@@ -168,34 +172,13 @@ public class IdAPIs
 	
 
 	/**
-	 * @return The translation types supported by this server, suitable for use in the translate call, as either an inputType or an outputType
-	 * @throws RestException
+	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.idTypesComponent)  
-	public String[] getSupportedTypes() throws RestException
+	public RestSupportedIdType[] getSupportedTypes() throws RestException
 	{
-		String[] temp = new String[IDType.values().length];
-		for (IDType idt : IDType.values())
-		{
-			temp[idt.ordinal()] = idt.name();
-		}
-		return temp;
-	}
-	
-	private Optional<IDType> read(String input)
-	{
-		if (StringUtils.isNotBlank(input))
-		{
-			for (IDType idt : IDType.values())
-			{
-				if (input.trim().equalsIgnoreCase(idt.name()))
-				{
-					return Optional.of(idt);
-				}
-			}
-		}
-		return Optional.empty();
+		return RestSupportedIdType.getAll();
 	}
 }
