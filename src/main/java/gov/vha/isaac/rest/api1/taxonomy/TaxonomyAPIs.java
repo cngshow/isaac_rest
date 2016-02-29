@@ -65,7 +65,7 @@ public class TaxonomyAPIs
 	@Path(RestPaths.versionComponent)
 	public RestConceptVersion getConceptVersionTaxonomy(
 			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
-			@QueryParam("id") @DefaultValue("cc0b2455-f546-48fa-90e8-e214cc8478d6") String id,
+			@QueryParam("id") @DefaultValue("7c21b6c5-cf11-5af9-893b-743f004c97f5") String id,
 			@QueryParam("stated") @DefaultValue("true") String stated, 
 			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight, 
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth, 
