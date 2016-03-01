@@ -20,17 +20,18 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
@@ -40,75 +41,73 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
  * {@link RestLogicNode}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- *
+ * 
+ * The abstract base class of all REST logic graph nodes
  */
+@XmlSeeAlso({
+	RestConceptNode.class,
+	RestConnectorNode.class,
+	RestUntypedConnectorNode.class,
+	RestTypedConnectorNode.class,
+	RestFeatureNode.class,
+	RestRoleNode.class,
+	RestLiteralNode.class,
+	RestLiteralNodeBoolean.class,
+	RestLiteralNodeInteger.class,
+	RestLiteralNodeFloat.class,
+	RestLiteralNodeString.class,
+	RestLiteralNodeInstant.class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
 
-	@XmlElement
-	short nodeIndex;
-
+	/**
+	 * The UUID of the logic node itself (not of any referenced or associated component or concept)
+	 */
 	@XmlElement
 	UUID nodeUuid;
-	
+
+	/**
+	 * The list of child RestLogicNode instances contained within this RestLogicNode.
+	 * A RestTypedConnctorNode may have exactly one child node
+	 * A literal node may not have any child nodes at all
+	 * Others may have one or more child nodes
+	 */
 	@XmlElement
 	List<RestLogicNode> children;
-	
+
+	/**
+	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
+	 */
 	@XmlElement
 	RestNodeSemantic nodeSemantic;
-	
+
 	protected RestLogicNode()
 	{
 		//For jaxb
 	}
-	
+
 	private static String getClassBaseName(Object obj) {
 		return obj.getClass().getSimpleName().replaceAll(".*\\.", "");
 	}
-	public RestLogicNode(AbstractLogicNode logicNode) {
-		nodeUuid = logicNode.getNodeUuidSetForDepth(1).first();
-		this.nodeSemantic = new RestNodeSemantic(logicNode.getNodeSemantic());
-		this.nodeIndex = logicNode.getNodeIndex();
-		this.children = new ArrayList<RestLogicNode>(logicNode.getChildren().length);
-		
-		AbstractLogicNode[] childNodes = logicNode.getChildren();
-		LOG.debug("Constructing " + this.nodeSemantic + " " + getClassBaseName(this) + " from " + logicNode + " with {} child nodes", childNodes.length);			
-		for (int i = 0; i < childNodes.length; ++i) {
-			LOG.debug(childNodes[i].getNodeSemantic() + " node #" + i + 1 + " of " + childNodes.length + "(node index=" + childNodes[i].getNodeIndex() + "): class=" + getClassBaseName(childNodes[i]) + ", " + childNodes[i]);
+	public RestLogicNode(AbstractLogicNode passedLogicNode) {
+		nodeUuid = passedLogicNode.getNodeUuidSetForDepth(1).first();
+		this.nodeSemantic = new RestNodeSemantic(passedLogicNode.getNodeSemantic());
+
+		AbstractLogicNode[] childrenOfPassedLogicNode = passedLogicNode.getChildren();
+		this.children = new ArrayList<>(childrenOfPassedLogicNode.length);
+
+		LOG.debug("Constructing " + getClassBaseName(this) + " " + this.nodeSemantic + " from " + passedLogicNode.toString() + " with {} child nodes", childrenOfPassedLogicNode.length);			
+		for (int i = 0; i < childrenOfPassedLogicNode.length; ++i) {
+			LOG.debug(childrenOfPassedLogicNode[i].getNodeSemantic() + " node #" + ((int)i + 1) + " of " + childrenOfPassedLogicNode.length + " (node index=" + childrenOfPassedLogicNode[i].getNodeIndex() + "): class=" + getClassBaseName(childrenOfPassedLogicNode[i]) + ", " + childrenOfPassedLogicNode[i]);
 		}
-		for (LogicNode child : childNodes) {
-			RestLogicNode newRestNode = RestLogicNodeFactory.create(child);
-			LOG.debug(this.nodeSemantic + " " + getClassBaseName(this) + " ctor inserting new " + newRestNode.nodeSemantic + " (index=" + child.getNodeIndex() + ") into child list at index " + children.size());
+		for (int i = 0; i < childrenOfPassedLogicNode.length; ++i) {
+			LogicNode childOfPassedLogicNode = childrenOfPassedLogicNode[i];
+			LOG.debug(getClassBaseName(this) + " " + this.nodeSemantic + " constructing child node from " + childOfPassedLogicNode + " with {} child nodes", childOfPassedLogicNode.getChildren().length);			
+			RestLogicNode newRestNode = RestLogicNodeFactory.create(childOfPassedLogicNode);
+			LOG.debug(getClassBaseName(this) + " " + this.nodeSemantic + " ctor inserting new " + getClassBaseName(newRestNode) + " " + newRestNode.nodeSemantic + " (index=" + childOfPassedLogicNode.getNodeIndex() + ") into child list at index " + i);
 			children.add(newRestNode);
 		}
 	}
-
-//	public UUID getNodeUuid() {
-//		return nodeUuid;
-//	}
-//	public RestNodeSemantic getNodeSemantic() {
-//		return nodeSemantic;
-//	}
-//	public List<RestLogicNode> getChildren() {
-//		return Collections.unmodifiableList(children);
-//	}
-//	public short getNodeIndex() {
-//		return nodeIndex;
-//	}
-
-    
-    /**
-     * Use to when printing out multiple expressions, and you want to differentiate the 
-     * identifiers so that they are unique across all the expressions. 
-     * @param nodeIdSuffix the identifier suffix for this expression. 
-     * @return a text representation of this expression. 
-     */
-    public String toString() {
-        return toString("");
-    }
-    public String toString(String nodeIdSuffix) {
-         return "";
-    }
 }

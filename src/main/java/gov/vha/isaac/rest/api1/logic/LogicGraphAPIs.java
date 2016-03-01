@@ -29,28 +29,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.IdentifierService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptService;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
-import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
-import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
-import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
@@ -63,9 +52,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 @Path(RestPaths.logicGraphPathComponent)
 public class LogicGraphAPIs
-{
-	private static Logger log = LogManager.getLogger();
-	
+{	
 	/**
 	 * Returns a single version of a logic graph.
 	 * TODO still need to define how to pass in a version parameter
@@ -84,7 +71,7 @@ public class LogicGraphAPIs
 	{
 		@SuppressWarnings("rawtypes")
 		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, StampCoordinates.getDevelopmentLatest());
 		if (lgs.isPresent())
 		{
@@ -117,12 +104,29 @@ public class LogicGraphAPIs
 				logicGraphChronology,
 				ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
 				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-				ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+				false //ri.shouldExpand(ExpandUtil.nestedSememesExpandable)
+				);
 	}
 
+	/**
+	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
+	 * @return - A LogicGraphSememe SememeChronology corresponding to the concept identified by the passed id
+	 * @throws RestException
+	 * 
+	 * Returns the stated logic graph sememe chronology corresponding to the passed id
+	 */
 	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id) throws RestException {
 		return findLogicGraphChronology(id, true);
 	}
+
+	/**
+	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
+	 * @param stated - A boolean specifying whether to use the stated definition of the logic graph 
+	 * @return - A LogicGraphSememe SememeChronology corresponding to the concept identified by the passed id
+	 * @throws RestException
+	 * 
+	 * Returns the either the stated or inferred logic graph sememe chronology corresponding to the passed id
+	 */
 	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id, boolean stated) throws RestException
 	{
 		//PremiseType premiseType = PremiseType.STATED; // TODO make specifiable
@@ -132,7 +136,9 @@ public class LogicGraphAPIs
 			Optional<SememeChronology<? extends SememeVersion<?>>> defChronologyOptional = stated ? Get.statedDefinitionChronology(intId.get()) : Get.inferredDefinitionChronology(intId.get());
 			if (defChronologyOptional.isPresent())
 			{
-				return (SememeChronology<? extends LogicGraphSememe<?>>)defChronologyOptional.get();
+				@SuppressWarnings("unchecked")
+				SememeChronology<? extends LogicGraphSememe<?>> sememeChronology = (SememeChronology<? extends LogicGraphSememe<?>>)defChronologyOptional.get();
+				return sememeChronology;
 			}
 			else
 			{
@@ -149,7 +155,9 @@ public class LogicGraphAPIs
 
 				if (defChronologyOptional.isPresent())
 				{
-					return (SememeChronology<? extends LogicGraphSememe<?>>)defChronologyOptional.get();
+					@SuppressWarnings("unchecked")
+					SememeChronology<? extends LogicGraphSememe<?>> sememeChronology = (SememeChronology<? extends LogicGraphSememe<?>>)defChronologyOptional.get();
+					return sememeChronology;
 				}
 				else
 				{

@@ -19,44 +19,54 @@
 
 package gov.vha.isaac.rest.api1.data.logic;
 
-import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.model.logic.node.external.ConceptNodeWithUuids;
+import gov.vha.isaac.ochre.model.logic.node.internal.ConceptNodeWithSequences;
 
 /**
  * 
- * {@link RestConceptNodeWithUuids}
+ * {@link RestConceptNode}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * A REST logic graph node containing a concept
  */
 @XmlRootElement
-public class RestConceptNodeWithUuids extends RestLogicNode {
+public class RestConceptNode extends RestLogicNode {
 
+	/**
+	 * The int sequence of the concept referred to by this REST logic graph node
+	 */
 	@XmlElement
-	UUID conceptUuid;
+	int conceptSequence;
+
+	/**
+	 * The String text description of the concept referred to by this REST logic graph node. It is included as a convenience, as it may be retrieved based on the concept sequence.
+	 */
+	@XmlElement
+	String conceptDescription;
 	
-	protected RestConceptNodeWithUuids() {
+	protected RestConceptNode() {
 		// For JAXB
+	}
+
+	/**
+	 * @param conceptNodeWithSequences
+	 */
+	public RestConceptNode(ConceptNodeWithSequences conceptNodeWithSequences) {
+		super(conceptNodeWithSequences);
+		conceptSequence = conceptNodeWithSequences.getConceptSequence();
+		conceptDescription = Get.conceptDescriptionText(conceptSequence);
 	}
 	/**
 	 * @param conceptNodeWithUuids
 	 */
-	public RestConceptNodeWithUuids(ConceptNodeWithUuids conceptNodeWithUuids) {
+	public RestConceptNode(ConceptNodeWithUuids conceptNodeWithUuids) {
 		super(conceptNodeWithUuids);
-		conceptUuid = conceptNodeWithUuids.getConceptUuid();
+		conceptSequence = Get.identifierService().getConceptSequenceForUuids(conceptNodeWithUuids.getConceptUuid());
+		conceptDescription = Get.conceptDescriptionText(conceptSequence);
 	}
-	
-	public UUID getConceptUuid() {
-        return conceptUuid;
-    }
-
-    @Override
-    public String toString(String nodeIdSuffix) {
-        return "ConceptNode[" + nodeIndex + nodeIdSuffix + "] \"" + Get.conceptService().getConcept(conceptUuid).toUserString() + "\"" + super.toString(nodeIdSuffix);
-    }
 }

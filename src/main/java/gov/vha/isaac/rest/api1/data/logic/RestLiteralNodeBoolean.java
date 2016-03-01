@@ -33,31 +33,17 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeBoolean;
  */
 @XmlRootElement
 public class RestLiteralNodeBoolean extends RestLiteralNode {
-	
+
 	@XmlElement
-    boolean literalValue;
+	boolean literalValue;
 
 	protected RestLiteralNodeBoolean() {
 		// For JAXB
 	}
 	/**
-	 * @param literalNode
+	 * @param literalNodeBoolean
 	 */
-	public RestLiteralNodeBoolean(LiteralNodeBoolean literalNode) {
-		super(literalNode);
+	public RestLiteralNodeBoolean(LiteralNodeBoolean literalNodeBoolean) {
+		super(literalNodeBoolean);
 	}
-	
-	public boolean getLiteralValue() {
-        return literalValue;
-    }
-
-    @Override
-    public String toString() {
-        return toString("");
-    }
-
-    @Override
-    public String toString(String nodeIdSuffix) {
-        return "Boolean literal[" + nodeIndex + nodeIdSuffix + "]" + literalValue + super.toString(nodeIdSuffix);
-    }
 }

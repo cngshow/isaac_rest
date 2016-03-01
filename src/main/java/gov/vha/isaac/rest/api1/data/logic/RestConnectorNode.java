@@ -19,13 +19,9 @@
 
 package gov.vha.isaac.rest.api1.data.logic;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
-import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.ConnectorNode;
 
 /**
@@ -35,44 +31,18 @@ import gov.vha.isaac.ochre.model.logic.node.ConnectorNode;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
+@XmlSeeAlso({RestUntypedConnectorNode.class,RestTypedConnectorNode.class})
 @XmlRootElement
 public abstract class RestConnectorNode extends RestLogicNode {
-
-	@XmlElement
-	List<Short> childIndices;
-
+	
 	protected RestConnectorNode() {
 		// For JAXB
 	}
+
 	/**
-	 * @param logicNode
+	 * @param ConnectorNode
 	 */
-	public RestConnectorNode(ConnectorNode connectorNode) {
+	protected RestConnectorNode(ConnectorNode connectorNode) {
 		super(connectorNode);
-		childIndices = new ArrayList<Short>(connectorNode.getChildren().length);
-		for (LogicNode child : connectorNode.getChildren()) {
-			childIndices.add(child.getNodeIndex());
-		}
-	}    @Override
-    public String toString() {
-        return toString("");
-    }
-    
-    @Override
-    public String toString(String nodeIdSuffix) {
-        if (childIndices != null && !childIndices.isEmpty()) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("➞[");
-            for (short index : childIndices) {
-                builder.append(index);
-                builder.append(nodeIdSuffix);
-                builder.append(", ");
-            }
-            builder.deleteCharAt(builder.length() -1);
-            builder.deleteCharAt(builder.length() -1);
-            builder.append("]");
-            return builder.toString();
-        }
-        return "";
-    }
+	}
 }

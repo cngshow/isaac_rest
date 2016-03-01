@@ -20,7 +20,7 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 import gov.vha.isaac.ochre.model.logic.node.LiteralNode;
 
@@ -31,20 +31,17 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNode;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
+@XmlSeeAlso({RestLiteralNodeBoolean.class,RestLiteralNodeInteger.class, RestLiteralNodeFloat.class, RestLiteralNodeString.class, RestLiteralNodeInstant.class})
 @XmlRootElement
 public abstract class RestLiteralNode extends RestLogicNode {
-	
 	protected RestLiteralNode() {
 		// For JAXB
 	}
+
 	/**
 	 * @param literalNode
 	 */
-	public RestLiteralNode(LiteralNode literalNode) {
+	protected RestLiteralNode(LiteralNode literalNode) {
 		super(literalNode);
 	}
-    @Override
-    public String toString(String nodeIdSuffix) {
-        return super.toString(nodeIdSuffix);
-    }
 }

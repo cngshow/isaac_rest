@@ -22,28 +22,49 @@ package gov.vha.isaac.rest.api1.data.logic;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.model.logic.node.external.RoleNodeAllWithUuids;
+import gov.vha.isaac.ochre.model.logic.node.external.RoleNodeSomeWithUuids;
+import gov.vha.isaac.ochre.model.logic.node.internal.RoleNodeAllWithSequences;
+import gov.vha.isaac.ochre.model.logic.node.internal.RoleNodeSomeWithSequences;
 
 /**
  * 
- * {@link RestRoleNodeAllWithUuids}
+ * {@link RestRoleNode}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
-public class RestRoleNodeAllWithUuids extends RestTypedNodeWithUuids {
-	protected RestRoleNodeAllWithUuids() {
-		// For JAXB
+public class RestRoleNode extends RestTypedConnectorNode {
+	/**
+	 * 
+	 */
+	protected RestRoleNode() {
+		// FOR JAXB
+	}
+
+	/**
+	 * @param roleNodeSomeWithSequences
+	 */
+	public RestRoleNode(RoleNodeSomeWithSequences roleNodeSomeWithSequences) {
+		super(roleNodeSomeWithSequences);
+	}
+	/**
+	 * @param roleNodeSomeWithUuids
+	 */
+	public RestRoleNode(RoleNodeSomeWithUuids roleNodeSomeWithUuids) {
+		super(roleNodeSomeWithUuids);
+	}
+
+	/**
+	 * @param roleNodeAllWithSequences
+	 */
+	public RestRoleNode(RoleNodeAllWithSequences roleNodeAllWithSequences) {
+		super(roleNodeAllWithSequences);
 	}
 	/**
 	 * @param roleNodeAllWithUuids
 	 */
-	public RestRoleNodeAllWithUuids(RoleNodeAllWithUuids roleNodeAllWithUuids) {
+	public RestRoleNode(RoleNodeAllWithUuids roleNodeAllWithUuids) {
 		super(roleNodeAllWithUuids);
 	}
-
-    @Override
-    public String toString(String nodeIdSuffix) {
-        return "RoleNodeAll[" + nodeIndex + nodeIdSuffix + "]" + super.toString(nodeIdSuffix);
-    }
 }

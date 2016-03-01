@@ -22,38 +22,38 @@ package gov.vha.isaac.rest.api1.data.logic;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import gov.vha.isaac.ochre.model.logic.node.external.FeatureNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.FeatureNodeWithSequences;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
 
 /**
  * 
- * {@link RestFeatureNodeWithSequences}
+ * {@link RestFeatureNode}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
-public class RestFeatureNodeWithSequences extends RestTypedNodeWithSequences {
+public class RestFeatureNode extends RestTypedConnectorNode {
 
 	@XmlElement
 	RestConcreteDomainOperators operator;
-	
-	protected RestFeatureNodeWithSequences() {
+
+	protected RestFeatureNode() {
 		// For JAXB
 	}
 	/**
 	 * @param featureNodeWithSequences
 	 */
-	public RestFeatureNodeWithSequences(FeatureNodeWithSequences featureNodeWithSequences) {
+	public RestFeatureNode(FeatureNodeWithSequences featureNodeWithSequences) {
 		super(featureNodeWithSequences);
 		operator = new RestConcreteDomainOperators(featureNodeWithSequences.getOperator());
 	}
-
-	@Override
-    public String toString(String nodeIdSuffix) {
-        return "Feature[" + nodeIndex + nodeIdSuffix +"] "
-                + operator
-                + ", units:" //+ Get.conceptDescriptionText(unitsConceptSequence)
-                + super.toString(nodeIdSuffix);
-    }
+	/**
+	 * @param featureNodeWithUuids
+	 */
+	public RestFeatureNode(FeatureNodeWithUuids featureNodeWithUuids) {
+		super(featureNodeWithUuids);
+		operator = new RestConcreteDomainOperators(featureNodeWithUuids.getOperator());
+	}
 }

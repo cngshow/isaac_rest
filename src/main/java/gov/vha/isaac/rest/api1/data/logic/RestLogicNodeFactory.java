@@ -49,21 +49,21 @@ import gov.vha.isaac.ochre.model.logic.node.internal.RoleNodeSomeWithSequences;
  */
 public final class RestLogicNodeFactory {
 	private RestLogicNodeFactory() {}
-	
+
 	public static RestLogicNode create(LogicNode logicNode) {
 
 		if (logicNode instanceof AndNode) 
-			return new RestAndNode((AndNode)logicNode);
+			return new RestUntypedConnectorNode((AndNode)logicNode);
 		else if (logicNode instanceof ConceptNodeWithSequences)
-			return new RestConceptNodeWithSequences((ConceptNodeWithSequences)logicNode);
+			return new RestConceptNode((ConceptNodeWithSequences)logicNode);
 		else if (logicNode instanceof ConceptNodeWithUuids)
-			return new RestConceptNodeWithUuids((ConceptNodeWithUuids)logicNode);
+			return new RestConceptNode((ConceptNodeWithUuids)logicNode);
 		else if (logicNode instanceof DisjointWithNode)
-			return new RestDisjointWithNode((DisjointWithNode)logicNode);
+			return new RestUntypedConnectorNode((DisjointWithNode)logicNode);
 		else if (logicNode instanceof FeatureNodeWithSequences)
-			return new RestFeatureNodeWithSequences((FeatureNodeWithSequences)logicNode);
+			return new RestFeatureNode((FeatureNodeWithSequences)logicNode);
 		else if (logicNode instanceof FeatureNodeWithUuids)
-			return new RestFeatureNodeWithUuids((FeatureNodeWithUuids)logicNode);
+			return new RestFeatureNode((FeatureNodeWithUuids)logicNode);
 		else if (logicNode instanceof LiteralNodeBoolean)
 			return new RestLiteralNodeBoolean((LiteralNodeBoolean)logicNode);
 		else if (logicNode instanceof LiteralNodeFloat)
@@ -75,21 +75,21 @@ public final class RestLogicNodeFactory {
 		else if (logicNode instanceof LiteralNodeString)
 			return new RestLiteralNodeString((LiteralNodeString)logicNode);
 		else if (logicNode instanceof NecessarySetNode)
-			return new RestNecessarySetNode((NecessarySetNode)logicNode);
+			return new RestUntypedConnectorNode((NecessarySetNode)logicNode);
 		else if (logicNode instanceof OrNode)
-			return new RestOrNode((OrNode)logicNode);
+			return new RestUntypedConnectorNode((OrNode)logicNode);
 		else if (logicNode instanceof RoleNodeAllWithSequences)
-			return new RestRoleNodeAllWithSequences((RoleNodeAllWithSequences)logicNode);
+			return new RestRoleNode((RoleNodeAllWithSequences)logicNode);
 		else if (logicNode instanceof RoleNodeAllWithUuids)
-			return new RestRoleNodeAllWithUuids((RoleNodeAllWithUuids)logicNode);
+			return new RestRoleNode((RoleNodeAllWithUuids)logicNode);
 		else if (logicNode instanceof RoleNodeSomeWithSequences)
-			return new RestRoleNodeSomeWithSequences((RoleNodeSomeWithSequences)logicNode);
+			return new RestRoleNode((RoleNodeSomeWithSequences)logicNode);
 		else if (logicNode instanceof RoleNodeSomeWithUuids)
-			return new RestRoleNodeSomeWithUuids((RoleNodeSomeWithUuids)logicNode);
+			return new RestRoleNode((RoleNodeSomeWithUuids)logicNode);
 		else if (logicNode instanceof RootNode)
-			return new RestRootNode((RootNode)logicNode);
+			return new RestUntypedConnectorNode((RootNode)logicNode);
 		else if (logicNode instanceof SufficientSetNode)
-			return new RestSufficientSetNode((SufficientSetNode)logicNode);
+			return new RestUntypedConnectorNode((SufficientSetNode)logicNode);
 		else
 			throw new IllegalArgumentException("create() Failed: Unsupported LogicNode " + logicNode.getClass().getName() + " " + logicNode);
 	}

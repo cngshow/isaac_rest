@@ -24,6 +24,8 @@ import java.time.Instant;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInstant;
+
 /**
  * 
  * {@link RestLiteralNodeInstant}
@@ -33,27 +35,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class RestLiteralNodeInstant extends RestLiteralNode {
-	
+
 	@XmlElement
-    Instant literalValue;
+	Instant literalValue;
 
 	protected RestLiteralNodeInstant() {
 		// For JAXB
 	}
 	/**
-	 * @param literalNode
+	 * @param literalNodeInstant
 	 */
-	public RestLiteralNodeInstant(gov.vha.isaac.ochre.model.logic.node.LiteralNodeInstant literalNode) {
-		super(literalNode);
+	public RestLiteralNodeInstant(LiteralNodeInstant literalNodeInstant) {
+		super(literalNodeInstant);
 	}
-
-    @Override
-    public String toString() {
-        return toString("");
-    }
-
-    @Override
-    public String toString(String nodeIdSuffix) {
-        return "Float literal[" + nodeIndex + nodeIdSuffix + "]" + literalValue + super.toString(nodeIdSuffix);
-    }
 }

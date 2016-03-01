@@ -33,30 +33,17 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeFloat;
  */
 @XmlRootElement
 public class RestLiteralNodeFloat extends RestLiteralNode {
-	
+
 	@XmlElement
-    float literalValue;
+	float literalValue;
 
 	protected RestLiteralNodeFloat() {
 		// For JAXB
 	}
 	/**
-	 * @param literalNode
+	 * @param literalNodeFloat
 	 */
-	public RestLiteralNodeFloat(LiteralNodeFloat literalNode) {
-		super(literalNode);
+	public RestLiteralNodeFloat(LiteralNodeFloat literalNodeFloat) {
+		super(literalNodeFloat);
 	}
-	public float getLiteralValue() {
-        return literalValue;
-    }
-
-    @Override
-    public String toString() {
-        return toString("");
-    }
-
-    @Override
-    public String toString(String nodeIdSuffix) {
-        return "Float literal[" + nodeIndex + nodeIdSuffix + "]" + literalValue + super.toString(nodeIdSuffix);
-    }
 }
