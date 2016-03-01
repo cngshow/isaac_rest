@@ -42,7 +42,11 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  * 
- * The abstract base class of all REST logic graph nodes
+ * The abstract base class of all REST logic graph tree structure nodes.
+ * Each node represents a part of the logic graph grammar and has, at least,
+ * its own UUID, a RestNodeSemantic enumerated type and a list of child RestNodeSemantic nodes.
+ * The allowed number of child RestNodeSemantic nodes and any additional data 
+ * depend on the RestNodeSemantic enumerated type.
  */
 @XmlSeeAlso({
 	RestConceptNode.class,
@@ -91,6 +95,11 @@ public abstract class RestLogicNode {
 	private static String getClassBaseName(Object obj) {
 		return obj.getClass().getSimpleName().replaceAll(".*\\.", "");
 	}
+	
+	/**
+	 * @param passedLogicNode constructor takes an AbstractLogicNode representing the
+	 * root of a logic graph tree or tree fragment and recursively creates and populates an equivalent RestLogicNode
+	 */
 	public RestLogicNode(AbstractLogicNode passedLogicNode) {
 		nodeUuid = passedLogicNode.getNodeUuidSetForDepth(1).first();
 		this.nodeSemantic = new RestNodeSemantic(passedLogicNode.getNodeSemantic());

@@ -30,8 +30,14 @@ import gov.vha.isaac.ochre.model.logic.node.ConnectorNode;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ *Abstract base class of all connectors nodes in the logic graph grammar
  */
-@XmlSeeAlso({RestUntypedConnectorNode.class,RestTypedConnectorNode.class})
+@XmlSeeAlso({
+	RestUntypedConnectorNode.class,
+	RestTypedConnectorNode.class,
+	RestFeatureNode.class,
+	RestRoleNode.class
+})
 @XmlRootElement
 public abstract class RestConnectorNode extends RestLogicNode {
 	

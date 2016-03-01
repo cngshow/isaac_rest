@@ -29,6 +29,13 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNode;
  * {@link RestLiteralNode}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * 
+ * RestLiteralNode is the abstract base class for logic nodes containing only literal values,
+ * such as boolean, int, float, Instant and String.
+ * 
+ * Each RestLiteralNode derived class instance has a RestNodeSemantic/NodeSemantic according to its type
+ * 
+ * A RestLiteralNode derived class may not have any child logic nodes.
  *
  */
 @XmlSeeAlso({RestLiteralNodeBoolean.class,RestLiteralNodeInteger.class, RestLiteralNodeFloat.class, RestLiteralNodeString.class, RestLiteralNodeInstant.class})

@@ -32,10 +32,18 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInstant;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * RestLiteralNodeInstant is a logic node containing only an Instant literal value
+ * 
+ * Each RestLiteralNodeInstant instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_INSTANT
+ * 
+ * A RestLiteralNodeInstant may not have any child logic nodes.
  */
 @XmlRootElement
 public class RestLiteralNodeInstant extends RestLiteralNode {
 
+	/**
+	 * RestLiteralNodeInstant contains a literal Instant value, literalValue
+	 */
 	@XmlElement
 	Instant literalValue;
 
@@ -47,5 +55,6 @@ public class RestLiteralNodeInstant extends RestLiteralNode {
 	 */
 	public RestLiteralNodeInstant(LiteralNodeInstant literalNodeInstant) {
 		super(literalNodeInstant);
+		literalValue = literalNodeInstant.getLiteralValue();
 	}
 }

@@ -46,6 +46,9 @@ import gov.vha.isaac.ochre.model.logic.node.internal.RoleNodeSomeWithSequences;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * Static factory that constructs an appropriate RestLogicNode according to the type of passed LogicNode.
+ * The RestLogicNode constructor is recursive, so each node returned will be a fully populated
+ * logic graph tree or tree fragment.
  */
 public final class RestLogicNodeFactory {
 	private RestLogicNodeFactory() {}

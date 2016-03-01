@@ -19,8 +19,6 @@
 
 package gov.vha.isaac.rest.api1.data.logic;
 
-import java.util.Arrays;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
@@ -35,13 +33,24 @@ import gov.vha.isaac.ochre.model.logic.node.internal.TypedNodeWithSequences;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * RestTypedConnectorNode derived classes must have exactly 1 child node.
+ * 
+ * RestTypedConnectorNode is the abstract base class for logic graph nodes
+ * containing a connector type specified by connectorTypeConceptSequence
+ * and described by connectorTypeConceptDescription
  */
 @XmlSeeAlso({RestFeatureNode.class,RestRoleNode.class})
 @XmlRootElement
 public abstract class RestTypedConnectorNode extends RestConnectorNode {
+	/**
+	 * RestTypedConnectorNode contains an int connectorTypeConceptSequence identifying a connector type concept 
+	 */
 	@XmlElement
 	int connectorTypeConceptSequence;
 	
+	/**
+	 * RestTypedConnectorNode contains a String connectorTypeConceptDescription describing a connector type concept 
+	 */
 	@XmlElement
 	String connectorTypeConceptDescription;
 
@@ -63,12 +72,5 @@ public abstract class RestTypedConnectorNode extends RestConnectorNode {
 		super(typedNodeWithUuids);
 		connectorTypeConceptSequence = Get.identifierService().getConceptSequenceForUuids(typedNodeWithUuids.getTypeConceptUuid());
 		connectorTypeConceptDescription = Get.conceptDescriptionText(connectorTypeConceptSequence);
-	}
-
-	public RestLogicNode getOnlyChild() {
-		if (children.size() == 1) {
-			return children.get(0);
-		}
-		throw new IllegalStateException("Typed nodes can have only one child. Found: " + Arrays.toString(children.toArray()));
 	}
 }

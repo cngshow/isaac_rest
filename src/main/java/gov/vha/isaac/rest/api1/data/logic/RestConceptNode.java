@@ -32,7 +32,8 @@ import gov.vha.isaac.ochre.model.logic.node.internal.ConceptNodeWithSequences;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
- * A REST logic graph node containing a concept
+ * A REST logic graph node containing (referencing) a concept by sequence and its text description.
+ * RestConceptNode has RestNodeSemantic. == NodeSemantic.CONCEPT and should never have any child nodes.
  */
 @XmlRootElement
 public class RestConceptNode extends RestLogicNode {

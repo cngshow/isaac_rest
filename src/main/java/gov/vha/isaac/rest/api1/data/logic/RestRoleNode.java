@@ -32,6 +32,12 @@ import gov.vha.isaac.ochre.model.logic.node.internal.RoleNodeSomeWithSequences;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * RestRoleNode is a RestTypedConnectorNode corresponding to either RoleNodeSome or RoleNodeAll.
+ * 
+ * RestFeatureNode must have exactly 1 child node.
+ * 
+ * RestRoleNode for RoleNodeSome has RestNodeSemantic == NodeSemantic.ROLE_SOME
+ * RestRoleNode for RoleNodeAll has RestNodeSemantic == NodeSemantic.ROLE_ALL
  */
 @XmlRootElement
 public class RestRoleNode extends RestTypedConnectorNode {

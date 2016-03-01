@@ -30,10 +30,19 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeBoolean;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * RestLiteralNodeBoolean is a logic node containing only a boolean literal value
+ * 
+ * Each RestLiteralNodeBoolean instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_BOOLEAN
+ * 
+ * A RestLiteralNodeBoolean may not have any child logic nodes.
+
  */
 @XmlRootElement
 public class RestLiteralNodeBoolean extends RestLiteralNode {
 
+	/**
+	 * RestLiteralNodeBoolean contains a literal boolean value, literalValue
+	 */
 	@XmlElement
 	boolean literalValue;
 
@@ -45,5 +54,6 @@ public class RestLiteralNodeBoolean extends RestLiteralNode {
 	 */
 	public RestLiteralNodeBoolean(LiteralNodeBoolean literalNodeBoolean) {
 		super(literalNodeBoolean);
+		literalValue = literalNodeBoolean.getLiteralValue();
 	}
 }

@@ -32,10 +32,27 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * The RestFeatureNode contains a RestConcreteDomainOperators operator type,
+ * must have exactly 1 child node,
+ * and has a RestNodeSemantic == NodeSemantic.FEATURE.
+ * 
  */
 @XmlRootElement
 public class RestFeatureNode extends RestTypedConnectorNode {
 
+	/**
+	 * RestFeatureNode contains a RestConcreteDomainOperators/ConcreteDomainOperators instance,
+	 * which is an enumeration specifying a type of comparison
+	 * 
+	 * RestFeatureNode must have exactly 1 child node.
+	 * 
+	 * Available RestConcreteDomainOperators/ConcreteDomainOperator values include
+	 *   EQUALS,
+	 *   LESS_THAN,
+	 *   LESS_THAN_EQUALS,
+	 *   GREATER_THAN,
+	 *   GREATER_THAN_EQUALS
+	 */
 	@XmlElement
 	RestConcreteDomainOperators operator;
 

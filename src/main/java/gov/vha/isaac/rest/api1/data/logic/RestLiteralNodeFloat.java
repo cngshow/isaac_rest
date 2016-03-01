@@ -30,10 +30,17 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeFloat;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * RestLiteralNodeFloat is a logic node containing only a float literal value
+ * 
+ * Each RestLiteralNodeFloat instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_FLOAT
+ * 
+ * A RestLiteralNodeFloat may not have any child logic nodes.
  */
 @XmlRootElement
 public class RestLiteralNodeFloat extends RestLiteralNode {
-
+	/**
+	 * RestLiteralNodeFloat contains a literal float value, literalValue
+	 */
 	@XmlElement
 	float literalValue;
 
@@ -45,5 +52,6 @@ public class RestLiteralNodeFloat extends RestLiteralNode {
 	 */
 	public RestLiteralNodeFloat(LiteralNodeFloat literalNodeFloat) {
 		super(literalNodeFloat);
+		literalValue = literalNodeFloat.getLiteralValue();
 	}
 }

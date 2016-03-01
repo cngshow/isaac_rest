@@ -30,10 +30,18 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInteger;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * RestLiteralNodeInteger is a logic node containing only an int literal value
+ * 
+ * Each RestLiteralNodeInteger instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_INTEGER
+ * 
+ * A RestLiteralNodeInteger may not have any child logic nodes.
  */
 @XmlRootElement
 public class RestLiteralNodeInteger extends RestLiteralNode {
 
+	/**
+	 * RestLiteralNodeInteger contains a literal int value, literalValue
+	 */
 	@XmlElement
 	int literalValue;
 
@@ -45,5 +53,6 @@ public class RestLiteralNodeInteger extends RestLiteralNode {
 	 */
 	public RestLiteralNodeInteger(LiteralNodeInteger literalNodeInteger) {
 		super(literalNodeInteger);
+		literalValue = literalNodeInteger.getLiteralValue();
 	}
 }
