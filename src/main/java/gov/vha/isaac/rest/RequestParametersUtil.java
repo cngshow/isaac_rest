@@ -25,6 +25,7 @@ package gov.vha.isaac.rest;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * This utility class needed only if RequestInfo uses init/ctor interface that takes parameter map
  */
 public class RequestParametersUtil {
 	private RequestParametersUtil() {}

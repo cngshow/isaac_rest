@@ -18,8 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.logic;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,7 +41,6 @@ import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.RequestParametersUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
@@ -79,13 +76,10 @@ public class LogicGraphAPIs
 			@QueryParam("expand") String expand, 
 			@QueryParam("stated") @DefaultValue("true") String stated) throws RestException
 	{
-		Map<String, String> requestParameters = new HashMap<>();
-		requestParameters.put(RequestParametersUtil.expandableString, expand);
-		requestParameters.put(RequestParametersUtil.statedBoolean, stated);
-		RequestInfo ri = RequestInfo.init(requestParameters);
+		RequestInfo ri = RequestInfo.init(expand);
 		
 		@SuppressWarnings("rawtypes")
-		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, ri.useStated());
+		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, ri.getStampCoordinate());
@@ -113,18 +107,15 @@ public class LogicGraphAPIs
 			@QueryParam("expand") String expand, 
 			@QueryParam("stated") @DefaultValue("true") String stated) throws RestException
 	{
-		Map<String, String> requestParameters = new HashMap<>();
-		requestParameters.put(RequestParametersUtil.expandableString, expand);
-		requestParameters.put(RequestParametersUtil.statedBoolean, stated);
-		RequestInfo ri = RequestInfo.init(requestParameters);
+		RequestInfo ri = RequestInfo.init(expand);
 
-		SememeChronology<? extends LogicGraphSememe<?>> logicGraphChronology = findLogicGraphChronology(id, ri.useStated());
+		SememeChronology<? extends LogicGraphSememe<?>> logicGraphChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
 		
 		return new RestSememeChronology(
 				logicGraphChronology,
 				ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
 				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-				false //ri.shouldExpand(ExpandUtil.nestedSememesExpandable)
+				false // LogicGraphSememe should not support nestedSememesExpandable
 				);
 	}
 

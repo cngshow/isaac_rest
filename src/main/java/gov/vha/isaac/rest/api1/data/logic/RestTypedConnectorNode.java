@@ -92,7 +92,7 @@ public abstract class RestTypedConnectorNode extends RestConnectorNode {
 			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true, false, false, RequestInfo.get().useStated());
+			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			connectorTypeConceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())
@@ -115,7 +115,7 @@ public abstract class RestTypedConnectorNode extends RestConnectorNode {
 			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true, false, false, RequestInfo.get().useStated());
+			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			connectorTypeConceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())

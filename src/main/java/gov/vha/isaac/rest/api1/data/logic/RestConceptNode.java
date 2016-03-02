@@ -88,7 +88,7 @@ public class RestConceptNode extends RestLogicNode {
 			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			conceptVersion = new RestConceptVersion(olcv.get().value(), true, false, false, RequestInfo.get().useStated());
+			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			conceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())
@@ -111,7 +111,7 @@ public class RestConceptNode extends RestLogicNode {
 			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			conceptVersion = new RestConceptVersion(olcv.get().value(), true, false, false, RequestInfo.get().useStated());
+			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			conceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())

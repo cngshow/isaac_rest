@@ -19,8 +19,8 @@
 package gov.vha.isaac.rest.api1.session;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
@@ -28,7 +28,6 @@ import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.RequestParametersUtil;
 
 /**
  * {@link RequestInfo}
@@ -41,7 +40,6 @@ import gov.vha.isaac.rest.RequestParametersUtil;
  */
 public class RequestInfo
 {
-	private boolean stated_ = true;
 	private Set<String> expandablesForDirectExpansion_;
 	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
 	//request these to be skipped in the replies, which will give them a performance boost.
@@ -59,6 +57,11 @@ public class RequestInfo
 	{
 		return requestInfo.get();
 	}
+
+	private RequestInfo()
+	{
+		expandablesForDirectExpansion_ = new HashSet<>(0);
+	}
 	
 	public static RequestInfo init(String expandables)
 	{
@@ -66,28 +69,24 @@ public class RequestInfo
 		requestInfo.set(ri);
 		return get();
 	}
-	public static RequestInfo init(Map<String, String> parameters)
-	{
-		RequestInfo ri = new RequestInfo(parameters);
-		requestInfo.set(ri);
-		return get();
-	}
-	
-	
-	private RequestInfo()
-	{
-		expandablesForDirectExpansion_ = new HashSet<>(0);
-	}
 	
 	private RequestInfo(String expandableString)
 	{
 		expandablesForDirectExpansion_ = ExpandUtil.read(expandableString);
 	}
-	private RequestInfo(Map<String, String> parameters)
-	{
-		stated_ = Boolean.parseBoolean(RequestParametersUtil.trim(parameters.get(RequestParametersUtil.statedBoolean)));
-		expandablesForDirectExpansion_ = ExpandUtil.read(RequestParametersUtil.trim(parameters.get(RequestParametersUtil.expandableString)));
-	}
+
+	// Mechanism for passing multiple params
+//	public static RequestInfo init(Map<String, String> parameters)
+//	{
+//		RequestInfo ri = new RequestInfo(parameters);
+//		requestInfo.set(ri);
+//		return get();
+//	}
+//	private RequestInfo(Map<String, String> parameters)
+//	{
+//		stated_ = Boolean.parseBoolean(RequestParametersUtil.trim(parameters.get(RequestParametersUtil.statedBoolean)));
+//		expandablesForDirectExpansion_ = ExpandUtil.read(RequestParametersUtil.trim(parameters.get(RequestParametersUtil.expandableString)));
+//	}
 	
 	public boolean shouldExpand(String expandable)
 	{
@@ -138,9 +137,5 @@ public class RequestInfo
 	public boolean useFSN()
 	{
 		return true;
-	}
-	
-	public boolean useStated() {
-		return stated_;
 	}
 }

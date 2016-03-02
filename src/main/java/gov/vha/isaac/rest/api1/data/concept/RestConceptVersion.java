@@ -77,6 +77,11 @@ public class RestConceptVersion
 		//for Jaxb
 	}
 	
+	@SuppressWarnings({ "rawtypes" }) 
+	public RestConceptVersion(ConceptVersion cv, boolean includeChronology) {
+		this(cv, includeChronology, false, false, false);
+	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean includeChildren, boolean stated)
 	{
