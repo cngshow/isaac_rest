@@ -39,12 +39,6 @@ import gov.vha.isaac.rest.api1.data.logic.RestUntypedConnectorNode;
 public class RestSememeLogicGraphVersion extends RestSememeVersion
 {
 	private static Logger LOG = LogManager.getLogger();
-	
-	/**
-	 * The int sequence of the associated concept
-	 */
-	@XmlElement
-	int referencedConceptSequence;
 
 	/**
 	 * The String text of the description of the associated concept
@@ -72,16 +66,13 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 	 * 
 	 * Constructor for RestSememeLogicGraphVersion taking a LogicGraphSememe
 	 */
-	public RestSememeLogicGraphVersion(LogicGraphSememe<?> lgs, boolean includeChronology, boolean expandNested, boolean stated) throws RestException
+	public RestSememeLogicGraphVersion(
+			LogicGraphSememe<?> lgs,
+			boolean includeChronology) throws RestException
 	{
-		// TODO Do something with expandNested and stated
 		super();
-		if (expandNested)
-		{
-		}
-		setup(lgs, includeChronology, expandNested, null);
+		setup(lgs, includeChronology, false, null);
 
-		referencedConceptSequence = Get.identifierService().getConceptSequence(lgs.getReferencedComponentNid());
 		referencedConceptDescription = Get.conceptDescriptionText(lgs.getReferencedComponentNid());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 	}

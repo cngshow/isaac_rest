@@ -19,12 +19,21 @@
 
 package gov.vha.isaac.rest.api1.data.logic;
 
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.ConceptNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.ConceptNodeWithSequences;
+import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.api.data.Expandables;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
@@ -39,10 +48,22 @@ import gov.vha.isaac.ochre.model.logic.node.internal.ConceptNodeWithSequences;
 public class RestConceptNode extends RestLogicNode {
 
 	/**
+	 * The data that was not expanded as part of this call (but can be)
+	 */
+	@XmlElement
+	Expandables expandables;
+
+	/**
 	 * The int sequence of the concept referred to by this REST logic graph node
 	 */
 	@XmlElement
 	int conceptSequence;
+	
+	/**
+	 * Optionally-expandable RestConceptVersion corresponding to 
+	 */
+	@XmlElement
+	RestConceptVersion conceptVersion;
 
 	/**
 	 * The String text description of the concept referred to by this REST logic graph node. It is included as a convenience, as it may be retrieved based on the concept sequence.
@@ -61,6 +82,21 @@ public class RestConceptNode extends RestLogicNode {
 		super(conceptNodeWithSequences);
 		conceptSequence = conceptNodeWithSequences.getConceptSequence();
 		conceptDescription = Get.conceptDescriptionText(conceptSequence);
+		
+		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeConceptVersionsExpandable)) {
+			@SuppressWarnings("rawtypes")
+			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
+			@SuppressWarnings("unchecked")
+			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			conceptVersion = new RestConceptVersion(olcv.get().value(), true, false, false, RequestInfo.get().useStated());
+		} else {
+			conceptVersion = null;
+			if (RequestInfo.get().returnExpandableLinks())
+			{
+				// TODO make expandables work for logicNodeConceptVersionsExpandable
+				// expandables.add(new Expandable(ExpandUtil.logicNodeConceptVersionsExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
+			}
+		}
 	}
 	/**
 	 * @param conceptNodeWithUuids
@@ -69,5 +105,20 @@ public class RestConceptNode extends RestLogicNode {
 		super(conceptNodeWithUuids);
 		conceptSequence = Get.identifierService().getConceptSequenceForUuids(conceptNodeWithUuids.getConceptUuid());
 		conceptDescription = Get.conceptDescriptionText(conceptSequence);
+		
+		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeConceptVersionsExpandable)) {
+			@SuppressWarnings("rawtypes")
+			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
+			@SuppressWarnings("unchecked")
+			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			conceptVersion = new RestConceptVersion(olcv.get().value(), true, false, false, RequestInfo.get().useStated());
+		} else {
+			conceptVersion = null;
+			if (RequestInfo.get().returnExpandableLinks())
+			{
+				// TODO make expandables work for logicNodeConceptVersionsExpandable
+				// expandables.add(new Expandable(ExpandUtil.logicNodeConceptVersionsExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
+			}
+		}
 	}
 }

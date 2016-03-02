@@ -159,8 +159,7 @@ public abstract class RestSememeVersion
 			case STRING:
 				return new RestDynamicSememeVersion((StringSememe<?>) sv, includeChronology, expandNested);
 			case LOGIC_GRAPH:
-				// TODO maybe should not be passing stated here
-				return new RestSememeLogicGraphVersion((LogicGraphSememe<?>) sv, includeChronology, expandNested, true);
+				return new RestSememeLogicGraphVersion((LogicGraphSememe<?>) sv, includeChronology);
 			case RELATIONSHIP_ADAPTOR:
 			case UNKNOWN:
 			default :
