@@ -28,7 +28,6 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
-import gov.vha.isaac.rest.CoordinatesUtil;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
@@ -44,6 +43,8 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 public class RequestInfo
 {
 	private StampCoordinate stampCoordinate_;
+	private LanguageCoordinate languageCoordinate_;
+
 	private Set<String> expandablesForDirectExpansion_;
 	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
 	//request these to be skipped in the replies, which will give them a performance boost.
@@ -88,8 +89,9 @@ public class RequestInfo
 	private RequestInfo(Map<String, String> parameters) throws RestException
 	{
 		expandablesForDirectExpansion_ = ExpandUtil.read(trim(parameters.get(RequestParameters.expand)));
-		
-		setStampCoordinate(CoordinatesUtil.getStampCoordinateFromParameters(parameters));
+
+		stampCoordinate_ = CoordinatesUtil.getStampCoordinateFromParameters(parameters);
+		languageCoordinate_ = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
 	}
 	
 	public boolean shouldExpand(String expandable)
@@ -107,11 +109,7 @@ public class RequestInfo
 	 */
 	public StampCoordinate getStampCoordinate()
 	{
-		//TODO implement stamp coord from request info
 		return stampCoordinate_ != null ? stampCoordinate_ : StampCoordinates.getDevelopmentLatest();
-	}
-	private void setStampCoordinate(StampCoordinate stampCoordinate) {
-		stampCoordinate_ = stampCoordinate;
 	}
 
 	/**
@@ -119,8 +117,7 @@ public class RequestInfo
 	 */
 	public LanguageCoordinate getLanguageCoordinate()
 	{
-		//TODO implement lang coord from request inf
-		return LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
+		return languageCoordinate_ != null ? languageCoordinate_ : LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
 	}
 
 	/**

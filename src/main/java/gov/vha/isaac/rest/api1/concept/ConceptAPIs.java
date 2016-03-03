@@ -82,6 +82,12 @@ public class ConceptAPIs
 	 * @param stampCoordPrecedence - specifies precedence of the StampCoordinate. Values are either "path" or "time"
 	 * @param stampCoordModules - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids
 	 * @param stampCoordStates - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names 
+
+	 * @param langCoordLang - specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms:
+	 * 		"english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish"
+	 * @param langCoordDescTypesPref - specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" or "definition"
+	 * @param langCoordDialectsPref - specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb"
+
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -97,15 +103,25 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String coordPath,
 			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String coordStampPrecedence,
 			@QueryParam(RequestParameters.stampCoordModules) @DefaultValue(RequestParameters.stampCoordModulesDefault) String stampCoordModules,
-			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordState) throws RestException
+			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordState,
+			
+			@QueryParam(RequestParameters.langCoordLang) @DefaultValue(RequestParameters.langCoordLangDefault) String langCoordLang,
+			@QueryParam(RequestParameters.langCoordDescTypesPref) @DefaultValue(RequestParameters.langCoordDescTypesPrefDefault) String langCoordDescTypesPref,
+			@QueryParam(RequestParameters.langCoordDialectsPref) @DefaultValue(RequestParameters.langCoordDialectsPrefDefault) String langCoordDialectsPref) throws RestException
 	{
 		Map<String,String> params = new HashMap<>();
 		params.put(RequestParameters.expand, expand);
+
 		params.put(RequestParameters.stampCoordTime, coordTime);
 		params.put(RequestParameters.stampCoordPath, coordPath);
 		params.put(RequestParameters.stampCoordPrecedence, coordStampPrecedence);
 		params.put(RequestParameters.stampCoordModules, stampCoordModules);
 		params.put(RequestParameters.stampCoordStates, stampCoordState);
+		
+		params.put(RequestParameters.langCoordLang, langCoordLang);
+		params.put(RequestParameters.langCoordDescTypesPref, langCoordDescTypesPref);
+		params.put(RequestParameters.langCoordDialectsPref, langCoordDialectsPref);
+		
 		RequestInfo ri = RequestInfo.init(params);
 		
 		@SuppressWarnings("rawtypes")

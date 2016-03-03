@@ -29,6 +29,16 @@ package gov.vha.isaac.rest.api1.session;
 public class RequestParameters {
 	private RequestParameters() {}
 	
+	public final static String langCoordLang = "langCoordLang";
+	public final static String langCoordLangDefault = "english";
+
+	public final static String langCoordDialectsPref = "langCoordDialectsPref";
+	public final static String langCoordDialectsPrefDefault = "us,gb";
+
+	public final static String langCoordDescTypesPref = "langCoordDescTypesPref";
+	public final static String langCoordDescTypesPrefDefault = "fsn,synonym";
+	
+	
 	public final static String stampCoordTime = "stampCoordTime";
 	public final static String stampCoordTimeDefault = "latest";
 
