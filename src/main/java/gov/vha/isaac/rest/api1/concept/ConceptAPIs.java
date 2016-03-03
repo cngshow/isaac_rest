@@ -19,10 +19,13 @@
 package gov.vha.isaac.rest.api1.concept;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,8 +33,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -42,7 +47,6 @@ import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -52,6 +56,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 
 /**
@@ -62,9 +67,9 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 @Path(RestPaths.conceptPathComponent)
 public class ConceptAPIs
 {
-	private Set<Integer> allDescriptionAssemblageTypes = null;
 	private static Logger log = LogManager.getLogger();
 	
+	private Set<Integer> allDescriptionAssemblageTypes = null;
 	/**
 	 * Returns a single version of a concept.
 	 * TODO still need to define how to pass in a version parameter
@@ -72,22 +77,43 @@ public class ConceptAPIs
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children'
 	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
+	 * @param stampCoordTime - specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest"
+	 * @param stampCoordPath - specifies path component of StampPosition component of the StampCoordinate. Values are path UUIDs, int ids or the terms "development" or "master"
+	 * @param stampCoordPrecedence - specifies precedence of the StampCoordinate. Values are either "path" or "time"
+	 * @param stampCoordModules - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids
+	 * @param stampCoordStates - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names 
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.versionComponent + "{id}")
-	public RestConceptVersion getConceptVersion(@PathParam("id") String id, @QueryParam("expand") String expand, 
-		@QueryParam("stated") @DefaultValue("true") String stated) throws RestException
+	public RestConceptVersion getConceptVersion(
+			@PathParam("id") String id,
+			@QueryParam(RequestParameters.expand) String expand, 
+			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
+
+			@QueryParam(RequestParameters.stampCoordTime) @DefaultValue(RequestParameters.stampCoordTimeDefault) String coordTime,
+			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String coordPath,
+			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String coordStampPrecedence,
+			@QueryParam(RequestParameters.stampCoordModules) @DefaultValue(RequestParameters.stampCoordModulesDefault) String stampCoordModules,
+			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordState) throws RestException
 	{
+		Map<String,String> params = new HashMap<>();
+		params.put(RequestParameters.expand, expand);
+		params.put(RequestParameters.stampCoordTime, coordTime);
+		params.put(RequestParameters.stampCoordPath, coordPath);
+		params.put(RequestParameters.stampCoordPrecedence, coordStampPrecedence);
+		params.put(RequestParameters.stampCoordModules, stampCoordModules);
+		params.put(RequestParameters.stampCoordStates, stampCoordState);
+		RequestInfo ri = RequestInfo.init(params);
+		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, ri.getStampCoordinate());
 		if (cv.isPresent())
 		{
-			RequestInfo ri = RequestInfo.init(expand);
 			return new RestConceptVersion(cv.get().value(), 
 					ri.shouldExpand(ExpandUtil.chronologyExpandable), 
 					ri.shouldExpand(ExpandUtil.parentsExpandable), 

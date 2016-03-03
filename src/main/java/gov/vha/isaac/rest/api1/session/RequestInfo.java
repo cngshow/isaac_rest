@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.session;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -27,7 +28,9 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
+import gov.vha.isaac.rest.CoordinatesUtil;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * {@link RequestInfo}
@@ -40,6 +43,7 @@ import gov.vha.isaac.rest.ExpandUtil;
  */
 public class RequestInfo
 {
+	private StampCoordinate stampCoordinate_;
 	private Set<String> expandablesForDirectExpansion_;
 	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
 	//request these to be skipped in the replies, which will give them a performance boost.
@@ -69,24 +73,24 @@ public class RequestInfo
 		requestInfo.set(ri);
 		return get();
 	}
-	
 	private RequestInfo(String expandableString)
 	{
 		expandablesForDirectExpansion_ = ExpandUtil.read(expandableString);
 	}
-
+	
 	// Mechanism for passing multiple params
-//	public static RequestInfo init(Map<String, String> parameters)
-//	{
-//		RequestInfo ri = new RequestInfo(parameters);
-//		requestInfo.set(ri);
-//		return get();
-//	}
-//	private RequestInfo(Map<String, String> parameters)
-//	{
-//		stated_ = Boolean.parseBoolean(RequestParametersUtil.trim(parameters.get(RequestParametersUtil.statedBoolean)));
-//		expandablesForDirectExpansion_ = ExpandUtil.read(RequestParametersUtil.trim(parameters.get(RequestParametersUtil.expandableString)));
-//	}
+	public static RequestInfo init(Map<String, String> parameters) throws RestException
+	{
+		RequestInfo ri = new RequestInfo(parameters);
+		requestInfo.set(ri);
+		return get();
+	}
+	private RequestInfo(Map<String, String> parameters) throws RestException
+	{
+		expandablesForDirectExpansion_ = ExpandUtil.read(trim(parameters.get(RequestParameters.expand)));
+		
+		setStampCoordinate(CoordinatesUtil.getStampCoordinateFromParameters(parameters));
+	}
 	
 	public boolean shouldExpand(String expandable)
 	{
@@ -104,7 +108,10 @@ public class RequestInfo
 	public StampCoordinate getStampCoordinate()
 	{
 		//TODO implement stamp coord from request info
-		return StampCoordinates.getDevelopmentLatest();
+		return stampCoordinate_ != null ? stampCoordinate_ : StampCoordinates.getDevelopmentLatest();
+	}
+	private void setStampCoordinate(StampCoordinate stampCoordinate) {
+		stampCoordinate_ = stampCoordinate;
 	}
 
 	/**
@@ -137,5 +144,9 @@ public class RequestInfo
 	public boolean useFSN()
 	{
 		return true;
+	}
+	
+	private static String trim(String str) {
+		return str != null ? str.trim() : null;
 	}
 }
