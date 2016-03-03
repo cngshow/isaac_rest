@@ -54,7 +54,8 @@ public class RequestParameters {
 	public final static String stampCoordStates = "stampCoordStates";
 	public final static String stampCoordStatesDefault = "active";
 	
-	
+
+	public final static String id = "id";
 	public final static String expand = "expand";
 
 	public final static String stated = "stated";

@@ -82,28 +82,26 @@ public class ConceptAPIs
 	 * @param stampCoordPrecedence - specifies precedence of the StampCoordinate. Values are either "path" or "time"
 	 * @param stampCoordModules - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids
 	 * @param stampCoordStates - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names 
-
 	 * @param langCoordLang - specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms:
 	 * 		"english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish"
 	 * @param langCoordDescTypesPref - specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" or "definition"
 	 * @param langCoordDialectsPref - specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb"
-
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.versionComponent + "{id}")
+	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestConceptVersion getConceptVersion(
-			@PathParam("id") String id,
+			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand, 
 			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
 
-			@QueryParam(RequestParameters.stampCoordTime) @DefaultValue(RequestParameters.stampCoordTimeDefault) String coordTime,
-			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String coordPath,
-			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String coordStampPrecedence,
+			@QueryParam(RequestParameters.stampCoordTime) @DefaultValue(RequestParameters.stampCoordTimeDefault) String stampCoordTime,
+			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String stampCoordPath,
+			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String stampCoordPrecedence,
 			@QueryParam(RequestParameters.stampCoordModules) @DefaultValue(RequestParameters.stampCoordModulesDefault) String stampCoordModules,
-			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordState,
+			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordStates,
 			
 			@QueryParam(RequestParameters.langCoordLang) @DefaultValue(RequestParameters.langCoordLangDefault) String langCoordLang,
 			@QueryParam(RequestParameters.langCoordDescTypesPref) @DefaultValue(RequestParameters.langCoordDescTypesPrefDefault) String langCoordDescTypesPref,
@@ -112,11 +110,11 @@ public class ConceptAPIs
 		Map<String,String> params = new HashMap<>();
 		params.put(RequestParameters.expand, expand);
 
-		params.put(RequestParameters.stampCoordTime, coordTime);
-		params.put(RequestParameters.stampCoordPath, coordPath);
-		params.put(RequestParameters.stampCoordPrecedence, coordStampPrecedence);
+		params.put(RequestParameters.stampCoordTime, stampCoordTime);
+		params.put(RequestParameters.stampCoordPath, stampCoordPath);
+		params.put(RequestParameters.stampCoordPrecedence, stampCoordPrecedence);
 		params.put(RequestParameters.stampCoordModules, stampCoordModules);
-		params.put(RequestParameters.stampCoordStates, stampCoordState);
+		params.put(RequestParameters.stampCoordStates, stampCoordStates);
 		
 		params.put(RequestParameters.langCoordLang, langCoordLang);
 		params.put(RequestParameters.langCoordDescTypesPref, langCoordDescTypesPref);
@@ -136,7 +134,7 @@ public class ConceptAPIs
 					ri.shouldExpand(ExpandUtil.childrenExpandable),
 					Boolean.parseBoolean(stated.trim()));
 		}
-		throw new RestException("id", id, "No concept was found");
+		throw new RestException(RequestParameters.id, id, "No concept was found");
 	}
 	
 	/**
