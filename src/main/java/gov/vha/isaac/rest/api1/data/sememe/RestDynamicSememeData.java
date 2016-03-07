@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -55,8 +56,12 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
  */
 @XmlSeeAlso ({RestDynamicSememeArray.class, RestDynamicSememeBoolean.class, RestDynamicSememeByteArray.class, RestDynamicSememeDouble.class, RestDynamicSememeFloat.class,
 	RestDynamicSememeInteger.class, RestDynamicSememeLong.class, RestDynamicSememeNid.class, RestDynamicSememeSequence.class, RestDynamicSememeString.class, 
-	RestDynamicSememeUUID.class,})
+	RestDynamicSememeUUID.class, RestDynamicSememeArray[].class, RestDynamicSememeBoolean[].class, RestDynamicSememeByteArray[].class, 
+	RestDynamicSememeDouble[].class, RestDynamicSememeFloat[].class, RestDynamicSememeInteger[].class, RestDynamicSememeLong[].class, 
+	RestDynamicSememeNid[].class, RestDynamicSememeSequence[].class, RestDynamicSememeString[].class, RestDynamicSememeUUID[].class,
+	RestDynamicSememeData[].class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
+@XmlRootElement
 public abstract class RestDynamicSememeData
 {
 	/**
@@ -95,7 +100,7 @@ public abstract class RestDynamicSememeData
 				List<RestDynamicSememeData> nested = new ArrayList<>();
 				for (DynamicSememeData nestedDataItem : ((DynamicSememeArray<?>)data).getDataArray())
 				{
-					nested.add(translate(null, nestedDataItem));
+					nested.add(translate(columnNumber, nestedDataItem));
 				}
 				return new RestDynamicSememeArray(columnNumber, nested.toArray(new RestDynamicSememeData[nested.size()]));
 			case BOOLEAN:
