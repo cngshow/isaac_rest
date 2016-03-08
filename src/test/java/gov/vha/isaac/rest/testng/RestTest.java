@@ -122,4 +122,85 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		checkFail(response);
 	}
+	/**
+	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
+	 * concept data.
+	 */
+	@Test
+	public void testIdReturn()
+	{
+		final String url = RestPaths.idPathComponent + RestPaths.idTranslateComponent +
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
+		
+		Response response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		
+		checkFail(response);
+
+		response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
+		
+		checkFail(response);
+	}
+	/**
+	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
+	 * concept data.
+	 */
+	@Test
+	public void testConceptReturn()
+	{
+		final String url = RestPaths.conceptPathComponent + RestPaths.versionComponent +
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
+		
+		Response response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		
+		checkFail(response);
+
+		response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
+		
+		checkFail(response);
+	}
+	/**
+	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
+	 * LogicGraph data.
+	 */
+	@Test
+	public void testLogicGraphReturn()
+	{
+		final String url = RestPaths.logicGraphPathComponent + RestPaths.versionComponent +
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
+		
+		Response response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		
+		checkFail(response);
+
+		response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
+		
+		checkFail(response);
+	}
+
+	/**
+	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
+	 * taxonomy data.
+	 */
+	@Test
+	public void testTaxonomyReturn()
+	{
+		final String url = RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
+
+		Response response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		System.out.println(target(url).request().get().toString());
+		
+		checkFail(response);
+
+		response = target(url).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
+		
+		checkFail(response);
+	}
 }
