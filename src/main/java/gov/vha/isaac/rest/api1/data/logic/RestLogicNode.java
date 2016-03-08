@@ -64,7 +64,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 	RestLiteralNodeFloat.class,
 	RestLiteralNodeString.class,
 	RestLiteralNodeInstant.class})
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();

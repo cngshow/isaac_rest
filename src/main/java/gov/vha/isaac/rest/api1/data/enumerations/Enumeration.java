@@ -39,7 +39,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlSeeAlso ({RestDynamicSememeValidatorType.class, RestDynamicSememeDataType.class, RestObjectChronologyType.class, RestSememeType.class})
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class Enumeration implements Comparable<Enumeration>
 {
