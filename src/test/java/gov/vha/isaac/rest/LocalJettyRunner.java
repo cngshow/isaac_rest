@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,6 +37,14 @@ import eu.infomas.annotation.AnnotationDetector;
 import gov.va.oia.HK2Utilities.AnnotatedClasses;
 import gov.va.oia.HK2Utilities.AnnotationReporter;
 import gov.vha.isaac.MetaData;
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptService;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.rest.api1.RestPaths;
 
 /**
@@ -47,11 +56,9 @@ import gov.vha.isaac.rest.api1.RestPaths;
 public class LocalJettyRunner
 {
 	private static final URI BASE_URI = URI.create("http://localhost:8180/rest/");
-
-	public static void main(String[] args) throws Exception
+	
+	public static ResourceConfig configureJerseyServer() throws IOException, ClassNotFoundException
 	{
-		System.out.println("Launching Jetty Server");
-		
 		//Find all classes with the specified annotations:
 		AnnotatedClasses ac = new AnnotatedClasses();
 
@@ -61,7 +68,21 @@ public class LocalJettyRunner
 		
 		Set<Class<?>> temp = new HashSet<Class<?>>(Arrays.asList(ac.getAnnotatedClasses()));
 		temp.add(JacksonFeature.class);  //No annotations in this class
-		final ResourceConfig resourceConfig = new ResourceConfig(temp);
+		
+		ResourceConfig rc = new ResourceConfig(temp);
+		
+		Map<String, Object> properties = new HashMap<>();
+		properties.put(MessageProperties.XML_FORMAT_OUTPUT, true);
+		rc.addProperties(properties);
+		
+		return rc;
+	}
+
+	public static void main(String[] args) throws Exception
+	{
+		System.out.println("Launching Jetty Server");
+		
+		final ResourceConfig resourceConfig = configureJerseyServer();
 
 		Map<String, Object> properties = new HashMap<>();
 		properties.put(MessageProperties.XML_FORMAT_OUTPUT, true);
@@ -76,6 +97,17 @@ public class LocalJettyRunner
 			}
 		}));
 		server.start();
+		
+		
+		StampCoordinate stampCoordinate = StampCoordinates.getDevelopmentLatest();
+		LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
+
+		ConceptService conceptService = Get.conceptService();
+
+		ConceptChronology<? extends ConceptVersion<?>> sctId = conceptService.getConcept(MetaData.SNOMED_INTEGER_ID.getPrimordialUuid());
+		System.out.println("Found [1]: " + sctId);
+
+		System.out.println(conceptService.getSnapshot(stampCoordinate, languageCoordinate).getConceptSnapshot(sctId.getNid()));
 
 		System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C", 
 			BASE_URI.toString().substring(0, BASE_URI.toString().length() - 5), 

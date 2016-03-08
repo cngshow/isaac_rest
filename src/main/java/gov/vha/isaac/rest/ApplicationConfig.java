@@ -1,25 +1,18 @@
 package gov.vha.isaac.rest;
 
+import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptService;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.DBLocator;
-import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 
 @ApplicationPath("rest/")
 public class ApplicationConfig extends Application implements ContainerLifecycleListener
@@ -39,37 +32,33 @@ public class ApplicationConfig extends Application implements ContainerLifecycle
 			//do startup in this thread
 			LookupService.get();
 			
-	
 			//TODO background thread this
-			File dataStoreLocation = DBLocator.findDBFolder(new File(System.getProperty("isaacDatabaseLocation")));
-			
-			if (!dataStoreLocation.exists())
+			if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)))
 			{
-				throw new RuntimeException("Couldn't find a data store from the input of '" + dataStoreLocation.getAbsoluteFile().getAbsolutePath() + "'");
+				//if there isn't an official system property set, check this one.
+				String sysProp = System.getProperty("isaacDatabaseLocation");
+				if (StringUtils.isBlank(sysProp))
+				{
+					sysProp = "";
+				}
+				File dataStoreLocation = DBLocator.findDBFolder(new File(sysProp));
+				
+				if (!dataStoreLocation.exists())
+				{
+					throw new RuntimeException("Couldn't find a data store from the input of '" + dataStoreLocation.getAbsoluteFile().getAbsolutePath() + "'");
+				}
+				if (!dataStoreLocation.isDirectory())
+				{
+					throw new RuntimeException("The specified data store: '" + dataStoreLocation.getAbsolutePath() + "' is not a folder");
+				}
+		
+				LookupService.getService(ConfigurationService.class).setDataStoreFolderPath(dataStoreLocation.toPath());
+				System.out.println("  Setup AppContext, data store location = " + dataStoreLocation.getAbsolutePath());
 			}
-			if (!dataStoreLocation.isDirectory())
-			{
-				throw new RuntimeException("The specified data store: '" + dataStoreLocation.getAbsolutePath() + "' is not a folder");
-			}
-	
-			LookupService.getService(ConfigurationService.class).setDataStoreFolderPath(dataStoreLocation.toPath());
-			System.out.println("  Setup AppContext, data store location = " + dataStoreLocation.getAbsolutePath());
 	
 			LookupService.startupIsaac();
 	
 			System.out.println("Done setting up ISAAC");
-	
-			System.out.println("System up...");
-	
-			StampCoordinate stampCoordinate = StampCoordinates.getDevelopmentLatest();
-			LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
-	
-			ConceptService conceptService = Get.conceptService();
-	
-			ConceptChronology<? extends ConceptVersion<?>> sctId = conceptService.getConcept(MetaData.SNOMED_INTEGER_ID.getPrimordialUuid());
-			System.out.println("Found [1]: " + sctId);
-	
-			System.out.println(conceptService.getSnapshot(stampCoordinate, languageCoordinate).getConceptSnapshot(sctId.getNid()));
 		}
 	}
 	
