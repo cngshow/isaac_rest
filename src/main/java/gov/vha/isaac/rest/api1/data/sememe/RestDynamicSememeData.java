@@ -60,7 +60,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 	RestDynamicSememeDouble[].class, RestDynamicSememeFloat[].class, RestDynamicSememeInteger[].class, RestDynamicSememeLong[].class, 
 	RestDynamicSememeNid[].class, RestDynamicSememeSequence[].class, RestDynamicSememeString[].class, RestDynamicSememeUUID[].class,
 	RestDynamicSememeData[].class})
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class RestDynamicSememeData
 {
