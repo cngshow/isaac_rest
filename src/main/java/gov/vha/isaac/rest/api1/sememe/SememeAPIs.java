@@ -42,7 +42,6 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -74,11 +73,15 @@ public class SememeAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.chronologyComponent + "{id}")
-	public RestSememeChronology getSememeChronology(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
+	public RestSememeChronology getSememeChronology(
+			@PathParam("id") String id,
+			@QueryParam("expand") String expand
+			) throws RestException
 	{
-		RequestInfo ri = RequestInfo.init(expand);
-		return new RestSememeChronology(findSememeChronology(id), ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
-				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+		RequestInfo.get().readExpandables(expand);
+		
+		return new RestSememeChronology(findSememeChronology(id), RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
+				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
 	}
 	
 	/**
@@ -96,15 +99,16 @@ public class SememeAPIs
 	@Path(RestPaths.versionComponent + "{id}")
 	public RestSememeVersion getSememeVersion(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
 	{
-		RequestInfo ri = RequestInfo.init(expand);
+		RequestInfo.get().readExpandables(expand);
+
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = findSememeChronology(id);
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, StampCoordinates.getDevelopmentLatest());
+		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 		if (sv.isPresent())
 		{
-			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), ri.shouldExpand(ExpandUtil.chronologyExpandable), 
-					ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
+					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
 		}
 		else
 		{
@@ -165,13 +169,13 @@ public class SememeAPIs
 	@Path(RestPaths.byAssemblageComponent + "{id}")
 	public List<RestSememeVersion> getByAssemblage(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
 	{
-		RequestInfo ri = RequestInfo.init(expand);
+		RequestInfo.get().readExpandables(expand);
 		
 		HashSet<Integer> temp = new HashSet<>();
 		temp.add(convertToConceptSequence(id));
 		
 		//we don't have a referenced component - our id is assemblage
-		return get(null, temp, ri.shouldExpand(ExpandUtil.chronologyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+		return get(null, temp, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
 	}
 	
 	/**
@@ -192,7 +196,7 @@ public class SememeAPIs
 	public List<RestSememeVersion> getByReferencedComponent(@PathParam("id") String id, @QueryParam("assemblage") Set<String> assemblage, @QueryParam("expand") String expand) 
 			throws RestException
 	{
-		RequestInfo ri = RequestInfo.init(expand);
+		RequestInfo.get().readExpandables(expand);
 		
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
 		for (String a : assemblage)
@@ -200,7 +204,7 @@ public class SememeAPIs
 			allowedAssemblages.add(convertToConceptSequence(a));
 		}
 		
-		return get(id, allowedAssemblages, ri.shouldExpand(ExpandUtil.chronologyExpandable), ri.shouldExpand(ExpandUtil.nestedSememesExpandable));
+		return get(id, allowedAssemblages, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
 	}
 	
 

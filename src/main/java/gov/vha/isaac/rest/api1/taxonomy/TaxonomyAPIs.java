@@ -30,7 +30,6 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -68,20 +67,22 @@ public class TaxonomyAPIs
 			@QueryParam("id") @DefaultValue("7c21b6c5-cf11-5af9-893b-743f004c97f5") String id,
 			@QueryParam("stated") @DefaultValue("true") String stated, 
 			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight, 
-			@QueryParam("childDepth") @DefaultValue("1") int childDepth, 
-			@QueryParam("expand") String expand) throws RestException
+			@QueryParam("childDepth") @DefaultValue("1") int childDepth,
+			@QueryParam("expand") String expand
+			) throws RestException
 	{
+		RequestInfo.get().readExpandables(expand);
+		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 		if (cv.isPresent())
 		{
-			RequestInfo ri = RequestInfo.init(expand);
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
-					ri.shouldExpand(ExpandUtil.chronologyExpandable), 
-					parentHeight > 0 ? false : ri.shouldExpand(ExpandUtil.parentsExpandable),   //when height / depth > 0, this is handled below
-					childDepth > 0 ? false : ri.shouldExpand(ExpandUtil.childrenExpandable), 
+					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
+					parentHeight > 0 ? false : RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable),   //when height / depth > 0, this is handled below
+					childDepth > 0 ? false : RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable), 
 					Boolean.parseBoolean(stated.trim()));
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(Boolean.parseBoolean(stated.trim())));

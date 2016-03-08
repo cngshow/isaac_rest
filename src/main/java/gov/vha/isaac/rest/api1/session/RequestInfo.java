@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.session;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,10 +43,10 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestInfo
 {
-	private StampCoordinate stampCoordinate_;
-	private LanguageCoordinate languageCoordinate_;
+	private StampCoordinate stampCoordinate_ = null;
+	private LanguageCoordinate languageCoordinate_ = null;
 
-	private Set<String> expandablesForDirectExpansion_;
+	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
 	//request these to be skipped in the replies, which will give them a performance boost.
 	
@@ -65,33 +66,46 @@ public class RequestInfo
 
 	private RequestInfo()
 	{
-		expandablesForDirectExpansion_ = new HashSet<>(0);
 	}
 	
-	public static RequestInfo init(String expandables)
-	{
-		RequestInfo ri = new RequestInfo(expandables);
-		requestInfo.set(ri);
-		return get();
+	public static void reset() {
+		requestInfo.set(new RequestInfo());
 	}
-	private RequestInfo(String expandableString)
-	{
-		expandablesForDirectExpansion_ = ExpandUtil.read(expandableString);
-	}
-	
-	// Mechanism for passing multiple params
-	public static RequestInfo init(Map<String, String> parameters) throws RestException
-	{
-		RequestInfo ri = new RequestInfo(parameters);
-		requestInfo.set(ri);
-		return get();
-	}
-	private RequestInfo(Map<String, String> parameters) throws RestException
-	{
-		expandablesForDirectExpansion_ = ExpandUtil.read(trim(parameters.get(RequestParameters.expand)));
 
-		stampCoordinate_ = CoordinatesUtil.getStampCoordinateFromParameters(parameters);
-		languageCoordinate_ = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
+	public RequestInfo readExpandables(String expandableString)
+	{
+		requestInfo.get().expandablesForDirectExpansion_ = ExpandUtil.read(expandableString);
+		return get();
+	}
+	public RequestInfo readExpandables(Map<String, List<String>> parameters) throws RestException
+	{
+		requestInfo.get().expandablesForDirectExpansion_ = new HashSet<>();
+		if (parameters.containsKey(RequestParameters.expand)) {
+			for (String expandable : RequestInfoUtils.expandCommaDelimitedElements(parameters.get(RequestParameters.expand))) {
+				if (expandable != null) {
+					requestInfo.get().expandablesForDirectExpansion_.add(expandable.trim());
+				}
+			}
+		}
+		return get();
+	}
+	public RequestInfo readStampCoordinate(Map<String, List<String>> parameters) throws RestException
+	{
+		requestInfo.get().stampCoordinate_ = CoordinatesUtil.getStampCoordinateFromParameters(parameters);
+		return get();
+	}
+	public RequestInfo readLanguageCoordinate(Map<String, List<String>> parameters) throws RestException
+	{
+		requestInfo.get().languageCoordinate_ = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
+		return get();
+	}
+	public RequestInfo readAll(Map<String, List<String>> parameters) throws RestException
+	{
+		readExpandables(parameters);
+		readStampCoordinate(parameters);
+		readLanguageCoordinate(parameters);
+		
+		return requestInfo.get();
 	}
 	
 	public boolean shouldExpand(String expandable)
@@ -141,9 +155,5 @@ public class RequestInfo
 	public boolean useFSN()
 	{
 		return true;
-	}
-	
-	private static String trim(String str) {
-		return str != null ? str.trim() : null;
 	}
 }

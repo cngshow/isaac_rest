@@ -48,7 +48,6 @@ import gov.vha.isaac.ochre.api.util.Interval;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.NumberUtilities;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
@@ -56,6 +55,7 @@ import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * {@link SearchAPIs}
@@ -159,7 +159,7 @@ public class SearchAPIs
 			{
 				case DESCRIPTION:
 					Optional<LatestVersion<DescriptionSememe>> text = sc.getLatestVersion(DescriptionSememe.class, 
-							StampCoordinates.getDevelopmentLatest());
+							RequestInfo.get().getStampCoordinate());
 					if (text.isPresent())
 					{
 						temp.add(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore()));
@@ -167,7 +167,7 @@ public class SearchAPIs
 					break;
 				case LONG:
 					Optional<LatestVersion<LongSememe>> longSememe = sc.getLatestVersion(LongSememe.class, 
-							StampCoordinates.getDevelopmentLatest());
+							RequestInfo.get().getStampCoordinate());
 					if (longSememe.isPresent())
 					{
 						temp.add(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore()));
@@ -175,14 +175,14 @@ public class SearchAPIs
 					break;
 				case STRING:
 					Optional<LatestVersion<StringSememe>> stringSememe = sc.getLatestVersion(StringSememe.class, 
-							StampCoordinates.getDevelopmentLatest());
+							RequestInfo.get().getStampCoordinate());
 					if (stringSememe.isPresent())
 					{
 						temp.add(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore()));
 					}
 					break;
 				case DYNAMIC:
-					Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, StampCoordinates.getDevelopmentLatest());
+					Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
 					if (ds.isPresent())
 					{
 						temp.add(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore()));

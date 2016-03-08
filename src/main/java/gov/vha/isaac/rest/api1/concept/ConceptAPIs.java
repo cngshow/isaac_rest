@@ -19,9 +19,7 @@
 package gov.vha.isaac.rest.api1.concept;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -75,6 +73,7 @@ public class ConceptAPIs
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
+	 * 
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children'
 	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
 	 * @param stampCoordTime - specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest"
@@ -86,6 +85,7 @@ public class ConceptAPIs
 	 * 		"english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish"
 	 * @param langCoordDescTypesPref - specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" or "definition"
 	 * @param langCoordDialectsPref - specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb"
+	 *
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -93,45 +93,33 @@ public class ConceptAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestConceptVersion getConceptVersion(
-			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand, 
+			@PathParam(RequestParameters.id) String id, 
 			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
-
-			@QueryParam(RequestParameters.stampCoordTime) @DefaultValue(RequestParameters.stampCoordTimeDefault) String stampCoordTime,
-			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String stampCoordPath,
-			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String stampCoordPrecedence,
-			@QueryParam(RequestParameters.stampCoordModules) @DefaultValue(RequestParameters.stampCoordModulesDefault) String stampCoordModules,
-			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordStates,
-			
-			@QueryParam(RequestParameters.langCoordLang) @DefaultValue(RequestParameters.langCoordLangDefault) String langCoordLang,
-			@QueryParam(RequestParameters.langCoordDescTypesPref) @DefaultValue(RequestParameters.langCoordDescTypesPrefDefault) String langCoordDescTypesPref,
-			@QueryParam(RequestParameters.langCoordDialectsPref) @DefaultValue(RequestParameters.langCoordDialectsPrefDefault) String langCoordDialectsPref) throws RestException
+			@QueryParam(RequestParameters.expand) String expand
+//
+//			@QueryParam(RequestParameters.stampCoordTime) @DefaultValue(RequestParameters.stampCoordTimeDefault) String stampCoordTime,
+//			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String stampCoordPath,
+//			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String stampCoordPrecedence,
+//			@QueryParam(RequestParameters.stampCoordModules) @DefaultValue(RequestParameters.stampCoordModulesDefault) String stampCoordModules,
+//			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordStates,
+//			
+//			@QueryParam(RequestParameters.langCoordLang) @DefaultValue(RequestParameters.langCoordLangDefault) String langCoordLang,
+//			@QueryParam(RequestParameters.langCoordDescTypesPref) @DefaultValue(RequestParameters.langCoordDescTypesPrefDefault) String langCoordDescTypesPref,
+//			@QueryParam(RequestParameters.langCoordDialectsPref) @DefaultValue(RequestParameters.langCoordDialectsPrefDefault) String langCoordDialectsPref
+			) throws RestException
 	{
-		Map<String,String> params = new HashMap<>();
-		params.put(RequestParameters.expand, expand);
+		RequestInfo.get().readExpandables(expand);
 
-		params.put(RequestParameters.stampCoordTime, stampCoordTime);
-		params.put(RequestParameters.stampCoordPath, stampCoordPath);
-		params.put(RequestParameters.stampCoordPrecedence, stampCoordPrecedence);
-		params.put(RequestParameters.stampCoordModules, stampCoordModules);
-		params.put(RequestParameters.stampCoordStates, stampCoordStates);
-		
-		params.put(RequestParameters.langCoordLang, langCoordLang);
-		params.put(RequestParameters.langCoordDescTypesPref, langCoordDescTypesPref);
-		params.put(RequestParameters.langCoordDialectsPref, langCoordDialectsPref);
-		
-		RequestInfo ri = RequestInfo.init(params);
-		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, ri.getStampCoordinate());
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 		if (cv.isPresent())
 		{
 			return new RestConceptVersion(cv.get().value(), 
-					ri.shouldExpand(ExpandUtil.chronologyExpandable), 
-					ri.shouldExpand(ExpandUtil.parentsExpandable), 
-					ri.shouldExpand(ExpandUtil.childrenExpandable),
+					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
+					RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable), 
+					RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable),
 					Boolean.parseBoolean(stated.trim()));
 		}
 		throw new RestException(RequestParameters.id, id, "No concept was found");
@@ -148,13 +136,16 @@ public class ConceptAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.chronologyComponent + "{id}")
-	public RestConceptChronology getConceptChronology(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
+	public RestConceptChronology getConceptChronology(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.expand) String expand
+			) throws RestException
 	{
+		RequestInfo.get().readExpandables(expand);
+
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
-		RequestInfo ri = RequestInfo.init(expand);
-		return new RestConceptChronology(concept, ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
-				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
-		
+		return new RestConceptChronology(concept, RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
+				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 	}
 	
 	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException
@@ -170,7 +161,7 @@ public class ConceptAPIs
 			}
 			else
 			{
-				throw new RestException("id", id, "No concept is available with the specified id");
+				throw new RestException(RequestParameters.id, id, "No concept is available with the specified id");
 			}
 		}
 		else
@@ -185,12 +176,12 @@ public class ConceptAPIs
 				}
 				else
 				{
-					throw new RestException("id", id, "No concept is available with the specified id");
+					throw new RestException(RequestParameters.id, id, "No concept is available with the specified id");
 				}
 			}
 			else
 			{
-				throw new RestException("id", id, "Is not a concept identifier.  Must be a UUID or an integer");
+				throw new RestException(RequestParameters.id, id, "Is not a concept identifier.  Must be a UUID or an integer");
 			}
 		}
 	}
@@ -204,8 +195,8 @@ public class ConceptAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.descriptionsComponent + "{id}")
-	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam("id") String id, @QueryParam("includeDialects") @DefaultValue("true") String includeDialects) throws RestException
+	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
+	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, @QueryParam("includeDialects") @DefaultValue("true") String includeDialects) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		

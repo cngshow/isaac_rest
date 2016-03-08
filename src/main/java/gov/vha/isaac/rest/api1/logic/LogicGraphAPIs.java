@@ -46,6 +46,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 /**
  * {@link LogicGraphAPIs}
@@ -70,24 +71,24 @@ public class LogicGraphAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.versionComponent + "{id}")
+	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestSememeLogicGraphVersion getLogicGraphVersion(
-			@PathParam("id") String id,
-			@QueryParam("expand") String expand, 
-			@QueryParam("stated") @DefaultValue("true") String stated) throws RestException
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.expand) String expand, 
+			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
 	{
-		RequestInfo ri = RequestInfo.init(expand);
+		RequestInfo.get().readExpandables(expand);
 		
 		@SuppressWarnings("rawtypes")
 		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, ri.getStampCoordinate());
+		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
 		if (lgs.isPresent())
 		{
-			return new RestSememeLogicGraphVersion(lgs.get().value(), ri.shouldExpand(ExpandUtil.chronologyExpandable));
+			return new RestSememeLogicGraphVersion(lgs.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable));
 		}
-		throw new RestException("id", id, "No concept was found");
+		throw new RestException(RequestParameters.id, id, "No concept was found");
 	}
 	
 	/**
@@ -101,20 +102,20 @@ public class LogicGraphAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.chronologyComponent + "{id}")
+	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestSememeChronology getLogicGraphChronology(
-			@PathParam("id") String id,
-			@QueryParam("expand") String expand, 
-			@QueryParam("stated") @DefaultValue("true") String stated) throws RestException
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.expand) String expand, 
+			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
 	{
-		RequestInfo ri = RequestInfo.init(expand);
+		RequestInfo.get().readExpandables(expand);
 
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
 		
 		return new RestSememeChronology(
 				logicGraphChronology,
-				ri.shouldExpand(ExpandUtil.versionsAllExpandable), 
-				ri.shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+				RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
+				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 				false // LogicGraphSememe should not support nestedSememesExpandable
 				);
 	}
@@ -148,7 +149,7 @@ public class LogicGraphAPIs
 			}
 			else
 			{
-				throw new RestException("id", id, "No LogicGraph chronology is available for the concept with the specified id");
+				throw new RestException(RequestParameters.id, id, "No LogicGraph chronology is available for the concept with the specified id");
 			}
 		}
 		else
@@ -178,7 +179,7 @@ public class LogicGraphAPIs
 				}
 				case UNKNOWN_NID:
 				default:
-					throw new RestException("id", id, "LogicGraph chronology cannot be retrieved by id of unsupported ObjectChronologyType " + typeOfPassedId);
+					throw new RestException(RequestParameters.id, id, "LogicGraph chronology cannot be retrieved by id of unsupported ObjectChronologyType " + typeOfPassedId);
 				}
 
 				if (defChronologyOptional.isPresent())
@@ -191,12 +192,12 @@ public class LogicGraphAPIs
 				}
 				else
 				{
-					throw new RestException("id", id, "No LogicGraph chronology is available for the specified " + typeOfPassedId + " UUID");
+					throw new RestException(RequestParameters.id, id, "No LogicGraph chronology is available for the specified " + typeOfPassedId + " UUID");
 				}
 			}
 			else
 			{
-				throw new RestException("id", id, "Is not a valid concept or sememe identifier.  Must be a UUID identifying a CONCEPT or SEMEME or an integer NID or SEQUENCE identifying a CONCEPT");
+				throw new RestException(RequestParameters.id, id, "Is not a valid concept or sememe identifier.  Must be a UUID identifying a CONCEPT or SEMEME or an integer NID or SEQUENCE identifying a CONCEPT");
 			}
 		}
 	}

@@ -59,8 +59,8 @@ public class CoordinatesUtil {
 	
 	private CoordinatesUtil() {}
 	
-	private static Map<String,String> getLanguageCoordinateParameters(Map<String, String> params) {
-		Map<String,String> languageCoordinateParams = new HashMap<>();
+	private static Map<String,List<String>> getLanguageCoordinateParameters(Map<String, List<String>> params) {
+		Map<String,List<String>> languageCoordinateParams = new HashMap<>();
 
 		String langCoordinateParamNames[] = new String[] {
 				RequestParameters.langCoordLang,
@@ -75,7 +75,7 @@ public class CoordinatesUtil {
 		
 		return languageCoordinateParams;
 	}
-	public static LanguageCoordinate getLanguageCoordinateFromParameters(Map<String,String> params) throws RestException {
+	public static LanguageCoordinate getLanguageCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
         LanguageCoordinateImpl languageCoordinate = new LanguageCoordinateImpl(
         		getLanguageCoordinateLanguageSequenceFromParameter(params.get(RequestParameters.langCoordLang)), 
         		getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDialectsPref)),
@@ -86,53 +86,62 @@ public class CoordinatesUtil {
         return languageCoordinate;
     }
 	
-	public static int getLanguageCoordinateLanguageSequenceFromParameter(String languageParamStr) throws RestException {
-		if (StringUtils.isBlank(languageParamStr)) {
+	public static int getLanguageCoordinateLanguageSequenceFromParameter(List<String> unexpandedLanguageParamStrs) throws RestException {
+		List<String> languageParamStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedLanguageParamStrs);
+
+		if (languageParamStrs == null || languageParamStrs.size() == 0) {
 			return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+		} else if (languageParamStrs.size() == 1) {
+			String languageParamStr = languageParamStrs.iterator().next();
+			
+			if (StringUtils.isBlank(languageParamStr)) {
+				return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+			}
+
+			if (languageParamStr.trim().toLowerCase().startsWith("english")) {
+				return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("spanish")) {
+				return TermAux.SPANISH_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("french")) {
+				return TermAux.FRENCH_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("danish")) {
+				return TermAux.DANISH_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("polish")) {
+				return TermAux.POLISH_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("dutch")) {
+				return TermAux.DUTCH_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("lithuanian")) {
+				return TermAux.LITHUANIAN_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("chinese")) {
+				return TermAux.CHINESE_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("japanese")) {
+				return TermAux.JAPANESE_LANGUAGE.getConceptSequence();
+			} else if (languageParamStr.trim().toLowerCase().startsWith("swedish")) {
+				return TermAux.SWEDISH_LANGUAGE.getConceptSequence();
+			}
+
+			Optional<Integer> languageIntIdOptional = NumericUtils.getInt(languageParamStr.trim());
+			if (languageIntIdOptional.isPresent()) {
+				int nid = Get.identifierService().getConceptNid(languageIntIdOptional.get());
+				if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT)
+					return Get.identifierService().getConceptSequence(nid);
+			}
+
+			Optional<UUID> languageUuidOptional = UUIDUtil.getUUID(languageParamStr.trim());
+			if (languageUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(languageUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+				return Get.identifierService().getConceptSequenceForUuids(languageUuidOptional.get());
+			}
 		}
 
-		if (languageParamStr.trim().toLowerCase().startsWith("english")) {
-			return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("spanish")) {
-			return TermAux.SPANISH_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("french")) {
-			return TermAux.FRENCH_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("danish")) {
-			return TermAux.DANISH_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("polish")) {
-			return TermAux.POLISH_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("dutch")) {
-			return TermAux.DUTCH_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("lithuanian")) {
-			return TermAux.LITHUANIAN_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("chinese")) {
-			return TermAux.CHINESE_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("japanese")) {
-			return TermAux.JAPANESE_LANGUAGE.getConceptSequence();
-		} else if (languageParamStr.trim().toLowerCase().startsWith("swedish")) {
-			return TermAux.SWEDISH_LANGUAGE.getConceptSequence();
-		}
-
-		Optional<Integer> languageIntIdOptional = NumericUtils.getInt(languageParamStr.trim());
-		if (languageIntIdOptional.isPresent()) {
-			int nid = Get.identifierService().getConceptNid(languageIntIdOptional.get());
-			if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT)
-				return Get.identifierService().getConceptSequence(nid);
-		}
-
-		Optional<UUID> languageUuidOptional = UUIDUtil.getUUID(languageParamStr.trim());
-		if (languageUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(languageUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-			return Get.identifierService().getConceptSequenceForUuids(languageUuidOptional.get());
-		}
-
-		throw new RestException(RequestParameters.langCoordLang, languageParamStr, "Invalid language coordinate language value");
+		throw new RestException(RequestParameters.langCoordLang, languageParamStrs.toString(), "Invalid language coordinate language value");
 	}
 
-	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(String dialectsStr) throws RestException {
+	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(List<String> unexpandedDialectsStrs) throws RestException {
 		List<Integer> seqList = new ArrayList<>();
-		if (StringUtils.isNotBlank(dialectsStr))
-		{
-			for (String dialectId : dialectsStr.trim().split(","))
+		
+		List<String> dialectsStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDialectsStrs);
+		if (dialectsStrs != null && dialectsStrs.size() > 0) {
+			for (String dialectId : dialectsStrs)
 			{
 				if (StringUtils.isNotBlank(dialectId))
 				{
@@ -157,7 +166,7 @@ public class CoordinatesUtil {
 						seqList.add(TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence());
 						continue;
 					}
-					
+
 					throw new RestException(RequestParameters.langCoordDialectsPref, dialectId, "Invalid language coordinate dialect value");
 				}
 			}
@@ -175,11 +184,13 @@ public class CoordinatesUtil {
 
 		return seqArray;
 	}
-	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(String descTypesStr) throws RestException {
+	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(List<String> unexpandedDescTypesStrs) throws RestException {
 		List<Integer> seqList = new ArrayList<>();
-		if (StringUtils.isNotBlank(descTypesStr))
-		{
-			for (String descTypeId : descTypesStr.trim().split(","))
+		
+		List<String> descTypesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDescTypesStrs);
+
+		if (descTypesStrs != null && descTypesStrs.size() > 0) {
+			for (String descTypeId : descTypesStrs)
 			{
 				if (StringUtils.isNotBlank(descTypeId))
 				{
@@ -226,8 +237,8 @@ public class CoordinatesUtil {
 		return seqArray;
 	}
 	
-	private static Map<String,String> getStampCoordinateParameters(Map<String, String> params) {
-		Map<String,String> stampCoordinateParams = new HashMap<>();
+	private static Map<String,List<String>> getStampCoordinateParameters(Map<String, List<String>> params) {
+		Map<String,List<String>> stampCoordinateParams = new HashMap<>();
 
 		String stampCoordinateParamNames[] = new String[] {
 				RequestParameters.stampCoordTime,
@@ -244,7 +255,7 @@ public class CoordinatesUtil {
 		
 		return stampCoordinateParams;
 	}
-	public static StampCoordinate getStampCoordinateFromParameters(Map<String, String> params) throws RestException {
+	public static StampCoordinate getStampCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
 		StampPosition stampPosition = new StampPositionImpl(
 				getStampCoordinateTimeFromParameter(params.get(RequestParameters.stampCoordTime)), 
 				getStampCoordinatePathSequenceFromParameter(params.get(RequestParameters.stampCoordPath)));
@@ -258,42 +269,53 @@ public class CoordinatesUtil {
 
 		return stampCoordinate;
 	}
-	public static StampPrecedence getStampCoordinatePrecedenceFromParameter(String precedenceStr) throws RestException {
-		if (StringUtils.isBlank(precedenceStr)) {
-			return StampPrecedence.PATH;
-		}
+	public static StampPrecedence getStampCoordinatePrecedenceFromParameter(List<String> unexpandedPrecedenceStrs) throws RestException {
+		List<String> precedenceStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedPrecedenceStrs);
 
-		for (StampPrecedence value : StampPrecedence.values()) {
-			if (value.name().equalsIgnoreCase(precedenceStr.trim())) {
-				return value;
+		if (precedenceStrs == null || precedenceStrs.size() == 0) {
+			return StampPrecedence.PATH; // default
+		} else if (precedenceStrs.size() == 1) {
+			String precedenceStr = precedenceStrs.iterator().next();
+			
+			if (StringUtils.isBlank(precedenceStr)) {
+				return StampPrecedence.PATH; // default
 			}
-		}
 
-		Optional<Integer> stampPrecedenceOrdinalOptional = NumericUtils.getInt(precedenceStr.trim());
-		if (stampPrecedenceOrdinalOptional.isPresent()) {
 			for (StampPrecedence value : StampPrecedence.values()) {
-				if (value.ordinal() == stampPrecedenceOrdinalOptional.get()) {
+				if (value.name().equalsIgnoreCase(precedenceStr.trim())) {
 					return value;
+				}
+			}
+
+			Optional<Integer> stampPrecedenceOrdinalOptional = NumericUtils.getInt(precedenceStr.trim());
+			if (stampPrecedenceOrdinalOptional.isPresent()) {
+				for (StampPrecedence value : StampPrecedence.values()) {
+					if (value.ordinal() == stampPrecedenceOrdinalOptional.get()) {
+						return value;
+					}
 				}
 			}
 		}
 
-		throw new RestException("stampCoordPrecedence", "\"" + precedenceStr + "\"", "Invalid stamp coordinate precedence value");
+		throw new RestException("stampCoordPrecedence", "\"" + precedenceStrs + "\"", "Invalid stamp coordinate precedence value");
 	}
 
-	public static EnumSet<State> getStampCoordinateAllowedStatesFromParameter(String statesStr) throws RestException {
+	public static EnumSet<State> getStampCoordinateAllowedStatesFromParameter(List<String> unexpandedStatesStrs) throws RestException {
 		EnumSet<State> allowedStates = EnumSet.allOf(State.class);
 		allowedStates.clear();
 
-		if (StringUtils.isNotBlank(statesStr))
-		{
-			for (String state : statesStr.trim().split(","))
+		List<String> statesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedStatesStrs);
+
+		if (statesStrs == null || statesStrs.size() == 0) {
+			return State.ANY_STATE_SET; // default
+		} else {
+			for (String stateStr : statesStrs)
 			{
-				if (StringUtils.isNotBlank(state))
+				if (StringUtils.isNotBlank(stateStr))
 				{
 					boolean foundMatch = false;
 					for (State value : State.values()) {
-						if (value.name().equalsIgnoreCase(state.trim())) {
+						if (value.name().equalsIgnoreCase(stateStr.trim())) {
 							allowedStates.add(value);
 							foundMatch = true;
 							break;
@@ -301,7 +323,7 @@ public class CoordinatesUtil {
 					}
 
 					if (! foundMatch) {
-						Optional<Integer> stateOrdinalOptional = NumericUtils.getInt(statesStr.trim());
+						Optional<Integer> stateOrdinalOptional = NumericUtils.getInt(stateStr.trim());
 						if (stateOrdinalOptional.isPresent()) {
 							for (State value : State.values()) {
 								if (value.ordinal() == stateOrdinalOptional.get()) {
@@ -313,27 +335,29 @@ public class CoordinatesUtil {
 						}
 						
 						if (! foundMatch) {
-							throw new RestException("stampCoordStates", state, "Invalid stamp coordinate state value");
+							throw new RestException("stampCoordStates", stateStr, "Invalid stamp coordinate state value");
 						}
 					}
 				}
 			}
 
 			if (allowedStates.isEmpty()) {
-				return EnumSet.allOf(State.class);
+				return State.ANY_STATE_SET;
 			} else {
 				return allowedStates;
 			}
-		} else {
-			return EnumSet.allOf(State.class);
 		}
 	}
 
-	public static ConceptSequenceSet getStampCoordinateModuleSequencesFromParameter(String modulesStr) throws RestException {
+	public static ConceptSequenceSet getStampCoordinateModuleSequencesFromParameter(List<String> unexpandedModulesStrs) throws RestException {
 		ConceptSequenceSet returnValue = new ConceptSequenceSet();
-		if (StringUtils.isNotBlank(modulesStr))
-		{
-			for (String moduleId : modulesStr.trim().split(","))
+		
+		List<String> modulesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedModulesStrs);
+
+		if (modulesStrs == null || modulesStrs.size() == 0) {
+			return returnValue; // default
+		} else {
+			for (String moduleId : modulesStrs)
 			{
 				if (StringUtils.isNotBlank(moduleId))
 				{
@@ -360,47 +384,64 @@ public class CoordinatesUtil {
 		return returnValue;
 	}
 
-	public static int getStampCoordinatePathSequenceFromParameter(String pathStr) throws RestException {
+	public static int getStampCoordinatePathSequenceFromParameter(List<String> unexpandedPathStrs) throws RestException {
 		int development = TermAux.DEVELOPMENT_PATH.getConceptSequence();
+		
+		List<String> pathStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedPathStrs);
 
-		if (StringUtils.isBlank(pathStr)) {
-			return development;
+		if (pathStrs == null || pathStrs.size() == 0) {
+			return TermAux.DEVELOPMENT_PATH.getConceptSequence(); // default
+		} else if (pathStrs.size() == 1) {
+			String pathStr = pathStrs.iterator().next();
+			
+			if (StringUtils.isBlank(pathStr)) {
+				return development;
+			}
+
+			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(pathStr.trim());
+			if (pathIntIdOptional.isPresent()) {
+				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+			}
+
+			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(pathStr.trim());
+			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+			}
+
+			if (pathStr.trim().equalsIgnoreCase("development")) {
+				return development;
+			} else if (pathStr.trim().equalsIgnoreCase("master")) {
+				return TermAux.MASTER_PATH.getConceptSequence();
+			}
 		}
 
-		Optional<Integer> pathIntIdOptional = NumericUtils.getInt(pathStr.trim());
-		if (pathIntIdOptional.isPresent()) {
-			return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-		}
-
-		Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(pathStr.trim());
-		if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-			return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-		}
-
-		if (pathStr.trim().equalsIgnoreCase("development")) {
-			return development;
-		} else if (pathStr.trim().equalsIgnoreCase("master")) {
-			return TermAux.MASTER_PATH.getConceptSequence();
-		}
-
-		throw new RestException("stampCoordPath", "\"" + pathStr + "\"", "Invalid stamp coordinate path value");
+		throw new RestException("stampCoordPath", "\"" + pathStrs + "\"", "Invalid stamp coordinate path value");
 	}
 
-	public static long getStampCoordinateTimeFromParameter(String timeStr) throws RestException {
+	public static long getStampCoordinateTimeFromParameter(List<String> unexpandedTimeStrs) throws RestException {
 		long latest = Long.MAX_VALUE;
-		if (StringUtils.isBlank(timeStr)) {
-			return latest;
+		
+		List<String> timeStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedTimeStrs);
+
+		if (timeStrs == null || timeStrs.size() == 0) {
+			return latest; // default
+		} else if (timeStrs.size() == 1) {
+			String timeStr = timeStrs.iterator().next();
+			
+			if (StringUtils.isBlank(timeStr)) {
+				return latest;
+			}
+
+			Optional<Long> longTimeOptional = NumericUtils.getLong(timeStr.trim());
+			if (longTimeOptional.isPresent()) {
+				return longTimeOptional.get();
+			}
+
+			if (timeStr.trim().equalsIgnoreCase("latest")) {
+				return latest;
+			}
 		}
 
-		Optional<Long> longTimeOptional = NumericUtils.getLong(timeStr.trim());
-		if (longTimeOptional.isPresent()) {
-			return longTimeOptional.get();
-		}
-
-		if (timeStr.trim().equalsIgnoreCase("latest")) {
-			return latest;
-		}
-
-		throw new RestException("stampCoordTime", "\"" + timeStr + "\"", "Invalid stamp coordinate time value");
+		throw new RestException("stampCoordTime", "\"" + timeStrs + "\"", "Invalid stamp coordinate time value");
 	}
 }
