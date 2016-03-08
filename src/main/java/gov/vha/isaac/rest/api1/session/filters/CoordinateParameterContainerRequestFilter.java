@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
@@ -39,7 +41,15 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * Initializes RequestInfo ThreadLocal if necessary and initializes
+ * StampCoordinate and LanguageCoordinate based on intercepted query parameters,
+ * or default values if no relevant parameters are present.
+ * 
+ * Priority is set to Priorities.USER - 500
+ * to ensure that this filter is run before other user filters
+ * 
  */
+@Priority(Priorities.USER - 500)
 @Provider
 public class CoordinateParameterContainerRequestFilter implements ContainerRequestFilter {
 	private static Logger LOG = LogManager.getLogger();
