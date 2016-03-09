@@ -22,6 +22,7 @@ import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATI
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -36,6 +37,7 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
+import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api1.RestPaths;
 
@@ -75,8 +77,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			reader.getStream().forEach((object) -> {
 				commitService.importNoChecks(object);
 			});
+			
+			Get.startIndexTask((Class<IndexServiceBI>[])null).get();
 		}
-		catch (FileNotFoundException e)
+		catch (FileNotFoundException | InterruptedException | ExecutionException e)
 		{
 			Assert.fail("Test data file not found", e);
 		}
@@ -95,12 +99,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//System.out.println(response.readEntity(String.class));
 	}
 	
-	private void checkFail(Response response)
+	private Response checkFail(Response response)
 	{
 		if (response.getStatus() != Status.OK.getStatusCode())
 		{
-			Assert.fail("Response code " + response.getStatus());
+			Assert.fail("Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus())
+					+ response.readEntity(String.class));
 		}
+		return response;
 	}
 	
 	/**
@@ -194,7 +200,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		Response response = target(url).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		System.out.println(target(url).request().get().toString());
+	//	System.out.println(target(url).request().get().toString());
 		
 		checkFail(response);
 
@@ -202,5 +208,57 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
 		
 		checkFail(response);
+	}
+	
+	
+	@Test
+	public void testSearchAssemblageRestriction1()
+	{
+		//Check with UUID
+		final String url = RestPaths.searchPathComponent + RestPaths.sememesComponent;
+
+		String result = checkFail(target(url)
+				.queryParam("treatAsString", "false")
+				.queryParam("query","3")
+				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getUUID().toString())
+				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_DEFAULT_VALUE.getPrimordialUuid().toString()));
+		
+		//Check with nid
+		result = checkFail(target(url)
+				.queryParam("treatAsString", "false")
+				.queryParam("query","3")
+				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
+				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_DEFAULT_VALUE.getPrimordialUuid().toString()));
+		
+		//Check with sequence
+		//Check with nid
+		result = checkFail(target(url)
+				.queryParam("treatAsString", "false")
+				.queryParam("query","3")
+				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getConceptSequence() + "")
+				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_DEFAULT_VALUE.getPrimordialUuid().toString()));
+		
+		//sanity check search
+		result = checkFail(target(url)
+				.queryParam("treatAsString", "false")
+				.queryParam("query","55")
+				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
+				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_DEFAULT_VALUE.getPrimordialUuid().toString()));
 	}
 }
