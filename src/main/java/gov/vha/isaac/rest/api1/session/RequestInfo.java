@@ -68,8 +68,8 @@ public class RequestInfo
 	{
 	}
 	
-	public static void reset() {
-		requestInfo.set(new RequestInfo());
+	public static void remove() {
+		requestInfo.remove();
 	}
 
 	public RequestInfo readExpandables(String expandableString)
