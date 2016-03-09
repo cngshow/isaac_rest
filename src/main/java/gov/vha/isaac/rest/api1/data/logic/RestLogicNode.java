@@ -70,6 +70,12 @@ public abstract class RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
 
 	/**
+	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
+	 */
+	@XmlElement
+	RestNodeSemantic nodeSemantic;
+
+	/**
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
@@ -89,12 +95,6 @@ public abstract class RestLogicNode {
 	 */
 	@XmlElement
 	List<RestLogicNode> children;
-
-	/**
-	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
-	 */
-	@XmlElement
-	RestNodeSemantic nodeSemantic;
 
 	protected RestLogicNode()
 	{
