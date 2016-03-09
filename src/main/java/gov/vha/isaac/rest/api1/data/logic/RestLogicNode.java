@@ -64,10 +64,16 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 	RestLiteralNodeFloat.class,
 	RestLiteralNodeString.class,
 	RestLiteralNodeInstant.class})
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
+
+	/**
+	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
+	 */
+	@XmlElement
+	RestNodeSemantic nodeSemantic;
 
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -89,12 +95,6 @@ public abstract class RestLogicNode {
 	 */
 	@XmlElement
 	List<RestLogicNode> children;
-
-	/**
-	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
-	 */
-	@XmlElement
-	RestNodeSemantic nodeSemantic;
 
 	protected RestLogicNode()
 	{
