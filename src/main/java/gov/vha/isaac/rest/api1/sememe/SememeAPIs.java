@@ -35,7 +35,6 @@ import javax.ws.rs.core.MediaType;
 import org.codehaus.plexus.util.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
@@ -45,6 +44,7 @@ import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
@@ -172,7 +172,7 @@ public class SememeAPIs
 		RequestInfo.get().readExpandables(expand);
 		
 		HashSet<Integer> temp = new HashSet<>();
-		temp.add(convertToConceptSequence(id));
+		temp.add(Util.convertToConceptSequence(id));
 		
 		//we don't have a referenced component - our id is assemblage
 		return get(null, temp, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
@@ -201,7 +201,7 @@ public class SememeAPIs
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
 		for (String a : assemblage)
 		{
-			allowedAssemblages.add(convertToConceptSequence(a));
+			allowedAssemblages.add(Util.convertToConceptSequence(a));
 		}
 		
 		return get(id, allowedAssemblages, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
@@ -219,7 +219,7 @@ public class SememeAPIs
 	@Path(RestPaths.sememeDefinitionComponent + "{id}")
 	public RestDynamicSememeDefinition getSememeDefinition(@PathParam("id") String id) throws RestException
 	{
-		int conceptSequence = convertToConceptSequence(id);
+		int conceptSequence = Util.convertToConceptSequence(id);
 		if (DynamicSememeUsageDescriptionImpl.isDynamicSememe(conceptSequence))
 		{
 			return new RestDynamicSememeDefinition(DynamicSememeUsageDescriptionImpl.read(conceptSequence));
@@ -314,38 +314,5 @@ public class SememeAPIs
 			}
 		}
 		return results;
-	}
-	
-	public static int convertToConceptSequence(String conceptId) throws RestException
-	{
-		Optional<UUID> uuidId = UUIDUtil.getUUID(conceptId);
-		Optional<Integer> sequence = Optional.empty();
-		if (uuidId.isPresent())
-		{
-			if (Get.identifierService().hasUuid(uuidId.get()))
-			{
-				Optional<? extends ConceptChronology<?>> con = Get.conceptService().getOptionalConcept(uuidId.get());
-				sequence = Optional.of(con.get().getConceptSequence());
-			}
-			else
-			{
-				throw new RestException("The UUID '" + conceptId + "' Is not known by the system");
-			}
-		}
-		else
-		{
-			sequence = NumericUtils.getInt(conceptId);
-			if (sequence.isPresent() && sequence.get() < 0)
-			{
-				sequence = Optional.of(Get.identifierService().getConceptSequence(sequence.get()));
-			}
-		}
-		
-		if (!sequence.isPresent())
-		{
-			throw new RestException("The value '" + conceptId + "' does not appear to be a UUID or a nid");
-		}
-		
-		return sequence.get();
 	}
 }

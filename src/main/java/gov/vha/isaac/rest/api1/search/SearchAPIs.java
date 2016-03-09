@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.search;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,8 +36,6 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
@@ -45,13 +44,12 @@ import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.index.SearchResult;
 import gov.vha.isaac.ochre.api.util.Interval;
-import gov.vha.isaac.ochre.api.util.NumericUtils;
-import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.NumberUtilities;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
@@ -107,7 +105,7 @@ public class SearchAPIs
 			{
 				throw new RestException("The parameter 'extendedDescriptionTypeId' may not be combined with a 'descriptionType' parameter");
 			}
-			UUID extendedDescTypeSequence = convertToConceptUUID(extendedDescriptionTypeId);
+			UUID extendedDescTypeSequence = Util.convertToConceptUUID(extendedDescriptionTypeId);
 			return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null));
 		}
 		
@@ -201,56 +199,7 @@ public class SearchAPIs
 		return temp;
 	}
 	
-	public static UUID convertToConceptUUID(String conceptId) throws RestException
-	{
-		Optional<UUID> uuid = UUIDUtil.getUUID(conceptId);
-		if (uuid.isPresent())
-		{
-			if (Get.identifierService().hasUuid(uuid.get()) && Get.conceptService().getOptionalConcept(uuid.get()).isPresent())
-			{
-				return uuid.get();
-			}
-			else
-			{
-				throw new RestException("The UUID '" + conceptId + "' Is not known by the system");
-			}
-		}
-		else
-		{
-			Optional<Integer> numId = NumericUtils.getInt(conceptId);
-			if (numId.isPresent() && numId.get() < 0)
-			{
-				if (numId.get() < 0)
-				{
-					uuid = Get.identifierService().getUuidPrimordialForNid(numId.get());
-					if (uuid.isPresent())
-					{
-						return uuid.get();
-					}
-					else
-					{
-						throw new RestException("The nid '" + conceptId + "' is not known by the system");
-					}
-				}
-				else
-				{
-					Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = Get.conceptService().getOptionalConcept(numId.get());
-					if (c.isPresent())
-					{
-						return c.get().getPrimordialUuid();
-					}
-					else
-					{
-						throw new RestException("The concept sequence '" + conceptId + "' is not known by the system");
-					}
-				}
-			}
-			else
-			{
-				throw new RestException("The id '" + conceptId + "' does not appear to be a valid UUID, NID or Concept Sequence");
-			}
-		}
-	}
+
 	
 	/**
 	 * @param query The query to be evaluated.  If the query is numeric (int, float, long, double) , it will be treated as a numeric search.
@@ -259,9 +208,9 @@ public class SearchAPIs
 	 * http://lucene.apache.org/core/5_3_1/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Overview
 	 * @param treatAsString Treat the query as a string search, even if it is parseable as a number.  This is useful because 
 	 * 'id' type sememes in the data model are always represented as a string, even if they are numeric.
-	 * @param sememeAssemblageSequence (optional) restrict the search to only match on members of the provided sememe assemblage identifier(s).
-	 * This should be the sequence number of the concept that defines the sememe.  This parameter can be passed multiple times to pass
-	 *  multiple sememe assemblage identifiers.
+	 * @param sememeAssemblageId (optional) restrict the search to only match on members of the provided sememe assemblage identifier(s).
+	 * This should be the identifier of a concept that defines a sememe.  This parameter can be passed multiple times to pass
+	 *  multiple sememe assemblage identifiers.  This accepts UUIDs, nids or concept sequences.
 	 * @param dynamicSememeColumns (optional) limit the search to the specified columns of attached data.  May ONLY be provided if 
 	 * ONE and only one sememeAssemblageSequence is provided.  May not be provided if 0 or more than 1 sememeAssemblageSequence values are provided.
 	 * This parameter can be passed multiple times to pass multiple column references.  This should be a 0 indexed column number - such as 
@@ -278,7 +227,7 @@ public class SearchAPIs
 	@Path(RestPaths.sememesComponent)
 	public List<RestSearchResult> sememeSearch(@QueryParam("query") String query,
 			@QueryParam("treatAsString") Boolean treatAsString,
-			@QueryParam("sememeAssemblageSequence") Set<Integer> sememeAssemblageSequence, 
+			@QueryParam("sememeAssemblageId") Set<String> sememeAssemblageId, 
 			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
 			@QueryParam("limit") @DefaultValue("10") int limit) throws RestException
 	{
@@ -294,7 +243,7 @@ public class SearchAPIs
 			//all "IDs" are stored as string sememes for consistency.
 			log.debug("Performing sememe search for '" + query + "' - treating it as a string");
 			return processSearchResults(LookupService.get().getService(SememeIndexer.class)
-					.query(new DynamicSememeStringImpl(searchString),false, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), 
+					.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
 							limit, null));
 		}
 		else
@@ -307,7 +256,7 @@ public class SearchAPIs
 			{
 				return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
-								toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), limit, null));
+								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null));
 			}
 			catch (NumberFormatException e)
 			{
@@ -319,14 +268,14 @@ public class SearchAPIs
 					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
 									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
-									toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), limit, null));
+									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null));
 				}
 				catch (NumberFormatException e1)
 				{
 					wasInterval = false;
 					//nope	Run it as a string search.
 					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
-							.query(new DynamicSememeStringImpl(searchString),false, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), 
+							.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
 									limit, null));
 				}
 			}
@@ -355,10 +304,11 @@ public class SearchAPIs
 	 * such as a ComponentNidSememe, or a Logic Graph.  
 	 * An example usage of this API would be to locate the concept that contains a graph that references another concept.  The input value must 
 	 * be a nid, sequences and UUIDs are not supported for this operation.
-	 * @param sememeAssemblageSequence (optional) restrict the search to only match on members of the provided sememe assemblage identifier(s).
-	 * This should be the sequence number of the concept that defines the sememe.  This parameter can be passed multiple times to pass
-	 *  multiple sememe assemblage identifiers.  An example usage would be to restrict the search to static logic graphs, as opposed to 
-	 *  inferred logic graphs.  To restrict to stated, you would pass the nid for the 'EL++ stated form assemblage (ISAAC)' concept
+	 * @param sememeAssemblageId (optional) restrict the search to only match on members of the provided sememe assemblage identifier(s).
+	 * This should be the identifier of a concept that defines a sememe.  This parameter can be passed multiple times to pass
+	 * multiple sememe assemblage identifiers.  This accepts UUIDs, nids or concept sequences.  An example usage would be to restrict the search to 
+	 * static logic graphs, as opposed to inferred logic graphs.  To restrict to stated, you would pass the id for the 
+	 * 'EL++ stated form assemblage (ISAAC)' concept
 	 * @param dynamicSememeColumns (optional) limit the search to the specified columns of attached data.  May ONLY be provided if 
 	 * ONE and only one sememeAssemblageSequence is provided.  May not be provided if 0 or more than 1 sememeAssemblageSequence values are provided.
 	 * This parameter can be passed multiple times to pass multiple column references.  This should be a 0 indexed column number - such as 
@@ -374,12 +324,24 @@ public class SearchAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.byReferencedComponentComponent)
 	public List<RestSearchResult> nidReferences(@QueryParam("nid") int nid,
-			@QueryParam("sememeAssemblageSequence") Set<Integer> sememeAssemblageSequence, 
+			@QueryParam("sememeAssemblageId") Set<String> sememeAssemblageId, 
 			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
 			@QueryParam("limit") @DefaultValue("10") int limit) throws RestException
 	{
 		return processSearchResults(LookupService.get().getService(SememeIndexer.class)
-				.query(nid, toArray(sememeAssemblageSequence), toArray(dynamicSememeColumns), limit, null));
+				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null));
+	}
+	
+	private Integer[] processAssemblageRestrictions(Set<String> sememeAssemblageIds) throws RestException
+	{
+		Set<Integer> sequences = new HashSet<>(sememeAssemblageIds.size());
+		
+		for (String id : sememeAssemblageIds)
+		{
+			sequences.add(Util.convertToConceptSequence(id));
+		}
+		
+		return toArray(sequences);
 	}
 
 	private Integer[] toArray(Set<Integer> ints)
