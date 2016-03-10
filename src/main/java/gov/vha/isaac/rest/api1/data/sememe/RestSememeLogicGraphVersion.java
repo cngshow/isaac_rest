@@ -26,6 +26,7 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.data.logic.RestLogicNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNodeFactory;
 import gov.vha.isaac.rest.api1.data.logic.RestUntypedConnectorNode;
 
@@ -50,7 +51,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 	 * The root node of the logical expression tree associated with the concept
 	 */
 	@XmlElement
-	RestUntypedConnectorNode rootLogicNode;
+	RestLogicNode rootLogicNode;
 
 	protected RestSememeLogicGraphVersion()
 	{
@@ -83,7 +84,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 	 * 
 	 * Constructs a RestUntypedConnectorNode with NodeSemantic of DEFINITION_ROOT which is the root of the logic graph tree
 	 */
-	private static RestUntypedConnectorNode constructRootRestLogicNodeFromLogicGraphSememe(LogicGraphSememe<?> lgs) {
+	private static RestLogicNode constructRootRestLogicNodeFromLogicGraphSememe(LogicGraphSememe<?> lgs) {
 		LogicalExpression le = lgs.getLogicalExpression();
 		
 		LOG.debug("Processing LogicalExpression for concept " + Get.conceptDescriptionText(le.getConceptSequence()));
@@ -96,7 +97,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 				LOG.debug(le.getNode(i).getNodeSemantic() + " node #" + ((int)i + 1) + " of " + le.getNodeCount() + ": class=" + le.getNode(i).getClass().getName() + ", " + le.getNode(i));
 			}
 
-			return (RestUntypedConnectorNode)RestLogicNodeFactory.create(le.getRoot());
+			return RestLogicNodeFactory.create(le.getRoot());
 		} else { // (le.getNodeCount() <= 0) {
 			LOG.warn("Passed LogicalExpression with no children");
 			throw new RuntimeException("No children found in LogicalExpression for " + Get.conceptDescriptionText(le.getConceptSequence()) + ": " + lgs);

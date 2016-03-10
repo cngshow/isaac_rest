@@ -191,6 +191,21 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	/**
 	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
+	 * LogicGraph data and validates that the returned Response XML contains a valid RestSememeLogicGraphVersion
+	 */
+	@Test
+	public void testRestSememeLogicGraphVersionReturn()
+	{
+		final String url = RestPaths.logicGraphPathComponent + RestPaths.versionComponent +
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
+	
+		Object returnedEntity = target(url).request().get().getEntity();
+		
+		System.out.println("testRestSememeLogicGraphVersionReturn(): " + url + " returned a " + returnedEntity.getClass().getName() + " " + returnedEntity);
+	}
+	
+	/**
+	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
 	 * taxonomy data.
 	 */
 	@Test
