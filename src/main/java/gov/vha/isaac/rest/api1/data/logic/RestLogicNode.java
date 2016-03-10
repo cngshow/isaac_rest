@@ -92,6 +92,27 @@ public abstract class RestLogicNode {
 	@XmlElement
 	List<RestLogicNode> children;
 
+	/**
+	 * The following null members are a hack to ensure that Enunciate can generate
+	 * the require Ruby classes. They should never be used in any way.
+	 */
+	@XmlElement
+	static RestConceptNode nullRestConceptNodeForEnunciate = null;
+	@XmlElement
+	static RestUntypedConnectorNode nullRestUntypedConnectorNodeForEnunciate = null;
+	@XmlElement
+	static RestTypedConnectorNode nullRestTypedConnectorNodeForEnunciate = null;
+	@XmlElement
+	static RestLiteralNodeBoolean nullRestLiteralNodeBooleanForEnunciate = null;
+	@XmlElement
+	static RestLiteralNodeInteger nullRestLiteralNodeIntegerForEnunciate = null;
+	@XmlElement
+	static RestLiteralNodeFloat nullRestLiteralNodeFloatForEnunciate = null;
+	@XmlElement
+	static RestLiteralNodeString nullRestLiteralNodeStringForEnunciate = null;
+	@XmlElement
+	static RestLiteralNodeInstant nullRestLiteralNodeInstantForEnunciate = null;
+
 	protected RestLogicNode()
 	{
 		//For jaxb
