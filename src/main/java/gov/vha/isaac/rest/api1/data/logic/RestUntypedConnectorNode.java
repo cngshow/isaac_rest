@@ -21,6 +21,8 @@ package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.model.logic.node.AndNode;
 import gov.vha.isaac.ochre.model.logic.node.DisjointWithNode;
 import gov.vha.isaac.ochre.model.logic.node.NecessarySetNode;
@@ -41,8 +43,9 @@ import gov.vha.isaac.ochre.model.logic.node.SufficientSetNode;
  * 
  * A RestUntypedConnectorNode must have 1 or more child nodes.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
-public class RestUntypedConnectorNode extends RestConnectorNode {
+public class RestUntypedConnectorNode extends RestLogicNode {
 	protected RestUntypedConnectorNode() {
 		// For JAXB
 	}

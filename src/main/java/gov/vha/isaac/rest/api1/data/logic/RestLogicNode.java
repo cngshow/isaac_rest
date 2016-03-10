@@ -53,12 +53,8 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  */
 @XmlSeeAlso({
 	RestConceptNode.class,
-	RestConnectorNode.class,
 	RestUntypedConnectorNode.class,
 	RestTypedConnectorNode.class,
-	RestFeatureNode.class,
-	RestRoleNode.class,
-	RestLiteralNode.class,
 	RestLiteralNodeBoolean.class,
 	RestLiteralNodeInteger.class,
 	RestLiteralNodeFloat.class,

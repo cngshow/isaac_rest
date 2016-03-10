@@ -24,6 +24,8 @@ import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -44,6 +46,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * A REST logic graph node containing (referencing) a concept by sequence and its text description.
  * RestConceptNode has RestNodeSemantic. == NodeSemantic.CONCEPT and should never have any child nodes.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public class RestConceptNode extends RestLogicNode {
 

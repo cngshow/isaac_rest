@@ -25,6 +25,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -32,7 +34,6 @@ import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.TypedNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.TypedNodeWithSequences;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
@@ -48,16 +49,10 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * containing a connector type specified by connectorTypeConceptSequence
  * and described by connectorTypeConceptDescription
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlSeeAlso({RestFeatureNode.class,RestRoleNode.class})
 @XmlRootElement
-public abstract class RestTypedConnectorNode extends RestConnectorNode {
-
-	/**
-	 * The data that was not expanded as part of this call (but can be)
-	 */
-	@XmlElement
-	Expandables expandables;
-
+public abstract class RestTypedConnectorNode extends RestLogicNode {
 	/**
 	 * RestTypedConnectorNode contains an int connectorTypeConceptSequence identifying a connector type concept 
 	 */
