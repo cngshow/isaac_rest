@@ -112,6 +112,8 @@ public abstract class RestLogicNode {
 	static RestLiteralNodeString nullRestLiteralNodeStringForEnunciate = null;
 	@XmlElement
 	static RestLiteralNodeInstant nullRestLiteralNodeInstantForEnunciate = null;
+	@XmlElement
+	static RestRoleNode nullRestRoleNodeForEnunciate = null;
 
 	protected RestLogicNode()
 	{
