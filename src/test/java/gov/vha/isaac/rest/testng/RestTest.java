@@ -19,23 +19,17 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
@@ -56,7 +50,6 @@ import gov.vha.isaac.ochre.api.logic.NodeSemantic;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
-import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 /**
  * {@link RestTest}
@@ -207,8 +200,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	/**
-	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
-	 * LogicGraph data and validates that the returned Response XML contains a valid RestSememeLogicGraphVersion
+	 * This test validates that the JSON serializer is working correctly with returns that contain
+	 * LogicGraph data and validates that the returned Response JSON contains a valid RestSememeLogicGraphVersion
 	 */
 	@Test
 	public void testRestSememeLogicGraphVersionReturn()
