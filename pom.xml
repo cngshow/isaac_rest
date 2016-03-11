@@ -27,6 +27,7 @@
 	<properties>
 		<isaac.version>3.01-SNAPSHOT</isaac.version>
 		<jersey.version>2.22.2</jersey.version>
+		<enunciate.version>2.2.0</enunciate.version>
 	</properties>
 
 	<dependencies>
@@ -178,7 +179,7 @@
 		<dependency>
 			<groupId>com.webcohesion.enunciate</groupId>
 			<artifactId>enunciate-core-annotations</artifactId>
-			<version>2.2.0-hack</version>
+			<version>${enunciate.version}</version>
 		</dependency>
 
 	</dependencies>
@@ -188,7 +189,7 @@
 			<plugin>
 				<groupId>com.webcohesion.enunciate</groupId>
 				<artifactId>enunciate-maven-plugin</artifactId>
-				<version>2.2.0</version>
+				<version>${enunciate.version}</version>
 				<executions>
 					<execution>
 						<goals>
