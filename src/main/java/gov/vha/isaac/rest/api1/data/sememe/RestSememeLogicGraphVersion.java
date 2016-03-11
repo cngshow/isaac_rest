@@ -28,7 +28,6 @@ import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNodeFactory;
-import gov.vha.isaac.rest.api1.data.logic.RestUntypedConnectorNode;
 
 /**
  * 
