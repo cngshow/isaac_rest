@@ -20,13 +20,8 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import java.util.Optional;
-
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -49,9 +44,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * containing a connector type specified by connectorTypeConceptSequence
  * and described by connectorTypeConceptDescription
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlSeeAlso({RestFeatureNode.class,RestRoleNode.class})
-@XmlRootElement
 public abstract class RestTypedConnectorNode extends RestLogicNode {
 	/**
 	 * RestTypedConnectorNode contains an int connectorTypeConceptSequence identifying a connector type concept 

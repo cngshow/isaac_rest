@@ -22,16 +22,12 @@ package gov.vha.isaac.rest.api1.data.logic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -91,29 +87,6 @@ public abstract class RestLogicNode {
 	 */
 	@XmlElement
 	List<RestLogicNode> children;
-
-	/**
-	 * The following null members are a hack to ensure that Enunciate can generate
-	 * the require Ruby classes. They should never be used in any way.
-	 */
-	@XmlElement
-	static RestConceptNode nullRestConceptNodeForEnunciate = null;
-	@XmlElement
-	static RestUntypedConnectorNode nullRestUntypedConnectorNodeForEnunciate = null;
-	@XmlElement
-	static RestTypedConnectorNode nullRestTypedConnectorNodeForEnunciate = null;
-	@XmlElement
-	static RestLiteralNodeBoolean nullRestLiteralNodeBooleanForEnunciate = null;
-	@XmlElement
-	static RestLiteralNodeInteger nullRestLiteralNodeIntegerForEnunciate = null;
-	@XmlElement
-	static RestLiteralNodeFloat nullRestLiteralNodeFloatForEnunciate = null;
-	@XmlElement
-	static RestLiteralNodeString nullRestLiteralNodeStringForEnunciate = null;
-	@XmlElement
-	static RestLiteralNodeInstant nullRestLiteralNodeInstantForEnunciate = null;
-	@XmlElement
-	static RestRoleNode nullRestRoleNodeForEnunciate = null;
 
 	protected RestLogicNode()
 	{

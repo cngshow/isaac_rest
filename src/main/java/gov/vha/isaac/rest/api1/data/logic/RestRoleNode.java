@@ -19,10 +19,6 @@
 
 package gov.vha.isaac.rest.api1.data.logic;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.model.logic.node.external.RoleNodeAllWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.external.RoleNodeSomeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.RoleNodeAllWithSequences;
@@ -41,8 +37,6 @@ import gov.vha.isaac.ochre.model.logic.node.internal.RoleNodeSomeWithSequences;
  * RestRoleNode for RoleNodeSome has RestNodeSemantic == NodeSemantic.ROLE_SOME
  * RestRoleNode for RoleNodeAll has RestNodeSemantic == NodeSemantic.ROLE_ALL
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-@XmlRootElement
 public class RestRoleNode extends RestTypedConnectorNode {
 	/**
 	 * 

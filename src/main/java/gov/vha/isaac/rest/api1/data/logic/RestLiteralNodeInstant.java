@@ -20,12 +20,7 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import java.time.Instant;
-
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInstant;
 
 /**
@@ -40,8 +35,6 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInstant;
  * 
  * A RestLiteralNodeInstant may not have any child logic nodes.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-@XmlRootElement
 public class RestLiteralNodeInstant extends RestLogicNode {
 
 	/**

@@ -20,10 +20,6 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.model.logic.node.LiteralNodeFloat;
 
 /**
@@ -38,8 +34,6 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeFloat;
  * 
  * A RestLiteralNodeFloat may not have any child logic nodes.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-@XmlRootElement
 public class RestLiteralNodeFloat extends RestLogicNode {
 	/**
 	 * RestLiteralNodeFloat contains a literal float value, literalValue
