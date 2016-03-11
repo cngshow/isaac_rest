@@ -21,25 +21,42 @@ package gov.vha.isaac.rest.testng;
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
+import gov.vha.isaac.ochre.api.logic.NodeSemantic;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 /**
  * {@link RestTest}
@@ -198,12 +215,55 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	{
 		final String url = RestPaths.logicGraphPathComponent + RestPaths.versionComponent +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
-	
-		Object returnedEntity = target(url).request().get().getEntity();
+		Response returnedResponse = target(url)
+				//.queryParam(RequestParameters.expand,"logicNodeConceptVersions")
+				.request().get();
+
+		String output = returnedResponse.readEntity(String.class);
+
+		ObjectMapper mapper = new ObjectMapper();
 		
-		System.out.println("testRestSememeLogicGraphVersionReturn(): " + url + " returned a " + returnedEntity.getClass().getName() + " " + returnedEntity);
+		JsonNode rootNode = null;
+		try {
+			System.out.println("testRestSememeLogicGraphVersionReturn() parsing json " + output);
+
+			rootNode = mapper.readValue(output, JsonNode.class);
+			
+			System.out.println("testRestSememeLogicGraphVersionReturn() parsed json as " + rootNode.getNodeType() + "\n" + rootNode);
+		} catch (IOException e) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() FAILED parsing json.  Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		}
+
+		JsonNode rootType = rootNode.get("@class");
+		
+		if (rootType.isMissingNode()) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed json object missing @class member");
+		} else if (! rootType.asText().equals(RestSememeLogicGraphVersion.class.getName())) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed json of unexpected object type " + rootType.asText());
+		} else {
+			System.out.println("testRestSememeLogicGraphVersionReturn() parsed " + rootType.asText() + " object");
+		}
+		
+		final String referencedConceptDescriptionFieldName = "referencedConceptDescription";
+		final String referencedConceptDescriptionExpectedValue = "dynamic sememe extension definition (ISAAC)";
+		if (! rootNode.has(referencedConceptDescriptionFieldName)) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with no referencedConceptDescription");
+		}
+		if (rootNode.get(referencedConceptDescriptionFieldName) == null) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with null referencedConceptDescription");
+		}
+		JsonNode referencedConceptDescriptionNode = rootNode.get(referencedConceptDescriptionFieldName);
+		if (! referencedConceptDescriptionNode.asText().equals(referencedConceptDescriptionExpectedValue)) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with unexpected referencedConceptDescription=\"" + referencedConceptDescriptionNode.asText() + "\"");
+		}
+		System.out.println("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with referencedConceptDescription of type " + referencedConceptDescriptionNode.getNodeType());
+		
+		final String rootLogicNodeFieldName = "rootLogicNode";
+		if (rootNode.with("rootLogicNode").with("nodeSemantic").get("name") == null || ! rootNode.with("rootLogicNode").with("nodeSemantic").get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with("rootLogicNode").with("nodeSemantic").get("name") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
+		}
 	}
-	
+
 	/**
 	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
 	 * taxonomy data.
