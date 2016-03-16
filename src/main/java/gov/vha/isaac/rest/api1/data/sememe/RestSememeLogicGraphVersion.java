@@ -73,6 +73,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 		super();
 		setup(lgs, includeChronology, false, null);
 
+		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
 		referencedConceptDescription = Get.conceptDescriptionText(lgs.getReferencedComponentNid());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 	}

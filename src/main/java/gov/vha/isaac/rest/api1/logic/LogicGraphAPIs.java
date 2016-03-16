@@ -64,7 +64,7 @@ public class LogicGraphAPIs
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'logicNodeConceptVersions'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'version'
 	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
 	 * @return the logic graph version object
 	 * @throws RestException 
@@ -94,7 +94,7 @@ public class LogicGraphAPIs
 	/**
 	 * Returns the chronology of a logic graph.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
-	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'logicNodeUuids' and/or 'logicNodeConceptVersions'
+	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'logicNodeUuids' and/or 'version'
 
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
 	 * @return the concept chronology object

@@ -19,27 +19,23 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
-
+import java.util.regex.Pattern;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.commit.CommitService;
@@ -47,6 +43,7 @@ import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
+import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
@@ -209,7 +206,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String url = RestPaths.logicGraphPathComponent + RestPaths.versionComponent +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
 		Response returnedResponse = target(url)
-				//.queryParam(RequestParameters.expand,"logicNodeConceptVersions")
+				//.queryParam(RequestParameters.expand,"version")
 				.request().get();
 
 		String output = returnedResponse.readEntity(String.class);
@@ -328,5 +325,180 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_DEFAULT_VALUE.getPrimordialUuid().toString()));
+	}
+	
+	@Test
+	public void testSearchExpandsUUID()
+	{
+		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
+		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
+		final String prefixSearch = RestPaths.searchPathComponent + RestPaths.prefixComponent;
+		final String byRefSearch = RestPaths.searchPathComponent + RestPaths.byReferencedComponentComponent;
+		
+		//Make sure it contains a random (type 4) UUID with this pattern...
+		//<uuids>12604572-254c-49d2-8d9f-39d485af0fa0</uuids>
+		final Pattern pXml = Pattern.compile(".*uuids.{9}-.{4}-4.{3}-.{4}-.{14}uuids.*", Pattern.DOTALL);
+		
+		//Test expand uuid on/off for each search type
+
+		String result = checkFail(target(sememeSearch)
+				.queryParam("treatAsString", "false")
+				.queryParam("query","1")
+				.queryParam("expand", "uuid")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(pXml.matcher(result).matches());
+		
+		result = checkFail(target(sememeSearch)
+				.queryParam("treatAsString", "false")
+				.queryParam("query","1")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(pXml.matcher(result).matches());
+		
+		result = checkFail(target(descriptionSearch)
+				.queryParam("query","dynamic*")
+				.queryParam("expand", "uuid")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(pXml.matcher(result).matches());
+		
+		result = checkFail(target(descriptionSearch)
+				.queryParam("query","dynamic*")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(pXml.matcher(result).matches());
+		
+		result = checkFail(target(prefixSearch)
+				.queryParam("query","dynamic")
+				.queryParam("expand", "uuid")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(pXml.matcher(result).matches());
+		
+		result = checkFail(target(prefixSearch)
+				.queryParam("query","dynamic")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(pXml.matcher(result).matches());
+		
+		result = checkFail(target(byRefSearch)
+				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
+				.queryParam("expand", "uuid")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(pXml.matcher(result).matches());
+		
+		result = checkFail(target(byRefSearch)
+				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(pXml.matcher(result).matches());
+		
+		//Spot check for JSON return support:
+		//Make sure it contains a random (type 4) UUID with this pattern...
+		// "uuids" : [ "bcf22234-a736-5f6b-9ce3-d016594ca5cd" ]
+		final Pattern pJson = Pattern.compile(".*uuids.{15}-.{4}-4.{3}-.{4}-.{12}.*", Pattern.DOTALL);
+		result = checkFail(target(prefixSearch)
+				.queryParam("query","dynamic")
+				.queryParam("expand", "uuid")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
+				.readEntity(String.class);
+		Assert.assertTrue(pJson.matcher(result).matches());
+		
+		result = checkFail(target(prefixSearch)
+				.queryParam("query","dynamic")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
+				.readEntity(String.class);
+		Assert.assertFalse(pJson.matcher(result).matches());
+	}
+	
+	@Test
+	public void testSearchExpandsRefConcept()
+	{
+		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
+		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
+		final String prefixSearch = RestPaths.searchPathComponent + RestPaths.prefixComponent;
+		final String byRefSearch = RestPaths.searchPathComponent + RestPaths.byReferencedComponentComponent;
+		
+		//Test expand uuid on/off for each search type
+
+		String result = checkFail(target(sememeSearch)
+				.queryParam("query", DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
+				.queryParam("expand", ExpandUtil.referencedConcept)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(sememeSearch)
+				.queryParam("query", DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(descriptionSearch)
+				.queryParam("query","dynamic sememe Asse*")
+				.queryParam("expand", ExpandUtil.referencedConcept)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(descriptionSearch)
+				.queryParam("query","dynamic sememe Asse*")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(prefixSearch)
+				.queryParam("query","dynamic sememe Asse")
+				.queryParam("expand", ExpandUtil.referencedConcept)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(prefixSearch)
+				.queryParam("query","dynamic sememe Asse")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(byRefSearch)
+				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
+				.queryParam("limit", "100")
+				.queryParam("expand", "uuid," + ExpandUtil.referencedConcept)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
+				.readEntity(String.class);
+		Assert.assertTrue(result.contains(MetaData.MODULE.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(byRefSearch)
+				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
+				.queryParam("limit", "100")
+				.queryParam("expand", "uuid")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
+				.readEntity(String.class);
+		Assert.assertFalse(result.contains(MetaData.MODULE.getPrimordialUuid().toString()));
+	}
+	
+	@Test
+	public void testSearchRecursiveRefComponentLookup()
+	{
+		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
+
+		String result = checkFail(target(sememeSearch)
+				.queryParam("query", MetaData.PREFERRED.getNid() + "")
+				.queryParam("treatAsString", "true")
+				.queryParam("limit", 500)
+				.queryParam("expand", ExpandUtil.referencedConcept)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
+		
+		result = checkFail(target(sememeSearch)
+				.queryParam("query", MetaData.PREFERRED.getNid() + "")
+				.queryParam("treatAsString", "true")
+				.queryParam("limit", 500)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 	}
 }

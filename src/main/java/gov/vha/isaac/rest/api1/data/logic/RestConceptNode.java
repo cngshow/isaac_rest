@@ -77,9 +77,10 @@ public class RestConceptNode extends RestLogicNode {
 	public RestConceptNode(ConceptNodeWithSequences conceptNodeWithSequences) {
 		super(conceptNodeWithSequences);
 		conceptSequence = conceptNodeWithSequences.getConceptSequence();
+		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
 		conceptDescription = Get.conceptDescriptionText(conceptSequence);
 		
-		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeConceptVersionsExpandable)) {
+		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
 			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
 			@SuppressWarnings("unchecked")
@@ -89,8 +90,8 @@ public class RestConceptNode extends RestLogicNode {
 			conceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())
 			{
-				// TODO make expandables work for logicNodeConceptVersionsExpandable
-				// expandables.add(new Expandable(ExpandUtil.logicNodeConceptVersionsExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
+				// TODO make expandables work for versionExpandable
+				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
 			}
 		}
 	}
@@ -100,9 +101,10 @@ public class RestConceptNode extends RestLogicNode {
 	public RestConceptNode(ConceptNodeWithUuids conceptNodeWithUuids) {
 		super(conceptNodeWithUuids);
 		conceptSequence = Get.identifierService().getConceptSequenceForUuids(conceptNodeWithUuids.getConceptUuid());
+		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
 		conceptDescription = Get.conceptDescriptionText(conceptSequence);
 		
-		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeConceptVersionsExpandable)) {
+		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
 			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
 			@SuppressWarnings("unchecked")
@@ -112,8 +114,8 @@ public class RestConceptNode extends RestLogicNode {
 			conceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())
 			{
-				// TODO make expandables work for logicNodeConceptVersionsExpandable
-				// expandables.add(new Expandable(ExpandUtil.logicNodeConceptVersionsExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
+				// TODO make expandables work for versionExpandable
+				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
 			}
 		}
 	}
