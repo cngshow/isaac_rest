@@ -501,4 +501,44 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 	}
+	
+	@Test
+	public void testDescriptionsFetch()
+	{
+		final String descriptions = RestPaths.conceptPathComponent +  RestPaths.descriptionsComponent;
+
+		String result = checkFail(target(descriptions + MetaData.USER.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		String[] temp = result.split("<restSememeDescriptionVersion>");
+		//[0] is header junk
+		//[1] is the first dialect
+		//[2] is the second dialect
+		
+		Assert.assertTrue(temp.length == 3);
+		for (int i = 1; i < 3; i++)
+		{
+			String[] temp2 = temp[i].split("<dialects>");
+			String preDialect = temp2[0];
+			String dialect = temp2[1];
+			Assert.assertEquals(temp2.length, 2);
+			
+			//Validate that the important bit of the description sememe are put together properly
+			Assert.assertTrue(preDialect.contains("<assemblageSequence>" + MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence() + "</assemblageSequence>"), "Wrong language");
+			Assert.assertTrue(preDialect.contains("<referencedComponentNid>" + MetaData.USER.getNid() + "</referencedComponentNid>"), "Wrong concept");
+			Assert.assertTrue(preDialect.contains("<caseSignificanceConceptSequence>" + MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence() 
+				+ "</caseSignificanceConceptSequence>"), "Wrong case sentivity");
+			Assert.assertTrue(preDialect.contains("<languageConceptSequence>" + MetaData.ENGLISH_LANGUAGE.getConceptSequence() 
+				+ "</languageConceptSequence>"), "Wrong language");
+			Assert.assertTrue((preDialect.contains("<text>user</text>") || preDialect.contains("<text>user (ISAAC)</text>")), "Wrong text " + preDialect);
+			Assert.assertTrue((preDialect.contains("<descriptionTypeConceptSequence>" + MetaData.SYNONYM.getConceptSequence() + "</descriptionTypeConceptSequence>") 
+					|| preDialect.contains("<descriptionTypeConceptSequence>" + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence() + "</descriptionTypeConceptSequence>")), 
+					"Wrong description type");
+			
+			//validate that the dialect bits are put together properly
+			Assert.assertTrue(dialect.contains("<assemblageSequence>" + MetaData.US_ENGLISH_DIALECT.getConceptSequence() + "</assemblageSequence>"), "Wrong dialect");
+			Assert.assertTrue(dialect.contains("<data xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xsi:type=\"xs:int\">" + MetaData.PREFERRED.getNid() + "</data>"), "Wrong value");
+		}
+	}
 }
