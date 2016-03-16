@@ -78,7 +78,7 @@ public class SearchAPIs
 	 * @param limit The maximum number of results to return
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
 	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
-	 * by following the referencedComponent refererences of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
 	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
 	 * @return the list of descriptions that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
@@ -138,7 +138,7 @@ public class SearchAPIs
 	 * @param limit The maximum number of results to return
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
 	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
-	 * by following the referencedComponent refererences of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
 	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
 	 * @return the list of descriptions that matched, along with their score. Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
@@ -242,7 +242,7 @@ public class SearchAPIs
 	 * @param limit The maximum number of results to return
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
 	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
-	 * by following the referencedComponent refererences of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
 	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
 	 * 
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
@@ -347,7 +347,7 @@ public class SearchAPIs
 	 * @param limit The maximum number of results to return
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
 	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
-	 * by following the referencedComponent refererences of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
 	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
