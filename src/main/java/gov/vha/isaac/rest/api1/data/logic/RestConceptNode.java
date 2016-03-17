@@ -93,7 +93,6 @@ public class RestConceptNode extends RestLogicNode {
 		conceptSequence = conceptNodeWithSequences.getConceptSequence();
 		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
 		conceptDescription = Get.conceptDescriptionText(conceptSequence);
-		
 		try {
 			// TODO Fine tune this when data problems resolved
 			Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());
@@ -103,7 +102,7 @@ public class RestConceptNode extends RestLogicNode {
 			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with " + Frills.getIdInfo(conceptSequence));
 			isConceptDefined = false;
 		}
-		
+
 		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
 			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);

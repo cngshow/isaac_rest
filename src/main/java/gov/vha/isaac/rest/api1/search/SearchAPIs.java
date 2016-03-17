@@ -40,6 +40,7 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.LongSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.index.SearchResult;
@@ -54,6 +55,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 /**
  * {@link SearchAPIs}
@@ -74,6 +76,10 @@ public class SearchAPIs
 	 * @param extendedDescriptionTypeId - optional - may not be combined with descriptionType.  This would typically be
 	 * a concept identifier of a concept that was a LEAF child of the concept 'description type in source terminology (ISAAC)'
 	 * @param limit The maximum number of results to return
+	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
+	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
 	 * @return the list of descriptions that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
 	 * @throws RestException 
@@ -82,12 +88,14 @@ public class SearchAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent)
 	public List<RestSearchResult> descriptionSearch(@QueryParam("query") String query, @QueryParam("descriptionType") String descriptionType, 
-			@QueryParam("extendedDescriptionTypeId") String extendedDescriptionTypeId, @QueryParam("limit") @DefaultValue("10") int limit) throws RestException
+			@QueryParam("extendedDescriptionTypeId") String extendedDescriptionTypeId, @QueryParam("limit") @DefaultValue("10") int limit,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		if (StringUtils.isBlank(query))
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
 		}
+		RequestInfo.get().readExpandables(expand);
 		
 		LuceneDescriptionType dt = null;
 		if (StringUtils.isNotBlank(descriptionType))
@@ -106,11 +114,11 @@ public class SearchAPIs
 				throw new RestException("The parameter 'extendedDescriptionTypeId' may not be combined with a 'descriptionType' parameter");
 			}
 			UUID extendedDescTypeSequence = Util.convertToConceptUUID(extendedDescriptionTypeId);
-			return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null));
+			return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null), query);
 		}
 		
 		log.debug("Performing description serach for '" + query + "'");
-		return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, null));
+		return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, null), query);
 	}
 	
 	/**
@@ -128,6 +136,10 @@ public class SearchAPIs
 	 * 
 	 * @param query The query to be evaluated. 
 	 * @param limit The maximum number of results to return
+	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
+	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
 	 * @return the list of descriptions that matched, along with their score. Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
 	 * @throws RestException 
@@ -135,18 +147,20 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.prefixComponent)
-	public List<RestSearchResult> prefixSearch(@QueryParam("query") String query, @QueryParam("limit") @DefaultValue("10") int limit) throws RestException
+	public List<RestSearchResult> prefixSearch(@QueryParam("query") String query, @QueryParam("limit") @DefaultValue("10") int limit,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		if (StringUtils.isBlank(query))
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
 		}
+		RequestInfo.get().readExpandables(expand);
 		log.debug("Performing prefix search for '" + query + "'");
-		return processSearchResults(LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null));
+		return processSearchResults(LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null), query);
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private List<RestSearchResult> processSearchResults(List<SearchResult> searchResults)
+	private List<RestSearchResult> processSearchResults(List<SearchResult> searchResults, String query)
 	{
 		ArrayList<RestSearchResult> temp = new ArrayList<>();
 		for (SearchResult sr : searchResults)
@@ -160,7 +174,7 @@ public class SearchAPIs
 							RequestInfo.get().getStampCoordinate());
 					if (text.isPresent())
 					{
-						temp.add(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore()));
+						temp.add(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState()));
 					}
 					break;
 				case LONG:
@@ -168,7 +182,8 @@ public class SearchAPIs
 							RequestInfo.get().getStampCoordinate());
 					if (longSememe.isPresent())
 					{
-						temp.add(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore()));
+						temp.add(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore(), 
+								longSememe.get().value().getState()));
 					}
 					break;
 				case STRING:
@@ -176,22 +191,29 @@ public class SearchAPIs
 							RequestInfo.get().getStampCoordinate());
 					if (stringSememe.isPresent())
 					{
-						temp.add(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore()));
+						temp.add(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore(),
+								stringSememe.get().value().getState()));
 					}
 					break;
 				case DYNAMIC:
 					Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
 					if (ds.isPresent())
 					{
-						temp.add(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore()));
+						temp.add(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore(),
+								ds.get().value().getState()));
 					}
 					break;
-				//No point in putting details on these, they will be exactly what was searched for
+				//No point in reading back details on these, they will be exactly what was searched for
 				case COMPONENT_NID: case LOGIC_GRAPH:
 				//Should never match on these, just let them fall through
 				case UNKNOWN: case MEMBER: case RELATIONSHIP_ADAPTOR:
 				default :
-					temp.add(new RestSearchResult(sr.getNid(), "", sr.getScore()));
+					Optional<LatestVersion<SememeVersion>> sv = sc.getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
+					if (sv.isPresent())
+					{
+						temp.add(new RestSearchResult(sr.getNid(), query.trim(), sr.getScore(),
+								sv.get().value().getState()));
+					}
 					break;
 				
 			}
@@ -218,6 +240,11 @@ public class SearchAPIs
 	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
 	 * has multiple columns of data.
 	 * @param limit The maximum number of results to return
+	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
+	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
+	 * 
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
 	 * @throws RestException
@@ -229,8 +256,10 @@ public class SearchAPIs
 			@QueryParam("treatAsString") Boolean treatAsString,
 			@QueryParam("sememeAssemblageId") Set<String> sememeAssemblageId, 
 			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
-			@QueryParam("limit") @DefaultValue("10") int limit) throws RestException
+			@QueryParam("limit") @DefaultValue("10") int limit,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
+		RequestInfo.get().readExpandables(expand);
 		String searchString = query.trim();
 		if (StringUtils.isBlank(searchString))
 		{
@@ -244,7 +273,7 @@ public class SearchAPIs
 			log.debug("Performing sememe search for '" + query + "' - treating it as a string");
 			return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 					.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-							limit, null));
+							limit, null), query);
 		}
 		else
 		{
@@ -256,7 +285,7 @@ public class SearchAPIs
 			{
 				return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
-								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null));
+								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null), query);
 			}
 			catch (NumberFormatException e)
 			{
@@ -268,7 +297,7 @@ public class SearchAPIs
 					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
 									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
-									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null));
+									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null), query);
 				}
 				catch (NumberFormatException e1)
 				{
@@ -276,7 +305,7 @@ public class SearchAPIs
 					//nope	Run it as a string search.
 					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
 							.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-									limit, null));
+									limit, null), query);
 				}
 			}
 			finally
@@ -316,6 +345,10 @@ public class SearchAPIs
 	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
 	 * has multiple columns of data.
 	 * @param limit The maximum number of results to return
+	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports 'uuid' (return the UUID
+	 * of the matched sememe, rather than just the nid) and 'referencedConcept' (return the conceptChronology of the nearest concept found
+	 * by following the referencedComponent references of the matched sememe.  In most cases, this concept will be the concept that directly 
+	 * contains the sememe - but in some cases, sememes may be nested under other sememes causing this to walk up until it finds a concept)
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
 	 * @throws RestException
@@ -326,10 +359,12 @@ public class SearchAPIs
 	public List<RestSearchResult> nidReferences(@QueryParam("nid") int nid,
 			@QueryParam("sememeAssemblageId") Set<String> sememeAssemblageId, 
 			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
-			@QueryParam("limit") @DefaultValue("10") int limit) throws RestException
+			@QueryParam("limit") @DefaultValue("10") int limit,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
+		RequestInfo.get().readExpandables(expand);
 		return processSearchResults(LookupService.get().getService(SememeIndexer.class)
-				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null));
+				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null), nid + "");
 	}
 	
 	private Integer[] processAssemblageRestrictions(Set<String> sememeAssemblageIds) throws RestException
