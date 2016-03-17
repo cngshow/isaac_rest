@@ -20,8 +20,10 @@ package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.tree.Tree;
@@ -59,7 +61,7 @@ public class RestConceptVersion
 	 */
 	@XmlElement
 	RestStampedVersion conVersion;
-	
+
 	/**
 	 * The parent concepts(s) of the concept at this point in time (is a relationships).  Depending on the expand parameter, this may not be returned.
 	 */

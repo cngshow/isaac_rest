@@ -43,6 +43,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestInfo
 {
+	private boolean stated_ = true;
 	private StampCoordinate stampCoordinate_ = null;
 	private LanguageCoordinate languageCoordinate_ = null;
 
@@ -99,11 +100,21 @@ public class RequestInfo
 		requestInfo.get().languageCoordinate_ = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
 		return get();
 	}
+	public RequestInfo readStated(Map<String, List<String>> parameters) throws RestException
+	{
+		if (parameters != null && parameters.get(RequestParameters.stated) != null && parameters.get(RequestParameters.stated).size() > 0) {
+			requestInfo.get().stated_ = RequestInfoUtils.getBooleanFromParameters(RequestParameters.stated, parameters);
+		} else {
+			requestInfo.get().stated_ = Boolean.parseBoolean(RequestParameters.statedDefault);
+		}
+		return get();
+	}
 	public RequestInfo readAll(Map<String, List<String>> parameters) throws RestException
 	{
 		readExpandables(parameters);
 		readStampCoordinate(parameters);
 		readLanguageCoordinate(parameters);
+		readStated(parameters);
 		
 		return requestInfo.get();
 	}
@@ -123,7 +134,11 @@ public class RequestInfo
 	 */
 	public StampCoordinate getStampCoordinate()
 	{
-		return stampCoordinate_ != null ? stampCoordinate_ : StampCoordinates.getDevelopmentLatest();
+		if (stampCoordinate_ != null) {
+			return stampCoordinate_;
+		} else {
+			return stampCoordinate_ = StampCoordinates.getDevelopmentLatest();
+		}
 	}
 
 	/**
@@ -131,7 +146,11 @@ public class RequestInfo
 	 */
 	public LanguageCoordinate getLanguageCoordinate()
 	{
-		return languageCoordinate_ != null ? languageCoordinate_ : LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
+		if (languageCoordinate_ != null) {
+			return languageCoordinate_;
+		} else {
+			return languageCoordinate_ = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
+		}
 	}
 
 	/**
@@ -155,5 +174,12 @@ public class RequestInfo
 	public boolean useFSN()
 	{
 		return true;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean getStated() {
+		return stated_;
 	}
 }

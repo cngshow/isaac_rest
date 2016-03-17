@@ -21,8 +21,11 @@ package gov.vha.isaac.rest.api1.session;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -33,6 +36,25 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class RequestInfoUtils {
 	private RequestInfoUtils() {}
+
+	public static boolean parseBooleanParameter(String parameterName, String str) throws RestException {
+		if (str == null || (! str.equalsIgnoreCase("false") && ! str.equalsIgnoreCase("true"))) {
+			throw new RestException(parameterName, str, "invalid boolean parameter value");
+		} else {
+			return Boolean.parseBoolean(str);
+		}
+	}
+
+	public static boolean getBooleanFromParameters(String parameterName, Map<String, List<String>> parameters) throws RestException {
+		try {
+			if (parameters.get(parameterName).size() != 1) {
+				throw new RestException(parameterName, null, "invalid boolean parameter value");
+			}
+			return parseBooleanParameter(parameterName, parameters.get(parameterName).get(0));
+		} catch (Exception e) {
+			throw new RestException(parameterName, null, e.getLocalizedMessage());
+		}
+	}
 
 	public static List<String> expandCommaDelimitedElements(String list) {
 		List<String> expandedList = new ArrayList<>();

@@ -37,9 +37,9 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -64,7 +64,7 @@ public class LogicGraphAPIs
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'logicNodeConceptVersions'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'version'
 	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
 	 * @return the logic graph version object
 	 * @throws RestException 
@@ -94,7 +94,7 @@ public class LogicGraphAPIs
 	/**
 	 * Returns the chronology of a logic graph.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
-	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'logicNodeUuids' and/or 'logicNodeConceptVersions'
+	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'logicNodeUuids' and/or 'version'
 
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
 	 * @return the concept chronology object
@@ -138,14 +138,10 @@ public class LogicGraphAPIs
 		if (intId.isPresent())
 		{
 			// id interpreted as the id of the referenced concept
-			Optional<SememeChronology<? extends SememeVersion<?>>> defChronologyOptional = stated ? Get.statedDefinitionChronology(intId.get()) : Get.inferredDefinitionChronology(intId.get());
+			Optional<SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(intId.get(), stated);
 			if (defChronologyOptional.isPresent())
 			{
-				@SuppressWarnings("unchecked")
-				SememeChronology<? extends LogicGraphSememe<?>> sememeChronology = (SememeChronology<? extends LogicGraphSememe<?>>)defChronologyOptional.get();
-				LOG.debug("Used CONCEPT id " + intId.get() + " to retrieve LogicGraphSememe SememeChronology " + sememeChronology);
-
-				return sememeChronology;
+				return defChronologyOptional.get();
 			}
 			else
 			{
@@ -161,20 +157,16 @@ public class LogicGraphAPIs
 				int nidForUuid = Get.identifierService().getNidForUuids(uuidId.get());
 				ObjectChronologyType typeOfPassedId = Get.identifierService().getChronologyTypeForNid(nidForUuid);
 				
-				Optional<? extends SememeChronology<? extends SememeVersion<?>>> defChronologyOptional = null;
+				Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = null;
 				
+				int seqForUuid = 0;
 				switch (typeOfPassedId) {
 				case CONCEPT: {
-					int seqForUuid = Get.identifierService().getConceptSequenceForUuids(uuidId.get());
-					defChronologyOptional = stated ? Get.statedDefinitionChronology(seqForUuid) : Get.inferredDefinitionChronology(seqForUuid);
-
-					
+					seqForUuid = Get.identifierService().getConceptSequenceForUuids(uuidId.get());
 					break;
 				}
 				case SEMEME: {
-					int seqForUuid = Get.identifierService().getSememeSequenceForUuids(uuidId.get());
-					defChronologyOptional = Get.sememeService().getOptionalSememe(seqForUuid);
-
+					seqForUuid = Get.identifierService().getSememeSequenceForUuids(uuidId.get());
 					break;
 				}
 				case UNKNOWN_NID:
@@ -182,13 +174,11 @@ public class LogicGraphAPIs
 					throw new RestException(RequestParameters.id, id, "LogicGraph chronology cannot be retrieved by id of unsupported ObjectChronologyType " + typeOfPassedId);
 				}
 
+				defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated);
 				if (defChronologyOptional.isPresent())
 				{
-					@SuppressWarnings("unchecked")
-					SememeChronology<? extends LogicGraphSememe<?>> sememeChronology = (SememeChronology<? extends LogicGraphSememe<?>>)defChronologyOptional.get();
-					
-					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology " + sememeChronology);
-					return sememeChronology;
+					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology " + defChronologyOptional.get());
+					return defChronologyOptional.get();
 				}
 				else
 				{

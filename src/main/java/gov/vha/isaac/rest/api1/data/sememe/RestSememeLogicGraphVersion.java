@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNodeFactory;
@@ -45,6 +46,12 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 	 */
 	@XmlElement
 	String referencedConceptDescription;
+
+	/**
+	 * A boolean indicating whether the concept referred to by this RestSememeLogicGraphVersion is defined rather than primitive
+	 */
+	@XmlElement
+	boolean isReferencedConceptDefined;
 	
 	/**
 	 * The root node of the logical expression tree associated with the concept
@@ -72,9 +79,17 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 	{
 		super();
 		setup(lgs, includeChronology, false, null);
-
+		
+		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
 		referencedConceptDescription = Get.conceptDescriptionText(lgs.getReferencedComponentNid());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
+		try {
+			// TODO Fine tune this when data problems resolved
+			isReferencedConceptDefined = Frills.isConceptFullyDefined(lgs);
+		} catch (Exception e) {
+			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing " + Frills.getIdInfo(lgs.getReferencedComponentNid()));
+			isReferencedConceptDefined = false;
+		}
 	}
 	
 	/**

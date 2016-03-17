@@ -37,7 +37,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
- * {@link CoordinateParameterContainerRequestFilter}
+ * {@link RestContainerRequestFilter}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
@@ -51,13 +51,13 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  */
 @Priority(Priorities.USER - 500)
 @Provider
-public class CoordinateParameterContainerRequestFilter implements ContainerRequestFilter {
+public class RestContainerRequestFilter implements ContainerRequestFilter {
 	private static Logger LOG = LogManager.getLogger();
 
 	/**
 	 * 
 	 */
-	public CoordinateParameterContainerRequestFilter() {
+	public RestContainerRequestFilter() {
 	}
 
 	/* (non-Javadoc)
@@ -79,6 +79,7 @@ public class CoordinateParameterContainerRequestFilter implements ContainerReque
 		try {
 			RequestInfo.get().readStampCoordinate(requestContext.getUriInfo().getQueryParameters());
 			RequestInfo.get().readLanguageCoordinate(requestContext.getUriInfo().getQueryParameters());
+			RequestInfo.get().readStated(requestContext.getUriInfo().getQueryParameters());
 		} catch (RestException e) {
 			throw new IOException(e.getLocalizedMessage(), e);
 		}

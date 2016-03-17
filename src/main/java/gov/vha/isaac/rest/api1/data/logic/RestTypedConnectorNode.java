@@ -73,9 +73,10 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 	public RestTypedConnectorNode(TypedNodeWithSequences typedNodeWithSequences) {
 		super(typedNodeWithSequences);
 		connectorTypeConceptSequence = typedNodeWithSequences.getTypeConceptSequence();
+		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
 		connectorTypeConceptDescription = Get.conceptDescriptionText(connectorTypeConceptSequence);
 		
-		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeConceptVersionsExpandable)) {
+		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
 			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
 			@SuppressWarnings("unchecked")
@@ -85,8 +86,8 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			connectorTypeConceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())
 			{
-				// TODO make expandables work for logicNodeConceptVersionsExpandable
-				// expandables.add(new Expandable(ExpandUtil.logicNodeConceptVersionsExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
+				// TODO make expandables work for versionExpandable
+				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
 			}
 		}
 	}
@@ -96,9 +97,10 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 	public RestTypedConnectorNode(TypedNodeWithUuids typedNodeWithUuids) {
 		super(typedNodeWithUuids);
 		connectorTypeConceptSequence = Get.identifierService().getConceptSequenceForUuids(typedNodeWithUuids.getTypeConceptUuid());
+		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
 		connectorTypeConceptDescription = Get.conceptDescriptionText(connectorTypeConceptSequence);
 
-		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeConceptVersionsExpandable)) {
+		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
 			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
 			@SuppressWarnings("unchecked")
@@ -108,8 +110,8 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			connectorTypeConceptVersion = null;
 			if (RequestInfo.get().returnExpandableLinks())
 			{
-				// TODO make expandables work for logicNodeConceptVersionsExpandable
-				// expandables.add(new Expandable(ExpandUtil.logicNodeConceptVersionsExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
+				// TODO make expandables work for versionExpandable
+				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
 			}
 		}
 	}
