@@ -23,12 +23,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshotService;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNodeFactory;
+import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
@@ -79,8 +81,8 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 	{
 		super();
 		setup(lgs, includeChronology, false, null);
-		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
-		referencedConceptDescription = Get.conceptDescriptionText(lgs.getReferencedComponentNid());
+		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
+		referencedConceptDescription = snapshotService.conceptDescriptionText(lgs.getReferencedComponentNid());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 		try {
 			// TODO Fine tune this when data problems resolved

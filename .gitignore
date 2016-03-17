@@ -71,3 +71,5 @@ workflowDB/**
 .idea
 .idea/
 *.data/
+/object-chronicles/
+/search/

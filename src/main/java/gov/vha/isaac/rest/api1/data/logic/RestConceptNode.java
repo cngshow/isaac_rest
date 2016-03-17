@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshotService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -91,8 +92,8 @@ public class RestConceptNode extends RestLogicNode {
 	public RestConceptNode(ConceptNodeWithSequences conceptNodeWithSequences) {
 		super(conceptNodeWithSequences);
 		conceptSequence = conceptNodeWithSequences.getConceptSequence();
-		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
-		conceptDescription = Get.conceptDescriptionText(conceptSequence);
+		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
+		conceptDescription = snapshotService.conceptDescriptionText(conceptSequence);
 		try {
 			// TODO Fine tune this when data problems resolved
 			Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());
@@ -124,8 +125,8 @@ public class RestConceptNode extends RestLogicNode {
 	public RestConceptNode(ConceptNodeWithUuids conceptNodeWithUuids) {
 		super(conceptNodeWithUuids);
 		conceptSequence = Get.identifierService().getConceptSequenceForUuids(conceptNodeWithUuids.getConceptUuid());
-		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
-		conceptDescription = Get.conceptDescriptionText(conceptSequence);
+		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
+		conceptDescription = snapshotService.conceptDescriptionText(conceptSequence);
 		try {
 			// TODO Fine tune this when data problems resolved
 			Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());

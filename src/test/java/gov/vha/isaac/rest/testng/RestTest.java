@@ -215,11 +215,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		JsonNode rootNode = null;
 		try {
-			System.out.println("testRestSememeLogicGraphVersionReturn() parsing json " + output);
+			//System.out.println("testRestSememeLogicGraphVersionReturn() parsing json " + output);
 
 			rootNode = mapper.readValue(output, JsonNode.class);
 			
-			System.out.println("testRestSememeLogicGraphVersionReturn() parsed json as " + rootNode.getNodeType() + "\n" + rootNode);
+			//System.out.println("testRestSememeLogicGraphVersionReturn() parsed json as " + rootNode.getNodeType() + "\n" + rootNode);
 		} catch (IOException e) {
 			Assert.fail("testRestSememeLogicGraphVersionReturn() FAILED parsing json.  Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
@@ -231,7 +231,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} else if (! rootType.asText().equals(RestSememeLogicGraphVersion.class.getName())) {
 			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed json of unexpected object type " + rootType.asText());
 		} else {
-			System.out.println("testRestSememeLogicGraphVersionReturn() parsed " + rootType.asText() + " object");
+			//System.out.println("testRestSememeLogicGraphVersionReturn() parsed " + rootType.asText() + " object");
 		}
 		
 		final String referencedConceptDescriptionFieldName = "referencedConceptDescription";
@@ -246,7 +246,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		if (! referencedConceptDescriptionNode.asText().equals(referencedConceptDescriptionExpectedValue)) {
 			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with unexpected referencedConceptDescription=\"" + referencedConceptDescriptionNode.asText() + "\"");
 		}
-		System.out.println("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with referencedConceptDescription of type " + referencedConceptDescriptionNode.getNodeType());
+		//System.out.println("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with referencedConceptDescription of type " + referencedConceptDescriptionNode.getNodeType());
 		
 		final String rootLogicNodeFieldName = "rootLogicNode";
 		if (rootNode.with("rootLogicNode").with("nodeSemantic").get("name") == null || ! rootNode.with("rootLogicNode").with("nodeSemantic").get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
