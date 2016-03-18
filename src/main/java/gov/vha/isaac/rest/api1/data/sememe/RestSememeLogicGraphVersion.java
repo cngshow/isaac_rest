@@ -39,8 +39,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
-public class RestSememeLogicGraphVersion extends RestSememeVersion
-{
+public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	private static Logger LOG = LogManager.getLogger();
 
 	/**
@@ -50,72 +49,84 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion
 	String referencedConceptDescription;
 
 	/**
-	 * A boolean indicating whether the concept referred to by this RestSememeLogicGraphVersion is defined rather than primitive
+	 * A boolean indicating whether the concept referred to by this
+	 * RestSememeLogicGraphVersion is defined rather than primitive
 	 */
 	@XmlElement
 	boolean isReferencedConceptDefined;
-	
+
 	/**
 	 * The root node of the logical expression tree associated with the concept
 	 */
 	@XmlElement
 	RestLogicNode rootLogicNode;
 
-	protected RestSememeLogicGraphVersion()
-	{
-		//for Jaxb
+	protected RestSememeLogicGraphVersion() {
+		// for Jaxb
 	}
-	
+
 	/**
-	 * @param lgs - A LogicGraphSememe
-	 * @param includeChronology - A boolean value indicating whether or not the RestSememeLogicGraphVersion should include a populated chronology
-	 * @param expandNested - A boolean value indicating whether or not nested values shoudl be expanded
-	 * @param stated - A boolean value indicating whether a stated or inferred logic graph should be retrieved 
+	 * @param lgs
+	 *            - A LogicGraphSememe
+	 * @param includeChronology
+	 *            - A boolean value indicating whether or not the
+	 *            RestSememeLogicGraphVersion should include a populated
+	 *            chronology
+	 * @param expandNested
+	 *            - A boolean value indicating whether or not nested values
+	 *            shoudl be expanded
+	 * @param stated
+	 *            - A boolean value indicating whether a stated or inferred
+	 *            logic graph should be retrieved
 	 * @throws RestException
 	 * 
-	 * Constructor for RestSememeLogicGraphVersion taking a LogicGraphSememe
+	 *             Constructor for RestSememeLogicGraphVersion taking a
+	 *             LogicGraphSememe
 	 */
-	public RestSememeLogicGraphVersion(
-			LogicGraphSememe<?> lgs,
-			boolean includeChronology) throws RestException
-	{
+	public RestSememeLogicGraphVersion(LogicGraphSememe<?> lgs, boolean includeChronology) throws RestException {
 		super();
 		setup(lgs, includeChronology, false, null);
-		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
-		referencedConceptDescription = snapshotService.conceptDescriptionText(lgs.getReferencedComponentNid());
+		referencedConceptDescription = Get.conceptService()
+				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());
+		LOG.info("Constructing REST logic graph for {} from LogicalExpression\n{}",
+				Frills.getIdInfo(lgs.getReferencedComponentNid()), lgs.getLogicalExpression());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 		try {
 			// TODO Fine tune this when data problems resolved
 			isReferencedConceptDefined = Frills.isConceptFullyDefined(lgs);
 		} catch (Exception e) {
-			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing " + Frills.getIdInfo(lgs.getReferencedComponentNid()));
+			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing {}",
+					Frills.getIdInfo(lgs.getReferencedComponentNid()));
 			isReferencedConceptDefined = false;
 		}
 	}
-	
+
 	/**
-	 * @param lgs - A LogicGraphSememe
+	 * @param lgs
+	 *            - A LogicGraphSememe
 	 * @return - A RestUntypedConnectorNode with NodeSemantic of DEFINITION_ROOT
 	 * 
-	 * Constructs a RestUntypedConnectorNode with NodeSemantic of DEFINITION_ROOT which is the root of the logic graph tree
+	 *         Constructs a RestUntypedConnectorNode with NodeSemantic of
+	 *         DEFINITION_ROOT which is the root of the logic graph tree
 	 */
 	private static RestLogicNode constructRootRestLogicNodeFromLogicGraphSememe(LogicGraphSememe<?> lgs) {
 		LogicalExpression le = lgs.getLogicalExpression();
-		
-		LOG.debug("Processing LogicalExpression for concept " + Get.conceptDescriptionText(le.getConceptSequence()));
+
+		LOG.debug("Processing LogicalExpression for concept {}", Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(le.getConceptSequence()));
 		LOG.debug(le.toString());
-		LOG.debug("Root is a " + le.getRoot().getNodeSemantic().name());
+		LOG.debug("Root is a {}", le.getRoot().getNodeSemantic().name());
 
 		if (le.getNodeCount() > 0) {
-			LOG.debug("Passed LogicalExpression with {} > 0 nodes", le.getNodeCount());			
+			LOG.debug("Passed LogicalExpression with {} > 0 nodes", le.getNodeCount());
 			for (int i = 0; i < le.getNodeCount(); ++i) {
-				LOG.debug(le.getNode(i).getNodeSemantic() + " node #" + ((int)i + 1) + " of " + le.getNodeCount() + ": class=" + le.getNode(i).getClass().getName() + ", " + le.getNode(i));
+				LOG.debug("{} node #{} of {}: class={}, {}", le.getNode(i).getNodeSemantic(), ((int) i + 1),
+						le.getNodeCount(), le.getNode(i).getClass().getName(), le.getNode(i));
 			}
 
 			return RestLogicNodeFactory.create(le.getRoot());
 		} else { // (le.getNodeCount() <= 0) {
 			LOG.warn("Passed LogicalExpression with no children");
-			throw new RuntimeException("No children found in LogicalExpression for " + Get.conceptDescriptionText(le.getConceptSequence()) + ": " + lgs);
+			throw new RuntimeException("No children found in LogicalExpression for " + Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(le.getConceptSequence()) + ": " + lgs);
 		}
 	}
 }
