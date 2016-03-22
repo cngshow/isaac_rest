@@ -36,16 +36,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import eu.infomas.annotation.AnnotationDetector;
 import gov.va.oia.HK2Utilities.AnnotatedClasses;
 import gov.va.oia.HK2Utilities.AnnotationReporter;
-import gov.vha.isaac.MetaData;
-import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptService;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
-import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
-import gov.vha.isaac.rest.api1.RestPaths;
 
 /**
  * 
@@ -99,19 +89,7 @@ public class LocalJettyRunner
 		server.start();
 		
 		
-		StampCoordinate stampCoordinate = StampCoordinates.getDevelopmentLatest();
-		LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
-
-		ConceptService conceptService = Get.conceptService();
-
-		ConceptChronology<? extends ConceptVersion<?>> sctId = conceptService.getConcept(MetaData.SNOMED_INTEGER_ID.getPrimordialUuid());
-		System.out.println("Found [1]: " + sctId);
-
-		System.out.println(conceptService.getSnapshot(stampCoordinate, languageCoordinate).getConceptSnapshot(sctId.getNid()));
-
-		System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C", 
-			BASE_URI.toString().substring(0, BASE_URI.toString().length() - 5), 
-				RestPaths.conceptVersionAppPathComponent + MetaData.CONCRETE_DOMAIN_OPERATOR.getNid()));
+		System.out.println("ISAAC is starting in a background thread, it may be some time before it can serve requests");
 		Thread.currentThread().join();
 	}
 }

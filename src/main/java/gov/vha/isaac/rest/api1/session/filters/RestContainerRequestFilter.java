@@ -31,7 +31,7 @@ import javax.ws.rs.ext.Provider;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
@@ -65,6 +65,13 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 	 */
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
+		
+		if (!ApplicationConfig.getInstance().isIsaacReady())
+		{
+			LOG.debug("Rejecting request as ISAAC is not yet ready");
+			throw new IOException("The system is not yet ready.  Status:  " + ApplicationConfig.getInstance().getStatusMessage());
+		}
+		
 		LOG.debug("Running CONTAINER REQUEST FILTER " + this.getClass().getName() + " on request " + requestContext.getRequest().getMethod());
 		
 		LOG.debug("Path parameters: " + requestContext.getUriInfo().getPathParameters().keySet());
