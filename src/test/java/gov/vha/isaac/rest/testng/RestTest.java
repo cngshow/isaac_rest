@@ -43,6 +43,7 @@ import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
+import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -79,6 +80,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Load in the test data
 		try
 		{
+			while (!ApplicationConfig.getInstance().isIsaacReady())
+			{
+				Thread.sleep(50);
+			}
+			
 			BinaryDataReaderService reader = Get.binaryDataReader(Paths.get("target", "data", "IsaacMetadataAuxiliary.ibdf"));
 			CommitService commitService = Get.commitService();
 			reader.getStream().forEach((object) -> {
