@@ -109,6 +109,7 @@ public class ConceptAPIs
 			) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
+		RequestInfo.get().readStated(stated);
 
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);

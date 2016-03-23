@@ -28,7 +28,6 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshotService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -92,15 +91,14 @@ public class RestConceptNode extends RestLogicNode {
 	public RestConceptNode(ConceptNodeWithSequences conceptNodeWithSequences) {
 		super(conceptNodeWithSequences);
 		conceptSequence = conceptNodeWithSequences.getConceptSequence();
-		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
-		conceptDescription = snapshotService.conceptDescriptionText(conceptSequence);
+		conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(conceptSequence);
 		try {
 			// TODO Fine tune this when data problems resolved
 			Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());
 			Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
 			isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
 		} catch (Exception e) {
-			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", Frills.getIdInfo(conceptSequence));
+			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence));
 			isConceptDefined = false;
 		}
 
@@ -125,15 +123,14 @@ public class RestConceptNode extends RestLogicNode {
 	public RestConceptNode(ConceptNodeWithUuids conceptNodeWithUuids) {
 		super(conceptNodeWithUuids);
 		conceptSequence = Get.identifierService().getConceptSequenceForUuids(conceptNodeWithUuids.getConceptUuid());
-		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
-		conceptDescription = snapshotService.conceptDescriptionText(conceptSequence);
+		conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(conceptSequence);
 		try {
 			// TODO Fine tune this when data problems resolved
 			Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());
 			Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
 			isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
 		} catch (Exception e) {
-			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", Frills.getIdInfo(conceptSequence));
+			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence));
 			isConceptDefined = false;
 		}
 

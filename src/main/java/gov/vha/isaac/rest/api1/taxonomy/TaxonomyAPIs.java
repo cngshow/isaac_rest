@@ -72,6 +72,7 @@ public class TaxonomyAPIs
 			) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
+		RequestInfo.get().readStated(stated);
 		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);

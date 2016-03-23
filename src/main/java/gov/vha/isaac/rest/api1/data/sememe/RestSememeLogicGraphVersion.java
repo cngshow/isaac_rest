@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshotService;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -89,7 +88,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 		referencedConceptDescription = Get.conceptService()
 				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());
 		LOG.info("Constructing REST logic graph for {} from LogicalExpression\n{}",
-				Frills.getIdInfo(lgs.getReferencedComponentNid()), lgs.getLogicalExpression());
+				() -> Frills.getIdInfo(lgs.getReferencedComponentNid()).toString(), () -> lgs.getLogicalExpression().toString());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 		try {
 			// TODO Fine tune this when data problems resolved

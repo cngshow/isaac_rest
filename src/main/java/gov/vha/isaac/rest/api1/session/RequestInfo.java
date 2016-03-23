@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
@@ -100,12 +102,21 @@ public class RequestInfo
 		requestInfo.get().languageCoordinate_ = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
 		return get();
 	}
+	
+	public RequestInfo readStated(String statedParameter) throws RestException {
+		if (StringUtils.isNotBlank(statedParameter)) {
+			requestInfo.get().stated_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, statedParameter);
+		} else {
+			requestInfo.get().stated_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, RequestParameters.statedDefault);
+		}
+		return get();
+	}
 	public RequestInfo readStated(Map<String, List<String>> parameters) throws RestException
 	{
 		if (parameters != null && parameters.get(RequestParameters.stated) != null && parameters.get(RequestParameters.stated).size() > 0) {
 			requestInfo.get().stated_ = RequestInfoUtils.getBooleanFromParameters(RequestParameters.stated, parameters);
 		} else {
-			requestInfo.get().stated_ = Boolean.parseBoolean(RequestParameters.statedDefault);
+			requestInfo.get().stated_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, RequestParameters.statedDefault);
 		}
 		return get();
 	}

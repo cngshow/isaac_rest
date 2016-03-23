@@ -59,6 +59,7 @@ public class LogicGraphAPIs
 {	
 	private static Logger LOG = LogManager.getLogger();
 
+	
 	/**
 	 * Returns a single version of a logic graph.
 	 * TODO still need to define how to pass in a version parameter
@@ -78,7 +79,8 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
-		
+		RequestInfo.get().readStated(stated);
+
 		@SuppressWarnings("rawtypes")
 		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
 
@@ -109,6 +111,7 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
+		RequestInfo.get().readStated(stated);
 
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
 		
@@ -157,8 +160,6 @@ public class LogicGraphAPIs
 				int nidForUuid = Get.identifierService().getNidForUuids(uuidId.get());
 				ObjectChronologyType typeOfPassedId = Get.identifierService().getChronologyTypeForNid(nidForUuid);
 				
-				Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = null;
-				
 				int seqForUuid = 0;
 				switch (typeOfPassedId) {
 				case CONCEPT: {
@@ -174,10 +175,10 @@ public class LogicGraphAPIs
 					throw new RestException(RequestParameters.id, id, "LogicGraph chronology cannot be retrieved by id of unsupported ObjectChronologyType " + typeOfPassedId);
 				}
 
-				defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated);
+				final Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated);
 				if (defChronologyOptional.isPresent())
 				{
-					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology " + defChronologyOptional.get());
+					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology {}", () -> defChronologyOptional.get());
 					return defChronologyOptional.get();
 				}
 				else
