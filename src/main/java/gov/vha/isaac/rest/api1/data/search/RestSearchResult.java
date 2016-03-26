@@ -171,8 +171,6 @@ public class RestSearchResult
 				expandables.add(new Expandable(ExpandUtil.versionsLatestOnlyExpandable, ""));
 				expandables.add(new Expandable(ExpandUtil.versionsAllExpandable, ""));
 			}
-			
-			
 		}
 		
 		if (expandables.size() == 0)
