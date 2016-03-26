@@ -28,7 +28,7 @@
 		<isaac.version>3.01-SNAPSHOT</isaac.version>
 		<jersey.version>2.22.2</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
-		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/334-->
+		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/351-->
 		<enunciate.version>2.3.0-patch1</enunciate.version>
 	</properties>
 
