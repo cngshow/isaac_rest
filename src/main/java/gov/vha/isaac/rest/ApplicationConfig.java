@@ -5,10 +5,11 @@ import java.io.File;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import gov.vha.isaac.MetaData;
@@ -25,7 +26,7 @@ import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
 
 @ApplicationPath("rest/")
-public class ApplicationConfig extends Application implements ContainerLifecycleListener
+public class ApplicationConfig extends ResourceConfig implements ContainerLifecycleListener
 {
 	private static final AtomicInteger startup = new AtomicInteger(1);
 	private static Logger log = LogManager.getLogger();
@@ -36,6 +37,14 @@ public class ApplicationConfig extends Application implements ContainerLifecycle
 	
 	//TODO implement convenience method to describe a object - concept, semeeme, etc
 	//TODO implement convenience methods for 'associations'
+	
+	public ApplicationConfig()
+	{
+		//If we leave everything to annotations, is picks up the eclipse moxy gson writer, which doesn't handle abstract classes properly.
+		//The goal here is to force it to use Jackson, but it seems that registering jackson disables scanning, so also have to re-enable 
+		//scanning.  It also seems ot forget to scan this class... so register itself..
+		super(new ResourceConfig().packages("gov.vha.isaac.rest").register(JacksonFeature.class).register(ApplicationConfig.class));
+	}
 	
 	public static ApplicationConfig getInstance()
 	{
@@ -51,7 +60,9 @@ public class ApplicationConfig extends Application implements ContainerLifecycle
 	@Override
 	public void onShutdown(Container arg0)
 	{
-		// noop
+		log.info("Stopping ISAAC");
+		LookupService.shutdownIsaac();
+		log.info("ISAAC stopped");
 	}
 
 	@Override
@@ -148,6 +159,14 @@ public class ApplicationConfig extends Application implements ContainerLifecycle
 	
 	private File downloadDB() throws Exception
 	{
+		log.info("Checking for existing DB");
+		File targetDBLocation = new File(System.getProperty("java.io.tmpdir"), "ISAAC.db");
+		if (targetDBLocation.isDirectory())
+		{
+			log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
+			status_.set("Using existing directory");
+			return targetDBLocation;
+		}
 		
 		File dbFolder = File.createTempFile("ISAAC-DATA", "");
 		dbFolder.delete();
@@ -171,6 +190,17 @@ public class ApplicationConfig extends Application implements ContainerLifecycle
 		task.get();
 		status_.unbind();
 		status_.set("Download complete");
-		return dbFolder;
+
+		log.debug("Renaming " + dbFolder.getCanonicalPath() + " to " + targetDBLocation.getCanonicalPath());
+		if (dbFolder.renameTo(targetDBLocation))
+		{
+			return targetDBLocation;
+		}
+		else
+		{
+			log.warn("Failed to rename the database");
+			//rename failed...  perhaps we tried to cross filesystems?
+			return dbFolder;
+		}
 	}
 }
