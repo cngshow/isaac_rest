@@ -95,7 +95,8 @@ public class RestSearchResult
 	 * looking up the sememe of the matchNid, and then getting the referenced component of that sememe.  If the referenced component 
 	 * is a concept, that is the concept that is returned.  If the referenced component is a sememe, then the process is repeated (following
 	 * the referenced component reference of the sememe) - continuing until a concept is found.  If an (unusual) case occurs where the 
-	 * sememe chain doesn't lead to a concept, this will not be populated.
+	 * sememe chain doesn't lead to a concept, this will not be populated.  This is populated by passing the expand parameter 'referencedConcept'.
+	 * If this is passed, you may also (optionally) pass the parameters 'versionsLatestOnly' or 'versionsAll'
 	 */
 	@XmlElement
 	RestConceptChronology referencedConcept;
@@ -131,7 +132,7 @@ public class RestSearchResult
 			identifiers = null;
 			if (RequestInfo.get().returnExpandableLinks())
 			{
-				expandables.add(new Expandable(ExpandUtil.uuid, RestPaths.idPathComponent + RestPaths.idTranslateComponent + matchNid + "?inputType=" 
+				expandables.add(new Expandable(ExpandUtil.uuid, RestPaths.idAppPathComponent + RestPaths.idTranslateComponent + matchNid + "?inputType=" 
 						+ IdType.NID.getDisplayName() + "&outputType=" + IdType.UUID.getDisplayName()));
 			}
 		}
@@ -142,7 +143,21 @@ public class RestSearchResult
 			if (conceptSequence >= 0)
 			{
 				referencedConcept = new RestConceptChronology(Get.conceptService().getConcept(conceptSequence), 
-						false, false);
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+				if (RequestInfo.get().returnExpandableLinks())
+				{
+					if (!RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable))
+					{
+						expandables.add(new Expandable(ExpandUtil.versionsAllExpandable, RestPaths.conceptVersionAppPathComponent + conceptSequence + "?expand=" 
+								+ ExpandUtil.versionsAllExpandable));
+					}
+					if (!RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable))
+					{
+						expandables.add(new Expandable(ExpandUtil.versionsLatestOnlyExpandable, RestPaths.conceptVersionAppPathComponent + conceptSequence + "?expand=" 
+								+ ExpandUtil.versionsLatestOnlyExpandable));
+					}
+				}
 			}
 		}
 		else 
@@ -152,7 +167,12 @@ public class RestSearchResult
 			{
 				//This is expensive to calculate, not going to support it as a convenience at this time.
 				expandables.add(new Expandable(ExpandUtil.referencedConcept, ""));
+				//two other variations (that depend on this)
+				expandables.add(new Expandable(ExpandUtil.versionsLatestOnlyExpandable, ""));
+				expandables.add(new Expandable(ExpandUtil.versionsAllExpandable, ""));
 			}
+			
+			
 		}
 		
 		if (expandables.size() == 0)

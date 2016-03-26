@@ -65,6 +65,7 @@ public class RestPaths
 	public static final String taxonomyPathComponent = apiVersionComponent + "taxonomy/";
 	
 	public static final String idPathComponent = apiVersionComponent + "id/";
+	public static final String idAppPathComponent = appPathComponent + apiVersionComponent + "id/";
 	
 	public static final String systemPathComponent = apiVersionComponent + "system/";
 

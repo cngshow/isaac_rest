@@ -486,6 +486,26 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	@Test
+	public void testSearchExpandsRefConceptVersion()
+	{
+		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
+		//Test expand uuid on/off for each search type
+
+		String result = checkFail(target(descriptionSearch)
+				.queryParam("query","dynamic sememe Asse*")
+				.queryParam("expand", ExpandUtil.referencedConcept + "," + ExpandUtil.versionsLatestOnlyExpandable)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertTrue(result.contains("<state>ACTIVE</state>"));
+		
+		result = checkFail(target(descriptionSearch)
+				.queryParam("query","dynamic sememe Asse*")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		Assert.assertFalse(result.contains("<state>ACTIVE</state>"));
+	}
+	
+	@Test
 	public void testSearchRecursiveRefComponentLookup()
 	{
 		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
