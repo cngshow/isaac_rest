@@ -185,7 +185,7 @@ public class SememeAPIs
 	 * @param id - A UUID or nid of a component.  Note that this could be a concept or a sememe reference, hence, sequences are not allowed here.
 	 * @param assemblage - An optional assemblage UUID, nid or concept sequence to restrict the type of sememes returned.  If ommitted, assemblages
 	 * of all types will be returned.  May be specified multiple times to allow multiple assemblages
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * @throws RestException 
