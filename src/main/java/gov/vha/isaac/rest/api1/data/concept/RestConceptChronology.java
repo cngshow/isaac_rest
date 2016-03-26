@@ -116,8 +116,13 @@ public class RestConceptChronology
 			}
 			else 
 			{
-				//TODO implement latest version
-				throw new RuntimeException("Latest version not yet implemented");
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersion>> latest = 
+						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
+				if (latest.isPresent())
+				{
+					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false));
+				}
 			}
 		}
 		else

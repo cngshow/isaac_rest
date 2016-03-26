@@ -20,8 +20,10 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -103,8 +105,13 @@ public class RestSememeChronology
 			}
 			else if (includeLatestVersion)
 			{
-				//TODO implement latest version
-				throw new RuntimeException("Latest version not yet implemented");
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Optional<LatestVersion<SememeVersion>> latest = 
+						((SememeChronology)sc).getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
+				if (latest.isPresent())
+				{
+					versions.add(RestSememeVersion.buildRestSememeVersion(latest.get().value(), false, includeNested));
+				}
 			}
 		}
 		else
