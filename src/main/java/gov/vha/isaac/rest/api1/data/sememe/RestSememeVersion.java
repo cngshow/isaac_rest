@@ -114,7 +114,7 @@ public abstract class RestSememeVersion
 			nestedSememes = new ArrayList<>();
 			//Always include the chronology for nested sememes... otherwise, the user would always have to make a return trip to find out what the 
 			//nested thing is
-			List<RestSememeVersion> temp = SememeAPIs.get(sv.getNid() + "", null, true, true);
+			List<RestSememeVersion> temp = SememeAPIs.get(sv.getNid() + "", null, true, true, true);
 			for (RestSememeVersion rsv : temp)
 			{
 				if (includeInNested == null || includeInNested.apply(rsv))

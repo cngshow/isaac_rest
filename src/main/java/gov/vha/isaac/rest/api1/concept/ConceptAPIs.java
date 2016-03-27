@@ -206,7 +206,7 @@ public class ConceptAPIs
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		
 		List<RestSememeVersion> descriptions = SememeAPIs.get(findConceptChronology(id).getNid() + "", getAllDescriptionTypes(), true, 
-				Boolean.parseBoolean(includeAttributes.trim()));
+				Boolean.parseBoolean(includeAttributes.trim()), true);
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up

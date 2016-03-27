@@ -26,13 +26,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -175,7 +176,8 @@ public class SememeAPIs
 		temp.add(Util.convertToConceptSequence(id));
 		
 		//we don't have a referenced component - our id is assemblage
-		return get(null, temp, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
+		return get(null, temp, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+			true);
 	}
 	
 	/**
@@ -185,6 +187,8 @@ public class SememeAPIs
 	 * @param id - A UUID or nid of a component.  Note that this could be a concept or a sememe reference, hence, sequences are not allowed here.
 	 * @param assemblage - An optional assemblage UUID, nid or concept sequence to restrict the type of sememes returned.  If ommitted, assemblages
 	 * of all types will be returned.  May be specified multiple times to allow multiple assemblages
+	 * @param includeDescriptions - an optional flag to request that description type sememes are returned.  By default, description type 
+	 * sememes are not returned, as these are typically retreived via a getDescriptions call on the Concept APIs.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
@@ -193,7 +197,8 @@ public class SememeAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.byReferencedComponentComponent + "{id}")
-	public List<RestSememeVersion> getByReferencedComponent(@PathParam("id") String id, @QueryParam("assemblage") Set<String> assemblage, @QueryParam("expand") String expand) 
+	public List<RestSememeVersion> getByReferencedComponent(@PathParam("id") String id, @QueryParam("assemblage") Set<String> assemblage, 
+		@QueryParam("includeDescriptions") @DefaultValue("false") String includeDescriptions, @QueryParam("expand") String expand) 
 			throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
@@ -204,7 +209,8 @@ public class SememeAPIs
 			allowedAssemblages.add(Util.convertToConceptSequence(a));
 		}
 		
-		return get(id, allowedAssemblages, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
+		return get(id, allowedAssemblages, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
+			RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), Boolean.parseBoolean(includeDescriptions.trim()) );
 	}
 	
 
@@ -243,11 +249,12 @@ public class SememeAPIs
 	 * referencedComponent is not provided - focuses the search on just this assemblage
 	 * @param expandChronology
 	 * @param expandNested
+	 * @param allowDescriptions true to include description type sememes, false to skip
 	 * @return
 	 * @throws RestException
 	 */
-	public static List<RestSememeVersion> get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested) 
-			throws RestException
+	public static List<RestSememeVersion> get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
+		boolean allowDescriptions) throws RestException
 	{
 		final ArrayList<RestSememeVersion> results = new ArrayList<>();
 		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
@@ -258,7 +265,8 @@ public class SememeAPIs
 				@SuppressWarnings("unchecked")
 				Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 				if (sv.isPresent() && sv.get().value().getChronology().getSememeType() != SememeType.LOGIC_GRAPH 
-						&& sv.get().value().getChronology().getSememeType() != SememeType.RELATIONSHIP_ADAPTOR)
+						&& sv.get().value().getChronology().getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
+						&& (allowDescriptions || sv.get().value().getChronology().getSememeType() != SememeType.DESCRIPTION))
 				{
 					try
 					{
