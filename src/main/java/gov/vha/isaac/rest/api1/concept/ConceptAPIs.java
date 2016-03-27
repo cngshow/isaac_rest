@@ -190,19 +190,23 @@ public class ConceptAPIs
 
 	/**
 	 * @param id - A UUID, nid, or concept sequence of a CONCEPT
-	 * @param includeDialects - true to include the (nested) dialect information, false to ommit
+	 * @param includeAttributes - true to include the (nested) attibutes, which includes the dialect information, false to ommit
+	 * Dialects and other types of attributes will be returned in different structures - all attributes that represent dialects will 
+	 * be in the RestSememeDescriptionVersion object, in the dialects fields, while any other type of attribute will be in the 
+	 * RestSememeVersion in the nestedAttributes field. 
 	 * @return The descriptions associated with the concept
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
-	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, @QueryParam("includeDialects") @DefaultValue("true") String includeDialects) throws RestException
+	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, 
+		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		
 		List<RestSememeVersion> descriptions = SememeAPIs.get(findConceptChronology(id).getNid() + "", getAllDescriptionTypes(), true, 
-				Boolean.parseBoolean(includeDialects.trim()));
+				Boolean.parseBoolean(includeAttributes.trim()));
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up
