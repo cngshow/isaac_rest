@@ -86,7 +86,7 @@ public class TaxonomyAPIs
 					childDepth > 0 ? false : RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable), 
 					Boolean.parseBoolean(stated.trim()));
 			
-			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(Boolean.parseBoolean(stated.trim())));
+			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
 			if (parentHeight > 0)
 			{
@@ -120,7 +120,7 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, true);
+				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, RequestInfo.get().getStated());
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
@@ -149,7 +149,7 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, true);
+				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, RequestInfo.get().getStated());
 				rcv.addParent(parentVersion);
 				if (remainingParentDepth > 0)
 				{
