@@ -23,6 +23,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.model.logic.ConcreteDomainOperators;
 
+//TODO fix these inconsistently named classes (which should be done in parallel with Cris, since it will likely break something on the ruby side)
+
 /**
  * 
  * {@link RestConcreteDomainOperators}

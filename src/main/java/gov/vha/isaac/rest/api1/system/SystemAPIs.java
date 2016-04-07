@@ -27,10 +27,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.webcohesion.enunciate.metadata.Facet;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
+import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
+import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.api1.data.logic.RestConceptNode;
 import gov.vha.isaac.rest.api1.data.logic.RestFeatureNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeBoolean;
@@ -107,6 +110,39 @@ public class SystemAPIs
 	public RestSememeType[] getRestObjectSememeTypes()
 	{
 		return RestSememeType.getAll();
+	}
+	
+	/**
+	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
+	public RestConcreteDomainOperators[] getRestConcreteDomainOperatorTypes()
+	{
+		return RestConcreteDomainOperators.getAll();
+	}
+	
+	/**
+	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.enumerationRestNodeSemanticTypes)
+	public RestNodeSemantic[] getRestNodeSemanticTypes()
+	{
+		return RestNodeSemantic.getAll();
+	}
+	
+	/**
+	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.enumerationRestSupportedIdTypes)
+	public RestSupportedIdType[] getRestSupportedIdTypes()
+	{
+		return RestSupportedIdType.getAll();
 	}
 	
 	//TODO the code below this point (noop, class Z) is a hack workaround for the bug 

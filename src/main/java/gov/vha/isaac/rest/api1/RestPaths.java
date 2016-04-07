@@ -46,6 +46,9 @@ public class RestPaths
 	public static final String enumerationRestDynamicSememeValidatorTypeComponent = enumerationComponent + "restDynamicSememeValidatorType/";
 	public static final String enumerationRestObjectChronologyTypeComponent = enumerationComponent + "restObjectChronologyType/";
 	public static final String enumerationRestSememeTypeComponent = enumerationComponent + "restSememeType/";
+	public static final String enumerationRestConcreteDomainOperatorTypes = enumerationComponent + "restConcreteDomainOperatorTypes/";
+	public static final String enumerationRestNodeSemanticTypes = enumerationComponent + "restNodeSemanticType/";
+	public static final String enumerationRestSupportedIdTypes = enumerationComponent + "restSupportedIdTypes/";
 	
 	public static final String conceptPathComponent = apiVersionComponent + "concept/";
 	public static final String conceptChronologyAppPathComponent = appPathComponent + conceptPathComponent + chronologyComponent;
