@@ -22,10 +22,15 @@ package gov.vha.isaac.rest.api1.data.logic;
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshotService;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.TypedNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.TypedNodeWithSequences;
@@ -47,6 +52,8 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  */
 @XmlSeeAlso({RestFeatureNode.class,RestRoleNode.class})
 public abstract class RestTypedConnectorNode extends RestLogicNode {
+	private static final Logger LOG = LoggerFactory.getLogger(RestTypedConnectorNode.class);
+
 	/**
 	 * RestTypedConnectorNode contains an int connectorTypeConceptSequence identifying a connector type concept 
 	 */
@@ -74,8 +81,7 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 	public RestTypedConnectorNode(TypedNodeWithSequences typedNodeWithSequences) {
 		super(typedNodeWithSequences);
 		connectorTypeConceptSequence = typedNodeWithSequences.getTypeConceptSequence();
-		//TODO - Joel, can't use this method, we aren't setting the stamp details of the ISAAC default stamp stuff
-		connectorTypeConceptDescription = Get.conceptDescriptionText(connectorTypeConceptSequence);
+		connectorTypeConceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(connectorTypeConceptSequence);
 		
 		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
@@ -98,6 +104,7 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 	public RestTypedConnectorNode(TypedNodeWithUuids typedNodeWithUuids) {
 		super(typedNodeWithUuids);
 		connectorTypeConceptSequence = Get.identifierService().getConceptSequenceForUuids(typedNodeWithUuids.getTypeConceptUuid());
+
 		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
 		connectorTypeConceptDescription = snapshotService.conceptDescriptionText(connectorTypeConceptSequence);
 

@@ -98,7 +98,7 @@ public class RestConceptNode extends RestLogicNode {
 			Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
 			isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
 		} catch (Exception e) {
-			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence));
+			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
 			isConceptDefined = false;
 		}
 
@@ -130,7 +130,7 @@ public class RestConceptNode extends RestLogicNode {
 			Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
 			isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
 		} catch (Exception e) {
-			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence));
+			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
 			isConceptDefined = false;
 		}
 
