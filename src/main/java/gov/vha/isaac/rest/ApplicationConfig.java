@@ -174,7 +174,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		log.info("Downloading DB to " + dbFolder.getAbsolutePath());
 		URL snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/" 
 				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/", "system", "system", 
-						"gov.vha.isaac.db", "vets", "1.0-SNAPSHOT", "all", "cradle.zip"));
+						"gov.vha.isaac.db", "vets", "1.0", "all", "cradle.zip"));
 		Task<File> task = new DownloadUnzipTask("system", "system", snapshot, true, true, dbFolder);
 		status_.bind(task.messageProperty());
 		Get.workExecutors().getExecutor().submit(task);
@@ -183,7 +183,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		
 		snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/" 
 				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/", "system", "system", 
-						"gov.vha.isaac.db", "vets", "1.0-SNAPSHOT", "all", "lucene.zip"));
+						"gov.vha.isaac.db", "vets", "1.0", "all", "lucene.zip"));
 		task = new DownloadUnzipTask("system", "system", snapshot, true, true, dbFolder);
 		status_.bind(task.messageProperty());
 		Get.workExecutors().getExecutor().submit(task);
