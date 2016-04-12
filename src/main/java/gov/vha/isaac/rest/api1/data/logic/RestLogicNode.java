@@ -108,11 +108,6 @@ public abstract class RestLogicNode {
 			nodeUuid = passedLogicNode.getNodeUuidSetForDepth(1).first();
 		} else {
 			nodeUuid = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for logicNodeUuidsExpandable
-				// expandables.add(new Expandable(ExpandUtil.logicNodeUuidsExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 		this.nodeSemantic = new RestNodeSemantic(passedLogicNode.getNodeSemantic());
 

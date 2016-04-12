@@ -113,10 +113,10 @@ public class LogicGraphAPIs
 		RequestInfo.get().readExpandables(expand);
 		RequestInfo.get().readStated(stated);
 
-		SememeChronology<? extends LogicGraphSememe<?>> logicGraphChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
+		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
 		
 		return new RestSememeChronology(
-				logicGraphChronology,
+				logicGraphSememeChronology,
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 				false // LogicGraphSememe should not support nestedSememesExpandable

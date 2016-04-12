@@ -21,8 +21,10 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
@@ -33,6 +35,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 /**
  * 
@@ -121,9 +124,9 @@ public class RestSememeChronology
 			{
 				expandables = new Expandables(
 						new Expandable(ExpandUtil.versionsAllExpandable, 
-								RestPaths.sememeVersionsAppPathComponent + sc.getSememeSequence() + "/"), 
+								RestPaths.sememeVersionsAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsAllExpandable), 
 						new Expandable(ExpandUtil.versionsLatestOnlyExpandable, 
-								RestPaths.sememeVersionAppPathComponent + sc.getSememeSequence() + "/"));
+								RestPaths.sememeVersionAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsLatestOnlyExpandable));
 			}
 			else
 			{

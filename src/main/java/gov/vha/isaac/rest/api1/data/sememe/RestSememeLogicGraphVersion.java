@@ -20,16 +20,22 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNodeFactory;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 /**
  * 
@@ -73,7 +79,10 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	 *            chronology
 	 * @param expandNested
 	 *            - A boolean value indicating whether or not nested values
-	 *            shoudl be expanded
+	 *            should be expanded
+	 * @param expandNested
+	 *            - A boolean value indicating whether or not LogicNode UUIDs
+	 *            should be included
 	 * @param stated
 	 *            - A boolean value indicating whether a stated or inferred
 	 *            logic graph should be retrieved
@@ -85,6 +94,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	public RestSememeLogicGraphVersion(LogicGraphSememe<?> lgs, boolean includeChronology) throws RestException {
 		super();
 		setup(lgs, includeChronology, false, null);
+
 		referencedConceptDescription = Get.conceptService()
 				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());
 		LOG.debug("Constructing REST logic graph for {} from LogicalExpression\n{}",
@@ -97,6 +107,12 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing {}",
 					Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
 			isReferencedConceptDefined = false;
+		}
+
+		if (! RequestInfo.get().shouldExpand(ExpandUtil.logicNodeUuidsExpandable) && RequestInfo.get().returnExpandableLinks())
+		{
+			expandables.add(new Expandable(ExpandUtil.logicNodeUuidsExpandable,
+					RestPaths.logicGraphVersionAppPathComponent + lgs.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.logicNodeUuidsExpandable));
 		}
 	}
 

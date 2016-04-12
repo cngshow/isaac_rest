@@ -21,10 +21,14 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.ComponentNidSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
@@ -40,6 +44,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 /**
  * 
@@ -91,6 +96,23 @@ public abstract class RestSememeVersion
 	{
 		setup(sv, includeChronology, expandNested, includeInNested);
 	}
+
+	private static String getRequestPathForExpandable(SememeVersion<?> sv) {
+		switch (sv.getChronology().getSememeType()) {
+		case LOGIC_GRAPH:
+			return RestPaths.logicGraphVersionAppPathComponent + sv.getSememeSequence();
+		case MEMBER:
+		case COMPONENT_NID:
+		case LONG:
+		case STRING:
+		case DYNAMIC:
+		case DESCRIPTION:
+		case RELATIONSHIP_ADAPTOR:
+		case UNKNOWN:
+			default:
+				return RestPaths.sememeVersionAppPathComponent + sv.getSememeSequence();
+		}
+	}
 	
 	protected void setup(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, Function<RestSememeVersion, Boolean> includeInNested) 
 			throws RestException
@@ -129,10 +151,9 @@ public abstract class RestSememeVersion
 		else
 		{
 			nestedSememes = null;
-			if (RequestInfo.get().returnExpandableLinks())
+			if (RequestInfo.get().returnExpandableLinks() && sv.getChronology().getSememeType() != SememeType.LOGIC_GRAPH)
 			{
-				expandables.add(new Expandable(ExpandUtil.nestedSememesExpandable, RestPaths.sememeVersionAppPathComponent +
-						sv.getSememeSequence() + "/?expand=" + ExpandUtil.nestedSememesExpandable + (includeChronology ? "," + ExpandUtil.chronologyExpandable : "")));
+				expandables.add(new Expandable(ExpandUtil.nestedSememesExpandable, getRequestPathForExpandable(sv) + "?" + RequestParameters.expand + "=" + ExpandUtil.nestedSememesExpandable + (includeChronology ? "," + ExpandUtil.chronologyExpandable : "")));
 			}
 		}
 		
