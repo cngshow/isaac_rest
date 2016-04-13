@@ -119,6 +119,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							}
 							catch (Exception e)
 							{
+								status_.set("Download Failed: " + e);
 								throw new RuntimeException(e);
 							}
 						}
@@ -172,8 +173,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		dbFolder.delete();
 		dbFolder.mkdirs();
 		log.info("Downloading DB to " + dbFolder.getAbsolutePath());
-		URL snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/" 
-				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/", "system", "system", 
+		URL snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/groups/everything/" 
+				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/groups/everything/", "system", "system", 
 						"gov.vha.isaac.db", "vets", "1.0", "all", "cradle.zip"));
 		Task<File> task = new DownloadUnzipTask("system", "system", snapshot, true, true, dbFolder);
 		status_.bind(task.messageProperty());
@@ -181,8 +182,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		task.get();
 		status_.unbind();
 		
-		snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/" 
-				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/repositories/termdatasnapshots/", "system", "system", 
+		snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/groups/everything/" 
+				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/groups/everything/", "system", "system", 
 						"gov.vha.isaac.db", "vets", "1.0", "all", "lucene.zip"));
 		task = new DownloadUnzipTask("system", "system", snapshot, true, true, dbFolder);
 		status_.bind(task.messageProperty());
