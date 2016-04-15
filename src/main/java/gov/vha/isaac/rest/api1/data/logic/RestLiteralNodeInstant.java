@@ -31,7 +31,7 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInstant;
  *
  * RestLiteralNodeInstant is a logic node containing only an Instant literal value
  * 
- * Each RestLiteralNodeInstant instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_INSTANT
+ * Each RestLiteralNodeInstant instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_INSTANT
  * 
  * A RestLiteralNodeInstant may not have any child logic nodes.
  */

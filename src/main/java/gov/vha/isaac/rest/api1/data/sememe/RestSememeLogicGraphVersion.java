@@ -101,7 +101,6 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 				() -> Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).toString(), () -> lgs.getLogicalExpression().toString());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 		try {
-			// TODO Fine tune this when data problems resolved
 			isReferencedConceptDefined = Frills.isConceptFullyDefined(lgs);
 		} catch (Exception e) {
 			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing {}",

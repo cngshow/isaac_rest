@@ -30,7 +30,7 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeFloat;
  *
  * RestLiteralNodeFloat is a logic node containing only a float literal value
  * 
- * Each RestLiteralNodeFloat instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_FLOAT
+ * Each RestLiteralNodeFloat instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_FLOAT
  * 
  * A RestLiteralNodeFloat may not have any child logic nodes.
  */

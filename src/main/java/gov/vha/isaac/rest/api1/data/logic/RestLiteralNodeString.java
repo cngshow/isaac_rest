@@ -30,7 +30,7 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeString;
  *
  * RestLiteralNodeString is a logic node containing only a String literal value
  * 
- * Each RestLiteralNodeString instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_STRING
+ * Each RestLiteralNodeString instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_STRING
  * 
  * A RestLiteralNodeString may not have any child logic nodes.
  */

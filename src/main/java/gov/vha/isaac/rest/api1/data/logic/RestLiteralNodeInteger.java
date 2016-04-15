@@ -30,7 +30,7 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInteger;
  *
  * RestLiteralNodeInteger is a logic node containing only an int literal value
  * 
- * Each RestLiteralNodeInteger instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_INTEGER
+ * Each RestLiteralNodeInteger instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_INTEGER
  * 
  * A RestLiteralNodeInteger may not have any child logic nodes.
  */

@@ -30,14 +30,14 @@ import gov.vha.isaac.ochre.model.logic.node.SufficientSetNode;
  * 
  * {@link RestUntypedConnectorNode}
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- *
- * RestUntypedConnectorNode is the abstract base class of untyped connector nodes.
+ * RestUntypedConnectorNode is the class representing untyped connector nodes.
  * 
- * A RestUntypedConnectorNode instance RestNodeSemantic/NodeSemantic value varies
+ * A RestUntypedConnectorNode instance RestNodeSemanticType/NodeSemantic value varies
  * according to its type: DEFINITION_ROOT, AND, OR, DISJOINT_WITH, NECESSARY_SET or SUFFICIENT_SET
  * 
  * A RestUntypedConnectorNode must have 1 or more child nodes.
+ *
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 public class RestUntypedConnectorNode extends RestLogicNode {
 	protected RestUntypedConnectorNode() {

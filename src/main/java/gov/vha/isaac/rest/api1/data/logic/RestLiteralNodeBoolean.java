@@ -30,7 +30,7 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeBoolean;
  *
  * RestLiteralNodeBoolean is a logic node containing only a boolean literal value
  * 
- * Each RestLiteralNodeBoolean instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_BOOLEAN
+ * Each RestLiteralNodeBoolean instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_BOOLEAN
  * 
  * A RestLiteralNodeBoolean may not have any child logic nodes.
 

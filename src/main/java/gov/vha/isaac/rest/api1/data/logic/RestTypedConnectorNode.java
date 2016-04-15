@@ -39,13 +39,17 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * 
  * {@link RestTypedConnectorNode}
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- *
- * RestTypedConnectorNode derived classes must have exactly 1 child node.
- * 
  * RestTypedConnectorNode is the abstract base class for logic graph nodes
  * containing a connector type specified by connectorTypeConceptSequence
  * and described by connectorTypeConceptDescription
+ * 
+ * RestTypedConnectorNode derived classes must have exactly 1 child node.
+ * 
+ * @see RestFeatureNode
+ * @see RestRoleNode
+ * 
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * 
  */
 @XmlSeeAlso({RestFeatureNode.class,RestRoleNode.class})
 public abstract class RestTypedConnectorNode extends RestLogicNode {
@@ -88,11 +92,6 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			connectorTypeConceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 	/**
@@ -113,11 +112,6 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			connectorTypeConceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 }

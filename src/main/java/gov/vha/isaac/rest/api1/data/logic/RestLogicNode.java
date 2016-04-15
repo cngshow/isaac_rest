@@ -33,19 +33,30 @@ import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
  * {@link RestLogicNode}
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- * 
  * The abstract base class of all REST logic graph tree structure nodes.
  * Each node represents a part of the logic graph grammar and has, at least,
- * its own UUID, a RestNodeSemantic enumerated type and a list of child RestNodeSemantic nodes.
- * The allowed number of child RestNodeSemantic nodes and any additional data 
- * depend on the RestNodeSemantic enumerated type.
+ * its own UUID, a RestNodeSemanticType enumerated type and a list of child RestNodeSemanticType nodes.
+ * The allowed number of child RestNodeSemanticType nodes and any additional data 
+ * depend on the RestNodeSemanticType enumerated type.
+ * 
+ * @see RestConceptNode
+ * @see RestUntypedConnectorNode
+ * @see RestTypedConnectorNode
+ * @see RestLiteralNodeBoolean
+ * @see RestLiteralNodeInteger
+ * @see RestLiteralNodeFloat
+ * @see RestLiteralNodeString
+ * @see RestLiteralNodeInstant
+ * 
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * 
  */
 @XmlSeeAlso({
 	RestConceptNode.class,
@@ -62,7 +73,7 @@ public abstract class RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
 
 	/**
-	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
+	 * The RestNodeSemanticType type of this node corresponding to the NodeSemantic enum
 	 */
 	@XmlElement
 	RestNodeSemanticType nodeSemantic;

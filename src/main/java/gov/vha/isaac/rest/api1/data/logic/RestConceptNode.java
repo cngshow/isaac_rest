@@ -46,7 +46,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  * A REST logic graph node containing (referencing) a concept by sequence and its text description.
- * RestConceptNode has RestNodeSemantic. == NodeSemantic.CONCEPT and should never have any child nodes.
+ * RestConceptNode has RestNodeSemanticType. == NodeSemantic.CONCEPT and should never have any child nodes.
  */
 public class RestConceptNode extends RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
@@ -110,11 +110,6 @@ public class RestConceptNode extends RestLogicNode {
 			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			conceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 	/**
@@ -142,11 +137,6 @@ public class RestConceptNode extends RestLogicNode {
 			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			conceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 }
