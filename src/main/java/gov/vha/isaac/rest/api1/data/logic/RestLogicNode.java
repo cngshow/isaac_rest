@@ -32,7 +32,7 @@ import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandables;
-import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
+import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
@@ -65,7 +65,7 @@ public abstract class RestLogicNode {
 	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
 	 */
 	@XmlElement
-	RestNodeSemantic nodeSemantic;
+	RestNodeSemanticType nodeSemantic;
 
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -109,7 +109,7 @@ public abstract class RestLogicNode {
 		} else {
 			nodeUuid = null;
 		}
-		this.nodeSemantic = new RestNodeSemantic(passedLogicNode.getNodeSemantic());
+		this.nodeSemantic = new RestNodeSemanticType(passedLogicNode.getNodeSemantic());
 
 		AbstractLogicNode[] childrenOfPassedLogicNode = passedLogicNode.getChildren();
 		this.children = new ArrayList<>(childrenOfPassedLogicNode.length);

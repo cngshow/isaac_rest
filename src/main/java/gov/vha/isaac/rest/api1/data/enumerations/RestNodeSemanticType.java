@@ -24,30 +24,30 @@ import gov.vha.isaac.ochre.api.logic.NodeSemantic;
 
 /**
  * 
- * {@link RestNodeSemantic}
+ * {@link RestNodeSemanticType}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
-public class RestNodeSemantic extends Enumeration
+public class RestNodeSemanticType extends Enumeration
 {
-	protected RestNodeSemantic()
+	protected RestNodeSemanticType()
 	{
 		//for jaxb
 	}
 	
-	public RestNodeSemantic(NodeSemantic st)
+	public RestNodeSemanticType(NodeSemantic st)
 	{
 		super(st.toString(), st.ordinal());
 	}
 
-	public static RestNodeSemantic[] getAll()
+	public static RestNodeSemanticType[] getAll()
 	{
-		RestNodeSemantic[] result = new RestNodeSemantic[NodeSemantic.values().length];
+		RestNodeSemanticType[] result = new RestNodeSemanticType[NodeSemantic.values().length];
 		for (int i = 0; i < NodeSemantic.values().length; i++)
 		{
-			result[i] = new RestNodeSemantic(NodeSemantic.values()[i]);
+			result[i] = new RestNodeSemanticType(NodeSemantic.values()[i]);
 		}
 		return result;
 	}

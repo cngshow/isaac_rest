@@ -23,34 +23,32 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.model.logic.ConcreteDomainOperators;
 
-//TODO fix these inconsistently named classes (which should be done in parallel with Cris, since it will likely break something on the ruby side)
-
 /**
  * 
- * {@link RestConcreteDomainOperators}
+ * {@link RestConcreteDomainOperatorsType}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
-public class RestConcreteDomainOperators extends Enumeration
+public class RestConcreteDomainOperatorsType extends Enumeration
 {
-	protected RestConcreteDomainOperators()
+	protected RestConcreteDomainOperatorsType()
 	{
 		//for jaxb
 	}
 	
-	public RestConcreteDomainOperators(ConcreteDomainOperators st)
+	public RestConcreteDomainOperatorsType(ConcreteDomainOperators st)
 	{
 		super(st.toString(), st.ordinal());
 	}
 	
-	public static RestConcreteDomainOperators[] getAll()
+	public static RestConcreteDomainOperatorsType[] getAll()
 	{
-		RestConcreteDomainOperators[] result = new RestConcreteDomainOperators[ConcreteDomainOperators.values().length];
+		RestConcreteDomainOperatorsType[] result = new RestConcreteDomainOperatorsType[ConcreteDomainOperators.values().length];
 		for (int i = 0; i < ConcreteDomainOperators.values().length; i++)
 		{
-			result[i] = new RestConcreteDomainOperators(ConcreteDomainOperators.values()[i]);
+			result[i] = new RestConcreteDomainOperatorsType(ConcreteDomainOperators.values()[i]);
 		}
 		return result;
 	}

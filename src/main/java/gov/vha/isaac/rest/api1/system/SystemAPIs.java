@@ -27,10 +27,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.webcohesion.enunciate.metadata.Facet;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
+import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
+import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
@@ -118,9 +118,9 @@ public class SystemAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
-	public RestConcreteDomainOperators[] getRestConcreteDomainOperatorTypes()
+	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes()
 	{
-		return RestConcreteDomainOperators.getAll();
+		return RestConcreteDomainOperatorsType.getAll();
 	}
 	
 	/**
@@ -129,9 +129,9 @@ public class SystemAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestNodeSemanticTypes)
-	public RestNodeSemantic[] getRestNodeSemanticTypes()
+	public RestNodeSemanticType[] getRestNodeSemanticTypes()
 	{
-		return RestNodeSemantic.getAll();
+		return RestNodeSemanticType.getAll();
 	}
 	
 	/**

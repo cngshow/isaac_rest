@@ -22,7 +22,7 @@ package gov.vha.isaac.rest.api1.data.logic;
 import javax.xml.bind.annotation.XmlElement;
 import gov.vha.isaac.ochre.model.logic.node.external.FeatureNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.FeatureNodeWithSequences;
-import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
+import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 
 /**
  * 
@@ -51,7 +51,7 @@ public class RestFeatureNode extends RestTypedConnectorNode {
 	 *   GREATER_THAN_EQUALS
 	 */
 	@XmlElement
-	RestConcreteDomainOperators operator;
+	RestConcreteDomainOperatorsType operator;
 
 	protected RestFeatureNode() {
 		// For JAXB
@@ -61,13 +61,13 @@ public class RestFeatureNode extends RestTypedConnectorNode {
 	 */
 	public RestFeatureNode(FeatureNodeWithSequences featureNodeWithSequences) {
 		super(featureNodeWithSequences);
-		operator = new RestConcreteDomainOperators(featureNodeWithSequences.getOperator());
+		operator = new RestConcreteDomainOperatorsType(featureNodeWithSequences.getOperator());
 	}
 	/**
 	 * @param featureNodeWithUuids
 	 */
 	public RestFeatureNode(FeatureNodeWithUuids featureNodeWithUuids) {
 		super(featureNodeWithUuids);
-		operator = new RestConcreteDomainOperators(featureNodeWithUuids.getOperator());
+		operator = new RestConcreteDomainOperatorsType(featureNodeWithUuids.getOperator());
 	}
 }
