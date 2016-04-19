@@ -33,7 +33,6 @@ import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**

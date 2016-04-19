@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -133,7 +134,7 @@ public class IdAPIs
 				case NID:
 					return new RestId(outputTypeFormat, object.get().getNid() + "");
 				case SCTID:
-					return new RestId(outputTypeFormat, "" + Frills.getSctId(object.get().getNid(), RequestInfo.get().getStampCoordinate()).
+					return new RestId(outputTypeFormat, "" + Frills.getSctId(object.get().getNid(), RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()]))).
 						orElseThrow(() -> new RestException("No SCTID was found on the specified component")));
 				case CONCEPT_SEQUENCE:
 					if (object.get().getOchreObjectType() == OchreExternalizableObjectType.CONCEPT)

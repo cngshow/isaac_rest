@@ -25,6 +25,7 @@ import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
@@ -110,7 +111,7 @@ public class RestSememeChronology
 			{
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				Optional<LatestVersion<SememeVersion>> latest = 
-						((SememeChronology)sc).getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
+						((SememeChronology)sc).getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])));
 				if (latest.isPresent())
 				{
 					versions.add(RestSememeVersion.buildRestSememeVersion(latest.get().value(), false, includeNested));

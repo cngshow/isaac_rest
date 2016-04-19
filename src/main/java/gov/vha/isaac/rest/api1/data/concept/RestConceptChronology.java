@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
@@ -114,11 +115,11 @@ public class RestConceptChronology
 					versions.add(new RestConceptVersion(cv, false, false, false, false));
 				}
 			}
-			else 
+			else // if (includeLatestVersion)
 			{
 				@SuppressWarnings("unchecked")
 				Optional<LatestVersion<ConceptVersion>> latest = 
-						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
+						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])));
 				if (latest.isPresent())
 				{
 					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false));

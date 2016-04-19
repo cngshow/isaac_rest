@@ -35,6 +35,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeService;
@@ -105,7 +106,7 @@ public class SememeAPIs
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = findSememeChronology(id);
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])));
 		if (sv.isPresent())
 		{
 			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 

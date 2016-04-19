@@ -37,6 +37,7 @@ import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
@@ -114,7 +115,7 @@ public class ConceptAPIs
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])));
 		if (cv.isPresent())
 		{
 			return new RestConceptVersion(cv.get().value(), 
