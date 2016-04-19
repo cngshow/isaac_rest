@@ -25,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -98,13 +99,13 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 		referencedConceptDescription = Get.conceptService()
 				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());
 		LOG.debug("Constructing REST logic graph for {} from LogicalExpression\n{}",
-				() -> Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).toString(), () -> lgs.getLogicalExpression().toString());
+				() -> Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])), RequestInfo.get().getLanguageCoordinate()).toString(), () -> lgs.getLogicalExpression().toString());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 		try {
 			isReferencedConceptDefined = Frills.isConceptFullyDefined(lgs);
 		} catch (Exception e) {
 			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing {}",
-					Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
+					Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])), RequestInfo.get().getLanguageCoordinate()));
 			isReferencedConceptDefined = false;
 		}
 
@@ -126,7 +127,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	private static RestLogicNode constructRootRestLogicNodeFromLogicGraphSememe(LogicGraphSememe<?> lgs) {
 		LogicalExpression le = lgs.getLogicalExpression();
 
-		LOG.debug("Processing LogicalExpression for concept {}", Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(le.getConceptSequence()));
+		LOG.debug("Processing LogicalExpression for concept {}", Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(le.getConceptSequence()));
 		LOG.debug(le.toString());
 		LOG.debug("Root is a {}", le.getRoot().getNodeSemantic().name());
 
@@ -140,7 +141,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 			return RestLogicNodeFactory.create(le.getRoot());
 		} else { // (le.getNodeCount() <= 0) {
 			LOG.warn("Passed LogicalExpression with no children");
-			throw new RuntimeException("No children found in LogicalExpression for " + Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(le.getConceptSequence()) + ": " + lgs);
+			throw new RuntimeException("No children found in LogicalExpression for " + Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate().makeAnalog(State.ANY_STATE_SET.toArray(new State[State.ANY_STATE_SET.size()])), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(le.getConceptSequence()) + ": " + lgs);
 		}
 	}
 }
