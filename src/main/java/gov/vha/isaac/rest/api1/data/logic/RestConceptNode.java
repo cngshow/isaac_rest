@@ -35,7 +35,6 @@ import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.ConceptNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.ConceptNodeWithSequences;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
@@ -50,12 +49,6 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  */
 public class RestConceptNode extends RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
-
-	/**
-	 * The data that was not expanded as part of this call (but can be)
-	 */
-	@XmlElement
-	Expandables expandables;
 
 	/**
 	 * The int sequence of the concept referred to by this REST logic graph node

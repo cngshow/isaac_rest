@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
 
@@ -77,11 +76,6 @@ public abstract class RestLogicNode {
 	@XmlElement
 	RestNodeSemanticType nodeSemantic;
 
-	/**
-	 * The data that was not expanded as part of this call (but can be)
-	 */
-	@XmlElement
-	Expandables expandables;
 	
 	/**
 	 * The UUID of the logic node itself (not of any referenced or associated component or concept)
@@ -112,8 +106,6 @@ public abstract class RestLogicNode {
 	 * root of a logic graph tree or tree fragment and recursively creates and populates an equivalent RestLogicNode
 	 */
 	public RestLogicNode(AbstractLogicNode passedLogicNode) {
-		expandables = new Expandables();
-
 		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeUuidsExpandable)) {
 			nodeUuid = passedLogicNode.getNodeUuidSetForDepth(1).first();
 		} else {

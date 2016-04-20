@@ -83,10 +83,16 @@ public class IdAPIs
 		Optional<? extends ObjectChronology> object = Optional.empty();
 		switch (inputTypeFormat)
 		{
-			case VUID:
-				//TODO implement vuid translation
-				throw new RestException("vuid input type not yet supported");
-			case SCTID:
+			case VUID: {
+				long l = NumericUtils.getLong(id).orElse(0l);
+				Optional<Integer> nid = Frills.getNidForVUID(l);
+				if (nid.isPresent())
+				{
+					object = Get.identifiedObjectService().getIdentifiedObjectChronology(nid.get());
+				}
+				break;
+			}
+			case SCTID: {
 				long l = NumericUtils.getLong(id).orElse(0l);
 				Optional<Integer> nid = Frills.getNidForSCTID(l);
 				if (nid.isPresent())
@@ -94,6 +100,7 @@ public class IdAPIs
 					object = Get.identifiedObjectService().getIdentifiedObjectChronology(nid.get());
 				}
 				break;
+			}
 			case CONCEPT_SEQUENCE:
 				object = Get.conceptService().getOptionalConcept(NumericUtils.getInt(id).orElse(0));
 				break;
