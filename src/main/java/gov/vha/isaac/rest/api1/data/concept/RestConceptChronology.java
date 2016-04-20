@@ -70,6 +70,11 @@ public class RestConceptChronology
 	@XmlElement
 	List<RestConceptVersion> versions;
 	
+	/**
+	 * @return boolean indicating that versions are present in the chronology
+	 */
+	public boolean hasVersions() { return versions.size() > 0; }
+	
 	protected RestConceptChronology()
 	{
 		//for JaxB

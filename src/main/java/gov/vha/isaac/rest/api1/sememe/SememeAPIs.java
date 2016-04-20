@@ -52,6 +52,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 
 /**
@@ -81,8 +82,18 @@ public class SememeAPIs
 	{
 		RequestInfo.get().readExpandables(expand);
 		
-		return new RestSememeChronology(findSememeChronology(id), RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
-				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
+		RestSememeChronology chronology =
+				new RestSememeChronology(
+						findSememeChronology(id),
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
+		
+		if (! chronology.hasVersions()) {
+			throw new RestException(RequestParameters.id, id, "No versions on coordinate path for sememe specified by the id");
+		}
+		
+		return chronology;
 	}
 	
 	/**

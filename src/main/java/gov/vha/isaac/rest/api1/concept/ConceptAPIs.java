@@ -123,7 +123,7 @@ public class ConceptAPIs
 					RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable),
 					Boolean.parseBoolean(stated.trim()));
 		}
-		throw new RestException(RequestParameters.id, id, "No concept was found");
+		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
 	}
 	
 	/**
@@ -145,8 +145,17 @@ public class ConceptAPIs
 		RequestInfo.get().readExpandables(expand);
 
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
-		return new RestConceptChronology(concept, RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
-				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+		RestConceptChronology chronology =
+				new RestConceptChronology(
+						concept,
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+
+		if (! chronology.hasVersions()) {
+			throw new RestException(RequestParameters.id, id, "No versions on coordinate path for concept with the specified id");
+		}
+
+		return chronology;
 	}
 	
 	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException
