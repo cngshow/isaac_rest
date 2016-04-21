@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.id;
 
 import java.util.Optional;
 import java.util.UUID;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,9 +28,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -39,11 +42,11 @@ import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api.session.RequestInfo;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestId;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 
 /**
@@ -55,7 +58,8 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 public class IdAPIs
 {
 	private static Logger log = LogManager.getLogger();
-	
+
+
 	/**
 	 * Translate an ID from one type to another.  
 	 * TODO still need to define how to pass in a version parameter
@@ -175,7 +179,6 @@ public class IdAPIs
 			throw new RestException("id", id, "Unable to locate an object with the given id.");
 		}
 	}
-	
 
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.

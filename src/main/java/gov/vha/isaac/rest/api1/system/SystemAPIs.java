@@ -18,14 +18,23 @@
  */
 package gov.vha.isaac.rest.api1.system;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.webcohesion.enunciate.metadata.Facet;
+
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
+import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api.session.RequestParameters;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
@@ -68,6 +77,74 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 @Path(RestPaths.systemPathComponent)
 public class SystemAPIs
 {
+	/**
+	 * Return the RestObjectChronologyType of the component corresponding to the passed id
+	 * @param id The id for which to determine RestObjectChronologyType
+	 * If an int < 0 then assumed to be a NID, else ambiguous and treated as a sememe or concept sequence, each of which may or may not correspond to existing components
+	 * If a String then parsed and handled as a UUID of either a concept or sequence
+	 * @return Map of RestObjectChronologyType to RestId.  Will contain exactly one entry if passed a UUID or NID, or one or two entries if passed a sequence. if no corresponding ids found a RestException is thrown.
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.objectChronologyTypeComponent + "{id}")  
+	public RestObjectChronologyType getObjectChronologyType(@PathParam("id") String id) throws RestException
+	{
+		RestObjectChronologyType returnedType = null;
+		Optional<Integer> intId = NumericUtils.getInt(id);
+		if (intId.isPresent())
+		{
+			if (intId.get() < 0)
+			{
+				// id is NID
+				returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(intId.get()));
+			}
+			else
+			{
+				// id is either sememe or concept sequence
+
+				int conceptNid = Get.identifierService().getConceptNid(intId.get());
+				if (conceptNid != 0) {
+					returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(conceptNid));
+				}
+
+				int sememeNid = Get.identifierService().getSememeNid(intId.get());
+				if (sememeNid != 0) {
+					if (returnedType != null) {
+						throw new RestException(RequestParameters.id, id, "Specified int id is ambiguous, as it may be either a sememe or concept sequence. Must be a UUID, or integer NID or sequence that uniquely identifies either a sememe or concept, but not both.");
+					}
+					returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(sememeNid));
+				}
+			}
+
+			if (returnedType != null) {
+				return returnedType;
+			} else {
+				throw new RestException(RequestParameters.id, id, "Specified int id is not a valid NID or sequence. Must be a UUID, or integer NID or sequence that uniquely identifies either a sememe or concept, but not both.");
+			}
+		}
+		else
+		{
+			Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+			if (uuidId.isPresent())
+			{
+				// id is uuid
+
+				Integer nid = null;
+
+				if (Get.identifierService().hasUuid(uuidId.get()) && (nid = Get.identifierService().getNidForUuids(uuidId.get())) != 0) {
+					return returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(nid));
+				} else {
+					throw new RestException(RequestParameters.id, id, "No concept or sememe exists corresponding to the passed UUID id.");
+				}
+			}
+			else
+			{
+				throw new RestException(RequestParameters.id, id, "Specified string id is not a valid identifier.  Must be a UUID, or integer NID or sequence.");
+			}
+		}
+	}
+
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
 	 */

@@ -47,12 +47,13 @@ import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api.session.RequestInfo;
+import gov.vha.isaac.rest.api.session.RequestParameters;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
-import gov.vha.isaac.rest.api1.session.RequestParameters;
 
 
 /**
@@ -63,6 +64,54 @@ import gov.vha.isaac.rest.api1.session.RequestParameters;
 @Path(RestPaths.sememePathComponent)
 public class SememeAPIs
 {
+	/**
+	 * Return the RestSememeType of the sememe corresponding to the passed id
+	 * @param id The id for which to determine RestSememeType
+	 * If an int then assumed to be a sememe NID or sequence
+	 * If a String then parsed and handled as a sememe UUID
+	 * @return RestSememeType of the sememe corresponding to the passed id. if no corresponding sememe found a RestException is thrown.
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.sememeTypeComponent + "{id}")  
+	public RestSememeType getSememeType(@PathParam("id") String id) throws RestException
+	{
+		Optional<Integer> intId = NumericUtils.getInt(id);
+		if (intId.isPresent())
+		{
+			if (Get.sememeService().hasSememe(intId.get()))
+			{
+				return new RestSememeType(Get.sememeService().getSememe(intId.get()).getSememeType());
+			}
+			else
+			{
+				throw new RestException(RequestParameters.id, id, "Specified sememe int id NID or sequence does not correspond to an existing sememe chronology. Must pass a UUID or integer NID or sequence that corresponds to an existing sememe chronology.");
+			}
+		}
+		else
+		{
+			Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+			if (uuidId.isPresent())
+			{
+				// id is uuid
+
+				Integer sememeSequence = null;
+				if (Get.identifierService().hasUuid(uuidId.get()) && (sememeSequence = Get.identifierService().getSememeSequenceForUuids(uuidId.get())) != 0 && Get.sememeService().hasSememe(sememeSequence))
+				{
+					return new RestSememeType(Get.sememeService().getSememe(sememeSequence).getSememeType());
+				}
+				else
+				{
+					throw new RestException(RequestParameters.id, id, "Specified sememe UUID does not correspond to an existing sememe chronology. Must pass a UUID or integer NID or sequence that corresponds to an existing sememe chronology.");
+				}
+			}
+			else
+			{
+				throw new RestException(RequestParameters.id, id, "Specified sememe string id is not a valid UUID identifier.  Must be a UUID, or integer NID or sequence.");
+			}
+		}
+	}
 
 	/**
 	 * Returns the chronology of a sememe.  

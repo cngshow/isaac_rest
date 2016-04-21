@@ -31,8 +31,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.api.session.RequestInfo;
 import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
 
 /**
  * 
