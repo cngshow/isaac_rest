@@ -151,10 +151,6 @@ public class ConceptAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 
-		if (! chronology.hasVersions()) {
-			throw new RestException(RequestParameters.id, id, "No versions on coordinate path for concept with the specified id");
-		}
-
 		return chronology;
 	}
 	

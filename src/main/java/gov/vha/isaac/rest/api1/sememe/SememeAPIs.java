@@ -89,10 +89,6 @@ public class SememeAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
 		
-		if (! chronology.hasVersions()) {
-			throw new RestException(RequestParameters.id, id, "No versions on coordinate path for sememe specified by the id");
-		}
-		
 		return chronology;
 	}
 	
