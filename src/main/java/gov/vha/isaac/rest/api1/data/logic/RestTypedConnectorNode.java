@@ -32,8 +32,8 @@ import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.TypedNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.TypedNodeWithSequences;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.api.session.RequestInfo;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 

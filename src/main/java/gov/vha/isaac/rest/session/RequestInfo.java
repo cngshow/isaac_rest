@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api.session;
+package gov.vha.isaac.rest.session;
 
 import java.util.HashSet;
 import java.util.List;

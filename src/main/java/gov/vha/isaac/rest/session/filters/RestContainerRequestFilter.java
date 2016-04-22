@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package gov.vha.isaac.rest.api.session.filters;
+package gov.vha.isaac.rest.session.filters;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.api.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 

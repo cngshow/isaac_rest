@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package gov.vha.isaac.rest.api.session;
+package gov.vha.isaac.rest.session;
 
 /**
  * 

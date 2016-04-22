@@ -30,10 +30,10 @@ import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
-import gov.vha.isaac.rest.api.session.RequestInfo;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
