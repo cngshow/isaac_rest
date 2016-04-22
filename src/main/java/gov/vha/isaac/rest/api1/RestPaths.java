@@ -42,6 +42,7 @@ public class RestPaths
 	public static final String byAssemblageComponent = "byAssemblage/";
 	public static final String byReferencedComponentComponent = "byReferencedComponent/";
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
+	public static final String systemInfoComponent = "systemInfo";
 	
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";

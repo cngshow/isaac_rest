@@ -20,7 +20,6 @@ package gov.vha.isaac.rest.api1.system;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -29,12 +28,12 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.webcohesion.enunciate.metadata.Facet;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.SystemInfo;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
@@ -220,6 +219,17 @@ public class SystemAPIs
 	public RestSupportedIdType[] getRestSupportedIdTypes()
 	{
 		return RestSupportedIdType.getAll();
+	}
+	
+	/**
+	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.systemInfoComponent)
+	public SystemInfo getSystemInfo()
+	{
+		return new SystemInfo();
 	}
 	
 	//TODO the code below this point (noop, class Z) is a hack workaround for the bug 
