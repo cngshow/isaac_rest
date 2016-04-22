@@ -43,11 +43,16 @@ import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
+import gov.vha.isaac.rest.tokens.CoordinatesToken;
 
 /**
  * {@link RestTest}
@@ -566,5 +571,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(dialect.contains("<assemblageSequence>" + MetaData.US_ENGLISH_DIALECT.getConceptSequence() + "</assemblageSequence>"), "Wrong dialect");
 			Assert.assertTrue(dialect.contains("<data xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xsi:type=\"xs:int\">" + MetaData.PREFERRED.getNid() + "</data>"), "Wrong value");
 		}
+	}
+	
+	@Test
+	public void testCoordinateTokenRoundTrip() throws Exception
+	{
+		CoordinatesToken t = new CoordinatesToken(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(), 
+				TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(), 
+						LogicCoordinates.getStandardElProfile()));
+		
+		String token = t.serialize();
+		
+		CoordinatesToken read = new CoordinatesToken(token);
+		Assert.assertTrue(token.equals(read.serialize()));
 	}
 }
