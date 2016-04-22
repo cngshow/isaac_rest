@@ -74,18 +74,8 @@ public class ConceptAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * 
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children', 'countChildren'
 	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
-	 * @param stampCoordTime - specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest"
-	 * @param stampCoordPath - specifies path component of StampPosition component of the StampCoordinate. Values are path UUIDs, int ids or the terms "development" or "master"
-	 * @param stampCoordPrecedence - specifies precedence of the StampCoordinate. Values are either "path" or "time"
-	 * @param stampCoordModules - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids
-	 * @param stampCoordStates - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names 
-	 * @param langCoordLang - specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms:
-	 * 		"english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish"
-	 * @param langCoordDescTypesPref - specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" or "definition"
-	 * @param langCoordDialectsPref - specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb"
-	 *
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -95,18 +85,7 @@ public class ConceptAPIs
 	public RestConceptVersion getConceptVersion(
 			@PathParam(RequestParameters.id) String id, 
 			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
-			@QueryParam(RequestParameters.expand) String expand
-//
-//			@QueryParam(RequestParameters.stampCoordTime) @DefaultValue(RequestParameters.stampCoordTimeDefault) String stampCoordTime,
-//			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String stampCoordPath,
-//			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String stampCoordPrecedence,
-//			@QueryParam(RequestParameters.stampCoordModules) @DefaultValue(RequestParameters.stampCoordModulesDefault) String stampCoordModules,
-//			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordStates,
-//			
-//			@QueryParam(RequestParameters.langCoordLang) @DefaultValue(RequestParameters.langCoordLangDefault) String langCoordLang,
-//			@QueryParam(RequestParameters.langCoordDescTypesPref) @DefaultValue(RequestParameters.langCoordDescTypesPrefDefault) String langCoordDescTypesPref,
-//			@QueryParam(RequestParameters.langCoordDialectsPref) @DefaultValue(RequestParameters.langCoordDialectsPrefDefault) String langCoordDialectsPref
-			) throws RestException
+			@QueryParam(RequestParameters.expand) String expand ) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 		RequestInfo.get().readStated(stated);
@@ -121,6 +100,7 @@ public class ConceptAPIs
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable),
+					RequestInfo.get().shouldExpand(ExpandUtil.childCountExpandable),
 					Boolean.parseBoolean(stated.trim()));
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");

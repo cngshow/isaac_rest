@@ -63,16 +63,23 @@ public class RestConceptVersion
 	RestStampedVersion conVersion;
 
 	/**
-	 * The parent concepts(s) of the concept at this point in time (is a relationships).  Depending on the expand parameter, this may not be returned.
+	 * The parent concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
 	List<RestConceptVersion> parents;
 	
 	/**
-	 * The child concepts(s) of the concept at this point in time (is a relationships).  Depending on the expand parameter, this may not be returned.
+	 * The child concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
 	List<RestConceptVersion> children;
+	
+	/**
+	 * The number of child concept(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
+	 * This will not be returned if the children field is populated.
+	 */
+	@XmlElement
+	Integer childCount;
 	
 	protected RestConceptVersion()
 	{
@@ -81,11 +88,11 @@ public class RestConceptVersion
 	
 	@SuppressWarnings({ "rawtypes" }) 
 	public RestConceptVersion(ConceptVersion cv, boolean includeChronology) {
-		this(cv, includeChronology, false, false, false);
+		this(cv, includeChronology, false, false, false, false);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean includeChildren, boolean stated)
+	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean includeChildren, boolean countChildren, boolean stated)
 	{
 		conVersion = new RestStampedVersion(cv);
 		if (includeChronology || includeParents || includeChildren)
@@ -106,7 +113,7 @@ public class RestConceptVersion
 						
 			}
 			Tree tree = null;
-			if (includeParents || includeChildren)
+			if (includeParents || includeChildren || countChildren)
 			{
 				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
 			}
@@ -126,7 +133,7 @@ public class RestConceptVersion
 			
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, 0);
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0);
 			}
 			else
 			{
@@ -135,6 +142,19 @@ public class RestConceptVersion
 					expandables.add(
 						new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
 							+ "?expand=" + ExpandUtil.childrenExpandable + "&stated=" + stated));
+				}
+				if (countChildren)
+				{
+					TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree);
+				}
+				else
+				{
+					if (RequestInfo.get().returnExpandableLinks())
+					{
+						expandables.add(
+							new Expandable(ExpandUtil.childCountExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
+								+ "?expand=" + ExpandUtil.childCountExpandable + "&stated=" + stated));
+					}
 				}
 			}
 			if (expandables.size() == 0)
@@ -187,5 +207,10 @@ public class RestConceptVersion
 		{
 			expandables.remove(ExpandUtil.parentsExpandable);
 		}
+	}
+
+	public void setChildCount(int count)
+	{
+		this.childCount = count;
 	}
 }
