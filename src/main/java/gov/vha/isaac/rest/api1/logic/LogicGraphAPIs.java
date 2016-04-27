@@ -119,7 +119,8 @@ public class LogicGraphAPIs
 				logicGraphSememeChronology,
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-				false // LogicGraphSememe should not support nestedSememesExpandable
+				false, // LogicGraphSememe should not support nestedSememesExpandable
+				false
 				);
 	}
 

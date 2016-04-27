@@ -19,7 +19,9 @@
 package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 
 import java.util.UUID;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
 
 /**
  * 
@@ -27,11 +29,15 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-public class RestDynamicSememeUUID extends RestDynamicSememeData
+public class RestDynamicSememeUUID extends RestDynamicSememeTypedData
 {
 	public RestDynamicSememeUUID(int columnNumber, UUID value)
 	{
-		super(columnNumber, value);
+		super(columnNumber, value, ObjectChronologyType.UNKNOWN_NID);
+		if (Get.identifierService().hasUuid(value))
+		{
+			setTypedData(Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(value)));
+		}
 	}
 	
 	protected RestDynamicSememeUUID()

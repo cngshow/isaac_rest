@@ -179,6 +179,11 @@ public class ConceptAPIs
 	 * Dialects and other types of attributes will be returned in different structures - all attributes that represent dialects will 
 	 * be in the RestSememeDescriptionVersion object, in the dialects fields, while any other type of attribute will be in the 
 	 * RestSememeVersion in the nestedAttributes field. 
+	 * @param expandReferenced - true to also include type information and preferred descriptions for concepts referenced by nested 
+	 * sememes and dialects 
+	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept.
 	 * @return The descriptions associated with the concept
 	 * @throws RestException 
 	 */
@@ -186,12 +191,14 @@ public class ConceptAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
 	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, 
-		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes) throws RestException
+		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes,
+		@QueryParam("expand") String expand) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
+		RequestInfo.get().readExpandables(expand);
 		
 		List<RestSememeVersion> descriptions = SememeAPIs.get(findConceptChronology(id).getNid() + "", getAllDescriptionTypes(), true, 
-				Boolean.parseBoolean(includeAttributes.trim()), true);
+				Boolean.parseBoolean(includeAttributes.trim()), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true);
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up

@@ -21,11 +21,11 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -34,6 +34,8 @@ import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
+import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -72,6 +74,22 @@ public class RestSememeChronology
 	int referencedComponentNid;
 	
 	/**
+	 * The type of the object that is referenced by the referencedComponentNid value.  This would tell you if the nid represents a concept or a sememe.
+	 * Only populated when the expand parameter 'referencedDetails' is passed.
+	 */
+	@XmlElement
+	RestObjectChronologyType referencedComponentNidObjectType;
+	
+	/**
+	 * If the referencedComponentNid represents a concept, then this carries the "best" description for that concept.  This is selected based on the 
+	 * attributes within the session for  stamp and language coordinates - or - if none present - the server default.  This is not populated if the 
+	 * referencedComponentNid is a sememe type.
+	 * Only populated when the expand parameter 'referencedDetails' is passed.
+	 */
+	@XmlElement
+	String referencedComponentNidDescription;
+	
+	/**
 	 * The permanent identifier object(s) attached to this sememe instance
 	 */
 	@XmlElement
@@ -88,13 +106,23 @@ public class RestSememeChronology
 		//For Jaxb
 	}
 
-	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeNested) 
-			throws RestException
+	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeNested,
+			boolean populateReferencedDetails) throws RestException
 	{
 		identifiers = new RestIdentifiedObject(sc.getUuidList());
 		sememeSequence = sc.getSememeSequence();
 		assemblageSequence = sc.getAssemblageSequence();
 		referencedComponentNid = sc.getReferencedComponentNid();
+		if (populateReferencedDetails)
+		{
+			ObjectChronologyType cronType = Get.identifierService().getChronologyTypeForNid(referencedComponentNid);
+			referencedComponentNidObjectType = new RestObjectChronologyType(cronType);
+			if (cronType == ObjectChronologyType.CONCEPT)
+			{
+				referencedComponentNidDescription = RestConceptChronology.readBestDescription(referencedComponentNid);
+			}
+		}
+		
 		if (includeAllVersions || includeLatestVersion)
 		{
 			expandables = null;
@@ -103,7 +131,7 @@ public class RestSememeChronology
 			{
 				for (SememeVersion<?> sv : sc.getVersionList())
 				{
-					versions.add(RestSememeVersion.buildRestSememeVersion(sv, false, includeNested));
+					versions.add(RestSememeVersion.buildRestSememeVersion(sv, false, includeNested, populateReferencedDetails));
 				}
 			}
 			else if (includeLatestVersion)
@@ -113,7 +141,7 @@ public class RestSememeChronology
 						((SememeChronology)sc).getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
 				if (latest.isPresent())
 				{
-					versions.add(RestSememeVersion.buildRestSememeVersion(latest.get().value(), false, includeNested));
+					versions.add(RestSememeVersion.buildRestSememeVersion(latest.get().value(), false, includeNested, populateReferencedDetails));
 				}
 			}
 		}

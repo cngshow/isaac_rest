@@ -80,28 +80,7 @@ public class RestConceptChronology
 	{
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
 		
-		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
-		
-		if (RequestInfo.get().useFSN())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
-				Get.sememeService().getDescriptionsForComponent(cc.getNid()).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (!descriptionOptional.isPresent())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
-				Get.sememeService().getDescriptionsForComponent(cc.getNid()).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (descriptionOptional.isPresent())
-		{
-			description = descriptionOptional.get().value().getText();
-		}
-		else
-		{
-			description = "-ERROR finding description_";
-		}
+		description = readBestDescription(cc.getNid());
 		
 		if (includeAllVersions || includeLatestVersion)
 		{
@@ -140,6 +119,37 @@ public class RestConceptChronology
 			{
 				expandables = null;
 			}
+		}
+	}
+
+	/**
+	 * Utility method to find the 'best' description for the concept at hand.
+	 * @param conceptNid
+	 * @return
+	 */
+	public static String readBestDescription(int conceptNid)
+	{
+		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
+		
+		if (RequestInfo.get().useFSN())
+		{
+			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
+				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
+		}
+		
+		if (!descriptionOptional.isPresent())
+		{
+			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
+				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
+		}
+		
+		if (descriptionOptional.isPresent())
+		{
+			return descriptionOptional.get().value().getText();
+		}
+		else
+		{
+			return null;
 		}
 	}
 }

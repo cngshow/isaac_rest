@@ -40,6 +40,7 @@ public class ExpandUtil
 	public static final String uuid = "uuid";
 	public static final String referencedConcept = "referencedConcept";
 	public static final String nestedSememesExpandable = "nestedSememes";
+	public static final String referencedDetails = "referencedDetails";
 	public static final String logicNodeUuidsExpandable = "logicNodeUuids";
 	
 	public static Set<String> read(String expandableString)

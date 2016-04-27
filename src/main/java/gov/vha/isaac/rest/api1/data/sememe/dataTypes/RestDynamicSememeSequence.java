@@ -18,7 +18,9 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
 
 /**
  * 
@@ -26,11 +28,26 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-public class RestDynamicSememeSequence extends RestDynamicSememeData
+public class RestDynamicSememeSequence extends RestDynamicSememeTypedData
 {
 	public RestDynamicSememeSequence(int columnNumber, int value)
 	{
-		super(columnNumber, value);
+		super(columnNumber, value, ObjectChronologyType.UNKNOWN_NID);
+		if (Get.conceptService().hasConcept(value))
+		{
+			if (Get.sememeService().hasSememe(value))
+			{
+				//leave unknown
+			}
+			else
+			{
+				setTypedData(ObjectChronologyType.CONCEPT);
+			}
+		}
+		else if (Get.sememeService().hasSememe(value))
+		{
+			setTypedData(ObjectChronologyType.SEMEME);
+		}
 	}
 	
 	protected RestDynamicSememeSequence()

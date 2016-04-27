@@ -51,6 +51,7 @@ import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeString;
 import gov.vha.isaac.rest.api1.data.logic.RestRoleNode;
 import gov.vha.isaac.rest.api1.data.logic.RestTypedConnectorNode;
 import gov.vha.isaac.rest.api1.data.logic.RestUntypedConnectorNode;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
@@ -285,5 +286,6 @@ public class SystemAPIs
 		@XmlElement RestDynamicSememeSequence a28 = null;
 		@XmlElement RestDynamicSememeString a29 = null;
 		@XmlElement RestDynamicSememeUUID a30 = null;
+		@XmlElement RestDynamicSememeTypedData a31 = null;
 	}
 }

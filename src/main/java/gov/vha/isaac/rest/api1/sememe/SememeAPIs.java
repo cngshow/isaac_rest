@@ -116,8 +116,9 @@ public class SememeAPIs
 	/**
 	 * Returns the chronology of a sememe.  
 	 * @param id - A UUID, nid or sememe sequence
-	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes'
+	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
+	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept, the description of that concept.
 	 * @return the sememe chronology object
 	 * @throws RestException
 	 */
@@ -136,7 +137,8 @@ public class SememeAPIs
 						findSememeChronology(id),
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
+						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 		
 		return chronology;
 	}
@@ -146,7 +148,7 @@ public class SememeAPIs
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
 	 * @return the sememe version object.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * @throws RestException 
@@ -165,7 +167,7 @@ public class SememeAPIs
 		if (sv.isPresent())
 		{
 			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable));
+					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 		}
 		else
 		{
@@ -215,7 +217,7 @@ public class SememeAPIs
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence of an assemblage concept
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * TODO this needs to be paged 
@@ -233,7 +235,7 @@ public class SememeAPIs
 		
 		//we don't have a referenced component - our id is assemblage
 		return get(null, temp, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-			true);
+			RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true);
 	}
 	
 	/**
@@ -245,7 +247,7 @@ public class SememeAPIs
 	 * of all types will be returned.  May be specified multiple times to allow multiple assemblages
 	 * @param includeDescriptions - an optional flag to request that description type sememes are returned.  By default, description type 
 	 * sememes are not returned, as these are typically retreived via a getDescriptions call on the Concept APIs.
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * @throws RestException 
@@ -266,7 +268,8 @@ public class SememeAPIs
 		}
 		
 		return get(id, allowedAssemblages, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-			RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), Boolean.parseBoolean(includeDescriptions.trim()) );
+			RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), 
+			Boolean.parseBoolean(includeDescriptions.trim()) );
 	}
 	
 
@@ -305,12 +308,13 @@ public class SememeAPIs
 	 * referencedComponent is not provided - focuses the search on just this assemblage
 	 * @param expandChronology
 	 * @param expandNested
+	 * @param expandReferenced
 	 * @param allowDescriptions true to include description type sememes, false to skip
 	 * @return
 	 * @throws RestException
 	 */
 	public static List<RestSememeVersion> get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
-		boolean allowDescriptions) throws RestException
+		boolean expandReferenced, boolean allowDescriptions) throws RestException
 	{
 		final ArrayList<RestSememeVersion> results = new ArrayList<>();
 		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
@@ -326,7 +330,7 @@ public class SememeAPIs
 				{
 					try
 					{
-						results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested));
+						results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested, expandReferenced));
 					}
 					catch (RestException e)
 					{

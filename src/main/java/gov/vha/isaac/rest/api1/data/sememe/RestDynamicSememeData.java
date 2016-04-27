@@ -55,11 +55,9 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlSeeAlso ({RestDynamicSememeArray.class, RestDynamicSememeBoolean.class, RestDynamicSememeByteArray.class, RestDynamicSememeDouble.class, RestDynamicSememeFloat.class,
-	RestDynamicSememeInteger.class, RestDynamicSememeLong.class, RestDynamicSememeNid.class, RestDynamicSememeSequence.class, RestDynamicSememeString.class, 
-	RestDynamicSememeUUID.class, RestDynamicSememeArray[].class, RestDynamicSememeBoolean[].class, RestDynamicSememeByteArray[].class, 
-	RestDynamicSememeDouble[].class, RestDynamicSememeFloat[].class, RestDynamicSememeInteger[].class, RestDynamicSememeLong[].class, 
-	RestDynamicSememeNid[].class, RestDynamicSememeSequence[].class, RestDynamicSememeString[].class, RestDynamicSememeUUID[].class,
-	RestDynamicSememeData[].class})
+	RestDynamicSememeInteger.class, RestDynamicSememeLong.class, RestDynamicSememeString.class, RestDynamicSememeTypedData.class, 
+	RestDynamicSememeArray[].class, RestDynamicSememeBoolean[].class, RestDynamicSememeByteArray[].class, RestDynamicSememeDouble[].class, 
+	RestDynamicSememeFloat[].class, RestDynamicSememeLong[].class, RestDynamicSememeString[].class, RestDynamicSememeData[].class, RestDynamicSememeTypedData[].class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class RestDynamicSememeData

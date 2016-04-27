@@ -93,7 +93,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	 */
 	public RestSememeLogicGraphVersion(LogicGraphSememe<?> lgs, boolean includeChronology) throws RestException {
 		super();
-		setup(lgs, includeChronology, false, null);
+		setup(lgs, includeChronology, false, false, null);
 
 		referencedConceptDescription = Get.conceptService()
 				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());

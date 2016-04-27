@@ -146,6 +146,34 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		checkFail(response);
 	}
+	
+	@Test
+	public void testReferencedDetailsExpansion()
+	{
+		Response response = target(RestPaths.sememePathComponent + RestPaths.byReferencedComponentComponent +
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid()).request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		
+		String result = checkFail(response).readEntity(String.class);
+		
+		Assert.assertFalse(result.contains("<conceptDescription>preferred (ISAAC)</conceptDescription>"));
+		Assert.assertFalse(result.contains("</referencedComponentNidObjectType>"));
+		Assert.assertFalse(result.contains("<referencedComponentNidDescription>dynamic sememe extension definition (ISAAC)</referencedComponentNidDescription>"));
+		
+		response = target(RestPaths.sememePathComponent + RestPaths.byReferencedComponentComponent +
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+				.queryParam("expand", "chronology,referencedDetails,nestedSememes")
+				.queryParam("includeDescriptions", "true")
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		
+		result = checkFail(response).readEntity(String.class);
+		
+		Assert.assertTrue(result.contains("<conceptDescription>preferred (ISAAC)</conceptDescription>"));
+		Assert.assertTrue(result.contains("</referencedComponentNidObjectType>"));
+		Assert.assertTrue(result.contains("<referencedComponentNidDescription>dynamic sememe extension definition (ISAAC)</referencedComponentNidDescription>"));
+	}
+	
+	
 	/**
 	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
 	 * concept data.
