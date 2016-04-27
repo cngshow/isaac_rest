@@ -46,6 +46,12 @@ import gov.vha.isaac.rest.session.RequestInfo;
 public class RestConceptChronology 
 {
 	/**
+	 * The concept sequence identifier of this concept
+	 */
+	@XmlElement
+	int conceptSequence;
+	
+	/**
 	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
 	 * stamp and language coordinates - or - if none present - the server default.
 	 */
@@ -78,6 +84,7 @@ public class RestConceptChronology
 	@SuppressWarnings("rawtypes") 
 	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion)
 	{
+		conceptSequence = cc.getConceptSequence();
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
 		
 		description = readBestDescription(cc.getNid());
