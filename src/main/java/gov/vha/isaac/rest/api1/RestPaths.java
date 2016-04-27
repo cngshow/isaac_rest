@@ -63,6 +63,7 @@ public class RestPaths
 	public static final String sememeChronologyAppPathComponent = appPathComponent + sememePathComponent + chronologyComponent;
 	public static final String sememeVersionsAppPathComponent = appPathComponent + sememePathComponent + versionsComponent;
 	public static final String sememeVersionAppPathComponent = appPathComponent + sememePathComponent +versionComponent;
+	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememePathComponent +byAssemblageComponent;
 
 	
 	public static final String searchPathComponent = apiVersionComponent + "search/";

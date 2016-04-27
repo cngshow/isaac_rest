@@ -36,6 +36,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * {@link TaxonomyAPIs}
@@ -67,12 +68,12 @@ public class TaxonomyAPIs
 	@Path(RestPaths.versionComponent)
 	public RestConceptVersion getConceptVersionTaxonomy(
 			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
-			@QueryParam("id") @DefaultValue("7c21b6c5-cf11-5af9-893b-743f004c97f5") String id,
-			@QueryParam("stated") @DefaultValue("true") String stated, 
+			@QueryParam(RequestParameters.id) @DefaultValue("7c21b6c5-cf11-5af9-893b-743f004c97f5") String id,
+			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated, 
 			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight, 
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth,
 			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
-			@QueryParam("expand") String expand
+			@QueryParam(RequestParameters.expand) String expand
 			) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);

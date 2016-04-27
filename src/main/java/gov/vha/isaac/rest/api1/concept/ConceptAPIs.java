@@ -41,6 +41,7 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -185,14 +186,29 @@ public class ConceptAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
-	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, 
-		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes) throws RestException
+	public List<RestSememeDescriptionVersion> getDescriptions(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
+			@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		
-		List<RestSememeVersion> descriptions = SememeAPIs.get(findConceptChronology(id).getNid() + "", getAllDescriptionTypes(), true, 
-				Boolean.parseBoolean(includeAttributes.trim()), true);
-		for (RestSememeVersion d : descriptions)
+		List<SememeVersion<?>> sememeVersions = SememeAPIs.get(
+				findConceptChronology(id).getNid() + "",
+				getAllDescriptionTypes(),
+				true);
+		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
+		for (int i = 0; i < sememeVersions.size(); ++i) {
+			if (i < ((pageNum - 1) * maxPageSize)) {
+				continue;
+			} else if (i >= (pageNum * maxPageSize)) {
+				continue;
+			} else {
+				restSememeVersions.add(RestSememeVersion.buildRestSememeVersion(sememeVersions.get(i), true, Boolean.parseBoolean(includeAttributes.trim())));
+			}
+		}
+		for (RestSememeVersion d : restSememeVersions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up
 			if (!(d instanceof RestSememeDescriptionVersion))

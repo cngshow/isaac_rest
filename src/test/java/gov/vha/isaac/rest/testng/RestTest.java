@@ -52,6 +52,7 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
+import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 
 /**
@@ -294,10 +295,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String url = RestPaths.searchPathComponent + RestPaths.sememesComponent;
 
 		String result = checkFail(target(url)
-				.queryParam("treatAsString", "false")
-				.queryParam("query","3")
-				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getUUID().toString())
-				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.treatAsString, "false")
+				.queryParam(RequestParameters.query,"3")
+				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getUUID().toString())
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -305,10 +306,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//Check with nid
 		result = checkFail(target(url)
-				.queryParam("treatAsString", "false")
-				.queryParam("query","3")
-				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
-				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.treatAsString, "false")
+				.queryParam(RequestParameters.query,"3")
+				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -317,10 +318,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Check with sequence
 		//Check with nid
 		result = checkFail(target(url)
-				.queryParam("treatAsString", "false")
-				.queryParam("query","3")
-				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getConceptSequence() + "")
-				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.treatAsString, "false")
+				.queryParam(RequestParameters.query,"3")
+				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getConceptSequence() + "")
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -328,10 +329,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//sanity check search
 		result = checkFail(target(url)
-				.queryParam("treatAsString", "false")
-				.queryParam("query","55")
-				.queryParam("sememeAssemblageId", DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
-				.queryParam("sememeAssemblageId", MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.treatAsString, "false")
+				.queryParam(RequestParameters.query,"55")
+				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -353,55 +354,55 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Test expand uuid on/off for each search type
 
 		String result = checkFail(target(sememeSearch)
-				.queryParam("treatAsString", "false")
-				.queryParam("query","1")
-				.queryParam("expand", "uuid")
+				.queryParam(RequestParameters.treatAsString, "false")
+				.queryParam(RequestParameters.query,"1")
+				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
 		result = checkFail(target(sememeSearch)
-				.queryParam("treatAsString", "false")
-				.queryParam("query","1")
+				.queryParam(RequestParameters.treatAsString, "false")
+				.queryParam(RequestParameters.query,"1")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pXml.matcher(result).matches());
 		
 		result = checkFail(target(descriptionSearch)
-				.queryParam("query","dynamic*")
-				.queryParam("expand", "uuid")
+				.queryParam(RequestParameters.query,"dynamic*")
+				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
 		result = checkFail(target(descriptionSearch)
-				.queryParam("query","dynamic*")
+				.queryParam(RequestParameters.query,"dynamic*")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pXml.matcher(result).matches());
 		
 		result = checkFail(target(prefixSearch)
-				.queryParam("query","dynamic")
-				.queryParam("expand", "uuid")
+				.queryParam(RequestParameters.query,"dynamic")
+				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
 		result = checkFail(target(prefixSearch)
-				.queryParam("query","dynamic")
+				.queryParam(RequestParameters.query,"dynamic")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pXml.matcher(result).matches());
 		
 		result = checkFail(target(byRefSearch)
-				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
-				.queryParam("expand", "uuid")
+				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
+				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
 		result = checkFail(target(byRefSearch)
-				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
+				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pXml.matcher(result).matches());
@@ -411,14 +412,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// "uuids" : [ "bcf22234-a736-5f6b-9ce3-d016594ca5cd" ]
 		final Pattern pJson = Pattern.compile(".*uuids.{15}-.{4}-4.{3}-.{4}-.{12}.*", Pattern.DOTALL);
 		result = checkFail(target(prefixSearch)
-				.queryParam("query","dynamic")
-				.queryParam("expand", "uuid")
+				.queryParam(RequestParameters.query,"dynamic")
+				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pJson.matcher(result).matches());
 		
 		result = checkFail(target(prefixSearch)
-				.queryParam("query","dynamic")
+				.queryParam(RequestParameters.query,"dynamic")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pJson.matcher(result).matches());
@@ -435,56 +436,56 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Test expand uuid on/off for each search type
 
 		String result = checkFail(target(sememeSearch)
-				.queryParam("query", DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
+				.queryParam(RequestParameters.query, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
 				.queryParam("expand", ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(sememeSearch)
-				.queryParam("query", DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
+				.queryParam(RequestParameters.query, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(descriptionSearch)
-				.queryParam("query","dynamic sememe Asse*")
-				.queryParam("expand", ExpandUtil.referencedConcept)
+				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
+				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(descriptionSearch)
-				.queryParam("query","dynamic sememe Asse*")
+				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(prefixSearch)
-				.queryParam("query","dynamic sememe Asse")
-				.queryParam("expand", ExpandUtil.referencedConcept)
+				.queryParam(RequestParameters.query,"dynamic sememe Asse")
+				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(prefixSearch)
-				.queryParam("query","dynamic sememe Asse")
+				.queryParam(RequestParameters.query,"dynamic sememe Asse")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(byRefSearch)
-				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
-				.queryParam("limit", "100")
-				.queryParam("expand", "uuid," + ExpandUtil.referencedConcept)
+				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
+				.queryParam(RequestParameters.maxPageSize, "100")
+				.queryParam(RequestParameters.expand, "uuid," + ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(MetaData.MODULE.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(byRefSearch)
-				.queryParam("nid", MetaData.ISAAC_ROOT.getNid())
-				.queryParam("limit", "100")
-				.queryParam("expand", "uuid")
+				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
+				.queryParam(RequestParameters.maxPageSize, "100")
+				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(MetaData.MODULE.getPrimordialUuid().toString()));
@@ -497,14 +498,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Test expand uuid on/off for each search type
 
 		String result = checkFail(target(descriptionSearch)
-				.queryParam("query","dynamic sememe Asse*")
-				.queryParam("expand", ExpandUtil.referencedConcept + "," + ExpandUtil.versionsLatestOnlyExpandable)
+				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
+				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept + "," + ExpandUtil.versionsLatestOnlyExpandable)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains("<state>ACTIVE</state>"));
 		
 		result = checkFail(target(descriptionSearch)
-				.queryParam("query","dynamic sememe Asse*")
+				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains("<state>ACTIVE</state>"));
@@ -516,18 +517,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
 
 		String result = checkFail(target(sememeSearch)
-				.queryParam("query", MetaData.PREFERRED.getNid() + "")
-				.queryParam("treatAsString", "true")
-				.queryParam("limit", 500)
-				.queryParam("expand", ExpandUtil.referencedConcept)
+				.queryParam(RequestParameters.query, MetaData.PREFERRED.getNid() + "")
+				.queryParam(RequestParameters.treatAsString, "true")
+				.queryParam(RequestParameters.maxPageSize, 500)
+				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(sememeSearch)
-				.queryParam("query", MetaData.PREFERRED.getNid() + "")
-				.queryParam("treatAsString", "true")
-				.queryParam("limit", 500)
+				.queryParam(RequestParameters.query, MetaData.PREFERRED.getNid() + "")
+				.queryParam(RequestParameters.treatAsString, "true")
+				.queryParam(RequestParameters.maxPageSize, 500)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
