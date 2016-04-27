@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -33,7 +34,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.StringUtils;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -50,6 +53,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionResults;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -74,8 +78,8 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.sememeTypeComponent + "{id}")  
-	public RestSememeType getSememeType(@PathParam("id") String id) throws RestException
+	@Path(RestPaths.sememeTypeComponent + "{" + RequestParameters.id + "}")  
+	public RestSememeType getSememeType(@PathParam(RequestParameters.id) String id) throws RestException
 	{
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
@@ -124,10 +128,10 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.chronologyComponent + "{id}")
+	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestSememeChronology getSememeChronology(
-			@PathParam("id") String id,
-			@QueryParam("expand") String expand
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.expand) String expand
 			) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
@@ -155,8 +159,10 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.versionComponent + "{id}")
-	public RestSememeVersion getSememeVersion(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
+	@Path(RestPaths.versionComponent + "{" + RequestParameters.id +"}")
+	public RestSememeVersion getSememeVersion(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 
@@ -217,7 +223,13 @@ public class SememeAPIs
 	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence of an assemblage concept
+<<<<<<< HEAD
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
+=======
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The pagination maximum page size >= 0 to return
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested'
+>>>>>>> refs/heads/pagination
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * TODO this needs to be paged 
@@ -225,8 +237,12 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.byAssemblageComponent + "{id}")
-	public List<RestSememeVersion> getByAssemblage(@PathParam("id") String id, @QueryParam("expand") String expand) throws RestException
+	@Path(RestPaths.byAssemblageComponent + "{" + RequestParameters.id +  "}")
+	public RestSememeVersionResults getByAssemblage(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 		
@@ -234,8 +250,35 @@ public class SememeAPIs
 		temp.add(Util.convertToConceptSequence(id));
 		
 		//we don't have a referenced component - our id is assemblage
-		return get(null, temp, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-			RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true);
+		List<SememeVersion<?>> versions =
+				get(
+						null,
+						temp,
+						true);
+		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
+		for (int i = 0; i < versions.size(); ++i) {
+			if (i < ((pageNum - 1) * maxPageSize)) {
+				continue;
+			} else if (i >= (pageNum * maxPageSize)) {
+				continue;
+			} else {
+				restSememeVersions.add(
+						RestSememeVersion.buildRestSememeVersion(versions.get(i),
+								RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
+								RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+								RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+			}
+		}
+		RestSememeVersionResults results =
+				new RestSememeVersionResults(
+						maxPageSize,
+						pageNum,
+						versions.size(),
+						RestPaths.sememeByAssemblageAppPathComponent + id,
+						restSememeVersions
+						);
+		
+		return results;
 	}
 	
 	/**
@@ -247,6 +290,8 @@ public class SememeAPIs
 	 * of all types will be returned.  May be specified multiple times to allow multiple assemblages
 	 * @param includeDescriptions - an optional flag to request that description type sememes are returned.  By default, description type 
 	 * sememes are not returned, as these are typically retreived via a getDescriptions call on the Concept APIs.
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The pagination maximum page size >= 0 to return
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
@@ -254,9 +299,14 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.byReferencedComponentComponent + "{id}")
-	public List<RestSememeVersion> getByReferencedComponent(@PathParam("id") String id, @QueryParam("assemblage") Set<String> assemblage, 
-		@QueryParam("includeDescriptions") @DefaultValue("false") String includeDescriptions, @QueryParam("expand") String expand) 
+	@Path(RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id + "}")
+	public RestSememeVersionResults getByReferencedComponent(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
+			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
+			@QueryParam(RequestParameters.expand) String expand) 
 			throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
@@ -266,12 +316,35 @@ public class SememeAPIs
 		{
 			allowedAssemblages.add(Util.convertToConceptSequence(a));
 		}
-		
-		return get(id, allowedAssemblages, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-			RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), 
-			Boolean.parseBoolean(includeDescriptions.trim()) );
+
+		List<SememeVersion<?>> ochreSememeVersions = 
+				get(
+						id,
+						allowedAssemblages,
+						Boolean.parseBoolean(includeDescriptions.trim()));
+		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
+		for (int i = 0; i < ochreSememeVersions.size(); ++i) {
+			if (i < ((pageNum - 1) * maxPageSize)) {
+				continue;
+			} else if (i >= (pageNum * maxPageSize)) {
+				continue;
+			} else {
+				restSememeVersions.add(
+						RestSememeVersion.buildRestSememeVersion(
+								ochreSememeVersions.get(i),
+								RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
+								RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+								RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+			}
+		}
+		return new RestSememeVersionResults(
+				pageNum,
+				maxPageSize,
+				ochreSememeVersions.size(),
+				RestPaths.sememeByAssemblageAppPathComponent + id,
+				restSememeVersions
+				);
 	}
-	
 
 	/**
 	 * Return the full description of a particular sememe - including its intended use, the types of any data columns that will be attached, etc.
@@ -281,8 +354,8 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.sememeDefinitionComponent + "{id}")
-	public RestDynamicSememeDefinition getSememeDefinition(@PathParam("id") String id) throws RestException
+	@Path(RestPaths.sememeDefinitionComponent + "{" + RequestParameters.id + "}")
+	public RestDynamicSememeDefinition getSememeDefinition(@PathParam(RequestParameters.id) String id) throws RestException
 	{
 		int conceptSequence = Util.convertToConceptSequence(id);
 		if (DynamicSememeUsageDescriptionImpl.isDynamicSememe(conceptSequence))
@@ -313,10 +386,13 @@ public class SememeAPIs
 	 * @return
 	 * @throws RestException
 	 */
-	public static List<RestSememeVersion> get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
-		boolean expandReferenced, boolean allowDescriptions) throws RestException
+
+	public static List<SememeVersion<?>> get(
+			String referencedComponent,
+			Set<Integer> allowedAssemblages,
+			boolean allowDescriptions) throws RestException
 	{
-		final ArrayList<RestSememeVersion> results = new ArrayList<>();
+		final ArrayList<SememeVersion<?>> ochreResults = new ArrayList<>();
 		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
 		{
 			@Override
@@ -328,14 +404,7 @@ public class SememeAPIs
 						&& sv.get().value().getChronology().getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
 						&& (allowDescriptions || sv.get().value().getChronology().getSememeType() != SememeType.DESCRIPTION))
 				{
-					try
-					{
-						results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested, expandReferenced));
-					}
-					catch (RestException e)
-					{
-						throw new RuntimeException("Unexpected error", e);
-					}
+					ochreResults.add(sv.get().value());
 				}
 			}
 		};
@@ -381,6 +450,7 @@ public class SememeAPIs
 				Get.sememeService().getSememesFromAssemblage(assemblageId).forEach(consumer);
 			}
 		}
-		return results;
+		
+		return ochreResults;
 	}
 }
