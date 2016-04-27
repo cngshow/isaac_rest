@@ -184,6 +184,7 @@ public class RequestInfo
 	 */
 	public boolean useFSN()
 	{
+		//TODO Joel, this needs to be implemented....
 		return true;
 	}
 	
