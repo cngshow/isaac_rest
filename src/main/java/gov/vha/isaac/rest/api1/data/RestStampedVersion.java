@@ -73,6 +73,7 @@ public class RestStampedVersion
 		time = sv.getTime();
 		authorSequence = sv.getAuthorSequence();
 		pathSequence = sv.getPathSequence();
+		moduleSequence = sv.getModuleSequence();
 	}
 
 }
