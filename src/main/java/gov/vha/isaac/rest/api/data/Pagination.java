@@ -30,7 +30,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 /**
  * {@link Pagination}
  * 
- * This class carries data for paginating result sets and performs the required pagination in its constructor
+ * Carries data for paginating result sets and calculates and creates example previous and next page URLs
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
@@ -78,12 +78,12 @@ public class Pagination
 	}
 
 	/**
-	 * @param pageNum
-	 * @param maxPageSize
-	 * @param baseUrl
-	 * @param passedResults
+	 * @param pageNum page number index > 0
+	 * @param maxPageSize maximum page size
+	 * @param total size of set of which this page is a subset
+	 * @param size actual size of this page
+	 * @param baseUrl base URL used to construct and return example previous and next URLs
 	 * @throws RestException 
-	 * 
 	 */
 	public Pagination(int pageNum, int maxPageSize, int total, int size, String baseUrl) throws RestException {
 		PaginationUtils.validateParameters(pageNum, maxPageSize);
