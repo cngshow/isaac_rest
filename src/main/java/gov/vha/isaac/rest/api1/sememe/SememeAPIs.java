@@ -267,8 +267,8 @@ public class SememeAPIs
 		}
 		RestSememeVersions results =
 				new RestSememeVersions(
-						maxPageSize,
 						pageNum,
+						maxPageSize,
 						versions.getTotal(),
 						RestPaths.sememeByAssemblageAppPathComponent + id,
 						restSememeVersions
@@ -377,18 +377,18 @@ public class SememeAPIs
 	
 	public static class SememeVersions {
 		private final List<SememeVersion<?>> values;
-		private final int total;
+		private final int approximateTotal;
 		
-		public SememeVersions(List<SememeVersion<?>> values, int total) {
+		public SememeVersions(List<SememeVersion<?>> values, int approximateTotal) {
 			this.values = values;
-			this.total = total;
+			this.approximateTotal = approximateTotal;
 		}
 
 		public List<SememeVersion<?>> getValues() {
 			return values;
 		}
 		public int getTotal() {
-			return total;
+			return approximateTotal;
 		}
 	}
 	/**
@@ -444,7 +444,7 @@ public class SememeAPIs
 			{
 				Stream<SememeChronology<? extends SememeVersion<?>>> sememes = getSememesForComponentFromAssemblagesFilteredBySememeType(refCompNid.get(), allowedAssemblages, excludedSememeTypes);
 				
-				int total = 0;
+				int approximateTotal = 0;
 				for (Iterator<SememeChronology<? extends SememeVersion<?>>> it = sememes.iterator(); it.hasNext();) {
 					if (ochreResults.size() > (pageNum * maxPageSize)) {
 						it.next();
@@ -459,21 +459,10 @@ public class SememeAPIs
 						}
 					}
 
-					total++;
+					approximateTotal++;
 				}
 
-				int lowerBound = (pageNum - 1) * maxPageSize;
-				int upperBound = pageNum * maxPageSize;
-				if (lowerBound >= ochreResults.size()) {
-					// If lowerBound larger than entire list return empty list
-					lowerBound = 0;
-					upperBound = 0;
-				} else if (upperBound > ochreResults.size()) {
-					// if upperBound larger than entire list return only to end of list
-					upperBound = ochreResults.size();
-				}
-				
-				return new SememeVersions(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), total);
+				return new SememeVersions(PaginationUtils.getResults(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), pageNum, maxPageSize), approximateTotal);
 			}
 			else
 			{
@@ -506,17 +495,7 @@ public class SememeAPIs
 				}
 			}
 
-			int lowerBound = (pageNum - 1) * maxPageSize;
-			int upperBound = pageNum * maxPageSize;
-			if (lowerBound >= ochreResults.size()) {
-				// If lowerBound larger than entire list return empty list
-				lowerBound = 0;
-				upperBound = 0;
-			} else if (upperBound > ochreResults.size()) {
-				// if upperBound larger than entire list return only to end of list
-				upperBound = ochreResults.size();
-			}
-			return new SememeVersions(ochreResults.subList(lowerBound, upperBound), allSememeSequences.size());
+			return new SememeVersions(PaginationUtils.getResults(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), pageNum, maxPageSize), allSememeSequences.size());
 		}
 	}
 	

@@ -62,13 +62,11 @@ public class RequestParameters {
 	public final static String stated = "stated";
 	public final static String statedDefault = "true";
 
-	public final static String pageNum = "page";
+	public final static String pageNum = "pageNum";
 	public final static String pageNumDefault = "1";
 
 	public final static String maxPageSize = "maxPageSize";
 	public final static String maxPageSizeDefault = "10";
-	public final static String limit = "limit";
-//	public final static String limitDefault = "100";
 
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
