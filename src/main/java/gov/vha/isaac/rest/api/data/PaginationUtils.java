@@ -63,19 +63,5 @@ public class PaginationUtils {
 		}
 
 		return fullSet.subList(lowerBound, upperBound);
-
-//		List temp = new ArrayList();
-//
-//		for (int i = 0; i < fullSet.size(); ++i) {
-//			if (i < ((pageNum - 1) * maxPageSize)) {
-//				continue;
-//			} else if (i >= (pageNum * maxPageSize)) {
-//				continue;
-//			} else {
-//				temp.add(fullSet.get(i));
-//			}
-//		}
-//		
-//		return temp;
 	}
 }
