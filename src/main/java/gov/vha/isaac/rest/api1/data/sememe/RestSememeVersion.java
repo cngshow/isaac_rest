@@ -43,6 +43,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs.SememeVersions;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -143,8 +144,8 @@ public abstract class RestSememeVersion
 			nestedSememes = new ArrayList<>();
 			//Always include the chronology for nested sememes... otherwise, the user would always have to make a return trip to find out what the 
 			//nested thing is
-			List<SememeVersion<?>> temp = SememeAPIs.get(sv.getNid() + "", null, true);
-			for (SememeVersion<?> nestedSv : temp)
+			SememeVersions temp = SememeAPIs.get(sv.getNid() + "", null, 1, Integer.MAX_VALUE, true);
+			for (SememeVersion<?> nestedSv : temp.getValues())
 			{
 				RestSememeVersion rsv = RestSememeVersion.buildRestSememeVersion(nestedSv, true, true, expandReferenced);
 				if (includeInNested == null || includeInNested.apply(rsv))

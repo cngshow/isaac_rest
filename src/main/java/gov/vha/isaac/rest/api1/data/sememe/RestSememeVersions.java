@@ -30,7 +30,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 
 
 /**
- * {@link RestSememeVersionResults}
+ * {@link RestSememeVersions}
  * 
  * This class carries back result sets in a way that allows pagination
  *
@@ -38,7 +38,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestSememeVersionResults
+public class RestSememeVersions
 {
 	
 	/**
@@ -53,7 +53,7 @@ public class RestSememeVersionResults
 	@XmlElement
 	List<RestSememeVersion> results = null;
 
-	protected RestSememeVersionResults()
+	protected RestSememeVersions()
 	{
 		//For jaxb
 	}
@@ -66,7 +66,7 @@ public class RestSememeVersionResults
 	 * @param results
 	 * @throws RestException 
 	 */
-	public RestSememeVersionResults(int pageNum, int maxPageSize, int total, String baseUrl, List<RestSememeVersion> results) throws RestException {
+	public RestSememeVersions(int pageNum, int maxPageSize, int total, String baseUrl, List<RestSememeVersion> results) throws RestException {
 		this.results = results;
 		this.paginationData = new Pagination(pageNum, maxPageSize, total, results.size(), baseUrl);
 	}

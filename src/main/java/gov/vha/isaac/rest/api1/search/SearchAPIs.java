@@ -296,16 +296,7 @@ public class SearchAPIs
 
 		return Optional.empty();
 	}
-	
-	private static String stripContainingSquareBrackets(String str) {
-		if (str.startsWith("[")) {
-			str = str.substring(1);
-		}
-		if (str.endsWith("]")) {
-			str = str.substring(0, str.length() - 1);
-		}
-		return str;
-	}
+
 	/**
 	 * @param query The query to be evaluated.  If the query is numeric (int, float, long, double) , it will be treated as a numeric search.
 	 * If the query is a mathematical interval - [4,6] or (5,10] or [4,] it will be handled as a numeric interval.  
@@ -352,10 +343,19 @@ public class SearchAPIs
 	{
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.sememesComponent
 				+ "?" + RequestParameters.query + "=" + query
-				+ "&" + RequestParameters.treatAsString + "=" + treatAsString
-				+ (sememeAssemblageId != null && sememeAssemblageId.size() > 0 ? ("&" + RequestParameters.sememeAssemblageId + "=" + stripContainingSquareBrackets(sememeAssemblageId.toString())) : "")
-				+ (dynamicSememeColumns != null && dynamicSememeColumns.size() > 0 ? ("&" + RequestParameters.dynamicSememeColumns + "=" + stripContainingSquareBrackets(dynamicSememeColumns.toString())) : "")
-				+ (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
+				+ "&" + RequestParameters.treatAsString + "=" + treatAsString;
+		if (sememeAssemblageId != null) {
+			for (String id : sememeAssemblageId) {
+				restPath += "&" + RequestParameters.sememeAssemblageId + "=" + id;
+			}
+		}
+		if (dynamicSememeColumns != null) {
+			for (int col : dynamicSememeColumns) {
+				restPath += "&" + RequestParameters.dynamicSememeColumns + "=" + col;
+			}
+		}
+		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
+		
 		RequestInfo.get().readExpandables(expand);
 		String searchString = query.trim();
 		if (StringUtils.isBlank(searchString))
@@ -521,10 +521,18 @@ public class SearchAPIs
 		RequestInfo.get().readExpandables(expand);
 		
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent
-				+ "?" + RequestParameters.nid + "=" + nid
-				+ (sememeAssemblageId != null && sememeAssemblageId.size() > 0 ? ("&" + RequestParameters.sememeAssemblageId + "=" + stripContainingSquareBrackets(sememeAssemblageId.toString())) : "")
-				+ (dynamicSememeColumns != null && dynamicSememeColumns.size() > 0 ? ("&" + RequestParameters.dynamicSememeColumns + "=" + stripContainingSquareBrackets(dynamicSememeColumns.toString())) : "")
-				+ (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
+				+ "?" + RequestParameters.nid + "=" + nid;
+		if (sememeAssemblageId != null) {
+			for (String id : sememeAssemblageId) {
+				restPath += "&" + RequestParameters.sememeAssemblageId + "=" + id;
+			}
+		}
+		if (dynamicSememeColumns != null) {
+			for (int col : dynamicSememeColumns) {
+				restPath += "&" + RequestParameters.dynamicSememeColumns + "=" + col;
+			}
+		}
+		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
 
