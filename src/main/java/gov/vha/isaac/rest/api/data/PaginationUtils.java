@@ -45,7 +45,7 @@ public class PaginationUtils {
 	/**
 	 * @param fullSet
 	 * @param pageNum
-	 * @param maxPageSize
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @return sublist of passed list according to pageNum and maxPageSize parameters
 	 * @throws RestException 
 	 */
@@ -55,7 +55,7 @@ public class PaginationUtils {
 		int lowerBound = (pageNum - 1) * maxPageSize;
 		int upperBound = pageNum * maxPageSize;
 		
-		if (lowerBound > fullSet.size()) {
+		if (lowerBound >= fullSet.size()) {
 			lowerBound = 0;
 			upperBound = 0;
 		} else if (upperBound > fullSet.size()) {

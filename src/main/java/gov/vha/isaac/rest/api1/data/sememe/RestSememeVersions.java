@@ -60,7 +60,7 @@ public class RestSememeVersions
 
 	/**
 	 * @param pageNum
-	 * @param maxPageSize
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param total
 	 * @param baseUrl
 	 * @param results

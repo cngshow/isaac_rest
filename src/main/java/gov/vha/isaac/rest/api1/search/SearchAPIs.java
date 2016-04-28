@@ -73,8 +73,8 @@ public class SearchAPIs
 	private static Logger log = LogManager.getLogger();
 	
 	/**
-	 * @param maxPageSize
-	 * @param pageNum
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
+	 * @param pageNum The pagination page number >= 1 to return
 	 * @return limit to pass to query to return requested subset without blowing out lucene.
 	 * If requested batch size is less than truncationThreshold then sets limit to truncationThreshold,
 	 * making total returned value for small searches more accurate
@@ -86,6 +86,24 @@ public class SearchAPIs
 		return 	requestedBatch < truncationThreshold ? truncationThreshold : calculatedLimit;
 	}
 	
+	private RestSearchResults getRestSearchResultsFromOchreSearchResults(
+			List<SearchResult> ochreSearchResults,
+			int pageNum,
+			int maxPageSize,
+			String restPath,
+			String query) throws RestException {
+		List<RestSearchResult> restSearchResults = new ArrayList<>();
+		for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
+			Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
+			if (restSearchResultOptional.isPresent()) {
+				restSearchResults.add(restSearchResultOptional.get());
+			}
+		}
+		
+		return new RestSearchResults(
+				pageNum, maxPageSize, ochreSearchResults.size(), restPath,
+				restSearchResults);
+	}
 	/**
 	 * A simple search interface which is evaluated across all indexed descriptions in the terminology.   
 	 * @param query The query to be evaluated.  Will be parsed by the Lucene Query Parser: 
@@ -95,7 +113,7 @@ public class SearchAPIs
 	 * @param extendedDescriptionTypeId - optional - may not be combined with descriptionType.  This would typically be
 	 * a concept identifier of a concept that was a LEAF child of the concept 'description type in source terminology (ISAAC)'
 	 * @param pageNum The pagination page number >= 1 to return
-	 * @param maxPageSize The pagination maximum page size >= 0 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -149,32 +167,23 @@ public class SearchAPIs
 			
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null);
-			List<RestSearchResult> restSearchResults = new ArrayList<>();
-			for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-				Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
-				if (restSearchResultOptional.isPresent()) {
-					restSearchResults.add(restSearchResultOptional.get());
-				}
-			}
 			
-			return new RestSearchResults(
-					pageNum, maxPageSize, ochreSearchResults.size(), restPath,
-					restSearchResults);
+			return getRestSearchResultsFromOchreSearchResults(
+					ochreSearchResults,
+					pageNum,
+					maxPageSize,
+					restPath,
+					query);
 		} else {
 			log.debug("Performing description search for '" + query + "'");
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, null);
-			List<RestSearchResult> restSearchResults = new ArrayList<>();
-			for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-				Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
-				if (restSearchResultOptional.isPresent()) {
-					restSearchResults.add(restSearchResultOptional.get());
-				}
-			}
-
-			return new RestSearchResults(
-					pageNum, maxPageSize, ochreSearchResults.size(), restPath,
-					restSearchResults);
+			return getRestSearchResultsFromOchreSearchResults(
+					ochreSearchResults,
+					pageNum,
+					maxPageSize,
+					restPath,
+					query);
 		}
 	}
 	
@@ -193,7 +202,7 @@ public class SearchAPIs
 	 * 
 	 * @param query The query to be evaluated. 
 	 * @param pageNum The pagination page number >= 1 to return
-	 * @param maxPageSize The pagination maximum page size >= 0 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -224,18 +233,13 @@ public class SearchAPIs
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
 		List<SearchResult> ochreSearchResults = LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null);
-		List<RestSearchResult> restSearchResults = new ArrayList<>();
-		for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-			Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
-			if (restSearchResultOptional.isPresent()) {
-				restSearchResults.add(restSearchResultOptional.get());
-			}
-		}
-
-		return new RestSearchResults(
-				pageNum, maxPageSize, ochreSearchResults.size(),
-				RestPaths.searchAppPathComponent + RestPaths.prefixComponent + "?" + RequestParameters.query + "=" + query,
-				restSearchResults);
+		String restPath = RestPaths.searchAppPathComponent + RestPaths.prefixComponent + "?" + RequestParameters.query + "=" + query;
+		return getRestSearchResultsFromOchreSearchResults(
+				ochreSearchResults,
+				pageNum,
+				maxPageSize,
+				restPath,
+				query);
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -314,7 +318,7 @@ public class SearchAPIs
 	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
 	 * has multiple columns of data.
 	 * @param pageNum The pagination page number >= 1 to return
-	 * @param maxPageSize The pagination maximum page size >= 0 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -374,18 +378,12 @@ public class SearchAPIs
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 					.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
 					limit, null);
-			List<RestSearchResult> restSearchResults = new ArrayList<>();
-			for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-				Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
-				if (restSearchResultOptional.isPresent()) {
-					restSearchResults.add(restSearchResultOptional.get());
-				}
-			}
-
-			return new RestSearchResults(
-					pageNum, maxPageSize, ochreSearchResults.size(),
+			return getRestSearchResultsFromOchreSearchResults(
+					ochreSearchResults,
+					pageNum,
+					maxPageSize,
 					restPath,
-					restSearchResults);
+					query);
 		}
 		else
 		{
@@ -398,18 +396,12 @@ public class SearchAPIs
 				List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
 								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
-				List<RestSearchResult> restSearchResults = new ArrayList<>();
-				for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-					Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
-					if (restSearchResultOptional.isPresent()) {
-						restSearchResults.add(restSearchResultOptional.get());
-					}
-				}
-
-				return new RestSearchResults(
-						pageNum, maxPageSize, ochreSearchResults.size(),
+				return getRestSearchResultsFromOchreSearchResults(
+						ochreSearchResults,
+						pageNum,
+						maxPageSize,
 						restPath,
-						restSearchResults);
+						query);
 			}
 			catch (NumberFormatException e)
 			{
@@ -422,18 +414,12 @@ public class SearchAPIs
 							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
 									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
 									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
-					List<RestSearchResult> restSearchResults = new ArrayList<>();
-					for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-						Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
-						if (restSearchResultOptional.isPresent()) {
-							restSearchResults.add(restSearchResultOptional.get());
-						}
-					}
-
-					return new RestSearchResults(
-							pageNum, maxPageSize, ochreSearchResults.size(),
+					return getRestSearchResultsFromOchreSearchResults(
+							ochreSearchResults,
+							pageNum,
+							maxPageSize,
 							restPath,
-							restSearchResults);
+							query);
 				}
 				catch (NumberFormatException e1)
 				{
@@ -442,18 +428,12 @@ public class SearchAPIs
 					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
 									limit, null);
-					List<RestSearchResult> restSearchResults = new ArrayList<>();
-					for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-						Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
-						if (restSearchResultOptional.isPresent()) {
-							restSearchResults.add(restSearchResultOptional.get());
-						}
-					}
-
-					return new RestSearchResults(
-							pageNum, maxPageSize, ochreSearchResults.size(),
+					return getRestSearchResultsFromOchreSearchResults(
+							ochreSearchResults,
+							pageNum,
+							maxPageSize,
 							restPath,
-							restSearchResults);
+							query);
 				}
 			}
 			finally
@@ -493,7 +473,7 @@ public class SearchAPIs
 	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
 	 * has multiple columns of data.
 	 * @param pageNum The pagination page number >= 1 to return
-	 * @param maxPageSize The pagination maximum page size >= 0 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param start The index within the full result set from which to begin this result set
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
@@ -538,18 +518,12 @@ public class SearchAPIs
 
 		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
-		List<RestSearchResult> restSearchResults = new ArrayList<>();
-		for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
-			Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, nid + "");
-			if (restSearchResultOptional.isPresent()) {
-				restSearchResults.add(restSearchResultOptional.get());
-			}
-		}
-
-		return new RestSearchResults(
-				pageNum, maxPageSize, ochreSearchResults.size(),
+		return getRestSearchResultsFromOchreSearchResults(
+				ochreSearchResults,
+				pageNum,
+				maxPageSize,
 				restPath,
-				restSearchResults);
+				nid + "");
 	}
 	
 	private Integer[] processAssemblageRestrictions(Set<String> sememeAssemblageIds) throws RestException

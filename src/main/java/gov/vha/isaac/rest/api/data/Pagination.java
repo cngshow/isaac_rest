@@ -55,13 +55,13 @@ public class Pagination
 	@XmlElement
 	int pageNum;
 	/**
-	 * The page max size
+	 * The page max size.  Must be an integer >= 0
 	 */
 	@XmlElement
 	int maxPageSize;
 
 	/**
-	 * Total set of values for of which the current page is a subset. Value is negative if and only if unknown
+	 * Estimated size of set of all matching values of which the current page is a subset. Value is negative if and only if unknown. May be affected by filtering.
 	 */
 	@XmlElement
 	int total;
@@ -79,8 +79,8 @@ public class Pagination
 
 	/**
 	 * @param pageNum page number index > 0
-	 * @param maxPageSize maximum page size
-	 * @param total size of set of which this page is a subset
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
+	 * @param estimated total size of set of which this page is a subset. May be affected by filtering.
 	 * @param size actual size of this page
 	 * @param baseUrl base URL used to construct and return example previous and next URLs
 	 * @throws RestException 

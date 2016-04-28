@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.sememe;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.PrimitiveIterator;
@@ -227,7 +228,7 @@ public class SememeAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence of an assemblage concept
 	 * @param pageNum The pagination page number >= 1 to return
-	 * @param maxPageSize The pagination maximum page size >= 0 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
@@ -286,7 +287,7 @@ public class SememeAPIs
 	 * @param includeDescriptions - an optional flag to request that description type sememes are returned.  By default, description type 
 	 * sememes are not returned, as these are typically retreived via a getDescriptions call on the Concept APIs.
 	 * @param pageNum The pagination page number >= 1 to return
-	 * @param maxPageSize The pagination maximum page size >= 0 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
@@ -295,12 +296,10 @@ public class SememeAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id + "}")
-	public RestSememeVersions getByReferencedComponent(
+	public List<RestSememeVersion> getByReferencedComponent(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
 			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
-			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
-			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
 			@QueryParam(RequestParameters.expand) String expand) 
 			throws RestException
 	{
@@ -312,29 +311,14 @@ public class SememeAPIs
 			allowedAssemblages.add(Util.convertToConceptSequence(a));
 		}
 
-		SememeVersions ochreSememeVersions = 
+		return
 				get(
 						id,
 						allowedAssemblages,
-						pageNum,
-						maxPageSize,
+						RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
+						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						Boolean.parseBoolean(includeDescriptions.trim()));
-		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
-		for (SememeVersion<?> sv : ochreSememeVersions.getValues()) {
-			restSememeVersions.add(
-					RestSememeVersion.buildRestSememeVersion(
-							sv,
-							RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
-							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
-		}
-		return new RestSememeVersions(
-				pageNum,
-				maxPageSize,
-				ochreSememeVersions.getTotal(),
-				RestPaths.sememeByAssemblageAppPathComponent + id,
-				restSememeVersions
-				);
 	}
 
 	/**
@@ -459,18 +443,23 @@ public class SememeAPIs
 			if (refCompNid.isPresent() && refCompNid.get() < 0)
 			{
 				Stream<SememeChronology<? extends SememeVersion<?>>> sememes = getSememesForComponentFromAssemblagesFilteredBySememeType(refCompNid.get(), allowedAssemblages, excludedSememeTypes);
-				@SuppressWarnings("rawtypes")
-				SememeChronology[] sememeArray = sememes.toArray(SememeChronology[]::new);
-				for (@SuppressWarnings("rawtypes") SememeChronology chronology : sememeArray) {
+				
+				int total = 0;
+				for (Iterator<SememeChronology<? extends SememeVersion<?>>> it = sememes.iterator(); it.hasNext();) {
 					if (ochreResults.size() > (pageNum * maxPageSize)) {
-						break;
+						it.next();
+						continue;
 					} else {
+						@SuppressWarnings("rawtypes")
+						SememeChronology chronology = it.next();
 						@SuppressWarnings({ "unchecked" })
 						Optional<LatestVersion<SememeVersion<?>>> sv = chronology.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 						if (sv.isPresent()) {
 							ochreResults.add(sv.get().value());
 						}
 					}
+
+					total++;
 				}
 
 				int lowerBound = (pageNum - 1) * maxPageSize;
@@ -483,7 +472,8 @@ public class SememeAPIs
 					// if upperBound larger than entire list return only to end of list
 					upperBound = ochreResults.size();
 				}
-				return new SememeVersions(ochreResults.subList(lowerBound, upperBound), sememeArray.length);
+				
+				return new SememeVersions(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), total);
 			}
 			else
 			{
