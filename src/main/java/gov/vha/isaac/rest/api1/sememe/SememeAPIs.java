@@ -20,7 +20,6 @@ package gov.vha.isaac.rest.api1.sememe;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.PrimitiveIterator;
@@ -391,34 +390,6 @@ public class SememeAPIs
 			return filteredList.stream();
 		}
 	}
-//
-//	private static Stream<SememeChronology<? extends SememeVersion<?>>> getSememesFromAssemblageFilteredBySememeType(int assemblageConceptSequence, Set<SememeType> typesToExclude) throws RestException {
-//		Stream<SememeChronology<? extends SememeVersion<?>>> unfilteredStream = Get.sememeService().getSememesFromAssemblage(assemblageConceptSequence);
-//		if (typesToExclude == null || typesToExclude.size() == 0) {
-//			return unfilteredStream;
-//		}
-//		final ArrayList<SememeChronology<? extends SememeVersion<?>>> filteredList = new ArrayList<>();
-//		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
-//		{
-//			@Override
-//			public void accept(@SuppressWarnings("rawtypes") SememeChronology sc)
-//			{
-//				if (typesToExclude != null) {
-//					for (SememeType type : typesToExclude) {
-//						if (sc.getSememeType() == type) {
-//							return;
-//						}
-//					}
-//				}
-//				
-//				filteredList.add(sc);
-//			}
-//		};
-//		
-//		unfilteredStream.forEach(consumer);
-//
-//        return filteredList.stream();
-//    }
 	
 	public static class SememeVersions {
 		private final List<SememeVersion<?>> values;
@@ -488,13 +459,14 @@ public class SememeAPIs
 			if (refCompNid.isPresent() && refCompNid.get() < 0)
 			{
 				Stream<SememeChronology<? extends SememeVersion<?>>> sememes = getSememesForComponentFromAssemblagesFilteredBySememeType(refCompNid.get(), allowedAssemblages, excludedSememeTypes);
-				
-				for (Iterator<SememeChronology<? extends SememeVersion<?>>> it = sememes.iterator(); it.hasNext();) {
+				@SuppressWarnings("rawtypes")
+				SememeChronology[] sememeArray = sememes.toArray(SememeChronology[]::new);
+				for (@SuppressWarnings("rawtypes") SememeChronology chronology : sememeArray) {
 					if (ochreResults.size() > (pageNum * maxPageSize)) {
 						break;
 					} else {
-						@SuppressWarnings({ "unchecked", "rawtypes" })
-						Optional<LatestVersion<SememeVersion<?>>> sv = ((SememeChronology)it.next()).getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+						@SuppressWarnings({ "unchecked" })
+						Optional<LatestVersion<SememeVersion<?>>> sv = chronology.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 						if (sv.isPresent()) {
 							ochreResults.add(sv.get().value());
 						}
@@ -511,7 +483,7 @@ public class SememeAPIs
 					// if upperBound larger than entire list return only to end of list
 					upperBound = ochreResults.size();
 				}
-				return new SememeVersions(ochreResults.subList(lowerBound, upperBound), sememes.toArray().length);
+				return new SememeVersions(ochreResults.subList(lowerBound, upperBound), sememeArray.length);
 			}
 			else
 			{
