@@ -42,7 +42,8 @@ public class RestPaths
 	public static final String byAssemblageComponent = "byAssemblage/";
 	public static final String byReferencedComponentComponent = "byReferencedComponent/";
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
-	public static final String systemInfoComponent = "systemInfo";
+	public static final String systemInfoComponent = "systemInfo/";
+	public static final String termRequestComponent = "termRequest/";
 	
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";
@@ -75,6 +76,7 @@ public class RestPaths
 	public static final String idAppPathComponent = appPathComponent + apiVersionComponent + "id/";
 	
 	public static final String systemPathComponent = apiVersionComponent + "system/";
+	public static final String requestPathComponent = apiVersionComponent + "request/";
 
 	public static final String logicGraphPathComponent = apiVersionComponent + "logicGraph/";
 	public static final String logicGraphVersionAppPathComponent = appPathComponent + logicGraphPathComponent + versionComponent;
