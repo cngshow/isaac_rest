@@ -33,6 +33,7 @@ public class RestPaths
 	public static final String versionsComponent = "versions/";	
 	public static final String versionComponent = "version/";
 	public static final String objectChronologyTypeComponent = "objectChronologyType/";
+	public static final String identifiedObjectsComponent = "identifiedObjects/";
 	public static final String sememeTypeComponent = "sememeType/";
 	public static final String idTranslateComponent = "translate/";
 	public static final String idTypesComponent = "types/";
