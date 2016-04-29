@@ -20,43 +20,33 @@ package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
@@ -729,9 +719,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testCoordinateTokenRoundTrip() throws Exception
 	{
-		CoordinatesToken t = new CoordinatesToken(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(), 
-				TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(), 
-						LogicCoordinates.getStandardElProfile()));
+		TaxonomyCoordinate taxonomyCoordinate =
+				TaxonomyCoordinates.getStatedTaxonomyCoordinate(
+						StampCoordinates.getDevelopmentLatest(),
+						LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(),
+						LogicCoordinates.getStandardElProfile());
+		CoordinatesToken t = new CoordinatesToken(
+				taxonomyCoordinate.getStampCoordinate(),
+				taxonomyCoordinate.getLanguageCoordinate(),
+				taxonomyCoordinate.getLogicCoordinate(),
+				taxonomyCoordinate.getTaxonomyType()
+				);
 		
 		String token = t.serialize();
 		
