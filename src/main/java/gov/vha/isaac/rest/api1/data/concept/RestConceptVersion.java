@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -122,7 +123,7 @@ public class RestConceptVersion
 			}
 			if (includeParents)
 			{
-				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, 0);
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, 0, new ConceptSequenceSet());
 			}
 			else
 			{
@@ -136,7 +137,7 @@ public class RestConceptVersion
 			
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0);
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0, new ConceptSequenceSet());
 			}
 			else
 			{

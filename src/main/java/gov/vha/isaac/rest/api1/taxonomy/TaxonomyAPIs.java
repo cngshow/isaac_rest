@@ -19,14 +19,17 @@
 package gov.vha.isaac.rest.api1.taxonomy;
 
 import java.util.Optional;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
@@ -94,11 +97,11 @@ public class TaxonomyAPIs
 			
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, tree, parentHeight - 1);
+				addParents(concept.getConceptSequence(), rcv, tree, parentHeight - 1, new ConceptSequenceSet());
 			}
 			if (childDepth > 0)
 			{
-				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1);
+				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1, new ConceptSequenceSet());
 			}
 			else if (countChildrenBoolean)
 			{
@@ -109,8 +112,20 @@ public class TaxonomyAPIs
 		throw new RestException("id", id, "No concept was found");
 	}
 
-	public static void addChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafChildren, int remainingChildDepth)
+	public static void addChildren(
+			int conceptSequence,
+			RestConceptVersion rcv,
+			Tree tree,
+			boolean countLeafChildren,
+			int remainingChildDepth,
+			ConceptSequenceSet alreadyAddedChildren)
 	{
+		if (alreadyAddedChildren.contains(conceptSequence)) {
+			// Avoiding infinite loop
+			return;
+		} else {
+			alreadyAddedChildren.add(conceptSequence);
+		}
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
 			@SuppressWarnings("rawtypes")
@@ -123,7 +138,6 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-			//TODO this needs infinite loop protection
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
@@ -133,7 +147,7 @@ public class TaxonomyAPIs
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
-					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, remainingChildDepth - 1);
+					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, remainingChildDepth - 1, alreadyAddedChildren);
 				}
 				else if (countLeafChildren)
 				{
@@ -169,8 +183,14 @@ public class TaxonomyAPIs
 		rcv.setChildCount(count);
 	}
 
-	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingParentDepth)
+	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingParentDepth, ConceptSequenceSet handledConcepts)
 	{
+		if (handledConcepts.contains(conceptSequence)) {
+			// Avoiding infinite loop
+			return;
+		} else {
+			handledConcepts.add(conceptSequence);
+		}
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
 		{
 			@SuppressWarnings("rawtypes")
@@ -183,7 +203,6 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-			//TODO this needs infinite loop protection
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
@@ -193,7 +212,7 @@ public class TaxonomyAPIs
 				rcv.addParent(parentVersion);
 				if (remainingParentDepth > 0)
 				{
-					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, remainingParentDepth - 1);
+					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, remainingParentDepth - 1, handledConcepts);
 				}
 			}
 		}
