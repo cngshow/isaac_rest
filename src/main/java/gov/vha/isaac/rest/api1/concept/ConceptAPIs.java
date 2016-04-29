@@ -74,7 +74,7 @@ public class ConceptAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * 
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children', 'countChildren'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children', 'countChildren', 'countParents'
 	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
 	 * @return the concept version object
 	 * @throws RestException 
@@ -98,7 +98,8 @@ public class ConceptAPIs
 		{
 			return new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable), 
+					RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable),
+					RequestInfo.get().shouldExpand(ExpandUtil.parentCountExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable),
 					RequestInfo.get().shouldExpand(ExpandUtil.childCountExpandable),
 					Boolean.parseBoolean(stated.trim()));

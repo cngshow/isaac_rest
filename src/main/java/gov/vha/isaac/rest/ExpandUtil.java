@@ -35,6 +35,7 @@ public class ExpandUtil
 	public static final String versionExpandable = "version";
 	public static final String chronologyExpandable = "chronology";
 	public static final String parentsExpandable = "parents";
+	public static final String parentCountExpandable = "countParents";
 	public static final String childrenExpandable = "children";
 	public static final String childCountExpandable = "countChildren";
 	public static final String uuid = "uuid";

@@ -97,7 +97,7 @@ public class RestConceptChronology
 			{
 				for (ConceptVersion cv : cc.getVersionList())
 				{
-					versions.add(new RestConceptVersion(cv, false, false, false, false, false));
+					versions.add(new RestConceptVersion(cv, false, false, false, false, false, false));
 				}
 			}
 			else // if (includeLatestVersion)
@@ -107,7 +107,7 @@ public class RestConceptChronology
 						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
 				if (latest.isPresent())
 				{
-					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false));
+					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false));
 				}
 			}
 		}

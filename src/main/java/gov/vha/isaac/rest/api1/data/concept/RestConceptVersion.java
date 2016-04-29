@@ -81,6 +81,13 @@ public class RestConceptVersion
 	@XmlElement
 	Integer childCount;
 	
+	/**
+	 * The number of parent concept(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
+	 * This will not be returned if the parents field is populated.
+	 */
+	@XmlElement
+	Integer parentCount;
+	
 	protected RestConceptVersion()
 	{
 		//for Jaxb
@@ -88,11 +95,12 @@ public class RestConceptVersion
 	
 	@SuppressWarnings({ "rawtypes" }) 
 	public RestConceptVersion(ConceptVersion cv, boolean includeChronology) {
-		this(cv, includeChronology, false, false, false, false);
+		this(cv, includeChronology, false, false, false, false, false);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean includeChildren, boolean countChildren, boolean stated)
+	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean countParents, 
+			boolean includeChildren, boolean countChildren, boolean stated)
 	{
 		conVersion = new RestStampedVersion(cv);
 		if (includeChronology || includeParents || includeChildren)
@@ -113,13 +121,13 @@ public class RestConceptVersion
 						
 			}
 			Tree tree = null;
-			if (includeParents || includeChildren || countChildren)
+			if (includeParents || includeChildren || countChildren || countParents)
 			{
 				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
 			}
 			if (includeParents)
 			{
-				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, 0);
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0);
 			}
 			else
 			{
@@ -128,6 +136,19 @@ public class RestConceptVersion
 					expandables.add(
 						new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
 							+ "?expand=" + ExpandUtil.parentsExpandable + "&stated=" + stated));
+				}
+				if (countParents)
+				{
+					TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree);
+				}
+				else
+				{
+					if (RequestInfo.get().returnExpandableLinks())
+					{
+						expandables.add(
+							new Expandable(ExpandUtil.parentCountExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
+								+ "?expand=" + ExpandUtil.parentCountExpandable + "&stated=" + stated));
+					}
 				}
 			}
 			
@@ -212,5 +233,10 @@ public class RestConceptVersion
 	public void setChildCount(int count)
 	{
 		this.childCount = count;
+	}
+	
+	public void setParentCount(int count)
+	{
+		this.parentCount = count;
 	}
 }

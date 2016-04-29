@@ -55,6 +55,9 @@ public class TaxonomyAPIs
 	 * is the UUID for the ISAAC_ROOT concept.
 	 * @param stated - true for stated, false for inferred
 	 * @param parentHeight - How far to walk up (expand) the parent tree
+	 * @param countParents - true to count the number of parents above this node.  May be used with or without the parentHeight parameter
+	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
+	 *  parent counts.
 	 * @param childDepth - How far to walk down (expand) the tree 
 	 * @param countChildren - true to count the number of children below this node.  May be used with or without the childDepth parameter
 	 *  - it works independently.  When used in combination with the childDepth parameter, only the last level of items returned will return
@@ -70,7 +73,8 @@ public class TaxonomyAPIs
 			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
 			@QueryParam(RequestParameters.id) @DefaultValue("7c21b6c5-cf11-5af9-893b-743f004c97f5") String id,
 			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated, 
-			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight, 
+			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight,
+			@QueryParam("countParents") @DefaultValue("false") String countParents,
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth,
 			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
 			@QueryParam(RequestParameters.expand) String expand
@@ -80,6 +84,7 @@ public class TaxonomyAPIs
 		RequestInfo.get().readStated(stated);
 		
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
+		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
 		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);
@@ -89,14 +94,19 @@ public class TaxonomyAPIs
 		{
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					false, false, false, Boolean.parseBoolean(stated.trim()));  //parent / child expansion is handled here by providing a depth, not with expandables.
+					false, false, false, false, Boolean.parseBoolean(stated.trim()));  //parent / child expansion is handled here by providing a depth, not with expandables.
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, tree, parentHeight - 1);
+				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1);
 			}
+			else if (countParentsBoolean)
+			{
+				countParents(concept.getConceptSequence(), rcv, tree);
+			}
+			
 			if (childDepth > 0)
 			{
 				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1);
@@ -130,7 +140,7 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, RequestInfo.get().getStated());
+				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated());
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
@@ -143,6 +153,32 @@ public class TaxonomyAPIs
 			}
 		}
 	}
+	
+	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree)
+	{
+		int count = 0;
+		for (int parentSequence : tree.getParentSequences(conceptSequence))
+		{
+			@SuppressWarnings("rawtypes")
+			ConceptChronology parentConcept;
+			try
+			{
+				parentConcept = ConceptAPIs.findConceptChronology(parentSequence + "");
+			}
+			catch (RestException e)
+			{
+				throw new RuntimeException("Internal Error!", e);
+			}
+			@SuppressWarnings("unchecked")
+			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			if (cv.isPresent())
+			{
+				count++;
+			}
+		}
+		rcv.setParentCount(count);
+	}
+	
 	
 	public static void countChildren(int conceptSequence, RestConceptVersion rcv, Tree tree)
 	{
@@ -170,7 +206,7 @@ public class TaxonomyAPIs
 		rcv.setChildCount(count);
 	}
 
-	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, int remainingParentDepth)
+	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth)
 	{
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
 		{
@@ -184,17 +220,20 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-			//TODO this needs infinite loop protection
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
 			{
 				//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, RequestInfo.get().getStated());
+				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated());
 				rcv.addParent(parentVersion);
 				if (remainingParentDepth > 0)
 				{
-					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, remainingParentDepth - 1);
+					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1);
+				}
+				else if (countLeafParents)
+				{
+					countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree);
 				}
 			}
 		}
