@@ -446,7 +446,7 @@ public class SememeAPIs
 				
 				int approximateTotal = 0;
 				for (Iterator<SememeChronology<? extends SememeVersion<?>>> it = sememes.iterator(); it.hasNext();) {
-					if (ochreResults.size() > (pageNum * maxPageSize)) {
+					if (ochreResults.size() >= (pageNum * maxPageSize)) {
 						it.next();
 						continue;
 					} else {
@@ -483,7 +483,7 @@ public class SememeAPIs
 			}
 			
 			for (PrimitiveIterator.OfInt it = allSememeSequences.getIntIterator(); it.hasNext();) {
-				if (ochreResults.size() > (pageNum * maxPageSize)) {
+				if (ochreResults.size() >= (pageNum * maxPageSize)) {
 					break;
 				} else {
 					SememeChronology<? extends SememeVersion<?>> chronology = Get.sememeService().getSememe(it.nextInt());
@@ -495,7 +495,7 @@ public class SememeAPIs
 				}
 			}
 
-			return new SememeVersions(PaginationUtils.getResults(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), pageNum, maxPageSize), allSememeSequences.size());
+			return new SememeVersions(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), allSememeSequences.size());
 		}
 	}
 	

@@ -19,9 +19,13 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -29,11 +33,24 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.vha.isaac.MetaData;
@@ -126,6 +143,154 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					+ response.readEntity(String.class));
 		}
 		return response;
+	}
+	
+	private static String toString(Node node) {
+		return "Node {name=" + node.getNodeName() + ", value=" + node.getNodeValue() + ", type=" + node.getNodeType() + ", text=" + node.getTextContent() + "}";
+	}
+	
+	private static NodeList getNodeList(String xmlStr, String xPathStr) {
+		//System.out.println(xmlStr);
+		
+		InputStream responseXmlStream = new ByteArrayInputStream(xmlStr.getBytes(StandardCharsets.UTF_8));
+
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		
+		DocumentBuilder db;
+		try {
+			db = dbf.newDocumentBuilder();
+			Document xmlDocument = db.parse(responseXmlStream);
+			
+			XPath xPath =  XPathFactory.newInstance().newXPath();
+			
+			//String expression = "/Employees/Employee[@emplid='3333']/email"
+
+			//String xPathStr = "/restSememeVersions/results/sememeChronology/identifiers/uuids";
+			//expression = "/restSememeVersions/results";
+			
+			//read a single xml node using xpath
+			//Node node = (Node) xPath.compile(expression).evaluate(xmlDocument, XPathConstants.NODE);
+			 
+			//read a nodelist using xpath
+			NodeList nodeList = (NodeList) xPath.compile(xPathStr).evaluate(xmlDocument, XPathConstants.NODESET);
+			
+			//System.out.println("FOUND " + nodeList.getLength() + " NODES IN LIST:");
+//			for (int i = 0; i < nodeList.getLength(); ++i) {
+//				System.out.println("Node #" + i + ": " + toString(nodeList.item(i)));
+//			}
+			
+			return nodeList;
+		} catch (XPathExpressionException | ParserConfigurationException | SAXException | IOException e) {
+			System.err.println("Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * This test validates that the XML serializers, sememe by-assemblage API and pagination are working correctly 
+	 */
+	@Test
+	public void testPaginatedSememesByAssemblage()
+	{
+		String xpathExpr = "/restSememeVersions/results/sememeChronology/sememeSequence";
+				
+		// Test to confirm that requested maxPageSize of results returned
+		for (int pageSize : new int[] { 1, 5, 10 }) {
+			Response response = target(
+					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					.queryParam(RequestParameters.expand, "chronology")
+					.queryParam(RequestParameters.maxPageSize, pageSize)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+
+			String resultXmlString = checkFail(response).readEntity(String.class);
+
+			NodeList nodeList = getNodeList(resultXmlString, xpathExpr);
+			
+			Assert.assertTrue(nodeList != null && nodeList.getLength() == pageSize);
+		}
+		
+		// Test to confirm that pageNum works
+		{
+			// Get first page of 10 results
+			Response response = target(
+					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					.queryParam(RequestParameters.expand, "chronology")
+					.queryParam(RequestParameters.maxPageSize, 10)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+			String resultXmlString = checkFail(response).readEntity(String.class);
+			NodeList nodeList = getNodeList(resultXmlString, xpathExpr);
+			String idOfTenthResultOfFirstTenResultPage = nodeList.item(9).getTextContent();
+			
+			// Get 10th page of 1 result
+			response = target(
+					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					.queryParam(RequestParameters.expand, "chronology")
+					.queryParam(RequestParameters.pageNum, 10)
+					.queryParam(RequestParameters.maxPageSize, 1)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+			
+			resultXmlString = checkFail(response).readEntity(String.class);
+			nodeList = getNodeList(resultXmlString, xpathExpr);
+			String idOfOnlyResultOfTenthResultPage = nodeList.item(0).getTextContent();
+			
+			Assert.assertTrue(idOfTenthResultOfFirstTenResultPage.equals(idOfOnlyResultOfTenthResultPage));
+		}
+	}
+	
+	/**
+	 * This test validates that the XML serializers, description search API and pagination are working correctly 
+	 */
+	@Test
+	public void testPaginatedSearchResults()
+	{
+		String xpathExpr = "/restSearchResults/results/matchNid";
+		
+		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
+
+		// Test to confirm that requested maxPageSize of results returned
+		for (int pageSize : new int[] { 2, 3, 8 }) {
+			String resultXmlString = checkFail(target(descriptionSearch)
+					.queryParam(RequestParameters.query,"dynamic*")
+					.queryParam(RequestParameters.expand, "uuid")
+					.queryParam(RequestParameters.maxPageSize, pageSize)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			
+			NodeList nodeList = getNodeList(resultXmlString, xpathExpr);
+			
+			Assert.assertTrue(nodeList != null && nodeList.getLength() == pageSize);
+		}
+		
+		// Test to confirm that pageNum works
+		{
+			// Get first page of 7 results
+			String resultXmlString = checkFail(target(descriptionSearch)
+					.queryParam(RequestParameters.query,"dynamic*")
+					.queryParam(RequestParameters.expand, "uuid")
+					.queryParam(RequestParameters.maxPageSize, 7)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			NodeList nodeList = getNodeList(resultXmlString, xpathExpr);
+			String idOf7thResultOfFirst7ResultPage = nodeList.item(6).getTextContent();
+			
+			// Get 7th page of 1 result
+			resultXmlString = checkFail(target(descriptionSearch)
+					.queryParam(RequestParameters.query,"dynamic*")
+					.queryParam(RequestParameters.expand, "uuid")
+					.queryParam(RequestParameters.pageNum, 7)
+					.queryParam(RequestParameters.maxPageSize, 1)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			nodeList = getNodeList(resultXmlString, xpathExpr);
+			String idOfOnlyResultOf7thResultPage = nodeList.item(0).getTextContent();
+			
+			Assert.assertTrue(idOf7thResultOfFirst7ResultPage.equals(idOfOnlyResultOf7thResultPage));
+		}
 	}
 	
 	/**
