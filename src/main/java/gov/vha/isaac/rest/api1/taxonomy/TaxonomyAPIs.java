@@ -27,6 +27,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
@@ -50,6 +53,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.taxonomyPathComponent)
 public class TaxonomyAPIs
 {
+	private static Logger log = LogManager.getLogger();
+
 	/**
 	 * Returns a single version of a concept, with parents and children expanded to the specified levels.
 	 * If no version parameter is specified, returns the latest version.
@@ -122,6 +127,7 @@ public class TaxonomyAPIs
 	{
 		if (alreadyAddedChildren.contains(conceptSequence)) {
 			// Avoiding infinite loop
+			log.warn("addChildren(" + conceptSequence + ") aborted potential infinite recursion");
 			return;
 		} else {
 			alreadyAddedChildren.add(conceptSequence);
@@ -172,7 +178,6 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-			//TODO this needs infinite loop protection
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
@@ -187,6 +192,7 @@ public class TaxonomyAPIs
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
+			log.warn("addParents(" + conceptSequence + ") aborted potential infinite recursion");
 			return;
 		} else {
 			handledConcepts.add(conceptSequence);
