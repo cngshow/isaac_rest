@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
 
@@ -27,6 +29,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestDynamicSememeNid extends RestDynamicSememeTypedData
 {
 	public RestDynamicSememeNid(int columnNumber, int value)

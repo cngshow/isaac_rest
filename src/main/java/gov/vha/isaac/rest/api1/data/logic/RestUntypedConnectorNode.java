@@ -19,6 +19,8 @@
 
 package gov.vha.isaac.rest.api1.data.logic;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.model.logic.node.AndNode;
 import gov.vha.isaac.ochre.model.logic.node.DisjointWithNode;
 import gov.vha.isaac.ochre.model.logic.node.NecessarySetNode;
@@ -39,6 +41,7 @@ import gov.vha.isaac.ochre.model.logic.node.SufficientSetNode;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestUntypedConnectorNode extends RestLogicNode {
 	protected RestUntypedConnectorNode() {
 		// For JAXB

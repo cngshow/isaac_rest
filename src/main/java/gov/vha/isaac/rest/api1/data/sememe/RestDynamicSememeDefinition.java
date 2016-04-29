@@ -20,6 +20,9 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
@@ -32,6 +35,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestDynamicSememeDefinition 
 {
 	protected RestDynamicSememeDefinition()
