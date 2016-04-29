@@ -24,6 +24,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -43,6 +46,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptChronology 
 {
 	/**
@@ -138,7 +142,7 @@ public class RestConceptChronology
 	{
 		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
 		
-		if (RequestInfo.get().useFSN())
+		if (RequestInfo.get().useFsn())
 		{
 			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
 				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());

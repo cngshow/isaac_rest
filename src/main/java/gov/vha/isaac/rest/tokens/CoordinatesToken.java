@@ -25,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
@@ -51,18 +53,33 @@ public class CoordinatesToken
 	private byte stampPrecedence;
 	private int[] stampModules;
 	private byte[] stampStates;
+	
 	private int langCoord;
 	private int[] langDialects;
 	private int[] langTypePrefs;
+	
 	private byte taxonomyType;
-	//TODO add other taxonomy coordinate attributes
+
+	private int logicStatedAssemblage;
+	private int logicInferredAssemblage;
+	private int logicDescLogicProfile;
+	private int logicClassifier;
 	
 	public CoordinatesToken()
 	{
 		
 	}
 	
-	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, TaxonomyCoordinate tax)
+	// This constructor handles everything with the TaxonomyCoordinate with no overlap
+	public CoordinatesToken(TaxonomyCoordinate tax) {
+		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
+	}
+	// This constructor passes overlapping/redundant data
+//	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, TaxonomyCoordinate tax) {
+//		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
+//	}
+	// This constructor handles everything with constituents of the TaxonomyCoordinate with no overlap
+	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, PremiseType taxType)
 	{
 		stampTime = stamp.getStampPosition().getTime();
 		stampPath = stamp.getStampPosition().getStampPathSequence();
@@ -79,10 +96,17 @@ public class CoordinatesToken
 		{
 			stampStates[pos++] = (byte)s.ordinal(); 
 		}
+		
 		langCoord = lang.getLanguageConceptSequence();
 		langDialects = lang.getDialectAssemblagePreferenceList();
 		langTypePrefs = lang.getDescriptionTypePreferenceList();
-		taxonomyType = (byte)tax.getTaxonomyType().ordinal();
+		
+		taxonomyType = (byte)taxType.ordinal();
+		
+		logicStatedAssemblage = logic.getStatedAssemblageSequence();
+		logicInferredAssemblage = logic.getInferredAssemblageSequence();
+		logicDescLogicProfile = logic.getDescriptionLogicProfileSequence();
+		logicClassifier = logic.getClassifierSequence();
 	}
 	
 	public CoordinatesToken(String encodedData) throws Exception
@@ -116,6 +140,7 @@ public class CoordinatesToken
 		{
 			stampStates[i] = buffer.getByte();
 		}
+		
 		langCoord = buffer.getInt();
 		langDialects = new int[buffer.getInt()];
 		for (int i = 0; i < langDialects.length; i++)
@@ -127,7 +152,14 @@ public class CoordinatesToken
 		{
 			langTypePrefs[i] = buffer.getInt();
 		}
+		
 		taxonomyType = buffer.getByte();
+		
+		logicStatedAssemblage = buffer.getInt();
+		logicInferredAssemblage = buffer.getInt();
+		logicDescLogicProfile = buffer.getInt();
+		logicClassifier = buffer.getInt();
+		
 		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
 	}
 	
@@ -161,6 +193,7 @@ public class CoordinatesToken
 		{
 			buffer.putByte(x);
 		}
+		
 		buffer.putInt(langCoord);
 		buffer.putInt(langDialects.length);
 		for (int x: langDialects)
@@ -172,7 +205,14 @@ public class CoordinatesToken
 		{
 			buffer.putInt(x);
 		}
+		
 		buffer.putByte(taxonomyType);
+		
+		buffer.putInt(logicStatedAssemblage);
+		buffer.putInt(logicInferredAssemblage);
+		buffer.putInt(logicDescLogicProfile);
+		buffer.putInt(logicClassifier);
+		
 		buffer.trimToSize();
 		return buffer.getData();
 	}
@@ -231,6 +271,11 @@ public class CoordinatesToken
 		r.stampTime = Long.MAX_VALUE;
 		r.taxonomyType = 5;
 
+		r.logicStatedAssemblage = 1;
+		r.logicInferredAssemblage = 2;
+		r.logicDescLogicProfile = 3;
+		r.logicClassifier = 4;
+		
 		String token1 = r.serialize();
 		System.out.println(token1);
 		new CoordinatesToken(token1);

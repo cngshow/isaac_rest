@@ -20,6 +20,9 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.model.logic.node.external.FeatureNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.FeatureNodeWithSequences;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
@@ -35,6 +38,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType
  * and has a RestNodeSemanticType == NodeSemantic.FEATURE.
  * 
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestFeatureNode extends RestTypedConnectorNode {
 
 	/**

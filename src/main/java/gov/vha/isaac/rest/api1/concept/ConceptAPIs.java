@@ -70,7 +70,6 @@ public class ConceptAPIs
 	private Set<Integer> allDescriptionAssemblageTypes = null;
 	/**
 	 * Returns a single version of a concept.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * 

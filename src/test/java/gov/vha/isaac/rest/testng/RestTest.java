@@ -19,27 +19,34 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.w3c.dom.NodeList;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
@@ -126,6 +133,113 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					+ response.readEntity(String.class));
 		}
 		return response;
+	}
+	
+	
+	
+	/**
+	 * This test validates that the XML serializers, sememe by-assemblage API and pagination are working correctly 
+	 */
+	@Test
+	public void testPaginatedSememesByAssemblage()
+	{
+		String xpathExpr = "/restSememeVersions/results/sememeChronology/sememeSequence";
+				
+		// Test to confirm that requested maxPageSize of results returned
+		for (int pageSize : new int[] { 1, 5, 10 }) {
+			Response response = target(
+					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					.queryParam(RequestParameters.expand, "chronology")
+					.queryParam(RequestParameters.maxPageSize, pageSize)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+
+			String resultXmlString = checkFail(response).readEntity(String.class);
+
+			NodeList nodeList = RestTestUtils.getNodeList(resultXmlString, xpathExpr);
+			
+			Assert.assertTrue(nodeList != null && nodeList.getLength() == pageSize);
+		}
+		
+		// Test to confirm that pageNum works
+		{
+			// Get first page of 10 results
+			Response response = target(
+					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					.queryParam(RequestParameters.expand, "chronology")
+					.queryParam(RequestParameters.maxPageSize, 10)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+			String resultXmlString = checkFail(response).readEntity(String.class);
+			NodeList nodeList = RestTestUtils.getNodeList(resultXmlString, xpathExpr);
+			String idOfTenthResultOfFirstTenResultPage = nodeList.item(9).getTextContent();
+			
+			// Get 10th page of 1 result
+			response = target(
+					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					.queryParam(RequestParameters.expand, "chronology")
+					.queryParam(RequestParameters.pageNum, 10)
+					.queryParam(RequestParameters.maxPageSize, 1)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+			
+			resultXmlString = checkFail(response).readEntity(String.class);
+			nodeList = RestTestUtils.getNodeList(resultXmlString, xpathExpr);
+			String idOfOnlyResultOfTenthResultPage = nodeList.item(0).getTextContent();
+			
+			Assert.assertTrue(idOfTenthResultOfFirstTenResultPage.equals(idOfOnlyResultOfTenthResultPage));
+		}
+	}
+	
+	/**
+	 * This test validates that the XML serializers, description search API and pagination are working correctly 
+	 */
+	@Test
+	public void testPaginatedSearchResults()
+	{
+		String xpathExpr = "/restSearchResults/results/matchNid";
+		
+		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
+
+		// Test to confirm that requested maxPageSize of results returned
+		for (int pageSize : new int[] { 2, 3, 8 }) {
+			String resultXmlString = checkFail(target(descriptionSearch)
+					.queryParam(RequestParameters.query,"dynamic*")
+					.queryParam(RequestParameters.expand, "uuid")
+					.queryParam(RequestParameters.maxPageSize, pageSize)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			
+			NodeList nodeList = RestTestUtils.getNodeList(resultXmlString, xpathExpr);
+			
+			Assert.assertTrue(nodeList != null && nodeList.getLength() == pageSize);
+		}
+		
+		// Test to confirm that pageNum works
+		{
+			// Get first page of 7 results
+			String resultXmlString = checkFail(target(descriptionSearch)
+					.queryParam(RequestParameters.query,"dynamic*")
+					.queryParam(RequestParameters.expand, "uuid")
+					.queryParam(RequestParameters.maxPageSize, 7)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			NodeList nodeList = RestTestUtils.getNodeList(resultXmlString, xpathExpr);
+			String idOf7thResultOfFirst7ResultPage = nodeList.item(6).getTextContent();
+			
+			// Get 7th page of 1 result
+			resultXmlString = checkFail(target(descriptionSearch)
+					.queryParam(RequestParameters.query,"dynamic*")
+					.queryParam(RequestParameters.expand, "uuid")
+					.queryParam(RequestParameters.pageNum, 7)
+					.queryParam(RequestParameters.maxPageSize, 1)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			nodeList = RestTestUtils.getNodeList(resultXmlString, xpathExpr);
+			String idOfOnlyResultOf7thResultPage = nodeList.item(0).getTextContent();
+			
+			Assert.assertTrue(idOf7thResultOfFirst7ResultPage.equals(idOfOnlyResultOf7thResultPage));
+		}
 	}
 	
 	/**
@@ -605,9 +719,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testCoordinateTokenRoundTrip() throws Exception
 	{
-		CoordinatesToken t = new CoordinatesToken(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(), 
-				TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(), 
-						LogicCoordinates.getStandardElProfile()));
+		TaxonomyCoordinate taxonomyCoordinate =
+				TaxonomyCoordinates.getStatedTaxonomyCoordinate(
+						StampCoordinates.getDevelopmentLatest(),
+						LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(),
+						LogicCoordinates.getStandardElProfile());
+		CoordinatesToken t = new CoordinatesToken(
+				taxonomyCoordinate.getStampCoordinate(),
+				taxonomyCoordinate.getLanguageCoordinate(),
+				taxonomyCoordinate.getLogicCoordinate(),
+				taxonomyCoordinate.getTaxonomyType()
+				);
 		
 		String token = t.serialize();
 		

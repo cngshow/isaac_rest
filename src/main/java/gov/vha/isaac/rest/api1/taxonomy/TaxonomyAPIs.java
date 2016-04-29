@@ -19,14 +19,20 @@
 package gov.vha.isaac.rest.api1.taxonomy;
 
 import java.util.Optional;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
@@ -47,9 +53,10 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.taxonomyPathComponent)
 public class TaxonomyAPIs
 {
+	private static Logger log = LogManager.getLogger();
+
 	/**
 	 * Returns a single version of a concept, with parents and children expanded to the specified levels.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.
@@ -100,7 +107,7 @@ public class TaxonomyAPIs
 			
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1);
+				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, new ConceptSequenceSet());
 			}
 			else if (countParentsBoolean)
 			{
@@ -109,7 +116,7 @@ public class TaxonomyAPIs
 			
 			if (childDepth > 0)
 			{
-				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1);
+				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1, new ConceptSequenceSet());
 			}
 			else if (countChildrenBoolean)
 			{
@@ -120,8 +127,21 @@ public class TaxonomyAPIs
 		throw new RestException("id", id, "No concept was found");
 	}
 
-	public static void addChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafChildren, int remainingChildDepth)
+	public static void addChildren(
+			int conceptSequence,
+			RestConceptVersion rcv,
+			Tree tree,
+			boolean countLeafChildren,
+			int remainingChildDepth,
+			ConceptSequenceSet alreadyAddedChildren)
 	{
+		if (alreadyAddedChildren.contains(conceptSequence)) {
+			// Avoiding infinite loop
+			log.warn("addChildren(" + conceptSequence + ") aborted potential infinite recursion");
+			return;
+		} else {
+			alreadyAddedChildren.add(conceptSequence);
+		}
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
 			@SuppressWarnings("rawtypes")
@@ -134,7 +154,6 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-			//TODO this needs infinite loop protection
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
@@ -144,7 +163,7 @@ public class TaxonomyAPIs
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
-					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, remainingChildDepth - 1);
+					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, remainingChildDepth - 1, alreadyAddedChildren);
 				}
 				else if (countLeafChildren)
 				{
@@ -195,7 +214,6 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-			//TODO this needs infinite loop protection
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			if (cv.isPresent())
@@ -206,8 +224,15 @@ public class TaxonomyAPIs
 		rcv.setChildCount(count);
 	}
 
-	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth)
+	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth, ConceptSequenceSet handledConcepts)
 	{
+		if (handledConcepts.contains(conceptSequence)) {
+			// Avoiding infinite loop
+			log.warn("addParents(" + conceptSequence + ") aborted potential infinite recursion");
+			return;
+		} else {
+			handledConcepts.add(conceptSequence);
+		}
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
 		{
 			@SuppressWarnings("rawtypes")
@@ -229,7 +254,7 @@ public class TaxonomyAPIs
 				rcv.addParent(parentVersion);
 				if (remainingParentDepth > 0)
 				{
-					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1);
+					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, handledConcepts);
 				}
 				else if (countLeafParents)
 				{

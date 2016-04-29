@@ -153,7 +153,6 @@ public class SememeAPIs
 	
 	/**
 	 * Returns a single version of a sememe.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
@@ -224,7 +223,6 @@ public class SememeAPIs
 	
 	/**
 	 * Returns all sememe instances with the given assemblage
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence of an assemblage concept
 	 * @param pageNum The pagination page number >= 1 to return
@@ -232,7 +230,6 @@ public class SememeAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
-	 * TODO this needs to be paged 
 	 * @throws RestException 
 	 */
 	@GET
@@ -267,8 +264,8 @@ public class SememeAPIs
 		}
 		RestSememeVersions results =
 				new RestSememeVersions(
-						maxPageSize,
 						pageNum,
+						maxPageSize,
 						versions.getTotal(),
 						RestPaths.sememeByAssemblageAppPathComponent + id,
 						restSememeVersions
@@ -279,7 +276,6 @@ public class SememeAPIs
 	
 	/**
 	 * Returns all sememe instances attached to the specified referenced component
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID or nid of a component.  Note that this could be a concept or a sememe reference, hence, sequences are not allowed here.
 	 * @param assemblage - An optional assemblage UUID, nid or concept sequence to restrict the type of sememes returned.  If ommitted, assemblages
@@ -377,18 +373,18 @@ public class SememeAPIs
 	
 	public static class SememeVersions {
 		private final List<SememeVersion<?>> values;
-		private final int total;
+		private final int approximateTotal;
 		
-		public SememeVersions(List<SememeVersion<?>> values, int total) {
+		public SememeVersions(List<SememeVersion<?>> values, int approximateTotal) {
 			this.values = values;
-			this.total = total;
+			this.approximateTotal = approximateTotal;
 		}
 
 		public List<SememeVersion<?>> getValues() {
 			return values;
 		}
 		public int getTotal() {
-			return total;
+			return approximateTotal;
 		}
 	}
 	/**
@@ -444,9 +440,9 @@ public class SememeAPIs
 			{
 				Stream<SememeChronology<? extends SememeVersion<?>>> sememes = getSememesForComponentFromAssemblagesFilteredBySememeType(refCompNid.get(), allowedAssemblages, excludedSememeTypes);
 				
-				int total = 0;
+				int approximateTotal = 0;
 				for (Iterator<SememeChronology<? extends SememeVersion<?>>> it = sememes.iterator(); it.hasNext();) {
-					if (ochreResults.size() > (pageNum * maxPageSize)) {
+					if (ochreResults.size() >= (pageNum * maxPageSize)) {
 						it.next();
 						continue;
 					} else {
@@ -459,21 +455,10 @@ public class SememeAPIs
 						}
 					}
 
-					total++;
+					approximateTotal++;
 				}
 
-				int lowerBound = (pageNum - 1) * maxPageSize;
-				int upperBound = pageNum * maxPageSize;
-				if (lowerBound >= ochreResults.size()) {
-					// If lowerBound larger than entire list return empty list
-					lowerBound = 0;
-					upperBound = 0;
-				} else if (upperBound > ochreResults.size()) {
-					// if upperBound larger than entire list return only to end of list
-					upperBound = ochreResults.size();
-				}
-				
-				return new SememeVersions(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), total);
+				return new SememeVersions(PaginationUtils.getResults(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), pageNum, maxPageSize), approximateTotal);
 			}
 			else
 			{
@@ -494,7 +479,7 @@ public class SememeAPIs
 			}
 			
 			for (PrimitiveIterator.OfInt it = allSememeSequences.getIntIterator(); it.hasNext();) {
-				if (ochreResults.size() > (pageNum * maxPageSize)) {
+				if (ochreResults.size() >= (pageNum * maxPageSize)) {
 					break;
 				} else {
 					SememeChronology<? extends SememeVersion<?>> chronology = Get.sememeService().getSememe(it.nextInt());
@@ -506,17 +491,7 @@ public class SememeAPIs
 				}
 			}
 
-			int lowerBound = (pageNum - 1) * maxPageSize;
-			int upperBound = pageNum * maxPageSize;
-			if (lowerBound >= ochreResults.size()) {
-				// If lowerBound larger than entire list return empty list
-				lowerBound = 0;
-				upperBound = 0;
-			} else if (upperBound > ochreResults.size()) {
-				// if upperBound larger than entire list return only to end of list
-				upperBound = ochreResults.size();
-			}
-			return new SememeVersions(ochreResults.subList(lowerBound, upperBound), allSememeSequences.size());
+			return new SememeVersions(PaginationUtils.getResults(ochreResults, pageNum, maxPageSize), allSememeSequences.size());
 		}
 	}
 	

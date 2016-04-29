@@ -59,15 +59,15 @@ public class RestSememeVersions
 	}
 
 	/**
-	 * @param pageNum
+	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
-	 * @param total
-	 * @param baseUrl
+	 * @param approximateTotal approximate size of full matching set of which this paginated result is a subset
+	 * @param baseUrl url used to construct example previous and next urls
 	 * @param results
 	 * @throws RestException 
 	 */
-	public RestSememeVersions(int pageNum, int maxPageSize, int total, String baseUrl, List<RestSememeVersion> results) throws RestException {
+	public RestSememeVersions(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, List<RestSememeVersion> results) throws RestException {
 		this.results = results;
-		this.paginationData = new Pagination(pageNum, maxPageSize, total, results.size(), baseUrl);
+		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
 	}
 }

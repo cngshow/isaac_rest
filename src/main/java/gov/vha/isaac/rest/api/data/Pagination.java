@@ -54,23 +54,12 @@ public class Pagination
 	 */
 	@XmlElement
 	int pageNum;
-	/**
-	 * The page max size.  Must be an integer >= 0
-	 */
-	@XmlElement
-	int maxPageSize;
-
+	
 	/**
 	 * Estimated size of set of all matching values of which the current page is a subset. Value is negative if and only if unknown. May be affected by filtering.
 	 */
 	@XmlElement
-	int total;
-	
-	/**
-	 * Size of returned set
-	 */
-	@XmlElement
-	int size;
+	int approximateTotal;
 
 	protected Pagination()
 	{
@@ -80,17 +69,14 @@ public class Pagination
 	/**
 	 * @param pageNum page number index > 0
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
-	 * @param estimated total size of set of which this page is a subset. May be affected by filtering.
-	 * @param size actual size of this page
+	 * @param approximateTotal total size of set of which this page is a subset. May be affected by filtering.
 	 * @param baseUrl base URL used to construct and return example previous and next URLs
 	 * @throws RestException 
 	 */
-	public Pagination(int pageNum, int maxPageSize, int total, int size, String baseUrl) throws RestException {
+	public Pagination(int pageNum, int maxPageSize, int approximateTotal, String baseUrl) throws RestException {
 		PaginationUtils.validateParameters(pageNum, maxPageSize);
 
-		this.maxPageSize = maxPageSize;
 		this.pageNum = pageNum;
-		this.size = size;
 
 		boolean baseUrlHasParams = baseUrl.contains("?");
 		
@@ -100,38 +86,38 @@ public class Pagination
 			// At beginning
 			previousPageNum = 1;
 			previousPageSize = 0;
-		} else if ((this.pageNum - 1) * this.maxPageSize <= total || total < 0) {
+		} else if ((this.pageNum - 1) * maxPageSize <= approximateTotal || approximateTotal < 0) {
 			// Within first chunk
 			previousPageNum = this.pageNum - 1;
-			previousPageSize = this.maxPageSize;
+			previousPageSize = maxPageSize;
 		} else {
 			// Somewhere in the middle
 			previousPageNum = this.pageNum - 1;
-			previousPageSize = this.maxPageSize;
+			previousPageSize = maxPageSize;
 		}
 		this.previousUrl = baseUrl + (baseUrlHasParams ? "&" : "?") + RequestParameters.pageNum + "=" + previousPageNum + "&" + RequestParameters.maxPageSize + "=" + previousPageSize;
 		
 		int nextPageNum = 0;
 		int nextPageSize = 0;
-		if (total < 0) {
+		if (approximateTotal < 0) {
 			// If total < 0 then no known limit
 			nextPageNum = this.pageNum + 1;
-			nextPageSize = this.maxPageSize;
-			this.total = -1; // total unknown
+			nextPageSize = maxPageSize;
+			this.approximateTotal = -1; // total unknown
 		} else {
-			this.total = total; // total unknown
-			if ((this.pageNum * this.maxPageSize) >= total) {
+			this.approximateTotal = approximateTotal; // total unknown
+			if ((this.pageNum * maxPageSize) >= approximateTotal) {
 				// Current result contains or is past end of results
 				nextPageNum = this.pageNum;
 				nextPageSize = 0;
-			} else if (((this.pageNum + 1) * this.maxPageSize) >= total) {
+			} else if (((this.pageNum + 1) * maxPageSize) >= approximateTotal) {
 				// Next result contains end of results
 				nextPageNum = this.pageNum + 1;
-				nextPageSize = total - (this.pageNum * this.maxPageSize);
+				nextPageSize = approximateTotal - (this.pageNum * maxPageSize);
 			} else {
 				// Somewhere near beginning or middle
 				nextPageNum = this.pageNum + 1;
-				nextPageSize = this.maxPageSize;
+				nextPageSize = maxPageSize;
 			}
 		}
 		this.nextUrl = baseUrl + (baseUrlHasParams ? "&" : "?") + RequestParameters.pageNum + "=" + nextPageNum + "&" + RequestParameters.maxPageSize + "=" + nextPageSize;

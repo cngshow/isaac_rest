@@ -62,7 +62,6 @@ public class IdAPIs
 
 	/**
 	 * Translate an ID from one type to another.  
-	 * TODO still need to define how to pass in a version parameter
 	 * @param id The id to translate
 	 * @param inputType - should be one of the types from the supportedTypes call.  You can pass the name or enumId of the 
 	 * returned RestIdType object.  This will be something like [uuid, nid, conceptSequence, sememeSequence, sctid, vuid]

@@ -24,7 +24,10 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -42,6 +45,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptVersion
 {
 	/**
@@ -127,7 +131,7 @@ public class RestConceptVersion
 			}
 			if (includeParents)
 			{
-				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0);
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, new ConceptSequenceSet());
 			}
 			else
 			{
@@ -154,7 +158,7 @@ public class RestConceptVersion
 			
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0);
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0, new ConceptSequenceSet());
 			}
 			else
 			{

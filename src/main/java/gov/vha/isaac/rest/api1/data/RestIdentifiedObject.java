@@ -22,12 +22,15 @@ import java.util.List;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * 
  * {@link RestIdentifiedObject}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestIdentifiedObject
 {
 	/**

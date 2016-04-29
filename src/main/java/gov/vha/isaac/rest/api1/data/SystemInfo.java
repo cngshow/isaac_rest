@@ -21,6 +21,8 @@ package gov.vha.isaac.rest.api1.data;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * {@link SystemInfo}
  * 
@@ -29,6 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class SystemInfo
 {
 	/**
