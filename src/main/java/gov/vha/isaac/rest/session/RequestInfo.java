@@ -45,9 +45,10 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestInfo
 {
-	private boolean stated_ = true;
+	private boolean stated_ = Boolean.parseBoolean(RequestParameters.statedDefault);
 	private StampCoordinate stampCoordinate_ = null;
 	private LanguageCoordinate languageCoordinate_ = null;
+	private boolean useFsn_ = Boolean.parseBoolean(RequestParameters.useFsnDefault);
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
@@ -111,6 +112,7 @@ public class RequestInfo
 		}
 		return get();
 	}
+	
 	public RequestInfo readStated(Map<String, List<String>> parameters) throws RestException
 	{
 		if (parameters != null && parameters.get(RequestParameters.stated) != null && parameters.get(RequestParameters.stated).size() > 0) {
@@ -120,8 +122,28 @@ public class RequestInfo
 		}
 		return get();
 	}
+
+	public RequestInfo readUseFsn(Map<String, List<String>> parameters) throws RestException
+	{
+		if (parameters != null && parameters.get(RequestParameters.useFsn) != null && parameters.get(RequestParameters.useFsn).size() > 0) {
+			requestInfo.get().useFsn_ = RequestInfoUtils.getBooleanFromParameters(RequestParameters.useFsn, parameters);
+		} else {
+			requestInfo.get().useFsn_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.useFsn, RequestParameters.useFsnDefault);
+		}
+		return get();
+	}
+	public RequestInfo readUseFsn(String useFsnParameter) throws RestException {
+		if (StringUtils.isNotBlank(useFsnParameter)) {
+			requestInfo.get().useFsn_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, useFsnParameter);
+		} else {
+			requestInfo.get().useFsn_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, RequestParameters.statedDefault);
+		}
+		return get();
+	}
+	
 	public RequestInfo readAll(Map<String, List<String>> parameters) throws RestException
 	{
+		readUseFsn(parameters);
 		readExpandables(parameters);
 		readStampCoordinate(parameters);
 		readLanguageCoordinate(parameters);
@@ -182,10 +204,9 @@ public class RequestInfo
 	/**
 	 * @return
 	 */
-	public boolean useFSN()
+	public boolean useFsn()
 	{
-		//TODO Joel, this needs to be implemented....
-		return true;
+		return useFsn_;
 	}
 	
 	/**

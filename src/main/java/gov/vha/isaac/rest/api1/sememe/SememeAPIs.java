@@ -153,7 +153,6 @@ public class SememeAPIs
 	
 	/**
 	 * Returns a single version of a sememe.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
@@ -224,7 +223,6 @@ public class SememeAPIs
 	
 	/**
 	 * Returns all sememe instances with the given assemblage
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence of an assemblage concept
 	 * @param pageNum The pagination page number >= 1 to return
@@ -232,7 +230,6 @@ public class SememeAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
-	 * TODO this needs to be paged 
 	 * @throws RestException 
 	 */
 	@GET
@@ -279,7 +276,6 @@ public class SememeAPIs
 	
 	/**
 	 * Returns all sememe instances attached to the specified referenced component
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID or nid of a component.  Note that this could be a concept or a sememe reference, hence, sequences are not allowed here.
 	 * @param assemblage - An optional assemblage UUID, nid or concept sequence to restrict the type of sememes returned.  If ommitted, assemblages

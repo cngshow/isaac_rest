@@ -138,7 +138,7 @@ public class RestConceptChronology
 	{
 		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
 		
-		if (RequestInfo.get().useFSN())
+		if (RequestInfo.get().useFsn())
 		{
 			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
 				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());

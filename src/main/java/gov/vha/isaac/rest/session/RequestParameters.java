@@ -62,6 +62,9 @@ public class RequestParameters {
 	public final static String stated = "stated";
 	public final static String statedDefault = "true";
 
+	public final static String useFsn = "useFsn";
+	public final static String useFsnDefault = "true";
+
 	public final static String pageNum = "pageNum";
 	public final static String pageNumDefault = "1";
 

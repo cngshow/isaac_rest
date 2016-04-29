@@ -35,7 +35,6 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	
 	private StringProperty status_ = new SimpleStringProperty("Not Started");
 	
-	//TODO implement convenience method to describe a object - concept, semeeme, etc
 	//TODO implement convenience methods for 'associations'
 	
 	public ApplicationConfig()

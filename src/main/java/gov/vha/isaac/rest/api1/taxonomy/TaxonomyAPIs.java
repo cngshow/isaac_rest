@@ -49,7 +49,6 @@ public class TaxonomyAPIs
 {
 	/**
 	 * Returns a single version of a concept, with parents and children expanded to the specified levels.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.

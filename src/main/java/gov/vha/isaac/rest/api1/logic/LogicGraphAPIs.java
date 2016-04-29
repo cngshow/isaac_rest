@@ -62,7 +62,6 @@ public class LogicGraphAPIs
 	
 	/**
 	 * Returns a single version of a logic graph.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'version'
