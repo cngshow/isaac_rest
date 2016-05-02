@@ -88,6 +88,8 @@ public class RequestInfoUtils {
 						expandedList.add(s.trim());
 					}
 				}
+			} else {
+				expandedList.add(element.trim());
 			}
 		}
 		

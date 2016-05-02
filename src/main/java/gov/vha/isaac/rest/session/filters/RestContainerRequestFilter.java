@@ -84,9 +84,7 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 		}
 
 		try {
-			RequestInfo.get().readStampCoordinate(requestContext.getUriInfo().getQueryParameters());
-			RequestInfo.get().readLanguageCoordinate(requestContext.getUriInfo().getQueryParameters());
-			RequestInfo.get().readStated(requestContext.getUriInfo().getQueryParameters());
+			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
 		} catch (RestException e) {
 			throw new IOException(e.getLocalizedMessage(), e);
 		}
