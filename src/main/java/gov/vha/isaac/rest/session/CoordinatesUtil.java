@@ -37,12 +37,14 @@ import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPosition;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.model.coordinate.LanguageCoordinateImpl;
+import gov.vha.isaac.ochre.model.coordinate.LogicCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -56,9 +58,9 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class CoordinatesUtil {
 	private static Logger log = LogManager.getLogger();
-	
+
 	private CoordinatesUtil() {}
-	
+
 	private static Map<String,List<String>> getLanguageCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> languageCoordinateParams = new HashMap<>();
 
@@ -72,20 +74,20 @@ public class CoordinatesUtil {
 				languageCoordinateParams.put(paramName, params.get(paramName));
 			}
 		}
-		
+
 		return languageCoordinateParams;
 	}
 	public static LanguageCoordinate getLanguageCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
-        LanguageCoordinateImpl languageCoordinate = new LanguageCoordinateImpl(
-        		getLanguageCoordinateLanguageSequenceFromParameter(params.get(RequestParameters.langCoordLang)), 
-        		getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDialectsPref)),
-        		getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDescTypesPref)));
-        
+		LanguageCoordinateImpl languageCoordinate = new LanguageCoordinateImpl(
+				getLanguageCoordinateLanguageSequenceFromParameter(params.get(RequestParameters.langCoordLang)), 
+				getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDialectsPref)),
+				getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDescTypesPref)));
+
 		log.debug("Created LanguageCoordinate from params: " + getLanguageCoordinateParameters(params) + ": " + languageCoordinate);
 
-        return languageCoordinate;
-    }
-	
+		return languageCoordinate;
+	}
+
 	public static int getLanguageCoordinateLanguageSequenceFromParameter(List<String> unexpandedLanguageParamStrs) throws RestException {
 		List<String> languageParamStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedLanguageParamStrs);
 
@@ -93,7 +95,7 @@ public class CoordinatesUtil {
 			return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
 		} else if (languageParamStrs.size() == 1) {
 			String languageParamStr = languageParamStrs.iterator().next();
-			
+
 			if (StringUtils.isBlank(languageParamStr)) {
 				return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
 			}
@@ -138,7 +140,7 @@ public class CoordinatesUtil {
 
 	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(List<String> unexpandedDialectsStrs) throws RestException {
 		List<Integer> seqList = new ArrayList<>();
-		
+
 		List<String> dialectsStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDialectsStrs);
 		if (dialectsStrs != null && dialectsStrs.size() > 0) {
 			for (String dialectId : dialectsStrs)
@@ -186,7 +188,7 @@ public class CoordinatesUtil {
 	}
 	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(List<String> unexpandedDescTypesStrs) throws RestException {
 		List<Integer> seqList = new ArrayList<>();
-		
+
 		List<String> descTypesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDescTypesStrs);
 
 		if (descTypesStrs != null && descTypesStrs.size() > 0) {
@@ -218,7 +220,7 @@ public class CoordinatesUtil {
 						seqList.add(TermAux.DEFINITION_DESCRIPTION_TYPE.getConceptSequence());
 						continue;
 					}
-					
+
 					throw new RestException(RequestParameters.langCoordDescTypesPref, descTypeId, "Invalid language description type value");
 				}
 			}
@@ -236,7 +238,7 @@ public class CoordinatesUtil {
 
 		return seqArray;
 	}
-	
+
 	private static Map<String,List<String>> getStampCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> stampCoordinateParams = new HashMap<>();
 
@@ -252,7 +254,7 @@ public class CoordinatesUtil {
 				stampCoordinateParams.put(paramName, params.get(paramName));
 			}
 		}
-		
+
 		return stampCoordinateParams;
 	}
 	public static StampCoordinate getStampCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
@@ -276,7 +278,7 @@ public class CoordinatesUtil {
 			return StampPrecedence.PATH; // default
 		} else if (precedenceStrs.size() == 1) {
 			String precedenceStr = precedenceStrs.iterator().next();
-			
+
 			if (StringUtils.isBlank(precedenceStr)) {
 				return StampPrecedence.PATH; // default
 			}
@@ -333,7 +335,7 @@ public class CoordinatesUtil {
 								}
 							}
 						}
-						
+
 						if (! foundMatch) {
 							throw new RestException("stampCoordStates", stateStr, "Invalid stamp coordinate state value");
 						}
@@ -351,7 +353,7 @@ public class CoordinatesUtil {
 
 	public static ConceptSequenceSet getStampCoordinateModuleSequencesFromParameter(List<String> unexpandedModulesStrs) throws RestException {
 		ConceptSequenceSet returnValue = new ConceptSequenceSet();
-		
+
 		List<String> modulesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedModulesStrs);
 
 		if (modulesStrs == null || modulesStrs.size() == 0) {
@@ -386,14 +388,14 @@ public class CoordinatesUtil {
 
 	public static int getStampCoordinatePathSequenceFromParameter(List<String> unexpandedPathStrs) throws RestException {
 		int development = TermAux.DEVELOPMENT_PATH.getConceptSequence();
-		
+
 		List<String> pathStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedPathStrs);
 
 		if (pathStrs == null || pathStrs.size() == 0) {
 			return TermAux.DEVELOPMENT_PATH.getConceptSequence(); // default
 		} else if (pathStrs.size() == 1) {
 			String pathStr = pathStrs.iterator().next();
-			
+
 			if (StringUtils.isBlank(pathStr)) {
 				return development;
 			}
@@ -420,14 +422,14 @@ public class CoordinatesUtil {
 
 	public static long getStampCoordinateTimeFromParameter(List<String> unexpandedTimeStrs) throws RestException {
 		long latest = Long.MAX_VALUE;
-		
+
 		List<String> timeStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedTimeStrs);
 
 		if (timeStrs == null || timeStrs.size() == 0) {
 			return latest; // default
 		} else if (timeStrs.size() == 1) {
 			String timeStr = timeStrs.iterator().next();
-			
+
 			if (StringUtils.isBlank(timeStr)) {
 				return latest;
 			}
@@ -443,5 +445,142 @@ public class CoordinatesUtil {
 		}
 
 		throw new RestException("stampCoordTime", "\"" + timeStrs + "\"", "Invalid stamp coordinate time value");
+	}
+
+	private static Map<String,List<String>> getLogicCoordinateParameters(Map<String, List<String>> params) {
+		Map<String,List<String>> logicCoordinateParams = new HashMap<>();
+
+		String logicCoordinateParamNames[] = new String[] {
+				RequestParameters.logicCoordStated,
+				RequestParameters.logicCoordInferred,
+				RequestParameters.logicCoordDesc,
+				RequestParameters.logicCoordClassifier
+		};
+		for (String paramName : logicCoordinateParamNames) {
+			if (params.containsKey(paramName)) {
+				logicCoordinateParams.put(paramName, params.get(paramName));
+			}
+		}
+
+		return logicCoordinateParams;
+	}
+	public static LogicCoordinate getLogicCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
+		LogicCoordinate logicCoordinate = new LogicCoordinateImpl(
+				getLogicCoordinateStatedAssemblageFromParameter(params.get(RequestParameters.logicCoordStated)), 
+				getLogicCoordinateInferredAssemblageFromParameter(params.get(RequestParameters.logicCoordInferred)),
+				getLogicCoordinateDescProfileAssemblageFromParameter(params.get(RequestParameters.logicCoordDesc)),
+				getLogicCoordinateClassifierAssemblageFromParameter(params.get(RequestParameters.logicCoordClassifier)));
+
+		log.debug("Created LogicCoordinate from params: " + getLogicCoordinateParameters(params) + ": " + logicCoordinate);
+
+		return logicCoordinate;
+	}
+	public static int getLogicCoordinateStatedAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
+		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordStatedDefault));
+
+		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
+
+		if (assemblageStrs == null || assemblageStrs.size() == 0) {
+			return defaultSeq; // default
+		} else if (assemblageStrs.size() == 1) {
+			String assemblageStr = assemblageStrs.iterator().next();
+
+			if (StringUtils.isBlank(assemblageStr)) {
+				return defaultSeq;
+			}
+
+			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
+			if (pathIntIdOptional.isPresent()) {
+				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+			}
+
+			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
+			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+			}
+		}
+
+		throw new RestException(RequestParameters.logicCoordStated, "\"" + assemblageStrs + "\"", "Invalid logic coordinate stated assemblage value");
+	}
+	public static int getLogicCoordinateInferredAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
+		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordInferredDefault));
+
+		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
+
+		if (assemblageStrs == null || assemblageStrs.size() == 0) {
+			return defaultSeq; // default
+		} else if (assemblageStrs.size() == 1) {
+			String assemblageStr = assemblageStrs.iterator().next();
+
+			if (StringUtils.isBlank(assemblageStr)) {
+				return defaultSeq;
+			}
+
+			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
+			if (pathIntIdOptional.isPresent()) {
+				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+			}
+
+			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
+			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+			}
+		}
+
+		throw new RestException(RequestParameters.logicCoordInferred, "\"" + assemblageStrs + "\"", "Invalid logic coordinate inferred assemblage value");
+	}
+	public static int getLogicCoordinateDescProfileAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
+		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordDescDefault));
+
+		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
+
+		if (assemblageStrs == null || assemblageStrs.size() == 0) {
+			return defaultSeq; // default
+		} else if (assemblageStrs.size() == 1) {
+			String assemblageStr = assemblageStrs.iterator().next();
+
+			if (StringUtils.isBlank(assemblageStr)) {
+				return defaultSeq;
+			}
+
+			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
+			if (pathIntIdOptional.isPresent()) {
+				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+			}
+
+			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
+			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+			}
+		}
+
+		throw new RestException(RequestParameters.logicCoordDesc, "\"" + assemblageStrs + "\"", "Invalid logic coordinate description profile assemblage value");
+	}
+	public static int getLogicCoordinateClassifierAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
+		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordClassifierDefault));
+
+		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
+
+		if (assemblageStrs == null || assemblageStrs.size() == 0) {
+			return defaultSeq; // default
+		} else if (assemblageStrs.size() == 1) {
+			String assemblageStr = assemblageStrs.iterator().next();
+
+			if (StringUtils.isBlank(assemblageStr)) {
+				return defaultSeq;
+			}
+
+			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
+			if (pathIntIdOptional.isPresent()) {
+				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+			}
+
+			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
+			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+			}
+		}
+
+		throw new RestException(RequestParameters.logicCoordClassifier, "\"" + assemblageStrs + "\"", "Invalid logic coordinate classifier assemblage value");
 	}
 }

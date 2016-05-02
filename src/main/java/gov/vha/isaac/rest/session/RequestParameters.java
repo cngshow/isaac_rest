@@ -28,7 +28,12 @@ package gov.vha.isaac.rest.session;
  */
 public class RequestParameters {
 	private RequestParameters() {}
-	
+
+	// Taxonomy Coordinate
+	public final static String stated = "stated";
+	public final static String statedDefault = "true";
+
+	// Language Coordinate
 	public final static String langCoordLang = "langCoordLang";
 	public final static String langCoordLangDefault = "english";
 
@@ -38,29 +43,31 @@ public class RequestParameters {
 	public final static String langCoordDescTypesPref = "langCoordDescTypesPref";
 	public final static String langCoordDescTypesPrefDefault = "fsn,synonym";
 	
-	
+	// Stamp Coordinate
 	public final static String stampCoordTime = "stampCoordTime";
 	public final static String stampCoordTimeDefault = "latest";
-
 	public final static String stampCoordPath = "stampCoordPath";
 	public final static String stampCoordPathDefault = "development";
-
 	public final static String stampCoordPrecedence = "stampCoordPrecedence";
 	public final static String stampCoordPrecedenceDefault = "path";
-	
 	public final static String stampCoordModules = "stampCoordModules";
 	public final static String stampCoordModulesDefault = "";
-
 	public final static String stampCoordStates = "stampCoordStates";
 	public final static String stampCoordStatesDefault = "active";
-	
+
+	// Logic Coordinate
+	public final static String logicCoordStated = "logicCoordStated";
+	public final static String logicCoordStatedDefault = "1f201994-960e-11e5-8994-feff819cdc9f";
+	public final static String logicCoordInferred = "logicCoordInferred";
+	public final static String logicCoordInferredDefault = "1f20182c-960e-11e5-8994-feff819cdc9f";
+	public final static String logicCoordDesc = "logicCoordDesc";
+	public final static String logicCoordDescDefault = "1f201e12-960e-11e5-8994-feff819cdc9f";
+	public final static String logicCoordClassifier = "logicCoordClassifier";
+	public final static String logicCoordClassifierDefault = "1f201fac-960e-11e5-8994-feff819cdc9f";
 
 	public final static String id = "id";
 	public final static String nid = "nid";
 	public final static String expand = "expand";
-
-	public final static String stated = "stated";
-	public final static String statedDefault = "true";
 
 	public final static String useFsn = "useFsn";
 	public final static String useFsnDefault = "true";
@@ -80,4 +87,5 @@ public class RequestParameters {
 	public final static String extendedDescriptionTypeId = "extendedDescriptionTypeId";
 	public final static String dynamicSememeColumns = "dynamicSememeColumns";
 	public final static String sememeAssemblageId = "sememeAssemblageId";
+
 }

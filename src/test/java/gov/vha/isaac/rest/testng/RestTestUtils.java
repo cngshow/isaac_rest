@@ -37,6 +37,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
+
 /**
  * 
  * {@link RestTestUtils}
@@ -88,5 +93,18 @@ public class RestTestUtils {
 		}
 		
 		return null;
+	}
+
+	public static String toString(TaxonomyCoordinate coordinate) {
+		return "";
+	}
+	public static String toString(StampCoordinate coordinate) {
+		return "";
+	}
+	public static String toString(LanguageCoordinate coordinate) {
+		return "";
+	}
+	public static String toString(LogicCoordinate coordinate) {
+		return "";
 	}
 }

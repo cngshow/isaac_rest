@@ -26,9 +26,11 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -48,6 +50,7 @@ public class RequestInfo
 	private boolean stated_ = Boolean.parseBoolean(RequestParameters.statedDefault);
 	private StampCoordinate stampCoordinate_ = null;
 	private LanguageCoordinate languageCoordinate_ = null;
+	private LogicCoordinate logicCoordinate_ = null;
 	private boolean useFsn_ = Boolean.parseBoolean(RequestParameters.useFsnDefault);
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
@@ -103,6 +106,11 @@ public class RequestInfo
 		requestInfo.get().languageCoordinate_ = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
 		return get();
 	}
+	public RequestInfo readLogicCoordinate(Map<String, List<String>> parameters) throws RestException
+	{
+		requestInfo.get().logicCoordinate_ = CoordinatesUtil.getLogicCoordinateFromParameters(parameters);
+		return get();
+	}
 	
 	public RequestInfo readStated(String statedParameter) throws RestException {
 		if (StringUtils.isNotBlank(statedParameter)) {
@@ -147,6 +155,7 @@ public class RequestInfo
 		readExpandables(parameters);
 		readStampCoordinate(parameters);
 		readLanguageCoordinate(parameters);
+		readLogicCoordinate(parameters);
 		readStated(parameters);
 		
 		return requestInfo.get();
@@ -185,7 +194,26 @@ public class RequestInfo
 			return languageCoordinate_ = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
 		}
 	}
+	
+	/**
+	 * @return
+	 */
+	public LogicCoordinate getLogicCoordinate()
+	{
+		if (logicCoordinate_ != null) {
+			return logicCoordinate_;
+		} else {
+			return logicCoordinate_ = LogicCoordinates.getStandardElProfile();
+		}
+	}
 
+	/**
+	 * @return
+	 */
+	public TaxonomyCoordinate getTaxonomyCoordinate()
+	{
+		return getTaxonomyCoordinate(stated_);
+	}
 	/**
 	 * @return
 	 */
@@ -193,11 +221,11 @@ public class RequestInfo
 	{
 		if (stated)
 		{
-			return TaxonomyCoordinates.getStatedTaxonomyCoordinate(getStampCoordinate(), getLanguageCoordinate());
+			return TaxonomyCoordinates.getStatedTaxonomyCoordinate(getStampCoordinate(), getLanguageCoordinate(), getLogicCoordinate());
 		}
 		else
 		{
-			return TaxonomyCoordinates.getInferredTaxonomyCoordinate(getStampCoordinate(), getLanguageCoordinate());
+			return TaxonomyCoordinates.getInferredTaxonomyCoordinate(getStampCoordinate(), getLanguageCoordinate(), getLogicCoordinate());
 		}
 	}
 
