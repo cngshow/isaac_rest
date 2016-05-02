@@ -20,9 +20,12 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.model.logic.node.external.FeatureNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.FeatureNodeWithSequences;
-import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
+import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 
 /**
  * 
@@ -30,20 +33,21 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
- * The RestFeatureNode contains a RestConcreteDomainOperators operator type,
+ * The RestFeatureNode contains a RestConcreteDomainOperatorsType operator type,
  * must have exactly 1 child node,
- * and has a RestNodeSemantic == NodeSemantic.FEATURE.
+ * and has a RestNodeSemanticType == NodeSemantic.FEATURE.
  * 
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestFeatureNode extends RestTypedConnectorNode {
 
 	/**
-	 * RestFeatureNode contains a RestConcreteDomainOperators/ConcreteDomainOperators instance,
+	 * RestFeatureNode contains a RestConcreteDomainOperatorsType/ConcreteDomainOperators instance,
 	 * which is an enumeration specifying a type of comparison
 	 * 
 	 * RestFeatureNode must have exactly 1 child node.
 	 * 
-	 * Available RestConcreteDomainOperators/ConcreteDomainOperator values include
+	 * Available RestConcreteDomainOperatorsType/ConcreteDomainOperator values include
 	 *   EQUALS,
 	 *   LESS_THAN,
 	 *   LESS_THAN_EQUALS,
@@ -51,7 +55,7 @@ public class RestFeatureNode extends RestTypedConnectorNode {
 	 *   GREATER_THAN_EQUALS
 	 */
 	@XmlElement
-	RestConcreteDomainOperators operator;
+	RestConcreteDomainOperatorsType operator;
 
 	protected RestFeatureNode() {
 		// For JAXB
@@ -61,13 +65,13 @@ public class RestFeatureNode extends RestTypedConnectorNode {
 	 */
 	public RestFeatureNode(FeatureNodeWithSequences featureNodeWithSequences) {
 		super(featureNodeWithSequences);
-		operator = new RestConcreteDomainOperators(featureNodeWithSequences.getOperator());
+		operator = new RestConcreteDomainOperatorsType(featureNodeWithSequences.getOperator());
 	}
 	/**
 	 * @param featureNodeWithUuids
 	 */
 	public RestFeatureNode(FeatureNodeWithUuids featureNodeWithUuids) {
 		super(featureNodeWithUuids);
-		operator = new RestConcreteDomainOperators(featureNodeWithUuids.getOperator());
+		operator = new RestConcreteDomainOperatorsType(featureNodeWithUuids.getOperator());
 	}
 }

@@ -24,6 +24,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -34,7 +37,7 @@ import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -43,8 +46,15 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptChronology 
 {
+	/**
+	 * The concept sequence identifier of this concept
+	 */
+	@XmlElement
+	int conceptSequence;
+	
 	/**
 	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
 	 * stamp and language coordinates - or - if none present - the server default.
@@ -69,7 +79,7 @@ public class RestConceptChronology
 	 */
 	@XmlElement
 	List<RestConceptVersion> versions;
-	
+
 	protected RestConceptChronology()
 	{
 		//for JaxB
@@ -78,30 +88,10 @@ public class RestConceptChronology
 	@SuppressWarnings("rawtypes") 
 	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion)
 	{
+		conceptSequence = cc.getConceptSequence();
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
 		
-		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
-		
-		if (RequestInfo.get().useFSN())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
-				Get.sememeService().getDescriptionsForComponent(cc.getNid()).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (!descriptionOptional.isPresent())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
-				Get.sememeService().getDescriptionsForComponent(cc.getNid()).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (descriptionOptional.isPresent())
-		{
-			description = descriptionOptional.get().value().getText();
-		}
-		else
-		{
-			description = "-ERROR finding description_";
-		}
+		description = readBestDescription(cc.getNid());
 		
 		if (includeAllVersions || includeLatestVersion)
 		{
@@ -111,17 +101,17 @@ public class RestConceptChronology
 			{
 				for (ConceptVersion cv : cc.getVersionList())
 				{
-					versions.add(new RestConceptVersion(cv, false, false, false, false));
+					versions.add(new RestConceptVersion(cv, false, false, false, false, false, false));
 				}
 			}
-			else 
+			else // if (includeLatestVersion)
 			{
 				@SuppressWarnings("unchecked")
 				Optional<LatestVersion<ConceptVersion>> latest = 
 						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
 				if (latest.isPresent())
 				{
-					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false));
+					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false));
 				}
 			}
 		}
@@ -140,6 +130,37 @@ public class RestConceptChronology
 			{
 				expandables = null;
 			}
+		}
+	}
+
+	/**
+	 * Utility method to find the 'best' description for the concept at hand.
+	 * @param conceptNid
+	 * @return
+	 */
+	public static String readBestDescription(int conceptNid)
+	{
+		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
+		
+		if (RequestInfo.get().useFsn())
+		{
+			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
+				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
+		}
+		
+		if (!descriptionOptional.isPresent())
+		{
+			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
+				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
+		}
+		
+		if (descriptionOptional.isPresent())
+		{
+			return descriptionOptional.get().value().getText();
+		}
+		else
+		{
+			return null;
 		}
 	}
 }

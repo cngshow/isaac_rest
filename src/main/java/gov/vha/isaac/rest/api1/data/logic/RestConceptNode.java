@@ -25,6 +25,8 @@ import javax.xml.bind.annotation.XmlElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -35,9 +37,8 @@ import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.ConceptNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.ConceptNodeWithSequences;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -46,16 +47,11 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  * A REST logic graph node containing (referencing) a concept by sequence and its text description.
- * RestConceptNode has RestNodeSemantic. == NodeSemantic.CONCEPT and should never have any child nodes.
+ * RestConceptNode has RestNodeSemanticType. == NodeSemantic.CONCEPT and should never have any child nodes.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptNode extends RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
-
-	/**
-	 * The data that was not expanded as part of this call (but can be)
-	 */
-	@XmlElement
-	Expandables expandables;
 
 	/**
 	 * The int sequence of the concept referred to by this REST logic graph node
@@ -110,11 +106,6 @@ public class RestConceptNode extends RestLogicNode {
 			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			conceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 	/**
@@ -142,11 +133,6 @@ public class RestConceptNode extends RestLogicNode {
 			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			conceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 }

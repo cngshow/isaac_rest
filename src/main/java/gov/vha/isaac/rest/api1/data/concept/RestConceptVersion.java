@@ -24,7 +24,10 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -32,8 +35,8 @@ import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
 import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -42,6 +45,7 @@ import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptVersion
 {
 	/**
@@ -63,16 +67,30 @@ public class RestConceptVersion
 	RestStampedVersion conVersion;
 
 	/**
-	 * The parent concepts(s) of the concept at this point in time (is a relationships).  Depending on the expand parameter, this may not be returned.
+	 * The parent concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
 	List<RestConceptVersion> parents;
 	
 	/**
-	 * The child concepts(s) of the concept at this point in time (is a relationships).  Depending on the expand parameter, this may not be returned.
+	 * The child concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
 	List<RestConceptVersion> children;
+	
+	/**
+	 * The number of child concept(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
+	 * This will not be returned if the children field is populated.
+	 */
+	@XmlElement
+	Integer childCount;
+	
+	/**
+	 * The number of parent concept(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
+	 * This will not be returned if the parents field is populated.
+	 */
+	@XmlElement
+	Integer parentCount;
 	
 	protected RestConceptVersion()
 	{
@@ -81,11 +99,12 @@ public class RestConceptVersion
 	
 	@SuppressWarnings({ "rawtypes" }) 
 	public RestConceptVersion(ConceptVersion cv, boolean includeChronology) {
-		this(cv, includeChronology, false, false, false);
+		this(cv, includeChronology, false, false, false, false, false);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean includeChildren, boolean stated)
+	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean countParents, 
+			boolean includeChildren, boolean countChildren, boolean stated)
 	{
 		conVersion = new RestStampedVersion(cv);
 		if (includeChronology || includeParents || includeChildren)
@@ -106,13 +125,13 @@ public class RestConceptVersion
 						
 			}
 			Tree tree = null;
-			if (includeParents || includeChildren)
+			if (includeParents || includeChildren || countChildren || countParents)
 			{
 				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
 			}
 			if (includeParents)
 			{
-				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, 0);
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, new ConceptSequenceSet());
 			}
 			else
 			{
@@ -122,11 +141,24 @@ public class RestConceptVersion
 						new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
 							+ "?expand=" + ExpandUtil.parentsExpandable + "&stated=" + stated));
 				}
+				if (countParents)
+				{
+					TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree);
+				}
+				else
+				{
+					if (RequestInfo.get().returnExpandableLinks())
+					{
+						expandables.add(
+							new Expandable(ExpandUtil.parentCountExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
+								+ "?expand=" + ExpandUtil.parentCountExpandable + "&stated=" + stated));
+					}
+				}
 			}
 			
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, 0);
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0, new ConceptSequenceSet());
 			}
 			else
 			{
@@ -135,6 +167,19 @@ public class RestConceptVersion
 					expandables.add(
 						new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
 							+ "?expand=" + ExpandUtil.childrenExpandable + "&stated=" + stated));
+				}
+				if (countChildren)
+				{
+					TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree);
+				}
+				else
+				{
+					if (RequestInfo.get().returnExpandableLinks())
+					{
+						expandables.add(
+							new Expandable(ExpandUtil.childCountExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
+								+ "?expand=" + ExpandUtil.childCountExpandable + "&stated=" + stated));
+					}
 				}
 			}
 			if (expandables.size() == 0)
@@ -187,5 +232,15 @@ public class RestConceptVersion
 		{
 			expandables.remove(ExpandUtil.parentsExpandable);
 		}
+	}
+
+	public void setChildCount(int count)
+	{
+		this.childCount = count;
+	}
+	
+	public void setParentCount(int count)
+	{
+		this.parentCount = count;
 	}
 }

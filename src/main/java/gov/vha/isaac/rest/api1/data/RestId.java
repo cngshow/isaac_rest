@@ -20,6 +20,9 @@ package gov.vha.isaac.rest.api1.data;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 
@@ -31,6 +34,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestId
 {
 	/**

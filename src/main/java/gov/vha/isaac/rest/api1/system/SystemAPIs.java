@@ -18,19 +18,33 @@
  */
 package gov.vha.isaac.rest.api1.system;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.webcohesion.enunciate.metadata.Facet;
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
+import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperators;
+import gov.vha.isaac.rest.api1.data.SystemInfo;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
+import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
+import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
@@ -44,7 +58,9 @@ import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeString;
 import gov.vha.isaac.rest.api1.data.logic.RestRoleNode;
 import gov.vha.isaac.rest.api1.data.logic.RestTypedConnectorNode;
 import gov.vha.isaac.rest.api1.data.logic.RestUntypedConnectorNode;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
@@ -58,6 +74,8 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
+import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 
 /**
@@ -68,6 +86,208 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 @Path(RestPaths.systemPathComponent)
 public class SystemAPIs
 {
+	/**
+	 * @param id The id for which to retrieve objects. May be a UUID, NID or sequence
+	 * @param expand comma separated list of fields to expand.  Support depends on type of object identified by the passed id
+	 * RestConceptChronology supports 'versionsAll', 'versionsLatestOnly'
+	 * RestSememeChronology supports 'chronology', 'nestedSememes', 'referencedDetails'
+	 * @return
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")  
+	public List<Object> getIdentifiedObjects(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
+	{
+		RequestInfo.get().readExpandables(expand);
+		List<Object> identifiedObjects = new ArrayList<>();
+		Optional<Integer> intId = NumericUtils.getInt(id);
+		if (intId.isPresent())
+		{
+			if (intId.get() < 0)
+			{
+				// id is NID
+				ObjectChronologyType objectChronologyType = Get.identifierService().getChronologyTypeForNid(intId.get());
+				switch(objectChronologyType) {
+				case CONCEPT:
+					identifiedObjects.add(
+							new RestConceptChronology(
+									Get.conceptService().getConcept(intId.get()),
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+					break;
+				case SEMEME:
+					identifiedObjects.add(
+							new RestSememeChronology(
+									Get.sememeService().getSememe(intId.get()),
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+					break;
+				case UNKNOWN_NID:
+				default:
+					throw new RestException(RequestParameters.id, id, "Specified NID is for unsupported ObjectChronologyType " + objectChronologyType);
+				}
+				
+				if (identifiedObjects.size() == 0) {
+					throw new RestException(RequestParameters.id, id, "Specified NID does not correspond to an existing concept or sememe");
+				}
+
+				return identifiedObjects;
+			}
+			else
+			{
+				// id is either sememe or concept sequence
+
+				int conceptNid = Get.identifierService().getConceptNid(intId.get());
+				if (conceptNid != 0) {
+					identifiedObjects.add(
+							new RestConceptChronology(
+									Get.conceptService().getConcept(conceptNid),
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+				}
+
+				int sememeNid = Get.identifierService().getSememeNid(intId.get());
+				if (sememeNid != 0) {
+					identifiedObjects.add(
+							new RestSememeChronology(
+									Get.sememeService().getSememe(sememeNid),
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+				}
+			}
+
+			if (identifiedObjects.size() == 0) {
+				throw new RestException(RequestParameters.id, id, "Specified sequence does not correspond to an existing concept or sememe");
+			}
+
+			return identifiedObjects;
+		}
+		else
+		{
+			Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+			if (uuidId.isPresent())
+			{
+				// id is uuid
+
+				Integer nid = null;
+
+				if (Get.identifierService().hasUuid(uuidId.get()) && (nid = Get.identifierService().getNidForUuids(uuidId.get())) != 0) {
+					ObjectChronologyType objectChronologyType = Get.identifierService().getChronologyTypeForNid(nid);
+				
+					switch(objectChronologyType) {
+					case CONCEPT:
+						identifiedObjects.add(
+								new RestConceptChronology(
+										Get.conceptService().getConcept(nid),
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+						break;
+					case SEMEME:
+						identifiedObjects.add(
+								new RestSememeChronology(
+										Get.sememeService().getSememe(nid),
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
+										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+						break;
+					case UNKNOWN_NID:
+					default:
+						throw new RestException(RequestParameters.id, id, "Specified UUID is for NID " + nid + " for unsupported ObjectChronologyType " + objectChronologyType);
+					}
+					
+					if (identifiedObjects.size() == 0) {
+						throw new RestException(RequestParameters.id, id, "Specified UUID is for NID " + nid + " that does not correspond to an existing concept or sememe");
+					}
+
+					return identifiedObjects;
+				
+				} else {
+					throw new RestException(RequestParameters.id, id, "No concept or sememe exists corresponding to the passed UUID id.");
+				}
+			}
+			else
+			{
+				throw new RestException(RequestParameters.id, id, "Specified string id is not a valid identifier.  Must be a UUID, or integer NID or sequence.");
+			}
+		}
+	}
+	
+	/**
+	 * Return the RestObjectChronologyType of the component corresponding to the passed id
+	 * @param id The id for which to determine RestObjectChronologyType
+	 * If an int < 0 then assumed to be a NID, else ambiguous and treated as a sememe or concept sequence, each of which may or may not correspond to existing components
+	 * If a String then parsed and handled as a UUID of either a concept or sequence
+	 * @return Map of RestObjectChronologyType to RestId.  Will contain exactly one entry if passed a UUID or NID, or one or two entries if passed a sequence. if no corresponding ids found a RestException is thrown.
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.objectChronologyTypeComponent + "{" + RequestParameters.id + "}")  
+	public RestObjectChronologyType getObjectChronologyType(@PathParam(RequestParameters.id) String id) throws RestException
+	{
+		RestObjectChronologyType returnedType = null;
+		Optional<Integer> intId = NumericUtils.getInt(id);
+		if (intId.isPresent())
+		{
+			if (intId.get() < 0)
+			{
+				// id is NID
+				returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(intId.get()));
+			}
+			else
+			{
+				// id is either sememe or concept sequence
+
+				int conceptNid = Get.identifierService().getConceptNid(intId.get());
+				if (conceptNid != 0) {
+					returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(conceptNid));
+				}
+
+				int sememeNid = Get.identifierService().getSememeNid(intId.get());
+				if (sememeNid != 0) {
+					if (returnedType != null) {
+						throw new RestException(RequestParameters.id, id, "Specified int id is ambiguous, as it may be either a sememe or concept sequence. Must be a UUID, or integer NID or sequence that uniquely identifies either a sememe or concept, but not both.");
+					}
+					returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(sememeNid));
+				}
+			}
+
+			if (returnedType != null) {
+				return returnedType;
+			} else {
+				throw new RestException(RequestParameters.id, id, "Specified int id is not a valid NID or sequence. Must be a UUID, or integer NID or sequence that uniquely identifies either a sememe or concept, but not both.");
+			}
+		}
+		else
+		{
+			Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+			if (uuidId.isPresent())
+			{
+				// id is uuid
+
+				Integer nid = null;
+
+				if (Get.identifierService().hasUuid(uuidId.get()) && (nid = Get.identifierService().getNidForUuids(uuidId.get())) != 0) {
+					return returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(nid));
+				} else {
+					throw new RestException(RequestParameters.id, id, "No concept or sememe exists corresponding to the passed UUID id.");
+				}
+			}
+			else
+			{
+				throw new RestException(RequestParameters.id, id, "Specified string id is not a valid identifier.  Must be a UUID, or integer NID or sequence.");
+			}
+		}
+	}
+
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
 	 */
@@ -118,9 +338,9 @@ public class SystemAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
-	public RestConcreteDomainOperators[] getRestConcreteDomainOperatorTypes()
+	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes()
 	{
-		return RestConcreteDomainOperators.getAll();
+		return RestConcreteDomainOperatorsType.getAll();
 	}
 	
 	/**
@@ -129,9 +349,9 @@ public class SystemAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestNodeSemanticTypes)
-	public RestNodeSemantic[] getRestNodeSemanticTypes()
+	public RestNodeSemanticType[] getRestNodeSemanticTypes()
 	{
-		return RestNodeSemantic.getAll();
+		return RestNodeSemanticType.getAll();
 	}
 	
 	/**
@@ -143,6 +363,17 @@ public class SystemAPIs
 	public RestSupportedIdType[] getRestSupportedIdTypes()
 	{
 		return RestSupportedIdType.getAll();
+	}
+	
+	/**
+	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.systemInfoComponent)
+	public SystemInfo getSystemInfo()
+	{
+		return new SystemInfo();
 	}
 	
 	//TODO the code below this point (noop, class Z) is a hack workaround for the bug 
@@ -198,5 +429,6 @@ public class SystemAPIs
 		@XmlElement RestDynamicSememeSequence a28 = null;
 		@XmlElement RestDynamicSememeString a29 = null;
 		@XmlElement RestDynamicSememeUUID a30 = null;
+		@XmlElement RestDynamicSememeTypedData a31 = null;
 	}
 }

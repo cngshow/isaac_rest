@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
@@ -26,6 +28,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestDynamicSememeBoolean extends RestDynamicSememeData
 {
 	public RestDynamicSememeBoolean(int columnNumber, boolean value)

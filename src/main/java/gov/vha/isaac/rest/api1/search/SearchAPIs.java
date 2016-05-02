@@ -24,15 +24,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -51,11 +54,13 @@ import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
 import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.rest.api.data.PaginationUtils;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
-import gov.vha.isaac.rest.api1.session.RequestParameters;
+import gov.vha.isaac.rest.api1.data.search.RestSearchResults;
+import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * {@link SearchAPIs}
@@ -68,6 +73,38 @@ public class SearchAPIs
 	private static Logger log = LogManager.getLogger();
 	
 	/**
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @return limit to pass to query to return requested subset without blowing out lucene.
+	 * If requested batch size is less than truncationThreshold then sets limit to truncationThreshold,
+	 * making total returned value for small searches more accurate
+	 */
+	private static int calculateQueryLimit(int maxPageSize, int pageNum) {
+		int requestedBatch = maxPageSize * pageNum;
+		int calculatedLimit = (int) Math.round(requestedBatch * 1.5);
+		int truncationThreshold = 1000;
+		return 	requestedBatch < truncationThreshold ? truncationThreshold : calculatedLimit;
+	}
+	
+	private RestSearchResults getRestSearchResultsFromOchreSearchResults(
+			List<SearchResult> ochreSearchResults,
+			int pageNum,
+			int maxPageSize,
+			String restPath,
+			String query) throws RestException {
+		List<RestSearchResult> restSearchResults = new ArrayList<>();
+		for (SearchResult ochreSearchResult : PaginationUtils.getResults(ochreSearchResults, pageNum, maxPageSize)) {
+			Optional<RestSearchResult> restSearchResultOptional = createRestSearchResult(ochreSearchResult, query);
+			if (restSearchResultOptional.isPresent()) {
+				restSearchResults.add(restSearchResultOptional.get());
+			}
+		}
+		
+		return new RestSearchResults(
+				pageNum, maxPageSize, ochreSearchResults.size(), restPath,
+				restSearchResults);
+	}
+	/**
 	 * A simple search interface which is evaluated across all indexed descriptions in the terminology.   
 	 * @param query The query to be evaluated.  Will be parsed by the Lucene Query Parser: 
 	 * http://lucene.apache.org/core/5_3_1/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Overview
@@ -75,7 +112,8 @@ public class SearchAPIs
 	 * can be specified as 'fsn', 'synonym' or 'definition' to restrict to a particular description type.
 	 * @param extendedDescriptionTypeId - optional - may not be combined with descriptionType.  This would typically be
 	 * a concept identifier of a concept that was a LEAF child of the concept 'description type in source terminology (ISAAC)'
-	 * @param limit The maximum number of results to return
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -92,8 +130,12 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent)
-	public List<RestSearchResult> descriptionSearch(@QueryParam("query") String query, @QueryParam("descriptionType") String descriptionType, 
-			@QueryParam("extendedDescriptionTypeId") String extendedDescriptionTypeId, @QueryParam("limit") @DefaultValue("10") int limit,
+	public RestSearchResults descriptionSearch(
+			@QueryParam(RequestParameters.query) String query,
+			@QueryParam(RequestParameters.descriptionType) String descriptionType, 
+			@QueryParam(RequestParameters.extendedDescriptionTypeId) String extendedDescriptionTypeId,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
 			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		if (StringUtils.isBlank(query))
@@ -112,6 +154,9 @@ public class SearchAPIs
 			}
 		}
 		
+		final String restPath =
+				RestPaths.searchAppPathComponent + RestPaths.descriptionsComponent
+				+ "?" + RequestParameters.query + "=" + query;
 		if (StringUtils.isNotBlank(extendedDescriptionTypeId))
 		{
 			if (dt != null)
@@ -119,11 +164,27 @@ public class SearchAPIs
 				throw new RestException("The parameter 'extendedDescriptionTypeId' may not be combined with a 'descriptionType' parameter");
 			}
 			UUID extendedDescTypeSequence = Util.convertToConceptUUID(extendedDescriptionTypeId);
-			return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null), query);
+			
+			int limit = calculateQueryLimit(maxPageSize, pageNum);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null);
+			
+			return getRestSearchResultsFromOchreSearchResults(
+					ochreSearchResults,
+					pageNum,
+					maxPageSize,
+					restPath,
+					query);
+		} else {
+			log.debug("Performing description search for '" + query + "'");
+			int limit = calculateQueryLimit(maxPageSize, pageNum);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, null);
+			return getRestSearchResultsFromOchreSearchResults(
+					ochreSearchResults,
+					pageNum,
+					maxPageSize,
+					restPath,
+					query);
 		}
-		
-		log.debug("Performing description serach for '" + query + "'");
-		return processSearchResults(LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, null), query);
 	}
 	
 	/**
@@ -140,7 +201,8 @@ public class SearchAPIs
 	 * The query "family test " will not match on 'Testudinidae', as test is considered a complete token, and no * is appended.
 	 * 
 	 * @param query The query to be evaluated. 
-	 * @param limit The maximum number of results to return
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -156,7 +218,10 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.prefixComponent)
-	public List<RestSearchResult> prefixSearch(@QueryParam("query") String query, @QueryParam("limit") @DefaultValue("10") int limit,
+	public RestSearchResults prefixSearch(
+			@QueryParam(RequestParameters.query) String query,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
 			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		if (StringUtils.isBlank(query))
@@ -165,73 +230,77 @@ public class SearchAPIs
 		}
 		RequestInfo.get().readExpandables(expand);
 		log.debug("Performing prefix search for '" + query + "'");
-		return processSearchResults(LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null), query);
+		
+		int limit = calculateQueryLimit(maxPageSize, pageNum);
+		List<SearchResult> ochreSearchResults = LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null);
+		String restPath = RestPaths.searchAppPathComponent + RestPaths.prefixComponent + "?" + RequestParameters.query + "=" + query;
+		return getRestSearchResultsFromOchreSearchResults(
+				ochreSearchResults,
+				pageNum,
+				maxPageSize,
+				restPath,
+				query);
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private List<RestSearchResult> processSearchResults(List<SearchResult> searchResults, String query)
+	private Optional<RestSearchResult> createRestSearchResult(SearchResult sr, String query)
 	{
-		ArrayList<RestSearchResult> temp = new ArrayList<>();
-		for (SearchResult sr : searchResults)
-		{
-			SememeChronology sc = ((SememeChronology) Get.sememeService().getSememe(sr.getNid()));
-			
-			switch(sc.getSememeType())
-			{
-				case DESCRIPTION:
-					Optional<LatestVersion<DescriptionSememe>> text = sc.getLatestVersion(DescriptionSememe.class, 
-							RequestInfo.get().getStampCoordinate());
-					if (text.isPresent())
-					{
-						temp.add(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState()));
-					}
-					break;
-				case LONG:
-					Optional<LatestVersion<LongSememe>> longSememe = sc.getLatestVersion(LongSememe.class, 
-							RequestInfo.get().getStampCoordinate());
-					if (longSememe.isPresent())
-					{
-						temp.add(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore(), 
-								longSememe.get().value().getState()));
-					}
-					break;
-				case STRING:
-					Optional<LatestVersion<StringSememe>> stringSememe = sc.getLatestVersion(StringSememe.class, 
-							RequestInfo.get().getStampCoordinate());
-					if (stringSememe.isPresent())
-					{
-						temp.add(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore(),
-								stringSememe.get().value().getState()));
-					}
-					break;
-				case DYNAMIC:
-					Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-					if (ds.isPresent())
-					{
-						temp.add(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore(),
-								ds.get().value().getState()));
-					}
-					break;
-				//No point in reading back details on these, they will be exactly what was searched for
-				case COMPONENT_NID: case LOGIC_GRAPH:
-				//Should never match on these, just let them fall through
-				case UNKNOWN: case MEMBER: case RELATIONSHIP_ADAPTOR:
-				default :
-					Optional<LatestVersion<SememeVersion>> sv = sc.getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
-					if (sv.isPresent())
-					{
-						temp.add(new RestSearchResult(sr.getNid(), query.trim(), sr.getScore(),
-								sv.get().value().getState()));
-					}
-					break;
-				
-			}
-		}
-		return temp;
-	}
-	
+		SememeChronology sc = ((SememeChronology) Get.sememeService().getSememe(sr.getNid()));
 
-	
+		switch(sc.getSememeType())
+		{
+		case DESCRIPTION:
+			Optional<LatestVersion<DescriptionSememe>> text = sc.getLatestVersion(DescriptionSememe.class, 
+					RequestInfo.get().getStampCoordinate());
+			if (text.isPresent())
+			{
+				return Optional.of(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState()));
+			}
+			break;
+		case LONG:
+			Optional<LatestVersion<LongSememe>> longSememe = sc.getLatestVersion(LongSememe.class, 
+					RequestInfo.get().getStampCoordinate());
+			if (longSememe.isPresent())
+			{
+				return Optional.of(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore(), 
+						longSememe.get().value().getState()));
+			}
+			break;
+		case STRING:
+			Optional<LatestVersion<StringSememe>> stringSememe = sc.getLatestVersion(StringSememe.class, 
+					RequestInfo.get().getStampCoordinate());
+			if (stringSememe.isPresent())
+			{
+				return Optional.of(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore(),
+						stringSememe.get().value().getState()));
+			}
+			break;
+		case DYNAMIC:
+			Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
+			if (ds.isPresent())
+			{
+				return Optional.of(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore(),
+						ds.get().value().getState()));
+			}
+			break;
+			//No point in reading back details on these, they will be exactly what was searched for
+		case COMPONENT_NID: case LOGIC_GRAPH:
+			//Should never match on these, just let them fall through
+		case UNKNOWN: case MEMBER: case RELATIONSHIP_ADAPTOR:
+		default :
+			Optional<LatestVersion<SememeVersion>> sv = sc.getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
+			if (sv.isPresent())
+			{
+				return Optional.of(new RestSearchResult(sr.getNid(), query.trim(), sr.getScore(),
+						sv.get().value().getState()));
+			}
+			break;
+
+		}
+
+		return Optional.empty();
+	}
+
 	/**
 	 * @param query The query to be evaluated.  If the query is numeric (int, float, long, double) , it will be treated as a numeric search.
 	 * If the query is a mathematical interval - [4,6] or (5,10] or [4,] it will be handled as a numeric interval.  
@@ -248,7 +317,8 @@ public class SearchAPIs
 	 * 0 or 4.  Information about the columns for a particular sememe (and their index numbers) can be found via the 
 	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
 	 * has multiple columns of data.
-	 * @param limit The maximum number of results to return
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -266,28 +336,54 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememesComponent)
-	public List<RestSearchResult> sememeSearch(@QueryParam("query") String query,
-			@QueryParam("treatAsString") Boolean treatAsString,
-			@QueryParam("sememeAssemblageId") Set<String> sememeAssemblageId, 
-			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
-			@QueryParam("limit") @DefaultValue("10") int limit,
+	public RestSearchResults sememeSearch(
+			@QueryParam(RequestParameters.query) String query,
+			@QueryParam(RequestParameters.treatAsString) Boolean treatAsString,
+			@QueryParam(RequestParameters.sememeAssemblageId) Set<String> sememeAssemblageId, 
+			@QueryParam(RequestParameters.dynamicSememeColumns) Set<Integer> dynamicSememeColumns, 
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
 			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
+		String restPath = RestPaths.searchAppPathComponent + RestPaths.sememesComponent
+				+ "?" + RequestParameters.query + "=" + query
+				+ "&" + RequestParameters.treatAsString + "=" + treatAsString;
+		if (sememeAssemblageId != null) {
+			for (String id : sememeAssemblageId) {
+				restPath += "&" + RequestParameters.sememeAssemblageId + "=" + id;
+			}
+		}
+		if (dynamicSememeColumns != null) {
+			for (int col : dynamicSememeColumns) {
+				restPath += "&" + RequestParameters.dynamicSememeColumns + "=" + col;
+			}
+		}
+		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
+		
 		RequestInfo.get().readExpandables(expand);
 		String searchString = query.trim();
 		if (StringUtils.isBlank(searchString))
 		{
 			throw new RestException("The query must contain at least one character");
 		}
-				
+
+		int limit = calculateQueryLimit(maxPageSize, pageNum);
+	
 		if (treatAsString != null && treatAsString.booleanValue())
 		{
 			//We want to send in this query text as a string, even if it is parseable as a number, because 
 			//all "IDs" are stored as string sememes for consistency.
 			log.debug("Performing sememe search for '" + query + "' - treating it as a string");
-			return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+			
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 					.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-							limit, null), query);
+					limit, null);
+			return getRestSearchResultsFromOchreSearchResults(
+					ochreSearchResults,
+					pageNum,
+					maxPageSize,
+					restPath,
+					query);
 		}
 		else
 		{
@@ -296,10 +392,16 @@ public class SearchAPIs
 			boolean wasNumber = true;
 			boolean wasInterval = true;
 			try
-			{
-				return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+			{			
+				List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
-								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null), query);
+								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
+				return getRestSearchResultsFromOchreSearchResults(
+						ochreSearchResults,
+						pageNum,
+						maxPageSize,
+						restPath,
+						query);
 			}
 			catch (NumberFormatException e)
 			{
@@ -308,18 +410,30 @@ public class SearchAPIs
 				try
 				{
 					Interval interval = new Interval(searchString);
-					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
 									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
-									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null), query);
+									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
+					return getRestSearchResultsFromOchreSearchResults(
+							ochreSearchResults,
+							pageNum,
+							maxPageSize,
+							restPath,
+							query);
 				}
 				catch (NumberFormatException e1)
 				{
 					wasInterval = false;
 					//nope	Run it as a string search.
-					return processSearchResults(LookupService.get().getService(SememeIndexer.class)
+					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-									limit, null), query);
+									limit, null);
+					return getRestSearchResultsFromOchreSearchResults(
+							ochreSearchResults,
+							pageNum,
+							maxPageSize,
+							restPath,
+							query);
 				}
 			}
 			finally
@@ -358,7 +472,9 @@ public class SearchAPIs
 	 * 0 or 4.  Information about the columns for a particular sememe (and their index numbers) can be found via the 
 	 * sememe/sememe/sememeDefinition/{id}  call.  It only makes sense to pass this parameter when searching within a specific sememe that 
 	 * has multiple columns of data.
-	 * @param limit The maximum number of results to return
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
+	 * @param start The index within the full result set from which to begin this result set
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -374,15 +490,40 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.byReferencedComponentComponent)
-	public List<RestSearchResult> nidReferences(@QueryParam("nid") int nid,
-			@QueryParam("sememeAssemblageId") Set<String> sememeAssemblageId, 
-			@QueryParam("dynamicSememeColumns") Set<Integer> dynamicSememeColumns, 
-			@QueryParam("limit") @DefaultValue("10") int limit,
+	public RestSearchResults nidReferences(
+			@QueryParam(RequestParameters.nid) int nid,
+			@QueryParam(RequestParameters.sememeAssemblageId) Set<String> sememeAssemblageId, 
+			@QueryParam(RequestParameters.dynamicSememeColumns) Set<Integer> dynamicSememeColumns,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
 			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
-		return processSearchResults(LookupService.get().getService(SememeIndexer.class)
-				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null), nid + "");
+		
+		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent
+				+ "?" + RequestParameters.nid + "=" + nid;
+		if (sememeAssemblageId != null) {
+			for (String id : sememeAssemblageId) {
+				restPath += "&" + RequestParameters.sememeAssemblageId + "=" + id;
+			}
+		}
+		if (dynamicSememeColumns != null) {
+			for (int col : dynamicSememeColumns) {
+				restPath += "&" + RequestParameters.dynamicSememeColumns + "=" + col;
+			}
+		}
+		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
+		
+		int limit = calculateQueryLimit(maxPageSize, pageNum);
+
+		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
+				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
+		return getRestSearchResultsFromOchreSearchResults(
+				ochreSearchResults,
+				pageNum,
+				maxPageSize,
+				restPath,
+				nid + "");
 	}
 	
 	private Integer[] processAssemblageRestrictions(Set<String> sememeAssemblageIds) throws RestException

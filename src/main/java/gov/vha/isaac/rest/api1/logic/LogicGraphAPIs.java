@@ -45,8 +45,8 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
-import gov.vha.isaac.rest.api1.session.RequestParameters;
+import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * {@link LogicGraphAPIs}
@@ -62,7 +62,6 @@ public class LogicGraphAPIs
 	
 	/**
 	 * Returns a single version of a logic graph.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'version'
@@ -119,7 +118,8 @@ public class LogicGraphAPIs
 				logicGraphSememeChronology,
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-				false // LogicGraphSememe should not support nestedSememesExpandable
+				false, // LogicGraphSememe should not support nestedSememesExpandable
+				false
 				);
 	}
 

@@ -23,6 +23,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
@@ -37,7 +40,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -46,6 +49,7 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSearchResult
 {
 	private static Logger log = LogManager.getLogger();

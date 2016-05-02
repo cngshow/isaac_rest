@@ -24,6 +24,8 @@ import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -33,21 +35,26 @@ import gov.vha.isaac.ochre.model.logic.node.external.TypedNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.TypedNodeWithSequences;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
  * {@link RestTypedConnectorNode}
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- *
- * RestTypedConnectorNode derived classes must have exactly 1 child node.
- * 
  * RestTypedConnectorNode is the abstract base class for logic graph nodes
  * containing a connector type specified by connectorTypeConceptSequence
  * and described by connectorTypeConceptDescription
+ * 
+ * RestTypedConnectorNode derived classes must have exactly 1 child node.
+ * 
+ * @see RestFeatureNode
+ * @see RestRoleNode
+ * 
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * 
  */
 @XmlSeeAlso({RestFeatureNode.class,RestRoleNode.class})
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public abstract class RestTypedConnectorNode extends RestLogicNode {
 	//private static final Logger LOG = LoggerFactory.getLogger(RestTypedConnectorNode.class);
 
@@ -88,11 +95,6 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			connectorTypeConceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 	/**
@@ -113,11 +115,6 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
 		} else {
 			connectorTypeConceptVersion = null;
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				// TODO make expandables work for versionExpandable
-				// expandables.add(new Expandable(ExpandUtil.versionExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
-			}
 		}
 	}
 }

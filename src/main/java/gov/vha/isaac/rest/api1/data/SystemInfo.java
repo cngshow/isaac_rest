@@ -18,29 +18,35 @@
  */
 package gov.vha.isaac.rest.api1.data;
 
-import java.util.List;
-import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * {@link SystemInfo}
  * 
- * {@link RestIdentifiedObject}
+ * This class carries back various system information about this deployment.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestIdentifiedObject
+public class SystemInfo
 {
 	/**
-	 * The globally unique, fixed, stable set of identifiers for the object
+	 * The full version number of this API.  Note, this is an array, because in the future
+	 * the API may simultaneously support versions such as [1.3, 2.0] for reverse compatibility.
 	 */
 	@XmlElement
-	List<UUID> uuids;
+	String[] supportedAPIVersions = new String[] {"1.0"};
 	
-	public RestIdentifiedObject(List<UUID> uuids)
+	//TODO add other interesting system config info - like the DB in use, etc.
+	
+	
+	public SystemInfo()
 	{
-		this.uuids = uuids;
+		//For jaxb
 	}
+	
 }

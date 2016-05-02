@@ -78,4 +78,9 @@ public abstract class Enumeration implements Comparable<Enumeration>
 	public String toString() {
 		return name;
 	}
+	
+	public int getEnumId()
+	{
+		return enumId;
+	}
 }

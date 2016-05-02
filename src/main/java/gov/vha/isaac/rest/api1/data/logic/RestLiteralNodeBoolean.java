@@ -20,6 +20,9 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.model.logic.node.LiteralNodeBoolean;
 
 /**
@@ -30,11 +33,12 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeBoolean;
  *
  * RestLiteralNodeBoolean is a logic node containing only a boolean literal value
  * 
- * Each RestLiteralNodeBoolean instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_BOOLEAN
+ * Each RestLiteralNodeBoolean instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_BOOLEAN
  * 
  * A RestLiteralNodeBoolean may not have any child logic nodes.
 
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLiteralNodeBoolean extends RestLogicNode {
 
 	/**

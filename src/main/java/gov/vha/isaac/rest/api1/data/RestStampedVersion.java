@@ -19,6 +19,9 @@
 package gov.vha.isaac.rest.api1.data;
 
 import javax.xml.bind.annotation.XmlElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
 
@@ -28,6 +31,7 @@ import gov.vha.isaac.ochre.api.identity.StampedVersion;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestStampedVersion
 {
 	/**
@@ -73,6 +77,7 @@ public class RestStampedVersion
 		time = sv.getTime();
 		authorSequence = sv.getAuthorSequence();
 		pathSequence = sv.getPathSequence();
+		moduleSequence = sv.getModuleSequence();
 	}
 
 }

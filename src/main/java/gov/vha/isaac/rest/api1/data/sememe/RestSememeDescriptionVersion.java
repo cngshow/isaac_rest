@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
@@ -34,6 +37,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeDescriptionVersion extends RestSememeVersion
 {
 	/**
@@ -74,14 +78,14 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		//for Jaxb
 	}
 	
-	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested) throws RestException
+	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean expandReferenced) throws RestException
 	{
 		super();
 		if (expandNested)
 		{
 			dialects = new ArrayList<>();
 		}
-		setup(dsv, includeChronology, expandNested, (restSememeVersion ->
+		setup(dsv, includeChronology, expandNested, expandReferenced, (restSememeVersion ->
 		{
 			//If the assemblage is a dialect, put it in our list.
 			if (Get.taxonomyService().wasEverKindOf(restSememeVersion.sememeChronology.assemblageSequence, MetaData.DIALECT_ASSEMBLAGE.getConceptSequence()))

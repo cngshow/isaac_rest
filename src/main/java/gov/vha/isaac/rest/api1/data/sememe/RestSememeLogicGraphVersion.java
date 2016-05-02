@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
@@ -34,8 +36,8 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNodeFactory;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
-import gov.vha.isaac.rest.api1.session.RequestParameters;
+import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * 
@@ -44,6 +46,7 @@ import gov.vha.isaac.rest.api1.session.RequestParameters;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	private static Logger LOG = LogManager.getLogger();
 
@@ -93,7 +96,7 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	 */
 	public RestSememeLogicGraphVersion(LogicGraphSememe<?> lgs, boolean includeChronology) throws RestException {
 		super();
-		setup(lgs, includeChronology, false, null);
+		setup(lgs, includeChronology, false, false, null);
 
 		referencedConceptDescription = Get.conceptService()
 				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());
@@ -101,7 +104,6 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 				() -> Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).toString(), () -> lgs.getLogicalExpression().toString());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 		try {
-			// TODO Fine tune this when data problems resolved
 			isReferencedConceptDefined = Frills.isConceptFullyDefined(lgs);
 		} catch (Exception e) {
 			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing {}",

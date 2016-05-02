@@ -20,6 +20,9 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInteger;
 
 /**
@@ -30,10 +33,11 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeInteger;
  *
  * RestLiteralNodeInteger is a logic node containing only an int literal value
  * 
- * Each RestLiteralNodeInteger instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_INTEGER
+ * Each RestLiteralNodeInteger instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_INTEGER
  * 
  * A RestLiteralNodeInteger may not have any child logic nodes.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLiteralNodeInteger extends RestLogicNode {
 
 	/**

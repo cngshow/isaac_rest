@@ -43,8 +43,9 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
-import gov.vha.isaac.rest.api1.session.RequestParameters;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs.SememeVersions;
+import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * 
@@ -91,10 +92,10 @@ public abstract class RestSememeVersion
 	{
 		//For jaxb
 	}
-	public RestSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, Function<RestSememeVersion, Boolean> includeInNested) 
-			throws RestException
+	public RestSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean expandReferenced, 
+			Function<RestSememeVersion, Boolean> includeInNested) throws RestException
 	{
-		setup(sv, includeChronology, expandNested, includeInNested);
+		setup(sv, includeChronology, expandNested, expandReferenced, includeInNested);
 	}
 
 	private static String getRequestPathForExpandable(SememeVersion<?> sv) {
@@ -114,14 +115,14 @@ public abstract class RestSememeVersion
 		}
 	}
 	
-	protected void setup(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, Function<RestSememeVersion, Boolean> includeInNested) 
+	protected void setup(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean expandReferenced, Function<RestSememeVersion, Boolean> includeInNested) 
 			throws RestException
 	{
 		sememeVersion = new RestStampedVersion(sv);
 		expandables = new Expandables();
 		if (includeChronology)
 		{
-			sememeChronology = new RestSememeChronology(sv.getChronology(), false, false, false);
+			sememeChronology = new RestSememeChronology(sv.getChronology(), false, false, false, expandReferenced);
 		}
 		else
 		{
@@ -131,14 +132,22 @@ public abstract class RestSememeVersion
 				expandables.add(new Expandable(ExpandUtil.chronologyExpandable,  RestPaths.sememeChronologyAppPathComponent + sv.getChronology().getSememeSequence()));
 			}
 		}
+		
+		if (!expandReferenced && RequestInfo.get().returnExpandableLinks())
+		{
+			//No details on this one to follow, there is no clear URL that would fetch all of the details that this convenience adds
+			expandables.add(new Expandable(ExpandUtil.referencedDetails, ""));
+		}
+		
 		if (expandNested)
 		{
 			nestedSememes = new ArrayList<>();
 			//Always include the chronology for nested sememes... otherwise, the user would always have to make a return trip to find out what the 
 			//nested thing is
-			List<RestSememeVersion> temp = SememeAPIs.get(sv.getNid() + "", null, true, true, true);
-			for (RestSememeVersion rsv : temp)
+			SememeVersions temp = SememeAPIs.get(sv.getNid() + "", null, 1, Integer.MAX_VALUE, true);
+			for (SememeVersion<?> nestedSv : temp.getValues())
 			{
+				RestSememeVersion rsv = RestSememeVersion.buildRestSememeVersion(nestedSv, true, true, expandReferenced);
 				if (includeInNested == null || includeInNested.apply(rsv))
 				{
 					//This cast is expected to be safe - we should never nest a DescriptionSememe under another type of Sememe.
@@ -153,7 +162,8 @@ public abstract class RestSememeVersion
 			nestedSememes = null;
 			if (RequestInfo.get().returnExpandableLinks() && sv.getChronology().getSememeType() != SememeType.LOGIC_GRAPH)
 			{
-				expandables.add(new Expandable(ExpandUtil.nestedSememesExpandable, getRequestPathForExpandable(sv) + "?" + RequestParameters.expand + "=" + ExpandUtil.nestedSememesExpandable + (includeChronology ? "," + ExpandUtil.chronologyExpandable : "")));
+				expandables.add(new Expandable(ExpandUtil.nestedSememesExpandable, getRequestPathForExpandable(sv) + "?" 
+						+ RequestParameters.expand + "=" + ExpandUtil.nestedSememesExpandable + (includeChronology ? "," + ExpandUtil.chronologyExpandable : "")));
 			}
 		}
 		
@@ -163,22 +173,22 @@ public abstract class RestSememeVersion
 		}
 	}
 	
-	public static RestSememeVersion buildRestSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested) throws RestException
+	public static RestSememeVersion buildRestSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean expandReferenced) throws RestException
 	{
 		switch(sv.getChronology().getSememeType())
 		{
 			case COMPONENT_NID:
-				return new RestDynamicSememeVersion((ComponentNidSememe<?>) sv, includeChronology, expandNested);
+				return new RestDynamicSememeVersion((ComponentNidSememe<?>) sv, includeChronology, expandNested, expandReferenced);
 			case DESCRIPTION:
-				return new RestSememeDescriptionVersion((DescriptionSememe<?>) sv, includeChronology, expandNested);
+				return new RestSememeDescriptionVersion((DescriptionSememe<?>) sv, includeChronology, expandNested, expandReferenced);
 			case DYNAMIC:
-				return new RestDynamicSememeVersion((DynamicSememe<?>) sv, includeChronology, expandNested);
+				return new RestDynamicSememeVersion((DynamicSememe<?>) sv, includeChronology, expandNested, expandReferenced);
 			case LONG:
-				return new RestDynamicSememeVersion((LongSememe<?>) sv, includeChronology, expandNested);
+				return new RestDynamicSememeVersion((LongSememe<?>) sv, includeChronology, expandNested, expandReferenced);
 			case MEMBER:
-				return new RestDynamicSememeVersion((SememeVersion<?>) sv, includeChronology, expandNested);
+				return new RestDynamicSememeVersion((SememeVersion<?>) sv, includeChronology, expandNested, expandReferenced);
 			case STRING:
-				return new RestDynamicSememeVersion((StringSememe<?>) sv, includeChronology, expandNested);
+				return new RestDynamicSememeVersion((StringSememe<?>) sv, includeChronology, expandNested, expandReferenced);
 			case LOGIC_GRAPH:
 				return new RestSememeLogicGraphVersion((LogicGraphSememe<?>) sv, includeChronology);
 			case RELATIONSHIP_ADAPTOR:

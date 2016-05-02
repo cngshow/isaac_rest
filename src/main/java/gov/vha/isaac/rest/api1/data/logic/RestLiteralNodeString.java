@@ -20,6 +20,9 @@
 package gov.vha.isaac.rest.api1.data.logic;
 
 import javax.xml.bind.annotation.XmlElement;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.model.logic.node.LiteralNodeString;
 
 /**
@@ -30,10 +33,11 @@ import gov.vha.isaac.ochre.model.logic.node.LiteralNodeString;
  *
  * RestLiteralNodeString is a logic node containing only a String literal value
  * 
- * Each RestLiteralNodeString instance has a RestNodeSemantic/NodeSemantic == NodeSemantic.LITERAL_STRING
+ * Each RestLiteralNodeString instance has a RestNodeSemanticType/NodeSemantic == NodeSemantic.LITERAL_STRING
  * 
  * A RestLiteralNodeString may not have any child logic nodes.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLiteralNodeString extends RestLogicNode {
 
 	/**

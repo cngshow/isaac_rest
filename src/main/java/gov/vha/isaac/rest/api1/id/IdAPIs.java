@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.id;
 
 import java.util.Optional;
 import java.util.UUID;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,9 +28,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -43,7 +46,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestId;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 
 /**
@@ -55,10 +58,10 @@ import gov.vha.isaac.rest.api1.session.RequestInfo;
 public class IdAPIs
 {
 	private static Logger log = LogManager.getLogger();
-	
+
+
 	/**
 	 * Translate an ID from one type to another.  
-	 * TODO still need to define how to pass in a version parameter
 	 * @param id The id to translate
 	 * @param inputType - should be one of the types from the supportedTypes call.  You can pass the name or enumId of the 
 	 * returned RestIdType object.  This will be something like [uuid, nid, conceptSequence, sememeSequence, sctid, vuid]
@@ -83,10 +86,16 @@ public class IdAPIs
 		Optional<? extends ObjectChronology> object = Optional.empty();
 		switch (inputTypeFormat)
 		{
-			case VUID:
-				//TODO implement vuid translation
-				throw new RestException("vuid input type not yet supported");
-			case SCTID:
+			case VUID: {
+				long l = NumericUtils.getLong(id).orElse(0l);
+				Optional<Integer> nid = Frills.getNidForVUID(l);
+				if (nid.isPresent())
+				{
+					object = Get.identifiedObjectService().getIdentifiedObjectChronology(nid.get());
+				}
+				break;
+			}
+			case SCTID: {
 				long l = NumericUtils.getLong(id).orElse(0l);
 				Optional<Integer> nid = Frills.getNidForSCTID(l);
 				if (nid.isPresent())
@@ -94,6 +103,7 @@ public class IdAPIs
 					object = Get.identifiedObjectService().getIdentifiedObjectChronology(nid.get());
 				}
 				break;
+			}
 			case CONCEPT_SEQUENCE:
 				object = Get.conceptService().getOptionalConcept(NumericUtils.getInt(id).orElse(0));
 				break;
@@ -156,9 +166,8 @@ public class IdAPIs
 				case UUID:
 					return new RestId(outputTypeFormat, object.get().getPrimordialUuid().toString());
 				case VUID:
-					//TODO implement vuid translation
-					throw new RestException("Not yet implemented");
-
+					return new RestId(outputTypeFormat, "" + Frills.getVuId(object.get().getNid(), RequestInfo.get().getStampCoordinate()).
+							orElseThrow(() -> new RestException("No VUID was found on the specified component")));
 				default :
 					log.error("Design error - case not handled: " + inputTypeFormat);
 					throw new RestException("Internal server error");
@@ -169,7 +178,6 @@ public class IdAPIs
 			throw new RestException("id", id, "Unable to locate an object with the given id.");
 		}
 	}
-	
 
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.

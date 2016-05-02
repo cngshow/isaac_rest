@@ -53,8 +53,8 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
-import gov.vha.isaac.rest.api1.session.RequestParameters;
+import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 
 /**
@@ -70,22 +70,11 @@ public class ConceptAPIs
 	private Set<Integer> allDescriptionAssemblageTypes = null;
 	/**
 	 * Returns a single version of a concept.
-	 * TODO still need to define how to pass in a version parameter
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * 
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children'
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children', 'countChildren', 'countParents'
 	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
-	 * @param stampCoordTime - specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest"
-	 * @param stampCoordPath - specifies path component of StampPosition component of the StampCoordinate. Values are path UUIDs, int ids or the terms "development" or "master"
-	 * @param stampCoordPrecedence - specifies precedence of the StampCoordinate. Values are either "path" or "time"
-	 * @param stampCoordModules - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids
-	 * @param stampCoordStates - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names 
-	 * @param langCoordLang - specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms:
-	 * 		"english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish"
-	 * @param langCoordDescTypesPref - specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" or "definition"
-	 * @param langCoordDialectsPref - specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb"
-	 *
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -95,18 +84,7 @@ public class ConceptAPIs
 	public RestConceptVersion getConceptVersion(
 			@PathParam(RequestParameters.id) String id, 
 			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
-			@QueryParam(RequestParameters.expand) String expand
-//
-//			@QueryParam(RequestParameters.stampCoordTime) @DefaultValue(RequestParameters.stampCoordTimeDefault) String stampCoordTime,
-//			@QueryParam(RequestParameters.stampCoordPath) @DefaultValue(RequestParameters.stampCoordPathDefault) String stampCoordPath,
-//			@QueryParam(RequestParameters.stampCoordPrecedence) @DefaultValue(RequestParameters.stampCoordPrecedenceDefault) String stampCoordPrecedence,
-//			@QueryParam(RequestParameters.stampCoordModules) @DefaultValue(RequestParameters.stampCoordModulesDefault) String stampCoordModules,
-//			@QueryParam(RequestParameters.stampCoordStates) @DefaultValue(RequestParameters.stampCoordStatesDefault) String stampCoordStates,
-//			
-//			@QueryParam(RequestParameters.langCoordLang) @DefaultValue(RequestParameters.langCoordLangDefault) String langCoordLang,
-//			@QueryParam(RequestParameters.langCoordDescTypesPref) @DefaultValue(RequestParameters.langCoordDescTypesPrefDefault) String langCoordDescTypesPref,
-//			@QueryParam(RequestParameters.langCoordDialectsPref) @DefaultValue(RequestParameters.langCoordDialectsPrefDefault) String langCoordDialectsPref
-			) throws RestException
+			@QueryParam(RequestParameters.expand) String expand ) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 		RequestInfo.get().readStated(stated);
@@ -119,11 +97,13 @@ public class ConceptAPIs
 		{
 			return new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable), 
+					RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable),
+					RequestInfo.get().shouldExpand(ExpandUtil.parentCountExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable),
+					RequestInfo.get().shouldExpand(ExpandUtil.childCountExpandable),
 					Boolean.parseBoolean(stated.trim()));
 		}
-		throw new RestException(RequestParameters.id, id, "No concept was found");
+		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
 	}
 	
 	/**
@@ -145,8 +125,13 @@ public class ConceptAPIs
 		RequestInfo.get().readExpandables(expand);
 
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
-		return new RestConceptChronology(concept, RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
-				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+		RestConceptChronology chronology =
+				new RestConceptChronology(
+						concept,
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+
+		return chronology;
 	}
 	
 	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException
@@ -194,6 +179,11 @@ public class ConceptAPIs
 	 * Dialects and other types of attributes will be returned in different structures - all attributes that represent dialects will 
 	 * be in the RestSememeDescriptionVersion object, in the dialects fields, while any other type of attribute will be in the 
 	 * RestSememeVersion in the nestedAttributes field. 
+	 * @param expandReferenced - true to also include type information and preferred descriptions for concepts referenced by nested 
+	 * sememes and dialects 
+	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept.
 	 * @return The descriptions associated with the concept
 	 * @throws RestException 
 	 */
@@ -201,12 +191,19 @@ public class ConceptAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
 	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, 
-		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes) throws RestException
+		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes,
+		@QueryParam("expand") String expand) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
+		RequestInfo.get().readExpandables(expand);
 		
-		List<RestSememeVersion> descriptions = SememeAPIs.get(findConceptChronology(id).getNid() + "", getAllDescriptionTypes(), true, 
-				Boolean.parseBoolean(includeAttributes.trim()), true);
+		List<RestSememeVersion> descriptions = SememeAPIs.get(
+				findConceptChronology(id).getNid() + "",
+				getAllDescriptionTypes(),
+				true, 
+				Boolean.parseBoolean(includeAttributes.trim()),
+				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+				true);
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up

@@ -31,21 +31,30 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.api.data.Expandables;
-import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemantic;
-import gov.vha.isaac.rest.api1.session.RequestInfo;
+import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
  * {@link RestLogicNode}
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- * 
  * The abstract base class of all REST logic graph tree structure nodes.
  * Each node represents a part of the logic graph grammar and has, at least,
- * its own UUID, a RestNodeSemantic enumerated type and a list of child RestNodeSemantic nodes.
- * The allowed number of child RestNodeSemantic nodes and any additional data 
- * depend on the RestNodeSemantic enumerated type.
+ * its own UUID, a RestNodeSemanticType enumerated type and a list of child RestNodeSemanticType nodes.
+ * The allowed number of child RestNodeSemanticType nodes and any additional data 
+ * depend on the RestNodeSemanticType enumerated type.
+ * 
+ * @see RestConceptNode
+ * @see RestUntypedConnectorNode
+ * @see RestTypedConnectorNode
+ * @see RestLiteralNodeBoolean
+ * @see RestLiteralNodeInteger
+ * @see RestLiteralNodeFloat
+ * @see RestLiteralNodeString
+ * @see RestLiteralNodeInstant
+ * 
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * 
  */
 @XmlSeeAlso({
 	RestConceptNode.class,
@@ -62,16 +71,11 @@ public abstract class RestLogicNode {
 	private static Logger LOG = LogManager.getLogger();
 
 	/**
-	 * The RestNodeSemantic type of this node corresponding to the NodeSemantic enum
+	 * The RestNodeSemanticType type of this node corresponding to the NodeSemantic enum
 	 */
 	@XmlElement
-	RestNodeSemantic nodeSemantic;
+	RestNodeSemanticType nodeSemantic;
 
-	/**
-	 * The data that was not expanded as part of this call (but can be)
-	 */
-	@XmlElement
-	Expandables expandables;
 	
 	/**
 	 * The UUID of the logic node itself (not of any referenced or associated component or concept)
@@ -102,14 +106,12 @@ public abstract class RestLogicNode {
 	 * root of a logic graph tree or tree fragment and recursively creates and populates an equivalent RestLogicNode
 	 */
 	public RestLogicNode(AbstractLogicNode passedLogicNode) {
-		expandables = new Expandables();
-
 		if (RequestInfo.get().shouldExpand(ExpandUtil.logicNodeUuidsExpandable)) {
 			nodeUuid = passedLogicNode.getNodeUuidSetForDepth(1).first();
 		} else {
 			nodeUuid = null;
 		}
-		this.nodeSemantic = new RestNodeSemantic(passedLogicNode.getNodeSemantic());
+		this.nodeSemantic = new RestNodeSemanticType(passedLogicNode.getNodeSemantic());
 
 		AbstractLogicNode[] childrenOfPassedLogicNode = passedLogicNode.getChildren();
 		this.children = new ArrayList<>(childrenOfPassedLogicNode.length);
