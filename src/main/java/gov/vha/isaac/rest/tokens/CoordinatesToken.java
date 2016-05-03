@@ -22,13 +22,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -81,11 +76,6 @@ public class CoordinatesToken
 	public CoordinatesToken(TaxonomyCoordinate tax) {
 		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
 	}
-	// This constructor passes overlapping/redundant data
-//	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, TaxonomyCoordinate tax) {
-//		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
-//	}
-	// This constructor handles everything with constituents of the TaxonomyCoordinate with no overlap
 	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, PremiseType taxType)
 	{
 		stampTime = stamp.getStampPosition().getTime();

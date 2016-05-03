@@ -74,14 +74,12 @@ public class LogicGraphAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestSememeLogicGraphVersion getLogicGraphVersion(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand, 
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
 
 		@SuppressWarnings("rawtypes")
-		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
+		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
@@ -106,13 +104,11 @@ public class LogicGraphAPIs
 	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestSememeChronology getLogicGraphChronology(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand, 
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
 
-		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
+		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
 		
 		return new RestSememeChronology(
 				logicGraphSememeChronology,

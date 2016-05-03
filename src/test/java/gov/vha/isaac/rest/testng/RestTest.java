@@ -37,6 +37,7 @@ import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -735,5 +736,73 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		CoordinatesToken read = new CoordinatesToken(token);
 		Assert.assertTrue(token.equals(read.serialize()));
+	}
+	
+
+	@Test
+	public void testGetCoordinates()
+	{
+		final String getTaxonomyCoordinate = RestPaths.coordinatePathComponent + RestPaths.taxonomyCoordinatePathComponent;
+		final String getStampCoordinate = RestPaths.coordinatePathComponent + RestPaths.stampCoordinatePathComponent;
+		final String getLanguageCoordinate = RestPaths.coordinatePathComponent + RestPaths.languageCoordinatePathComponent;
+		final String getLogicCoordinate = RestPaths.coordinatePathComponent + RestPaths.logicCoordinatePathComponent;
+
+		String xpath = null;
+		Node node = null;
+		String result = null;
+		try {
+			result = checkFail(target(getTaxonomyCoordinate)
+					.queryParam(RequestParameters.stated, "false")
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restTaxonomyCoordinate/stated";
+			node = RestTestUtils.getNodeFromXml(result, xpath);
+			boolean taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
+			Assert.assertTrue(taxonomyCoordinateStated == false);
+
+			result = checkFail(target(getTaxonomyCoordinate)
+					.queryParam(RequestParameters.stated, "true")
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			node = RestTestUtils.getNodeFromXml(result, xpath);
+			taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
+			Assert.assertTrue(taxonomyCoordinateStated == true);
+
+			result = checkFail(target(getStampCoordinate)
+					.queryParam(RequestParameters.stampCoordTime, 123456789)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restStampCoordinate/time";
+			node = RestTestUtils.getNodeFromXml(result, xpath);
+			long stampCoordinateTime = Long.parseLong(node.getTextContent());
+			Assert.assertTrue(stampCoordinateTime == 123456789);
+
+			result = checkFail(target(getLanguageCoordinate)
+					.queryParam(RequestParameters.langCoordLang, 11)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restLanguageCoordinate/language";
+			node = RestTestUtils.getNodeFromXml(result, xpath);
+			int languageCoordinateLangSeq = Integer.parseInt(node.getTextContent());
+			Assert.assertTrue(languageCoordinateLangSeq == 11);
+
+			result = checkFail(target(getLogicCoordinate)
+					.queryParam(RequestParameters.logicCoordClassifier, 22)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restLogicCoordinate/classifier";
+			node = RestTestUtils.getNodeFromXml(result, xpath);
+			int logicCoordinateClassifierSeq = Integer.parseInt(node.getTextContent());
+			Assert.assertTrue(logicCoordinateClassifierSeq == 22);	
+		} catch (Error error) {
+			System.out.println("Failing result XPath: " + xpath);
+			System.out.println("Failing result Node: " + RestTestUtils.toString(node));
+			System.out.println("Failing result XML: " + result);
+
+			throw error;
+		}
+	}
+	
+	public static void main(String[] argv) {
 	}
 }

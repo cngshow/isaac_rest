@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
-import gov.vha.isaac.rest.api1.data.enumerations.RestTaxonomyType;
 
 /**
  * 
@@ -41,20 +40,8 @@ public class RestTaxonomyCoordinate {
 	@XmlElement
 	boolean stated;
 	
-	@XmlElement
-	RestStampCoordinate stampCoordinate;
-	
-	@XmlElement
-	RestLanguageCoordinate languageCoordinate;
-	
-	@XmlElement
-	RestLogicCoordinate logicCoordinate;
-
 	public RestTaxonomyCoordinate(TaxonomyCoordinate tc) {
 		stated = tc.getTaxonomyType() == PremiseType.STATED;
-		stampCoordinate = new RestStampCoordinate(tc.getStampCoordinate());
-		languageCoordinate = new RestLanguageCoordinate(tc.getLanguageCoordinate());
-		logicCoordinate = new RestLogicCoordinate(tc.getLogicCoordinate());
 	}
 
 	protected RestTaxonomyCoordinate() {

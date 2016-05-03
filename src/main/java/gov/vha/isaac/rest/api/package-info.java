@@ -12,7 +12,7 @@
  * 
  * <h2>Coordinate Parameters</h2>
  * <p>
- * Most ISAAC REST Server calls return results that are contingent upon the value of LANGUAGE and STAMP coordinates.  Passing relevant parameters can change the results of the query, depending on the data, the request and whether or not the parameter value differs from its respective default value.
+ * Most ISAAC REST Server calls return results that are contingent upon the value of coordinates.  Passing relevant parameters can change the results of the query, depending on the data, the request and whether or not the parameter value differs from its respective default value.
  * </p>
  * 
  * <h3><u>Taxonomy Coordinate Parameters</u></h3

@@ -80,6 +80,8 @@ public class RequestParameters {
 
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
+	public final static String includeAttributes = "includeAttributes";
+	public final static String includeAttributesDefault = "true";
 
 	public final static String query = "query";
 	public final static String treatAsString = "treatAsString";

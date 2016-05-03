@@ -83,11 +83,9 @@ public class ConceptAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestConceptVersion getConceptVersion(
 			@PathParam(RequestParameters.id) String id, 
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
 			@QueryParam(RequestParameters.expand) String expand ) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
 
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
@@ -101,7 +99,7 @@ public class ConceptAPIs
 					RequestInfo.get().shouldExpand(ExpandUtil.parentCountExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable),
 					RequestInfo.get().shouldExpand(ExpandUtil.childCountExpandable),
-					Boolean.parseBoolean(stated.trim()));
+					RequestInfo.get().getStated());
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
 	}
@@ -116,7 +114,7 @@ public class ConceptAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.chronologyComponent + "{id}")
+	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestConceptChronology getConceptChronology(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand
@@ -190,9 +188,10 @@ public class ConceptAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
-	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, 
-		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes,
-		@QueryParam("expand") String expand) throws RestException
+	public List<RestSememeDescriptionVersion> getDescriptions(
+			@PathParam(RequestParameters.id) String id, 
+			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		RequestInfo.get().readExpandables(expand);
