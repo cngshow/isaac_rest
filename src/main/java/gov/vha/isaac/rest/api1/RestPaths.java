@@ -80,6 +80,7 @@ public class RestPaths
 	public static final String requestPathComponent = apiVersionComponent + "request/";
 
 	public static final String coordinatePathComponent = apiVersionComponent + "coordinate/";
+	public static final String coordinatesComponent = "coordinates/";
 	public static final String coordinatesTokenComponent = "coordinatesToken/";
 	public static final String taxonomyCoordinatePathComponent = "taxonomyCoordinate/";
 	public static final String languageCoordinatePathComponent = "languageCoordinate/";

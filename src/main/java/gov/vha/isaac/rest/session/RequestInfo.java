@@ -27,14 +27,12 @@ import org.apache.commons.lang3.StringUtils;
 
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
-import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
-import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
-import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.tokens.CoordinatesToken;
 
 /**
  * {@link RequestInfo}
@@ -47,11 +45,8 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestInfo
 {
-	private boolean stated_ = Boolean.parseBoolean(RequestParameters.statedDefault);
-	private StampCoordinate stampCoordinate_ = null;
-	private LanguageCoordinate languageCoordinate_ = null;
-	private LogicCoordinate logicCoordinate_ = null;
-	private boolean useFsn_ = Boolean.parseBoolean(RequestParameters.useFsnDefault);
+	//private boolean useFsn_ = Boolean.parseBoolean(RequestParameters.useFsnDefault);
+	private CoordinatesToken coordinatesToken_ = null;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
@@ -96,67 +91,19 @@ public class RequestInfo
 		}
 		return get();
 	}
-	public RequestInfo readStampCoordinate(Map<String, List<String>> parameters) throws RestException
-	{
-		requestInfo.get().stampCoordinate_ = CoordinatesUtil.getStampCoordinateFromParameters(parameters);
-		return get();
-	}
-	public RequestInfo readLanguageCoordinate(Map<String, List<String>> parameters) throws RestException
-	{
-		requestInfo.get().languageCoordinate_ = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
-		return get();
-	}
-	public RequestInfo readLogicCoordinate(Map<String, List<String>> parameters) throws RestException
-	{
-		requestInfo.get().logicCoordinate_ = CoordinatesUtil.getLogicCoordinateFromParameters(parameters);
-		return get();
-	}
 	
-	public RequestInfo readStated(String statedParameter) throws RestException {
-		if (StringUtils.isNotBlank(statedParameter)) {
-			requestInfo.get().stated_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, statedParameter);
-		} else {
-			requestInfo.get().stated_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, RequestParameters.statedDefault);
-		}
-		return get();
-	}
-	
-	public RequestInfo readStated(Map<String, List<String>> parameters) throws RestException
-	{
-		if (parameters != null && parameters.get(RequestParameters.stated) != null && parameters.get(RequestParameters.stated).size() > 0) {
-			requestInfo.get().stated_ = RequestInfoUtils.getBooleanFromParameters(RequestParameters.stated, parameters);
-		} else {
-			requestInfo.get().stated_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, RequestParameters.statedDefault);
-		}
-		return get();
-	}
-
-	public RequestInfo readUseFsn(Map<String, List<String>> parameters) throws RestException
-	{
-		if (parameters != null && parameters.get(RequestParameters.useFsn) != null && parameters.get(RequestParameters.useFsn).size() > 0) {
-			requestInfo.get().useFsn_ = RequestInfoUtils.getBooleanFromParameters(RequestParameters.useFsn, parameters);
-		} else {
-			requestInfo.get().useFsn_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.useFsn, RequestParameters.useFsnDefault);
-		}
-		return get();
-	}
-	public RequestInfo readUseFsn(String useFsnParameter) throws RestException {
-		if (StringUtils.isNotBlank(useFsnParameter)) {
-			requestInfo.get().useFsn_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, useFsnParameter);
-		} else {
-			requestInfo.get().useFsn_ = RequestInfoUtils.parseBooleanParameter(RequestParameters.stated, RequestParameters.statedDefault);
-		}
-		return get();
-	}
-	
+	//public RequestInfo readCoordinatesToken()
 	public RequestInfo readAll(Map<String, List<String>> parameters) throws RestException
 	{
-		readUseFsn(parameters);
 		readExpandables(parameters);
-		readStampCoordinate(parameters);
-		readLanguageCoordinate(parameters);
-		readLogicCoordinate(parameters);
-		readStated(parameters);
+
+		// These CoordinatesUtil defer to an existing CoordinatesToken parameter, if one exists, for all defaults
+		boolean stated = CoordinatesUtil.getStatedFromParameters(parameters);
+		LanguageCoordinate languageCoordinate = CoordinatesUtil.getLanguageCoordinateFromParameters(parameters);
+		StampCoordinate stampCoordinate = CoordinatesUtil.getStampCoordinateFromParameters(parameters);
+		LogicCoordinate logicCoordinate = CoordinatesUtil.getLogicCoordinateFromParameters(parameters);
+		
+		requestInfo.get().coordinatesToken_ = CoordinatesToken.get(stampCoordinate, languageCoordinate, logicCoordinate, stated ? PremiseType.STATED : PremiseType.INFERRED);
 		
 		return requestInfo.get();
 	}
@@ -176,11 +123,7 @@ public class RequestInfo
 	 */
 	public StampCoordinate getStampCoordinate()
 	{
-		if (stampCoordinate_ != null) {
-			return stampCoordinate_;
-		} else {
-			return stampCoordinate_ = StampCoordinates.getDevelopmentLatest();
-		}
+		return getCoordinatesToken().getTaxonomyCoordinate().getStampCoordinate();
 	}
 
 	/**
@@ -188,11 +131,7 @@ public class RequestInfo
 	 */
 	public LanguageCoordinate getLanguageCoordinate()
 	{
-		if (languageCoordinate_ != null) {
-			return languageCoordinate_;
-		} else {
-			return languageCoordinate_ = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
-		}
+		return getCoordinatesToken().getTaxonomyCoordinate().getLanguageCoordinate();
 	}
 	
 	/**
@@ -200,11 +139,7 @@ public class RequestInfo
 	 */
 	public LogicCoordinate getLogicCoordinate()
 	{
-		if (logicCoordinate_ != null) {
-			return logicCoordinate_;
-		} else {
-			return logicCoordinate_ = LogicCoordinates.getStandardElProfile();
-		}
+		return getCoordinatesToken().getTaxonomyCoordinate().getLogicCoordinate();
 	}
 
 	/**
@@ -212,7 +147,7 @@ public class RequestInfo
 	 */
 	public TaxonomyCoordinate getTaxonomyCoordinate()
 	{
-		return getTaxonomyCoordinate(stated_);
+		return getCoordinatesToken().getTaxonomyCoordinate();
 	}
 	/**
 	 * @return
@@ -221,11 +156,11 @@ public class RequestInfo
 	{
 		if (stated)
 		{
-			return TaxonomyCoordinates.getStatedTaxonomyCoordinate(getStampCoordinate(), getLanguageCoordinate(), getLogicCoordinate());
+			return getTaxonomyCoordinate().getTaxonomyType() == PremiseType.STATED ? getTaxonomyCoordinate() : getTaxonomyCoordinate().makeAnalog(PremiseType.STATED);
 		}
-		else
+		else // (! stated)
 		{
-			return TaxonomyCoordinates.getInferredTaxonomyCoordinate(getStampCoordinate(), getLanguageCoordinate(), getLogicCoordinate());
+			return getTaxonomyCoordinate().getTaxonomyType() == PremiseType.INFERRED ? getTaxonomyCoordinate() : getTaxonomyCoordinate().makeAnalog(PremiseType.INFERRED);
 		}
 	}
 
@@ -234,13 +169,20 @@ public class RequestInfo
 	 */
 	public boolean useFsn()
 	{
-		return useFsn_;
+		return getLanguageCoordinate().isFSNPreferred();
 	}
 	
 	/**
 	 * @return
 	 */
 	public boolean getStated() {
-		return stated_;
+		return getTaxonomyCoordinate().getTaxonomyType() == PremiseType.STATED;
+	}
+	
+	/**
+	 * @return CoordinatesToken created from existing coordinates
+	 */
+	public CoordinatesToken getCoordinatesToken() {
+		return coordinatesToken_ != null ? coordinatesToken_ : (coordinatesToken_ = CoordinatesToken.get());
 	}
 }

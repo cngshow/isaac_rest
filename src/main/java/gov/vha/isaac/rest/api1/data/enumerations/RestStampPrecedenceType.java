@@ -19,9 +19,12 @@
 
 package gov.vha.isaac.rest.api1.data.enumerations;
 
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
 
 /**
  * 
@@ -41,6 +44,21 @@ public class RestStampPrecedenceType extends Enumeration
 	public RestStampPrecedenceType(StampPrecedence st)
 	{
 		super(st.toString(), st.ordinal());
+	}
+
+	public static RestStampPrecedenceType valueOf(String str) {
+		for (StampPrecedence spValue : StampPrecedence.values()) {
+			if (spValue.name().equals(str.trim())
+					|| spValue.toString().equals(str.trim())) {
+				return new RestStampPrecedenceType(spValue);
+			} else {
+				Optional<Integer> intOptional = NumericUtils.getInt(str.trim());
+				if (intOptional.isPresent() && intOptional.get() == spValue.ordinal()) {
+					return new RestStampPrecedenceType(spValue);
+				}
+			}
+		}
+		throw new IllegalArgumentException("invalid RestStampPrecedenceType value \"" + str + "\"");
 	}
 
 	public static RestStampPrecedenceType[] getAll()

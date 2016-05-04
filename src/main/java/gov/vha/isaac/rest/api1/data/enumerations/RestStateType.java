@@ -19,9 +19,12 @@
 
 package gov.vha.isaac.rest.api1.data.enumerations;
 
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
 
 /**
  * 
@@ -42,7 +45,23 @@ public class RestStateType extends Enumeration
 	{
 		super(st.toString(), st.ordinal());
 	}
-
+	
+	public static RestStateType valueOf(String str) {
+		for (State spValue : State.values()) {
+			if (spValue.name().equals(str.trim())
+					|| spValue.toString().equals(str.trim())
+					|| spValue.getAbbreviation().equals(str.trim())) {
+				return new RestStateType(spValue);
+			} else {
+				Optional<Integer> intOptional = NumericUtils.getInt(str.trim());
+				if (intOptional.isPresent() && intOptional.get() == spValue.ordinal()) {
+					return new RestStateType(spValue);
+				}
+			}
+		}
+		throw new IllegalArgumentException("invalid RestStateType value \"" + str + "\"");
+	}
+	
 	public static RestStateType[] getAll()
 	{
 		RestStateType[] result = new RestStateType[State.values().length];

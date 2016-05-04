@@ -18,6 +18,9 @@
  */
 package gov.vha.isaac.rest.api1.coordinate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -31,7 +34,6 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestLogicCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestStampCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.tokens.CoordinatesToken;
 
 
 /**
@@ -68,7 +70,7 @@ public class CoordinateAPIs
 	@Path(RestPaths.coordinatesTokenComponent)  
 	public RestCoordinatesToken getCoordinatesToken() throws RestException
 	{
-		return new RestCoordinatesToken(new CoordinatesToken(RequestInfo.get().getTaxonomyCoordinate()));
+		return new RestCoordinatesToken(RequestInfo.get().getCoordinatesToken());
 	}
 
 	/**
@@ -88,6 +90,27 @@ public class CoordinateAPIs
 	 * @param logicCoordInferred specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * @param logicCoordDesc specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * @param logicCoordClassifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * 
+	 * @return List<Object> all known coordinates
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.coordinatesComponent)  
+	public List<Object> getCoordinates() throws RestException
+	{
+		List<Object> coordinates = new ArrayList<>();
+		
+		coordinates.add(getTaxonomyCoordinate());
+		coordinates.add(getStampCoordinate());
+		coordinates.add(getLanguageCoordinate());
+		coordinates.add(getLogicCoordinate());
+		
+		return coordinates;
+	}
+
+	/**
+	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
 	 * 
 	 * @return RestTaxonomyCoordinate
 	 * @throws RestException

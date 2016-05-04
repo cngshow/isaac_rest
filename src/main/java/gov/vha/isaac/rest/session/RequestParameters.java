@@ -29,6 +29,8 @@ package gov.vha.isaac.rest.session;
 public class RequestParameters {
 	private RequestParameters() {}
 
+	public final static String coordToken = "coordToken";
+
 	// Taxonomy Coordinate
 	public final static String stated = "stated";
 	public final static String statedDefault = "true";

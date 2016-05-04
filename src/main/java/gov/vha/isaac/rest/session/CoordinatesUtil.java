@@ -38,16 +38,19 @@ import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPosition;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.coordinate.LanguageCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.LogicCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.tokens.CoordinatesToken;
 
 /**
  * 
@@ -61,6 +64,28 @@ public class CoordinatesUtil {
 
 	private CoordinatesUtil() {}
 
+	public static boolean getStatedFromParameters(Map<String, List<String>> params) throws RestException {
+		Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
+
+		boolean defaultValue = token.isPresent() ? (token.get().getTaxonomyType() == PremiseType.STATED) : Boolean.parseBoolean(RequestParameters.statedDefault);
+		
+		List<String> statedParamStrs = RequestInfoUtils.expandCommaDelimitedElements(params.get(RequestParameters.stated));
+
+		if (statedParamStrs == null || statedParamStrs.size() == 0) {
+			return defaultValue;
+		} else if (statedParamStrs.size() == 1) {
+			String statedParamStr = statedParamStrs.iterator().next();
+
+			if (StringUtils.isBlank(statedParamStr)) {
+				return defaultValue;
+			}
+
+			return Boolean.parseBoolean(statedParamStrs.get(0).trim());
+		}
+
+		throw new RestException(RequestParameters.stated, params.get(RequestParameters.stated).toString(), "Invalid stated/inferred value");
+	}
+	
 	private static Map<String,List<String>> getLanguageCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> languageCoordinateParams = new HashMap<>();
 
@@ -78,26 +103,30 @@ public class CoordinatesUtil {
 		return languageCoordinateParams;
 	}
 	public static LanguageCoordinate getLanguageCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
+		Optional<CoordinatesToken> token = getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
+
 		LanguageCoordinateImpl languageCoordinate = new LanguageCoordinateImpl(
-				getLanguageCoordinateLanguageSequenceFromParameter(params.get(RequestParameters.langCoordLang)), 
-				getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDialectsPref)),
-				getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDescTypesPref)));
+				getLanguageCoordinateLanguageSequenceFromParameter(params.get(RequestParameters.langCoordLang), token), 
+				getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDialectsPref), token),
+				getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDescTypesPref), token));
 
 		log.debug("Created LanguageCoordinate from params: " + getLanguageCoordinateParameters(params) + ": " + languageCoordinate);
 
 		return languageCoordinate;
 	}
 
-	public static int getLanguageCoordinateLanguageSequenceFromParameter(List<String> unexpandedLanguageParamStrs) throws RestException {
+	public static int getLanguageCoordinateLanguageSequenceFromParameter(List<String> unexpandedLanguageParamStrs, Optional<CoordinatesToken> token) throws RestException {
+		int defaultValue = token.isPresent() ? token.get().getLangCoord() : TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+		
 		List<String> languageParamStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedLanguageParamStrs);
 
 		if (languageParamStrs == null || languageParamStrs.size() == 0) {
-			return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+			return defaultValue;
 		} else if (languageParamStrs.size() == 1) {
 			String languageParamStr = languageParamStrs.iterator().next();
 
 			if (StringUtils.isBlank(languageParamStr)) {
-				return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+				return defaultValue;
 			}
 
 			if (languageParamStr.trim().toLowerCase().startsWith("english")) {
@@ -138,7 +167,8 @@ public class CoordinatesUtil {
 		throw new RestException(RequestParameters.langCoordLang, languageParamStrs.toString(), "Invalid language coordinate language value");
 	}
 
-	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(List<String> unexpandedDialectsStrs) throws RestException {
+	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(List<String> unexpandedDialectsStrs, Optional<CoordinatesToken> token) throws RestException {
+		int[] defaultValues = token.isPresent() ? token.get().getLangDialects().asArray() : LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate().getDialectAssemblagePreferenceList();
 		List<Integer> seqList = new ArrayList<>();
 
 		List<String> dialectsStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDialectsStrs);
@@ -175,18 +205,18 @@ public class CoordinatesUtil {
 		}
 
 		if (seqList.size() == 0) {
-			seqList.add(TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence());
-			seqList.add(TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence());
+			return defaultValues;
+		} else {
+			int[] seqArray = new int[seqList.size()];
+			for (int i = 0; i < seqList.size(); ++i) {
+				seqArray[i] = seqList.get(i);
+			}
+			return seqArray;
 		}
-
-		int[] seqArray = new int[seqList.size()];
-		for (int i = 0; i < seqList.size(); ++i) {
-			seqArray[i] = seqList.get(i);
-		}
-
-		return seqArray;
 	}
-	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(List<String> unexpandedDescTypesStrs) throws RestException {
+	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(List<String> unexpandedDescTypesStrs, Optional<CoordinatesToken> token) throws RestException {
+		int[] defaultValues = token.isPresent() ? token.get().getLangTypePrefs().asArray() : LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate().getDescriptionTypePreferenceList();
+
 		List<Integer> seqList = new ArrayList<>();
 
 		List<String> descTypesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDescTypesStrs);
@@ -227,16 +257,15 @@ public class CoordinatesUtil {
 		}
 
 		if (seqList.size() == 0) {
-			seqList.add(TermAux.FULLY_SPECIFIED_DESCRIPTION_TYPE.getConceptSequence());
-			seqList.add(TermAux.SYNONYM_DESCRIPTION_TYPE.getConceptSequence());
-		}
+			return defaultValues;
+		} else {
+			int[] seqArray = new int[seqList.size()];
+			for (int i = 0; i < seqList.size(); ++i) {
+				seqArray[i] = seqList.get(i);
+			}
 
-		int[] seqArray = new int[seqList.size()];
-		for (int i = 0; i < seqList.size(); ++i) {
-			seqArray[i] = seqList.get(i);
+			return seqArray;
 		}
-
-		return seqArray;
 	}
 
 	private static Map<String,List<String>> getStampCoordinateParameters(Map<String, List<String>> params) {
@@ -257,34 +286,58 @@ public class CoordinatesUtil {
 
 		return stampCoordinateParams;
 	}
+
+
+	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameter(List<String> coordinateTokenParameterValues) throws RestException {
+		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0) {
+			return Optional.empty();
+		} else if (coordinateTokenParameterValues.size() > 1) {
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues + "\"", "too many (" + coordinateTokenParameterValues.size() + " values");
+		} else if (coordinateTokenParameterValues.get(0) == null) {
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "invalid (null) value");
+		}
+		
+		try {
+			return Optional.of(CoordinatesToken.get(coordinateTokenParameterValues.get(0)));
+		} catch (Exception e) {
+			log.warn("Failed constructing CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			e.printStackTrace();
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		}
+	}
 	public static StampCoordinate getStampCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
+		Optional<CoordinatesToken> token = getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
+		
 		StampPosition stampPosition = new StampPositionImpl(
-				getStampCoordinateTimeFromParameter(params.get(RequestParameters.stampCoordTime)), 
-				getStampCoordinatePathSequenceFromParameter(params.get(RequestParameters.stampCoordPath)));
+				getStampCoordinateTimeFromParameter(params.get(RequestParameters.stampCoordTime), token), 
+				getStampCoordinatePathSequenceFromParameter(params.get(RequestParameters.stampCoordPath), token));
 		StampCoordinate stampCoordinate = new StampCoordinateImpl(
-				getStampCoordinatePrecedenceFromParameter(params.get(RequestParameters.stampCoordPrecedence)),
+				getStampCoordinatePrecedenceFromParameter(params.get(RequestParameters.stampCoordPrecedence), token),
 				stampPosition, 
-				getStampCoordinateModuleSequencesFromParameter(params.get(RequestParameters.stampCoordModules)),
-				getStampCoordinateAllowedStatesFromParameter(params.get(RequestParameters.stampCoordStates)));
+				getStampCoordinateModuleSequencesFromParameter(params.get(RequestParameters.stampCoordModules), token),
+				getStampCoordinateAllowedStatesFromParameter(params.get(RequestParameters.stampCoordStates), token));
 
 		log.debug("Created StampCoordinate from params: " + getStampCoordinateParameters(params) + ": " + stampCoordinate);
 
 		return stampCoordinate;
 	}
-	public static StampPrecedence getStampCoordinatePrecedenceFromParameter(List<String> unexpandedPrecedenceStrs) throws RestException {
+	public static StampPrecedence getStampCoordinatePrecedenceFromParameter(List<String> unexpandedPrecedenceStrs, Optional<CoordinatesToken> token) throws RestException {
+		StampPrecedence defaultValue = token.isPresent() ? token.get().getStampPrecedence() : StampPrecedence.PATH;
+
 		List<String> precedenceStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedPrecedenceStrs);
 
 		if (precedenceStrs == null || precedenceStrs.size() == 0) {
-			return StampPrecedence.PATH; // default
+			return defaultValue;
 		} else if (precedenceStrs.size() == 1) {
 			String precedenceStr = precedenceStrs.iterator().next();
 
 			if (StringUtils.isBlank(precedenceStr)) {
-				return StampPrecedence.PATH; // default
+				return defaultValue;
 			}
 
 			for (StampPrecedence value : StampPrecedence.values()) {
-				if (value.name().equalsIgnoreCase(precedenceStr.trim())) {
+				if (value.name().equalsIgnoreCase(precedenceStr.trim())
+						|| value.toString().equalsIgnoreCase(precedenceStr.trim())) {
 					return value;
 				}
 			}
@@ -302,14 +355,16 @@ public class CoordinatesUtil {
 		throw new RestException("stampCoordPrecedence", "\"" + precedenceStrs + "\"", "Invalid stamp coordinate precedence value");
 	}
 
-	public static EnumSet<State> getStampCoordinateAllowedStatesFromParameter(List<String> unexpandedStatesStrs) throws RestException {
+	public static EnumSet<State> getStampCoordinateAllowedStatesFromParameter(List<String> unexpandedStatesStrs, Optional<CoordinatesToken> token) throws RestException {
+		EnumSet<State> defaultValues = token.isPresent() ? token.get().getStampStates() : EnumSet.of(State.ACTIVE);
+		
 		EnumSet<State> allowedStates = EnumSet.allOf(State.class);
 		allowedStates.clear();
 
 		List<String> statesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedStatesStrs);
 
 		if (statesStrs == null || statesStrs.size() == 0) {
-			return State.ANY_STATE_SET; // default
+			return defaultValues; // default
 		} else {
 			for (String stateStr : statesStrs)
 			{
@@ -317,7 +372,9 @@ public class CoordinatesUtil {
 				{
 					boolean foundMatch = false;
 					for (State value : State.values()) {
-						if (value.name().equalsIgnoreCase(stateStr.trim())) {
+						if (value.name().equalsIgnoreCase(stateStr.trim())
+								|| value.getAbbreviation().equalsIgnoreCase(stateStr.trim())
+								|| value.toString().equalsIgnoreCase(stateStr.trim())) {
 							allowedStates.add(value);
 							foundMatch = true;
 							break;
@@ -344,20 +401,21 @@ public class CoordinatesUtil {
 			}
 
 			if (allowedStates.isEmpty()) {
-				return State.ANY_STATE_SET;
+				return defaultValues;
 			} else {
 				return allowedStates;
 			}
 		}
 	}
 
-	public static ConceptSequenceSet getStampCoordinateModuleSequencesFromParameter(List<String> unexpandedModulesStrs) throws RestException {
-		ConceptSequenceSet returnValue = new ConceptSequenceSet();
+	public static ConceptSequenceSet getStampCoordinateModuleSequencesFromParameter(List<String> unexpandedModulesStrs, Optional<CoordinatesToken> token) throws RestException {
+		ConceptSequenceSet defaultValue = token.isPresent() ? token.get().getStampModules() : new ConceptSequenceSet();
 
+		ConceptSequenceSet valuesFromParameters = new ConceptSequenceSet();
 		List<String> modulesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedModulesStrs);
 
 		if (modulesStrs == null || modulesStrs.size() == 0) {
-			return returnValue; // default
+			return defaultValue; // default
 		} else {
 			for (String moduleId : modulesStrs)
 			{
@@ -367,14 +425,14 @@ public class CoordinatesUtil {
 					if (moduleIdIntIdOptional.isPresent()) {
 						int nid = Get.identifierService().getConceptNid(moduleIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
-							returnValue.add(Get.identifierService().getConceptSequence(moduleIdIntIdOptional.get()));
+							valuesFromParameters.add(Get.identifierService().getConceptSequence(moduleIdIntIdOptional.get()));
 							continue;
 						}
 					}
 
 					Optional<UUID> moduleUuidOptional = UUIDUtil.getUUID(moduleId.trim());
 					if (moduleUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(moduleUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-						returnValue.add(Get.identifierService().getConceptSequenceForUuids(moduleUuidOptional.get()));
+						valuesFromParameters.add(Get.identifierService().getConceptSequenceForUuids(moduleUuidOptional.get()));
 						continue;
 					}
 
@@ -383,21 +441,21 @@ public class CoordinatesUtil {
 			}
 		}
 
-		return returnValue;
+		return valuesFromParameters;
 	}
 
-	public static int getStampCoordinatePathSequenceFromParameter(List<String> unexpandedPathStrs) throws RestException {
-		int development = TermAux.DEVELOPMENT_PATH.getConceptSequence();
+	public static int getStampCoordinatePathSequenceFromParameter(List<String> unexpandedPathStrs, Optional<CoordinatesToken> token) throws RestException {
+		int defaultValue = token.isPresent() ? token.get().getStampPath() : TermAux.DEVELOPMENT_PATH.getConceptSequence();
 
 		List<String> pathStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedPathStrs);
 
 		if (pathStrs == null || pathStrs.size() == 0) {
-			return TermAux.DEVELOPMENT_PATH.getConceptSequence(); // default
+			return defaultValue;
 		} else if (pathStrs.size() == 1) {
 			String pathStr = pathStrs.iterator().next();
 
 			if (StringUtils.isBlank(pathStr)) {
-				return development;
+				return defaultValue;
 			}
 
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(pathStr.trim());
@@ -411,7 +469,7 @@ public class CoordinatesUtil {
 			}
 
 			if (pathStr.trim().equalsIgnoreCase("development")) {
-				return development;
+				return TermAux.DEVELOPMENT_PATH.getConceptSequence();
 			} else if (pathStr.trim().equalsIgnoreCase("master")) {
 				return TermAux.MASTER_PATH.getConceptSequence();
 			}
@@ -420,18 +478,18 @@ public class CoordinatesUtil {
 		throw new RestException("stampCoordPath", "\"" + pathStrs + "\"", "Invalid stamp coordinate path value");
 	}
 
-	public static long getStampCoordinateTimeFromParameter(List<String> unexpandedTimeStrs) throws RestException {
-		long latest = Long.MAX_VALUE;
+	public static long getStampCoordinateTimeFromParameter(List<String> unexpandedTimeStrs, Optional<CoordinatesToken> token) throws RestException {
+		long defaultValue = token.isPresent() ? token.get().getStampTime() : Long.MAX_VALUE;
 
 		List<String> timeStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedTimeStrs);
 
 		if (timeStrs == null || timeStrs.size() == 0) {
-			return latest; // default
+			return defaultValue; // default
 		} else if (timeStrs.size() == 1) {
 			String timeStr = timeStrs.iterator().next();
 
 			if (StringUtils.isBlank(timeStr)) {
-				return latest;
+				return defaultValue;
 			}
 
 			Optional<Long> longTimeOptional = NumericUtils.getLong(timeStr.trim());
@@ -440,11 +498,11 @@ public class CoordinatesUtil {
 			}
 
 			if (timeStr.trim().equalsIgnoreCase("latest")) {
-				return latest;
+				return Long.MAX_VALUE;
 			}
 		}
 
-		throw new RestException("stampCoordTime", "\"" + timeStrs + "\"", "Invalid stamp coordinate time value");
+		throw new RestException("stampCoordTime", "\"" + timeStrs + "\"", "invalid stamp coordinate time value");
 	}
 
 	private static Map<String,List<String>> getLogicCoordinateParameters(Map<String, List<String>> params) {
@@ -465,18 +523,20 @@ public class CoordinatesUtil {
 		return logicCoordinateParams;
 	}
 	public static LogicCoordinate getLogicCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
+		Optional<CoordinatesToken> token = getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
+
 		LogicCoordinate logicCoordinate = new LogicCoordinateImpl(
-				getLogicCoordinateStatedAssemblageFromParameter(params.get(RequestParameters.logicCoordStated)), 
-				getLogicCoordinateInferredAssemblageFromParameter(params.get(RequestParameters.logicCoordInferred)),
-				getLogicCoordinateDescProfileAssemblageFromParameter(params.get(RequestParameters.logicCoordDesc)),
-				getLogicCoordinateClassifierAssemblageFromParameter(params.get(RequestParameters.logicCoordClassifier)));
+				getLogicCoordinateStatedAssemblageFromParameter(params.get(RequestParameters.logicCoordStated), token), 
+				getLogicCoordinateInferredAssemblageFromParameter(params.get(RequestParameters.logicCoordInferred), token),
+				getLogicCoordinateDescProfileAssemblageFromParameter(params.get(RequestParameters.logicCoordDesc), token),
+				getLogicCoordinateClassifierAssemblageFromParameter(params.get(RequestParameters.logicCoordClassifier), token));
 
 		log.debug("Created LogicCoordinate from params: " + getLogicCoordinateParameters(params) + ": " + logicCoordinate);
 
 		return logicCoordinate;
 	}
-	public static int getLogicCoordinateStatedAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
-		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordStatedDefault));
+	public static int getLogicCoordinateStatedAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
+		final int defaultSeq = token.isPresent() ? token.get().getLogicStatedAssemblage() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordStatedDefault));
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 
@@ -502,8 +562,8 @@ public class CoordinatesUtil {
 
 		throw new RestException(RequestParameters.logicCoordStated, "\"" + assemblageStrs + "\"", "Invalid logic coordinate stated assemblage value");
 	}
-	public static int getLogicCoordinateInferredAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
-		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordInferredDefault));
+	public static int getLogicCoordinateInferredAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
+		final int defaultSeq = token.isPresent() ? token.get().getLogicInferredAssemblage() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordInferredDefault));
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 
@@ -529,8 +589,8 @@ public class CoordinatesUtil {
 
 		throw new RestException(RequestParameters.logicCoordInferred, "\"" + assemblageStrs + "\"", "Invalid logic coordinate inferred assemblage value");
 	}
-	public static int getLogicCoordinateDescProfileAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
-		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordDescDefault));
+	public static int getLogicCoordinateDescProfileAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
+		final int defaultSeq = token.isPresent() ? token.get().getLogicDescLogicProfile() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordDescDefault));
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 
@@ -556,8 +616,8 @@ public class CoordinatesUtil {
 
 		throw new RestException(RequestParameters.logicCoordDesc, "\"" + assemblageStrs + "\"", "Invalid logic coordinate description profile assemblage value");
 	}
-	public static int getLogicCoordinateClassifierAssemblageFromParameter(List<String> unexpandedAssemblageStrs) throws RestException {
-		final int defaultSeq = Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordClassifierDefault));
+	public static int getLogicCoordinateClassifierAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
+		final int defaultSeq = token.isPresent() ? token.get().getLogicClassifier() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordClassifierDefault));
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 

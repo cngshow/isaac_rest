@@ -21,7 +21,6 @@ package gov.vha.isaac.rest.api1.logic;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;

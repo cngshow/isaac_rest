@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
@@ -45,8 +47,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
@@ -62,6 +66,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
+import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 
 /**
  * {@link RestTest}
@@ -725,7 +730,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						StampCoordinates.getDevelopmentLatest(),
 						LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(),
 						LogicCoordinates.getStandardElProfile());
-		CoordinatesToken t = new CoordinatesToken(
+		CoordinatesToken t = CoordinatesToken.get(
 				taxonomyCoordinate.getStampCoordinate(),
 				taxonomyCoordinate.getLanguageCoordinate(),
 				taxonomyCoordinate.getLogicCoordinate(),
@@ -734,7 +739,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		String token = t.serialize();
 		
-		CoordinatesToken read = new CoordinatesToken(token);
+		CoordinatesToken read = CoordinatesTokens.get(token);
 		Assert.assertTrue(token.equals(read.serialize()));
 	}
 	
@@ -749,14 +754,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		String xpath = null;
 		Node node = null;
+		NodeList nodeList = null;
 		String result = null;
 		try {
+			// RestTaxonomyCoordinate
 			result = checkFail(target(getTaxonomyCoordinate)
 					.queryParam(RequestParameters.stated, "false")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restTaxonomyCoordinate/stated";
 			node = RestTestUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
 			boolean taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
 			Assert.assertTrue(taxonomyCoordinateStated == false);
 
@@ -765,33 +773,69 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			node = RestTestUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
 			taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
 			Assert.assertTrue(taxonomyCoordinateStated == true);
 
+			// RestStampCoordinate
 			result = checkFail(target(getStampCoordinate)
 					.queryParam(RequestParameters.stampCoordTime, 123456789)
+					.queryParam(RequestParameters.stampCoordPrecedence, StampPrecedence.TIME)
+					.queryParam(RequestParameters.stampCoordModules, 1)
+					.queryParam(RequestParameters.stampCoordModules, 2)
+					.queryParam(RequestParameters.stampCoordModules, 3)
+					.queryParam(RequestParameters.stampCoordStates, State.INACTIVE)
+					.queryParam(RequestParameters.stampCoordStates, State.PRIMORDIAL)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restStampCoordinate/time";
 			node = RestTestUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
 			long stampCoordinateTime = Long.parseLong(node.getTextContent());
 			Assert.assertTrue(stampCoordinateTime == 123456789);
 
+			xpath = "/restStampCoordinate/modules";
+			List<Integer> stampCoordinateModules = new ArrayList<>();
+			node = null;
+			nodeList = RestTestUtils.getNodeSetFromXml(result, xpath);
+			for (int i = 0; i < nodeList.getLength(); ++i) {
+				stampCoordinateModules.add(Integer.valueOf(nodeList.item(i).getTextContent()));
+			}
+			Assert.assertTrue(stampCoordinateModules.size() == 3);
+			Assert.assertTrue(stampCoordinateModules.contains(1));
+			Assert.assertTrue(stampCoordinateModules.contains(2));
+			Assert.assertTrue(stampCoordinateModules.contains(3));
+
+			xpath = "/restStampCoordinate/allowedStates/enumId";
+			List<Integer> allowedStates = new ArrayList<>();
+			node = null;
+			nodeList = RestTestUtils.getNodeSetFromXml(result, xpath);
+			for (int i = 0; i < nodeList.getLength(); ++i) {
+				allowedStates.add(Integer.valueOf(nodeList.item(i).getTextContent()));
+			}
+			Assert.assertTrue(allowedStates.size() == 2);
+			Assert.assertTrue(allowedStates.contains(0));
+			Assert.assertTrue(allowedStates.contains(2));
+			
+			// LanguageCoordinate
 			result = checkFail(target(getLanguageCoordinate)
 					.queryParam(RequestParameters.langCoordLang, 11)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/language";
 			node = RestTestUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
 			int languageCoordinateLangSeq = Integer.parseInt(node.getTextContent());
 			Assert.assertTrue(languageCoordinateLangSeq == 11);
 
+			// LogicCoordinate
 			result = checkFail(target(getLogicCoordinate)
 					.queryParam(RequestParameters.logicCoordClassifier, 22)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLogicCoordinate/classifier";
 			node = RestTestUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
 			int logicCoordinateClassifierSeq = Integer.parseInt(node.getTextContent());
 			Assert.assertTrue(logicCoordinateClassifierSeq == 22);	
 		} catch (Error error) {
