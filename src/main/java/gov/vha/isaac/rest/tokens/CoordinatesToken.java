@@ -78,11 +78,41 @@ public class CoordinatesToken
 	private final int logicDescLogicProfile;
 	private final int logicClassifier;
 
-	private final TaxonomyCoordinate taxonomyCoordinate;
+	//private final TaxonomyCoordinate taxonomyCoordinate;
 	
+	public static CoordinatesToken get(
+			long stampTime,
+			int stampPath,
+			byte stampPrecedence,
+			int[] stampModules,
+			byte[] stampStates,
+			int langCoord,
+			int[] langDialects,
+			int[] langTypePrefs,
+			byte taxonomyType,
+			int logicStatedAssemblage,
+			int logicInferredAssemblage,
+			int logicDescLogicProfile,
+			int logicClassifier) throws Exception {
+		return CoordinatesTokens.get(
+				new CoordinatesToken(
+						stampTime,
+						stampPath,
+						stampPrecedence,
+						stampModules,
+						stampStates,
+						langCoord,
+						langDialects,
+						langTypePrefs,
+						taxonomyType,
+						logicStatedAssemblage,
+						logicInferredAssemblage,
+						logicDescLogicProfile,
+						logicClassifier).serialize());
+	}
 	public static CoordinatesToken get() {
 		try {
-			return CoordinatesTokens.get(new CoordinatesToken(TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest().makeAnalog(State.ACTIVE),LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate())).serialize());
+			return CoordinatesTokens.getDefaultCoordinatesTokenObject();
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
 			e.printStackTrace();
@@ -168,20 +198,10 @@ public class CoordinatesToken
 		this.logicInferredAssemblage = logicInferredAssemblage;
 		this.logicDescLogicProfile = logicDescLogicProfile;
 		this.logicClassifier = logicClassifier;
-		
-		taxonomyCoordinate = new TaxonomyCoordinateImpl(
-				getTaxonomyType(),
-				new StampCoordinateImpl(
-						getStampPrecedence(),
-						new StampPositionImpl(stampTime, stampPath),
-						getStampModules(),
-						getStampStates()),
-				new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs),
-				new LogicCoordinateImpl(
-						logicStatedAssemblage,
-						logicInferredAssemblage,
-						logicDescLogicProfile,
-						logicClassifier));
+	}
+	
+	CoordinatesToken() {
+		this(TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest().makeAnalog(State.ACTIVE),LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate()));
 	}
 
 	// This constructor handles everything with the TaxonomyCoordinate with no overlap
@@ -216,12 +236,6 @@ public class CoordinatesToken
 		logicInferredAssemblage = logic.getInferredAssemblageSequence();
 		logicDescLogicProfile = logic.getDescriptionLogicProfileSequence();
 		logicClassifier = logic.getClassifierSequence();
-		
-		taxonomyCoordinate = new TaxonomyCoordinateImpl(
-				taxType,
-				stamp,
-				lang,
-				logic);
 	}
 	
 	CoordinatesToken(String encodedData) throws Exception
@@ -276,8 +290,10 @@ public class CoordinatesToken
 		logicClassifier = buffer.getInt();
 		
 		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
+	}
 
-		taxonomyCoordinate = new TaxonomyCoordinateImpl(
+	public TaxonomyCoordinate getTaxonomyCoordinate() {
+		return new TaxonomyCoordinateImpl(
 				getTaxonomyType(),
 				new StampCoordinateImpl(
 						getStampPrecedence(),
@@ -291,18 +307,22 @@ public class CoordinatesToken
 						logicDescLogicProfile,
 						logicClassifier));
 	}
-
-	public TaxonomyCoordinate getTaxonomyCoordinate() {
-		return taxonomyCoordinate;
-	}
 	public StampCoordinate getStampCoordinate() {
-		return taxonomyCoordinate.getStampCoordinate();
+		return new StampCoordinateImpl(
+				getStampPrecedence(),
+				new StampPositionImpl(stampTime, stampPath),
+				getStampModules(),
+				getStampStates());
 	}
 	public LanguageCoordinate getLanguageCoordinate() {
-		return taxonomyCoordinate.getLanguageCoordinate();
+		return new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs);
 	}
 	public LogicCoordinate getLogicCoordinate() {
-		return taxonomyCoordinate.getLogicCoordinate();
+		return new LogicCoordinateImpl(
+				logicStatedAssemblage,
+				logicInferredAssemblage,
+				logicDescLogicProfile,
+				logicClassifier);
 	}
 	
 	/**

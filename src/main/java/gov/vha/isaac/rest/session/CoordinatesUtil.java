@@ -64,12 +64,24 @@ public class CoordinatesUtil {
 
 	private CoordinatesUtil() {}
 
-	public static boolean getStatedFromParameters(Map<String, List<String>> params) throws RestException {
-		Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
+	public static Map<String,List<String>> getTaxonomyCoordinateParameters(Map<String, List<String>> params) {
+		Map<String,List<String>> coordinateParams = new HashMap<>();
 
+		String coordinateParamNames[] = new String[] {
+				RequestParameters.stated
+		};
+		for (String paramName : coordinateParamNames) {
+			if (params.containsKey(paramName) && params.get(paramName) != null && params.get(paramName).size() > 0) {
+				coordinateParams.put(paramName, params.get(paramName));
+			}
+		}
+
+		return coordinateParams;
+	}
+	public static boolean getStatedFromParameter(List<String> params, Optional<CoordinatesToken> token) throws RestException {
 		boolean defaultValue = token.isPresent() ? (token.get().getTaxonomyType() == PremiseType.STATED) : Boolean.parseBoolean(RequestParameters.statedDefault);
 		
-		List<String> statedParamStrs = RequestInfoUtils.expandCommaDelimitedElements(params.get(RequestParameters.stated));
+		List<String> statedParamStrs = RequestInfoUtils.expandCommaDelimitedElements(params);
 
 		if (statedParamStrs == null || statedParamStrs.size() == 0) {
 			return defaultValue;
@@ -83,10 +95,15 @@ public class CoordinatesUtil {
 			return Boolean.parseBoolean(statedParamStrs.get(0).trim());
 		}
 
-		throw new RestException(RequestParameters.stated, params.get(RequestParameters.stated).toString(), "Invalid stated/inferred value");
+		throw new RestException(RequestParameters.stated, (params != null ? params.toString() : null), "invalid stated/inferred value");
+	}
+	public static boolean getStatedFromParameters(Map<String, List<String>> params) throws RestException {
+		Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
+
+		return getStatedFromParameter(params.get(RequestParameters.stated), token);
 	}
 	
-	private static Map<String,List<String>> getLanguageCoordinateParameters(Map<String, List<String>> params) {
+	public static Map<String,List<String>> getLanguageCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> languageCoordinateParams = new HashMap<>();
 
 		String langCoordinateParamNames[] = new String[] {
@@ -95,7 +112,7 @@ public class CoordinatesUtil {
 				RequestParameters.langCoordDescTypesPref
 		};
 		for (String paramName : langCoordinateParamNames) {
-			if (params.containsKey(paramName)) {
+			if (params.containsKey(paramName) && params.get(paramName) != null && params.get(paramName).size() > 0) {
 				languageCoordinateParams.put(paramName, params.get(paramName));
 			}
 		}
@@ -268,7 +285,7 @@ public class CoordinatesUtil {
 		}
 	}
 
-	private static Map<String,List<String>> getStampCoordinateParameters(Map<String, List<String>> params) {
+	public static Map<String,List<String>> getStampCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> stampCoordinateParams = new HashMap<>();
 
 		String stampCoordinateParamNames[] = new String[] {
@@ -279,7 +296,7 @@ public class CoordinatesUtil {
 				RequestParameters.stampCoordStates
 		};
 		for (String paramName : stampCoordinateParamNames) {
-			if (params.containsKey(paramName)) {
+			if (params.containsKey(paramName) && params.get(paramName) != null && params.get(paramName).size() > 0) {
 				stampCoordinateParams.put(paramName, params.get(paramName));
 			}
 		}
@@ -287,7 +304,25 @@ public class CoordinatesUtil {
 		return stampCoordinateParams;
 	}
 
-
+	public static Optional<String> getCoordinatesTokenStringFromParameters(Map<String, List<String>> parameters) throws RestException {
+		List<String> coordinateTokenParameterValues = parameters.get(RequestParameters.coordToken);
+		
+		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0) {
+			return Optional.empty();
+		} else if (coordinateTokenParameterValues.size() > 1) {
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues + "\"", "too many (" + coordinateTokenParameterValues.size() + " values");
+		} else if (coordinateTokenParameterValues.get(0) == null) {
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "invalid (null) value");
+		}
+		
+		try {
+			return Optional.of(coordinateTokenParameterValues.get(0));
+		} catch (Exception e) {
+			log.warn("Failed constructing CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			e.printStackTrace();
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		}
+	}
 	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameter(List<String> coordinateTokenParameterValues) throws RestException {
 		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0) {
 			return Optional.empty();
@@ -505,7 +540,7 @@ public class CoordinatesUtil {
 		throw new RestException("stampCoordTime", "\"" + timeStrs + "\"", "invalid stamp coordinate time value");
 	}
 
-	private static Map<String,List<String>> getLogicCoordinateParameters(Map<String, List<String>> params) {
+	public static Map<String,List<String>> getLogicCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> logicCoordinateParams = new HashMap<>();
 
 		String logicCoordinateParamNames[] = new String[] {
