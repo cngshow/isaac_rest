@@ -737,10 +737,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				taxonomyCoordinate.getTaxonomyType()
 				);
 		
-		String token = t.serialize();
+		String token = t.getSerialized();
 		
 		CoordinatesToken read = CoordinatesTokens.get(token);
-		Assert.assertTrue(token.equals(read.serialize()));
+		Assert.assertTrue(token.equals(read.getSerialized()));
 	}
 	
 

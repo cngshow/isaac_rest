@@ -40,6 +40,9 @@ import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.session.RequestParameters.LanguageCoordinateParamNames;
+import gov.vha.isaac.rest.session.RequestParameters.LogicCoordinateParamNames;
+import gov.vha.isaac.rest.session.RequestParameters.StampCoordinateParamNames;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 
@@ -124,18 +127,16 @@ public class RequestInfo
 			log.debug("Constructing CoordinatesToken from parameters");
 			
 			// Set RequestInfo coordinatesToken string to parameter value if set, otherwise set to default
-			Optional<String> tokenStringFromParameters = CoordinatesUtil.getCoordinatesTokenStringFromParameters(parameters);
-			Optional<CoordinatesToken> token = Optional.empty();
-			if (tokenStringFromParameters.isPresent()) {
-				log.debug("Applying CoordinatesToken " + RequestParameters.coordToken + " parameter \"" + tokenStringFromParameters.get() + "\"");
+			Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameters(parameters);
+			if (token.isPresent()) {
+				log.debug("Applying CoordinatesToken " + RequestParameters.coordToken + " parameter \"" + token.get().getSerialized() + "\"");
 
 				try {
-					CoordinatesTokens.put(coordinatesToken_ = tokenStringFromParameters.get());
-					token = Optional.of(CoordinatesTokens.get(coordinatesToken_));
+					requestInfo.get().coordinatesToken_ = token.get().getSerialized();
 				} catch (Exception e) {
 					log.warn("Failed creating CoordinatesToken from parameters. caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 					e.printStackTrace();
-					throw new RestException(RequestParameters.coordToken, tokenStringFromParameters.get(), "caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+					throw new RestException(RequestParameters.coordToken, token.get().getSerialized(), "caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 				}
 			} else {
 				log.debug("Applying default coordinates");
@@ -146,10 +147,10 @@ public class RequestInfo
 
 			// Determine if any relevant coordinate parameters set
 			Map<String,List<String>> coordinateParameters = new HashMap<>();
-			coordinateParameters.putAll(CoordinatesUtil.getTaxonomyCoordinateParameters(parameters));
-			coordinateParameters.putAll(CoordinatesUtil.getStampCoordinateParameters(parameters));
-			coordinateParameters.putAll(CoordinatesUtil.getLanguageCoordinateParameters(parameters));
-			coordinateParameters.putAll(CoordinatesUtil.getLogicCoordinateParameters(parameters));
+			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, RequestParameters.stated));
+			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, StampCoordinateParamNames.values()));
+			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, LanguageCoordinateParamNames.values()));
+			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, LogicCoordinateParamNames.values()));
 
 			// If ANY relevant coordinate parameter values set, then calculate new CoordinatesToken string
 			if (coordinateParameters.size() == 0) {
@@ -195,7 +196,7 @@ public class RequestInfo
 							logicDescProfileSeq,
 							logicClassifierSeq);
 
-					requestInfo.get().coordinatesToken_ = tokenObj.serialize();
+					requestInfo.get().coordinatesToken_ = tokenObj.getSerialized();
 
 					CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), requestInfo.get().coordinatesToken_);
 					

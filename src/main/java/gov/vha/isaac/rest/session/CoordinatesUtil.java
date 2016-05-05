@@ -38,21 +38,17 @@ import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
-import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
-import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
-import gov.vha.isaac.ochre.api.coordinate.StampPosition;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
-import gov.vha.isaac.ochre.model.coordinate.LanguageCoordinateImpl;
-import gov.vha.isaac.ochre.model.coordinate.LogicCoordinateImpl;
-import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
-import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.session.RequestParameters.LanguageCoordinateParamNames;
+import gov.vha.isaac.rest.session.RequestParameters.LogicCoordinateParamNames;
+import gov.vha.isaac.rest.session.RequestParameters.StampCoordinateParamNames;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
+import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 
 /**
  * 
@@ -66,6 +62,12 @@ public class CoordinatesUtil {
 
 	private CoordinatesUtil() {}
 
+	/**
+	 * Used to hash CoordinatesToken object and serialized string by request parameters
+	 * 
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @return string representation of parameter name to value-list map
+	 */
 	public static String encodeCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> coordinateParams = getCoordinateParameters(params);
 		
@@ -87,33 +89,101 @@ public class CoordinatesUtil {
 		
 		return sb.toString();
 	}
-	public static  Map<String, List<String>> getCoordinateParameters(Map<String, List<String>> params) {
+
+	/**
+	 * 
+	 * Returns subset of parameter map relevant to CoordinatesToken,
+	 * including the coordToken parameter itself
+	 * 
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @return subset of parameter map relevant to CoordinatesToken
+	 */
+	public static Map<String, List<String>> getCoordinateParameters(Map<String, List<String>> params) {
 		Map<String, List<String>> coordinateParams = new TreeMap<>();
 		
-		if (params.containsKey(RequestParameters.coordToken) && params.get(RequestParameters.coordToken) != null && params.get(RequestParameters.coordToken).size() > 0) {
-			coordinateParams.put(RequestParameters.coordToken, params.get(RequestParameters.coordToken));
-		}
-		coordinateParams.putAll(getTaxonomyCoordinateParameters(params));
-		coordinateParams.putAll(getStampCoordinateParameters(params));
-		coordinateParams.putAll(getLanguageCoordinateParameters(params));
-		coordinateParams.putAll(getLogicCoordinateParameters(params));
+		coordinateParams.putAll(getParametersSubset(params, RequestParameters.coordToken));
+		coordinateParams.putAll(getParametersSubset(params, RequestParameters.stated));
+		coordinateParams.putAll(getParametersSubset(params, StampCoordinateParamNames.values()));
+		coordinateParams.putAll(getParametersSubset(params, LanguageCoordinateParamNames.values()));
+		coordinateParams.putAll(getParametersSubset(params, LogicCoordinateParamNames.values()));
 		
 		return coordinateParams;
 	}
-	public static Map<String,List<String>> getTaxonomyCoordinateParameters(Map<String, List<String>> params) {
-		Map<String,List<String>> coordinateParams = new HashMap<>();
+	
+	/**
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @param names array of parameter name Enums or objects for which toString() is used
+	 * @return
+	 */
+	@SafeVarargs
+	public static <E extends Enum<E>> Map<String, List<String>> getParametersSubset(Map<String, List<String>> params, E...names) {
+		return getParametersSubset(params, (Object[])names);
+	}
+	public static Map<String, List<String>> getParametersSubset(Map<String, List<String>> params, Object...names) {
+		Map<String,List<String>> paramSubset = new HashMap<>();
 
-		String coordinateParamNames[] = new String[] {
-				RequestParameters.stated
-		};
-		for (String paramName : coordinateParamNames) {
-			if (params.containsKey(paramName) && params.get(paramName) != null && params.get(paramName).size() > 0) {
-				coordinateParams.put(paramName, params.get(paramName));
+		for (Object paramName : names) {
+			if (params.containsKey(paramName.toString()) && params.get(paramName.toString()) != null && params.get(paramName.toString()).size() > 0) {
+				paramSubset.put(paramName.toString(), params.get(paramName.toString()));
 			}
 		}
 
-		return coordinateParams;
+		return paramSubset;
 	}
+
+	/**
+	 * 
+	 * This method returns an Optional containing a CoordinatesToken object if its parameter exists in the parameters map.
+	 * If the parameter exists, it automatically attempts to construct and cache the CoordinatesToken object before returning it
+	 *
+	 * @param allParams parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
+	 * @throws RestException
+	 */
+	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameters(Map<String, List<String>> allParams) throws RestException {
+		Optional<String> tokenStringOptional = getCoordinatesTokenStringFromParameters(allParams);
+		
+		if (! tokenStringOptional.isPresent()) {
+			return Optional.empty();
+		} else {
+			try {
+				return Optional.of(CoordinatesTokens.get(tokenStringOptional.get()));
+			} catch (Exception e) {
+				log.warn("Failed creating CoordinatesToken from parameters. caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+				e.printStackTrace();
+				throw new RestException("Failed creating CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage() + ". Parameters: " + encodeCoordinateParameters(allParams));
+			}
+		}
+	}
+	/**
+	 * 
+	 * This method returns an Optional containing a CoordinatesToken string if it exists in the parameters map.
+	 *
+	 * @param allParams parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
+	 * @throws RestException
+	 */
+	public static Optional<String> getCoordinatesTokenStringFromParameters(Map<String, List<String>> allParams) throws RestException {
+		List<String> coordinateTokenParameterValues = allParams.get(RequestParameters.coordToken);
+		
+		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0) {
+			return Optional.empty();
+		} else if (coordinateTokenParameterValues.size() > 1) {
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues + "\"", "too many (" + coordinateTokenParameterValues.size() + " values");
+		} else if (coordinateTokenParameterValues.get(0) == null) {
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "invalid (null) value");
+		}
+		
+		return Optional.of(coordinateTokenParameterValues.get(0));
+	}
+
+	/**
+	 * @param params list of values for parameter. Blank or empty values specify default,
+	 * otherwise valid IFF single boolean-parseable string
+	 * @param token underlying token providing default values, if present
+	 * @return
+	 * @throws RestException if contains multiple values or non boolean-parseable non-empty string
+	 */
 	public static boolean getStatedFromParameter(List<String> params, Optional<CoordinatesToken> token) throws RestException {
 		boolean defaultValue = token.isPresent() ? (token.get().getTaxonomyType() == PremiseType.STATED) : Boolean.parseBoolean(RequestParameters.statedDefault);
 		
@@ -133,40 +203,23 @@ public class CoordinatesUtil {
 
 		throw new RestException(RequestParameters.stated, (params != null ? params.toString() : null), "invalid stated/inferred value");
 	}
-	public static boolean getStatedFromParameters(Map<String, List<String>> params) throws RestException {
-		Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
 
-		return getStatedFromParameter(params.get(RequestParameters.stated), token);
-	}
-	
-	public static Map<String,List<String>> getLanguageCoordinateParameters(Map<String, List<String>> params) {
-		Map<String,List<String>> languageCoordinateParams = new HashMap<>();
-
-		String langCoordinateParamNames[] = new String[] {
-				RequestParameters.langCoordLang,
-				RequestParameters.langCoordDialectsPref,
-				RequestParameters.langCoordDescTypesPref
-		};
-		for (String paramName : langCoordinateParamNames) {
-			if (params.containsKey(paramName) && params.get(paramName) != null && params.get(paramName).size() > 0) {
-				languageCoordinateParams.put(paramName, params.get(paramName));
-			}
-		}
-
-		return languageCoordinateParams;
-	}
-	public static LanguageCoordinate getLanguageCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
-		Optional<CoordinatesToken> token = getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
-
-		LanguageCoordinateImpl languageCoordinate = new LanguageCoordinateImpl(
-				getLanguageCoordinateLanguageSequenceFromParameter(params.get(RequestParameters.langCoordLang), token), 
-				getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDialectsPref), token),
-				getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(params.get(RequestParameters.langCoordDescTypesPref), token));
-
-		log.debug("Created LanguageCoordinate from params: " + getLanguageCoordinateParameters(params) + ": " + languageCoordinate);
-
-		return languageCoordinate;
-	}
+//	/**
+//	 * This method gets the appropriate stated TaxonomyCoordinate value from the parameter map.
+//	 * It attempts to retrieve an explicit CoordinatesToken value from the parameter map.
+//	 * If an explicit CoordinatesToken exists in the parameter map then its values are used as defaults
+//	 * which will be overridden by any and all individual explicit parameter values.
+//	 * If an explicit CoordinatesToken exists in the parameter map then hard-coded defaults are used
+//	 * for any parameters missing from the relevant parameter subset
+//	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+//	 * @return
+//	 * @throws RestException if contains either inappropriate number or invalid non-empty values for relevant parameters
+//	 */
+//	public static boolean getStatedFromParameters(Map<String, List<String>> params) throws RestException {
+//		Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameters(params);
+//
+//		return getStatedFromParameter(params.get(RequestParameters.stated), token);
+//	}
 
 	public static int getLanguageCoordinateLanguageSequenceFromParameter(List<String> unexpandedLanguageParamStrs, Optional<CoordinatesToken> token) throws RestException {
 		int defaultValue = token.isPresent() ? token.get().getLangCoord() : TermAux.ENGLISH_LANGUAGE.getConceptSequence();
@@ -321,77 +374,6 @@ public class CoordinatesUtil {
 		}
 	}
 
-	public static Map<String,List<String>> getStampCoordinateParameters(Map<String, List<String>> params) {
-		Map<String,List<String>> stampCoordinateParams = new HashMap<>();
-
-		String stampCoordinateParamNames[] = new String[] {
-				RequestParameters.stampCoordTime,
-				RequestParameters.stampCoordPath,
-				RequestParameters.stampCoordPrecedence,
-				RequestParameters.stampCoordModules,
-				RequestParameters.stampCoordStates
-		};
-		for (String paramName : stampCoordinateParamNames) {
-			if (params.containsKey(paramName) && params.get(paramName) != null && params.get(paramName).size() > 0) {
-				stampCoordinateParams.put(paramName, params.get(paramName));
-			}
-		}
-
-		return stampCoordinateParams;
-	}
-
-	public static Optional<String> getCoordinatesTokenStringFromParameters(Map<String, List<String>> parameters) throws RestException {
-		List<String> coordinateTokenParameterValues = parameters.get(RequestParameters.coordToken);
-		
-		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0) {
-			return Optional.empty();
-		} else if (coordinateTokenParameterValues.size() > 1) {
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues + "\"", "too many (" + coordinateTokenParameterValues.size() + " values");
-		} else if (coordinateTokenParameterValues.get(0) == null) {
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "invalid (null) value");
-		}
-		
-		try {
-			return Optional.of(coordinateTokenParameterValues.get(0));
-		} catch (Exception e) {
-			log.warn("Failed constructing CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-			e.printStackTrace();
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-		}
-	}
-	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameter(List<String> coordinateTokenParameterValues) throws RestException {
-		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0) {
-			return Optional.empty();
-		} else if (coordinateTokenParameterValues.size() > 1) {
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues + "\"", "too many (" + coordinateTokenParameterValues.size() + " values");
-		} else if (coordinateTokenParameterValues.get(0) == null) {
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "invalid (null) value");
-		}
-		
-		try {
-			return Optional.of(CoordinatesToken.get(coordinateTokenParameterValues.get(0)));
-		} catch (Exception e) {
-			log.warn("Failed constructing CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-			e.printStackTrace();
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-		}
-	}
-	public static StampCoordinate getStampCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
-		Optional<CoordinatesToken> token = getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
-		
-		StampPosition stampPosition = new StampPositionImpl(
-				getStampCoordinateTimeFromParameter(params.get(RequestParameters.stampCoordTime), token), 
-				getStampCoordinatePathSequenceFromParameter(params.get(RequestParameters.stampCoordPath), token));
-		StampCoordinate stampCoordinate = new StampCoordinateImpl(
-				getStampCoordinatePrecedenceFromParameter(params.get(RequestParameters.stampCoordPrecedence), token),
-				stampPosition, 
-				getStampCoordinateModuleSequencesFromParameter(params.get(RequestParameters.stampCoordModules), token),
-				getStampCoordinateAllowedStatesFromParameter(params.get(RequestParameters.stampCoordStates), token));
-
-		log.debug("Created StampCoordinate from params: " + getStampCoordinateParameters(params) + ": " + stampCoordinate);
-
-		return stampCoordinate;
-	}
 	public static StampPrecedence getStampCoordinatePrecedenceFromParameter(List<String> unexpandedPrecedenceStrs, Optional<CoordinatesToken> token) throws RestException {
 		StampPrecedence defaultValue = token.isPresent() ? token.get().getStampPrecedence() : StampPrecedence.PATH;
 
@@ -574,37 +556,6 @@ public class CoordinatesUtil {
 		}
 
 		throw new RestException("stampCoordTime", "\"" + timeStrs + "\"", "invalid stamp coordinate time value");
-	}
-
-	public static Map<String,List<String>> getLogicCoordinateParameters(Map<String, List<String>> params) {
-		Map<String,List<String>> logicCoordinateParams = new HashMap<>();
-
-		String logicCoordinateParamNames[] = new String[] {
-				RequestParameters.logicCoordStated,
-				RequestParameters.logicCoordInferred,
-				RequestParameters.logicCoordDesc,
-				RequestParameters.logicCoordClassifier
-		};
-		for (String paramName : logicCoordinateParamNames) {
-			if (params.containsKey(paramName)) {
-				logicCoordinateParams.put(paramName, params.get(paramName));
-			}
-		}
-
-		return logicCoordinateParams;
-	}
-	public static LogicCoordinate getLogicCoordinateFromParameters(Map<String, List<String>> params) throws RestException {
-		Optional<CoordinatesToken> token = getCoordinatesTokenFromParameter(params.get(RequestParameters.coordToken));
-
-		LogicCoordinate logicCoordinate = new LogicCoordinateImpl(
-				getLogicCoordinateStatedAssemblageFromParameter(params.get(RequestParameters.logicCoordStated), token), 
-				getLogicCoordinateInferredAssemblageFromParameter(params.get(RequestParameters.logicCoordInferred), token),
-				getLogicCoordinateDescProfileAssemblageFromParameter(params.get(RequestParameters.logicCoordDesc), token),
-				getLogicCoordinateClassifierAssemblageFromParameter(params.get(RequestParameters.logicCoordClassifier), token));
-
-		log.debug("Created LogicCoordinate from params: " + getLogicCoordinateParameters(params) + ": " + logicCoordinate);
-
-		return logicCoordinate;
 	}
 	public static int getLogicCoordinateStatedAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
 		final int defaultSeq = token.isPresent() ? token.get().getLogicStatedAssemblage() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicCoordStatedDefault));

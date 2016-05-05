@@ -53,6 +53,6 @@ public class RestCoordinatesToken {
 		this.token = token;
 	}
 	public RestCoordinatesToken(CoordinatesToken token) {
-		this.token = token.serialize();
+		this.token = token.getSerialized();
 	}
 }

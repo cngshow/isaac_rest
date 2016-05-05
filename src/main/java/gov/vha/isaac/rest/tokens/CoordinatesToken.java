@@ -78,7 +78,13 @@ public class CoordinatesToken
 	private final int logicDescLogicProfile;
 	private final int logicClassifier;
 
-	//private final TaxonomyCoordinate taxonomyCoordinate;
+	private final Object coordinatesLock = new Object();
+	private TaxonomyCoordinate taxonomyCoordinate = null;
+	private StampCoordinate stampCoordinate = null;
+	private LanguageCoordinate languageCoordinate = null;
+	private LogicCoordinate logicCoordinate = null;
+	
+	private final String serialization;
 	
 	public static CoordinatesToken get(
 			long stampTime,
@@ -108,7 +114,7 @@ public class CoordinatesToken
 						logicStatedAssemblage,
 						logicInferredAssemblage,
 						logicDescLogicProfile,
-						logicClassifier).serialize());
+						logicClassifier).getSerialized());
 	}
 	public static CoordinatesToken get() {
 		try {
@@ -121,7 +127,7 @@ public class CoordinatesToken
 	}
 	public static CoordinatesToken get(TaxonomyCoordinate tax) {
 		try {
-			return CoordinatesTokens.get(new CoordinatesToken(tax).serialize());
+			return CoordinatesTokens.get(new CoordinatesToken(tax).getSerialized());
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
 			e.printStackTrace();
@@ -134,7 +140,7 @@ public class CoordinatesToken
 			LogicCoordinate logic,
 			PremiseType taxType) {
 		try {
-			return CoordinatesTokens.get(new CoordinatesToken(stamp, lang, logic, taxType).serialize());
+			return CoordinatesTokens.get(new CoordinatesToken(stamp, lang, logic, taxType).getSerialized());
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
 			e.printStackTrace();
@@ -198,6 +204,8 @@ public class CoordinatesToken
 		this.logicInferredAssemblage = logicInferredAssemblage;
 		this.logicDescLogicProfile = logicDescLogicProfile;
 		this.logicClassifier = logicClassifier;
+		
+		serialization = serialize(this);
 	}
 	
 	CoordinatesToken() {
@@ -236,10 +244,14 @@ public class CoordinatesToken
 		logicInferredAssemblage = logic.getInferredAssemblageSequence();
 		logicDescLogicProfile = logic.getDescriptionLogicProfileSequence();
 		logicClassifier = logic.getClassifierSequence();
+
+		serialization = serialize(this);
 	}
 	
 	CoordinatesToken(String encodedData) throws Exception
 	{
+		serialization = encodedData;
+
 		long time = System.currentTimeMillis();
 		String readHash = encodedData.substring(0, encodedHashLength);
 		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), getSecret(), hashRounds, hashLength);
@@ -293,38 +305,54 @@ public class CoordinatesToken
 	}
 
 	public TaxonomyCoordinate getTaxonomyCoordinate() {
-		return new TaxonomyCoordinateImpl(
-				getTaxonomyType(),
-				new StampCoordinateImpl(
+		synchronized (coordinatesLock) {
+			if (taxonomyCoordinate == null) {
+				taxonomyCoordinate = new TaxonomyCoordinateImpl(
+						getTaxonomyType(),
+						getStampCoordinate(),
+						getLanguageCoordinate(),
+						getLogicCoordinate());
+			}
+
+			return taxonomyCoordinate;
+		}
+	}
+	public synchronized StampCoordinate getStampCoordinate() {
+		synchronized (coordinatesLock) {
+			if (stampCoordinate == null) {
+				stampCoordinate = new StampCoordinateImpl(
 						getStampPrecedence(),
 						new StampPositionImpl(stampTime, stampPath),
 						getStampModules(),
-						getStampStates()),
-				new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs),
-				new LogicCoordinateImpl(
+						getStampStates());
+			}
+
+			return stampCoordinate;
+		}
+	}
+	public synchronized LanguageCoordinate getLanguageCoordinate() {
+		synchronized (coordinatesLock) {
+			if (languageCoordinate == null) {
+				languageCoordinate = new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs);
+			}
+
+			return languageCoordinate;
+		}
+	}
+	public synchronized LogicCoordinate getLogicCoordinate() {
+		synchronized (coordinatesLock) {
+			if (logicCoordinate == null) {
+				logicCoordinate = new LogicCoordinateImpl(
 						logicStatedAssemblage,
 						logicInferredAssemblage,
 						logicDescLogicProfile,
-						logicClassifier));
+						logicClassifier);
+			}
+
+			return logicCoordinate;
+		}
 	}
-	public StampCoordinate getStampCoordinate() {
-		return new StampCoordinateImpl(
-				getStampPrecedence(),
-				new StampPositionImpl(stampTime, stampPath),
-				getStampModules(),
-				getStampStates());
-	}
-	public LanguageCoordinate getLanguageCoordinate() {
-		return new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs);
-	}
-	public LogicCoordinate getLogicCoordinate() {
-		return new LogicCoordinateImpl(
-				logicStatedAssemblage,
-				logicInferredAssemblage,
-				logicDescLogicProfile,
-				logicClassifier);
-	}
-	
+
 	/**
 	 * @return the stampTime
 	 */
@@ -422,19 +450,23 @@ public class CoordinatesToken
 		return logicClassifier;
 	}
 
-	public String serialize()
+	public String getSerialized()
 	{
+		return serialization;
+	}
+	
+	private static String serialize(CoordinatesToken token) {
 		try
 		{
-			String data = Base64.getEncoder().encodeToString(getBytesToWrite());
-			return PasswordHasher.hash(data, getSecret(), hashRounds, hashLength) + data;
+			String data = Base64.getEncoder().encodeToString(token.getBytesToWrite());
+			return PasswordHasher.hash(data, token.getSecret(), hashRounds, hashLength) + data;
 		}
 		catch (Exception e)
 		{
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private byte[] getBytesToWrite()
 	{
 		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer();
@@ -534,7 +566,7 @@ public class CoordinatesToken
 				4); // logicClassifier
 		
 		
-		String token = t.serialize();
+		String token = t.getSerialized();
 		System.out.println(token);
 		new CoordinatesToken(token);
 		
@@ -553,7 +585,7 @@ public class CoordinatesToken
 				3, // logicDescLogicProfile
 				4); // logicClassifier
 		
-		String token1 = r.serialize();
+		String token1 = r.getSerialized();
 		System.out.println(token1);
 		new CoordinatesToken(token1);
 	}

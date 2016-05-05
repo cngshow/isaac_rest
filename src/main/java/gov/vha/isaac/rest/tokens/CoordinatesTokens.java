@@ -50,7 +50,7 @@ public class CoordinatesTokens {
 			};
 			
 			CoordinatesToken defaultCoordinatesToken = new CoordinatesToken();
-			defaultCoordinatesTokenStr = defaultCoordinatesToken.serialize();
+			defaultCoordinatesTokenStr = defaultCoordinatesToken.getSerialized();
 			put(defaultCoordinatesToken);
 			
 			TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
@@ -64,6 +64,9 @@ public class CoordinatesTokens {
 		}
 	}
 
+	/**
+	 * @return CoordinatesToken string encoding default coordinates
+	 */
 	public static String getDefaultCoordinatesTokenString() {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
@@ -73,6 +76,9 @@ public class CoordinatesTokens {
 			return defaultCoordinatesTokenStr;
 		}
 	}
+	/**
+	 * @return CoordinatesToken object containing components for default coordinates
+	 */
 	public static CoordinatesToken getDefaultCoordinatesTokenObject() {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
@@ -89,6 +95,14 @@ public class CoordinatesTokens {
 		}
 	}
 	
+	/**
+	 * 
+	 * This method attempts to cache a CoordinatesToken serialization,
+	 * automatically constructing the respective object
+	 * 
+	 * @param value CoordinatesToken string
+	 * @throws Exception
+	 */
 	public static void put(String value) throws Exception {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
@@ -98,24 +112,54 @@ public class CoordinatesTokens {
 			get(value);
 		}
 	}
+	/**
+	 * 
+	 * This method caches a CoordinatesToken object,
+	 * automatically serializing itself to generate its key
+	 * 
+	 * @param value CoordinatesToken object
+	 * @throws Exception
+	 */
 	public static void put(CoordinatesToken value) {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
 				init(DEFAULT_MAX_SIZE);
 			}
-			OBJECT_BY_TOKEN_CACHE.put(value.serialize(), value);
+			OBJECT_BY_TOKEN_CACHE.put(value.getSerialized(), value);
 		}
 	}
+	/**
+	 * 
+	 * This method caches a CoordinatesToken object,
+	 * automatically serializing itself to generate its key
+	 * and also caching the key by a hash of the parameters presumably
+	 * used to generate the object
+	 * 
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @param value CoordinatesToken object
+	 * @throws Exception
+	 */
 	public static void put(Map<String, List<String>> params, CoordinatesToken value) {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
 				init(DEFAULT_MAX_SIZE);
 			}
-			String serializedToken = value.serialize();
+			String serializedToken = value.getSerialized();
 			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
 	}
+	/**
+	 * 
+	 * This method caches a CoordinatesToken object by the provided key
+	 * and also caching the key by a hash of the parameters presumably
+	 * used to generate the object
+	 * 
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @param serializedToken CoordinatesToken serialization string used as key
+	 * @param value CoordinatesToken object
+	 * @throws Exception
+	 */
 	public static void put(Map<String, List<String>> params, String serializedToken, CoordinatesToken value) {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
@@ -125,6 +169,17 @@ public class CoordinatesTokens {
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
 	}
+	/**
+	 * 
+	 * This method attempts to cache a CoordinatesToken serialization,
+	 * automatically constructing the respective object
+	 * and also caching the key by a hash of the parameters presumably
+	 * used to generate the object
+	 * 
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @param serializedToken CoordinatesToken string
+	 * @throws Exception
+	 */
 	public static void put(Map<String, List<String>> params, String serializedToken) throws Exception {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
@@ -136,6 +191,18 @@ public class CoordinatesTokens {
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
 	}
+	/**
+	 * 
+	 * This method attempts to retrieve the CoordinatesToken object
+	 * corresponding to the passed serialized CoordinatesToken string key.
+	 * If the CoordinatesToken object is not already cached,
+	 * then the CoordinatesToken object will be constructed from the key and cached
+	 * before being returned
+	 * 
+	 * @param key serialized CoordinatesToken string
+	 * @return CoordinatesToken object
+	 * @throws Exception
+	 */
 	public static CoordinatesToken get(String key) throws Exception {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
@@ -149,6 +216,13 @@ public class CoordinatesTokens {
 			return OBJECT_BY_TOKEN_CACHE.get(key);
 		}
 	}
+	/**
+	 * Attempt to retrieve CoordinatesToken serialization key string
+	 * by a hash of the parameters presumably used to generate the object
+	 * 
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @return
+	 */
 	public static String get(Map<String, List<String>> params) {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {

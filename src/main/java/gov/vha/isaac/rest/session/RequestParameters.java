@@ -29,6 +29,7 @@ package gov.vha.isaac.rest.session;
 public class RequestParameters {
 	private RequestParameters() {}
 
+	// CoordinatesToken
 	public final static String coordToken = "coordToken";
 
 	// Taxonomy Coordinate
@@ -36,35 +37,51 @@ public class RequestParameters {
 	public final static String statedDefault = "true";
 
 	// Language Coordinate
-	public final static String langCoordLang = "langCoordLang";
+	public static enum LanguageCoordinateParamNames {
+		langCoordLang,
+		langCoordDialectsPref,
+		langCoordDescTypesPref
+	};
+	public final static String langCoordLang = LanguageCoordinateParamNames.langCoordLang.name();
 	public final static String langCoordLangDefault = "english";
-
-	public final static String langCoordDialectsPref = "langCoordDialectsPref";
+	public final static String langCoordDialectsPref = LanguageCoordinateParamNames.langCoordDialectsPref.name();
 	public final static String langCoordDialectsPrefDefault = "us,gb";
-
-	public final static String langCoordDescTypesPref = "langCoordDescTypesPref";
+	public final static String langCoordDescTypesPref = LanguageCoordinateParamNames.langCoordDescTypesPref.name();
 	public final static String langCoordDescTypesPrefDefault = "fsn,synonym";
 	
 	// Stamp Coordinate
-	public final static String stampCoordTime = "stampCoordTime";
+	public static enum StampCoordinateParamNames {
+		stampCoordTime,
+		stampCoordPath,
+		stampCoordPrecedence,
+		stampCoordModules,
+		stampCoordStates
+	};
+	public final static String stampCoordTime = StampCoordinateParamNames.stampCoordTime.name();
 	public final static String stampCoordTimeDefault = "latest";
-	public final static String stampCoordPath = "stampCoordPath";
+	public final static String stampCoordPath = StampCoordinateParamNames.stampCoordPath.name();
 	public final static String stampCoordPathDefault = "development";
-	public final static String stampCoordPrecedence = "stampCoordPrecedence";
+	public final static String stampCoordPrecedence = StampCoordinateParamNames.stampCoordPrecedence.name();
 	public final static String stampCoordPrecedenceDefault = "path";
-	public final static String stampCoordModules = "stampCoordModules";
+	public final static String stampCoordModules = StampCoordinateParamNames.stampCoordModules.name();
 	public final static String stampCoordModulesDefault = "";
-	public final static String stampCoordStates = "stampCoordStates";
+	public final static String stampCoordStates = StampCoordinateParamNames.stampCoordStates.name();
 	public final static String stampCoordStatesDefault = "active";
 
 	// Logic Coordinate
-	public final static String logicCoordStated = "logicCoordStated";
+	public static enum LogicCoordinateParamNames {
+		logicCoordStated,
+		logicCoordInferred,
+		logicCoordDesc,
+		logicCoordClassifier
+	};
+	public final static String logicCoordStated = LogicCoordinateParamNames.logicCoordStated.name();
 	public final static String logicCoordStatedDefault = "1f201994-960e-11e5-8994-feff819cdc9f";
-	public final static String logicCoordInferred = "logicCoordInferred";
+	public final static String logicCoordInferred = LogicCoordinateParamNames.logicCoordInferred.name();
 	public final static String logicCoordInferredDefault = "1f20182c-960e-11e5-8994-feff819cdc9f";
-	public final static String logicCoordDesc = "logicCoordDesc";
+	public final static String logicCoordDesc = LogicCoordinateParamNames.logicCoordDesc.name();
 	public final static String logicCoordDescDefault = "1f201e12-960e-11e5-8994-feff819cdc9f";
-	public final static String logicCoordClassifier = "logicCoordClassifier";
+	public final static String logicCoordClassifier = LogicCoordinateParamNames.logicCoordClassifier.name();
 	public final static String logicCoordClassifierDefault = "1f201fac-960e-11e5-8994-feff819cdc9f";
 
 	public final static String id = "id";
