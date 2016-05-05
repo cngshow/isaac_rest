@@ -100,7 +100,7 @@ public class CoordinatesToken
 			int logicInferredAssemblage,
 			int logicDescLogicProfile,
 			int logicClassifier) throws Exception {
-		return CoordinatesTokens.get(
+		CoordinatesToken token =
 				new CoordinatesToken(
 						stampTime,
 						stampPath,
@@ -114,11 +114,17 @@ public class CoordinatesToken
 						logicStatedAssemblage,
 						logicInferredAssemblage,
 						logicDescLogicProfile,
-						logicClassifier).getSerialized());
+						logicClassifier);
+		if (CoordinatesTokens.get(token.serialization) != null) {
+			return CoordinatesTokens.get(token.serialization);
+		} else {
+			CoordinatesTokens.put(token);
+			return token;
+		}
 	}
 	public static CoordinatesToken get() {
 		try {
-			return CoordinatesTokens.getDefaultCoordinatesTokenObject();
+			return CoordinatesTokens.getDefaultCoordinatesToken();
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
 			e.printStackTrace();
@@ -127,7 +133,13 @@ public class CoordinatesToken
 	}
 	public static CoordinatesToken get(TaxonomyCoordinate tax) {
 		try {
-			return CoordinatesTokens.get(new CoordinatesToken(tax).getSerialized());
+			CoordinatesToken token = new CoordinatesToken(tax);
+			if (CoordinatesTokens.get(token.getSerialized()) != null) {
+				return CoordinatesTokens.get(token.getSerialized());
+			} else {
+				CoordinatesTokens.put(token); 
+				return token;
+			}
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
 			e.printStackTrace();
@@ -140,7 +152,13 @@ public class CoordinatesToken
 			LogicCoordinate logic,
 			PremiseType taxType) {
 		try {
-			return CoordinatesTokens.get(new CoordinatesToken(stamp, lang, logic, taxType).getSerialized());
+			CoordinatesToken token = new CoordinatesToken(stamp, lang, logic, taxType);
+			if (CoordinatesTokens.get(token.serialization) != null) {
+				return CoordinatesTokens.get(token.serialization);
+			} else {
+				CoordinatesTokens.put(token);
+				return token;
+			}
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
 			e.printStackTrace();
@@ -148,7 +166,13 @@ public class CoordinatesToken
 		}
 	}
 	public static CoordinatesToken get(String tokenStr) throws Exception {
-		return CoordinatesTokens.get(tokenStr);
+		if (CoordinatesTokens.get(tokenStr) != null) {
+			return CoordinatesTokens.get(tokenStr);
+		} else {
+			CoordinatesToken token = new CoordinatesToken(tokenStr);
+			CoordinatesTokens.put(token);
+			return token;
+		}
 	}
 
 	private static <E extends Enum<E>> E getFromOrdinal(Class<E> clazz, int ordinal) {

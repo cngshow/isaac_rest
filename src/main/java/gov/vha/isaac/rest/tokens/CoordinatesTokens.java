@@ -35,7 +35,7 @@ import gov.vha.isaac.rest.session.CoordinatesUtil;
 public class CoordinatesTokens {
 	private static final Object LOCK = new Object();
 	private static final int DEFAULT_MAX_SIZE = 1024;
-	private static String defaultCoordinatesTokenStr = null;
+	private static CoordinatesToken defaultCoordinatesToken = null;
 	private static Map<String, CoordinatesToken> OBJECT_BY_TOKEN_CACHE = null;
 	private static Map<String, String> TOKEN_BY_PARAMS_CACHE = null;
 
@@ -49,8 +49,7 @@ public class CoordinatesTokens {
 				}
 			};
 			
-			CoordinatesToken defaultCoordinatesToken = new CoordinatesToken();
-			defaultCoordinatesTokenStr = defaultCoordinatesToken.getSerialized();
+			defaultCoordinatesToken = new CoordinatesToken();
 			put(defaultCoordinatesToken);
 			
 			TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
@@ -65,28 +64,16 @@ public class CoordinatesTokens {
 	}
 
 	/**
-	 * @return CoordinatesToken string encoding default coordinates
-	 */
-	public static String getDefaultCoordinatesTokenString() {
-		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
-			
-			return defaultCoordinatesTokenStr;
-		}
-	}
-	/**
 	 * @return CoordinatesToken object containing components for default coordinates
 	 */
-	public static CoordinatesToken getDefaultCoordinatesTokenObject() {
+	public static CoordinatesToken getDefaultCoordinatesToken() {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
 				init(DEFAULT_MAX_SIZE);
 			}
 			
 			try {
-				return get(defaultCoordinatesTokenStr);
+				return defaultCoordinatesToken;
 			} catch (Exception e) {
 				// Should never fail because defaultCoordinatesTokenStr created from real coordinates
 				e.printStackTrace();
@@ -109,7 +96,9 @@ public class CoordinatesTokens {
 				init(DEFAULT_MAX_SIZE);
 			}
 
-			get(value);
+			if (get(value) == null) {
+				put(new CoordinatesToken(value));
+			}
 		}
 	}
 	/**
@@ -195,9 +184,6 @@ public class CoordinatesTokens {
 	 * 
 	 * This method attempts to retrieve the CoordinatesToken object
 	 * corresponding to the passed serialized CoordinatesToken string key.
-	 * If the CoordinatesToken object is not already cached,
-	 * then the CoordinatesToken object will be constructed from the key and cached
-	 * before being returned
 	 * 
 	 * @param key serialized CoordinatesToken string
 	 * @return CoordinatesToken object
@@ -208,11 +194,7 @@ public class CoordinatesTokens {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
 				init(DEFAULT_MAX_SIZE);
 			}
-			if (OBJECT_BY_TOKEN_CACHE.get(key) != null) {
-				return OBJECT_BY_TOKEN_CACHE.get(key);
-			} else {
-				OBJECT_BY_TOKEN_CACHE.put(key, new CoordinatesToken(key));
-			}
+			
 			return OBJECT_BY_TOKEN_CACHE.get(key);
 		}
 	}

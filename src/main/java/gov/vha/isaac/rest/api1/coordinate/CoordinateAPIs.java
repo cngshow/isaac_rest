@@ -47,20 +47,20 @@ public class CoordinateAPIs
 	/**
 	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
 	 * 
-	 * @param langCoordDescTypesPref specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
-	 * @param langCoordDialectsPref specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
-	 * @param langCoordLang specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
+	 * @param descriptionTypePrefs specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
+	 * @param dialectPrefs specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
+	 * @param language specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
 	 * 
-	 * @param stampCoordModules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
-	 * @param stampCoordPath specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
-	 * @param stampCoordPrecedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
-	 * @param stampCoordStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
-	 * @param stampCoordTime specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
+	 * @param modules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
+	 * @param path specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
+	 * @param precedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
+	 * @param allowedStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
+	 * @param time specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
 	 * 
-	 * @param logicCoordStated specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordInferred specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordDesc specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordClassifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param logicStatedAssemblage specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param logicInferredAssemblage specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param descriptionLogicProfile specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param classifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * 
 	 * @return RestCoordinatesToken
 	 * @throws RestException
@@ -76,20 +76,20 @@ public class CoordinateAPIs
 	/**
 	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
 	 * 
-	 * @param langCoordDescTypesPref specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
-	 * @param langCoordDialectsPref specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
-	 * @param langCoordLang specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
+	 * @param descriptionTypePrefs specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
+	 * @param dialectPrefs specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
+	 * @param language specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
 	 * 
-	 * @param stampCoordModules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
-	 * @param stampCoordPath specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
-	 * @param stampCoordPrecedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
-	 * @param stampCoordStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
-	 * @param stampCoordTime specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
+	 * @param modules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
+	 * @param path specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
+	 * @param precedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
+	 * @param allowedStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
+	 * @param time specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
 	 * 
-	 * @param logicCoordStated specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordInferred specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordDesc specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordClassifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param logicStatedAssemblage specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param logicInferredAssemblage specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param descriptionLogicProfile specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param classifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * 
 	 * @return List<Object> all known coordinates
 	 * @throws RestException
@@ -124,11 +124,11 @@ public class CoordinateAPIs
 	}
 
 	/**
-	 * @param stampCoordModules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
-	 * @param stampCoordPath specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
-	 * @param stampCoordPrecedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
-	 * @param stampCoordStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
-	 * @param stampCoordTime specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
+	 * @param modules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
+	 * @param path specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
+	 * @param precedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
+	 * @param allowedStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
+	 * @param time specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
 	 * 
 	 * @return RestStampCoordinate
 	 * @throws RestException
@@ -142,9 +142,9 @@ public class CoordinateAPIs
 	}
 
 	/**
-	 * @param langCoordDescTypesPref specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
-	 * @param langCoordDialectsPref specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
-	 * @param langCoordLang specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
+	 * @param descriptionTypePrefs specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
+	 * @param dialectPrefs specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
+	 * @param language specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
 	 * 
 	 * @return RestLanguageCoordinate
 	 * @throws RestException
@@ -158,10 +158,10 @@ public class CoordinateAPIs
 	}
 
 	/**
-	 * @param logicCoordStated specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordInferred specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordDesc specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicCoordClassifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param logicStatedAssemblage specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param logicInferredAssemblage specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param descriptionLogicProfile specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * @param classifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * 
 	 * @return RestLogicCoordinate
 	 * @throws RestException

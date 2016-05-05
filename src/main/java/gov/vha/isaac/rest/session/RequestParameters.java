@@ -38,58 +38,55 @@ public class RequestParameters {
 
 	// Language Coordinate
 	public static enum LanguageCoordinateParamNames {
-		langCoordLang,
-		langCoordDialectsPref,
-		langCoordDescTypesPref
+		language,
+		dialectPrefs,
+		descriptionTypePrefs
 	};
-	public final static String langCoordLang = LanguageCoordinateParamNames.langCoordLang.name();
-	public final static String langCoordLangDefault = "english";
-	public final static String langCoordDialectsPref = LanguageCoordinateParamNames.langCoordDialectsPref.name();
-	public final static String langCoordDialectsPrefDefault = "us,gb";
-	public final static String langCoordDescTypesPref = LanguageCoordinateParamNames.langCoordDescTypesPref.name();
-	public final static String langCoordDescTypesPrefDefault = "fsn,synonym";
+	public final static String language = LanguageCoordinateParamNames.language.name();
+	public final static String languageDefault = "english";
+	public final static String dialectPrefs = LanguageCoordinateParamNames.dialectPrefs.name();
+	public final static String dialectPrefsDefault = "us,gb";
+	public final static String descriptionTypePrefs = LanguageCoordinateParamNames.descriptionTypePrefs.name();
+	public final static String descriptionTypePrefsDefault = "fsn,synonym";
 	
 	// Stamp Coordinate
 	public static enum StampCoordinateParamNames {
-		stampCoordTime,
-		stampCoordPath,
-		stampCoordPrecedence,
-		stampCoordModules,
-		stampCoordStates
+		time,
+		path,
+		precedence,
+		modules,
+		allowedStates
 	};
-	public final static String stampCoordTime = StampCoordinateParamNames.stampCoordTime.name();
-	public final static String stampCoordTimeDefault = "latest";
-	public final static String stampCoordPath = StampCoordinateParamNames.stampCoordPath.name();
-	public final static String stampCoordPathDefault = "development";
-	public final static String stampCoordPrecedence = StampCoordinateParamNames.stampCoordPrecedence.name();
-	public final static String stampCoordPrecedenceDefault = "path";
-	public final static String stampCoordModules = StampCoordinateParamNames.stampCoordModules.name();
-	public final static String stampCoordModulesDefault = "";
-	public final static String stampCoordStates = StampCoordinateParamNames.stampCoordStates.name();
-	public final static String stampCoordStatesDefault = "active";
+	public final static String time = StampCoordinateParamNames.time.name();
+	public final static String timeDefault = "latest";
+	public final static String path = StampCoordinateParamNames.path.name();
+	public final static String pathDefault = "development";
+	public final static String precedence = StampCoordinateParamNames.precedence.name();
+	public final static String precedenceDefault = "path";
+	public final static String modules = StampCoordinateParamNames.modules.name();
+	public final static String modulesDefault = "";
+	public final static String allowedStates = StampCoordinateParamNames.allowedStates.name();
+	public final static String allowedStatesDefault = "active";
 
 	// Logic Coordinate
 	public static enum LogicCoordinateParamNames {
-		logicCoordStated,
-		logicCoordInferred,
-		logicCoordDesc,
-		logicCoordClassifier
+		logicStatedAssemblage,
+		logicInferredAssemblage,
+		descriptionLogicProfile,
+		classifier
 	};
-	public final static String logicCoordStated = LogicCoordinateParamNames.logicCoordStated.name();
-	public final static String logicCoordStatedDefault = "1f201994-960e-11e5-8994-feff819cdc9f";
-	public final static String logicCoordInferred = LogicCoordinateParamNames.logicCoordInferred.name();
-	public final static String logicCoordInferredDefault = "1f20182c-960e-11e5-8994-feff819cdc9f";
-	public final static String logicCoordDesc = LogicCoordinateParamNames.logicCoordDesc.name();
-	public final static String logicCoordDescDefault = "1f201e12-960e-11e5-8994-feff819cdc9f";
-	public final static String logicCoordClassifier = LogicCoordinateParamNames.logicCoordClassifier.name();
-	public final static String logicCoordClassifierDefault = "1f201fac-960e-11e5-8994-feff819cdc9f";
+	public final static String logicStatedAssemblage = LogicCoordinateParamNames.logicStatedAssemblage.name();
+	public final static String logicStatedAssemblageDefault = "1f201994-960e-11e5-8994-feff819cdc9f";
+	public final static String logicInferredAssemblage = LogicCoordinateParamNames.logicInferredAssemblage.name();
+	public final static String logicInferredAssemblageDefault = "1f20182c-960e-11e5-8994-feff819cdc9f";
+	public final static String descriptionLogicProfile = LogicCoordinateParamNames.descriptionLogicProfile.name();
+	public final static String descriptionLogicProfileDefault = "1f201e12-960e-11e5-8994-feff819cdc9f";
+	public final static String classifier = LogicCoordinateParamNames.classifier.name();
+	public final static String classifierDefault = "1f201fac-960e-11e5-8994-feff819cdc9f";
 
 	public final static String id = "id";
 	public final static String nid = "nid";
 	public final static String expand = "expand";
-
-	public final static String useFsn = "useFsn";
-	public final static String useFsnDefault = "true";
 
 	public final static String pageNum = "pageNum";
 	public final static String pageNumDefault = "1";

@@ -780,13 +780,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// RestStampCoordinate
 			result = checkFail(target(getStampCoordinate)
-					.queryParam(RequestParameters.stampCoordTime, 123456789)
-					.queryParam(RequestParameters.stampCoordPrecedence, StampPrecedence.TIME)
-					.queryParam(RequestParameters.stampCoordModules, 1)
-					.queryParam(RequestParameters.stampCoordModules, 2)
-					.queryParam(RequestParameters.stampCoordModules, 3)
-					.queryParam(RequestParameters.stampCoordStates, State.INACTIVE)
-					.queryParam(RequestParameters.stampCoordStates, State.PRIMORDIAL)
+					.queryParam(RequestParameters.time, 123456789)
+					.queryParam(RequestParameters.precedence, StampPrecedence.TIME)
+					.queryParam(RequestParameters.modules, 1)
+					.queryParam(RequestParameters.modules, 2)
+					.queryParam(RequestParameters.modules, 3)
+					.queryParam(RequestParameters.allowedStates, State.INACTIVE)
+					.queryParam(RequestParameters.allowedStates, State.PRIMORDIAL)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restStampCoordinate/time";
@@ -820,7 +820,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			
 			// LanguageCoordinate
 			result = checkFail(target(getLanguageCoordinate)
-					.queryParam(RequestParameters.langCoordLang, 11)
+					.queryParam(RequestParameters.language, 11)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/language";
@@ -831,7 +831,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// LogicCoordinate
 			result = checkFail(target(getLogicCoordinate)
-					.queryParam(RequestParameters.logicCoordClassifier, 22)
+					.queryParam(RequestParameters.classifier, 22)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLogicCoordinate/classifier";
