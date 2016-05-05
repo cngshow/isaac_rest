@@ -105,5 +105,4 @@ public class RequestParameters {
 	public final static String extendedDescriptionTypeId = "extendedDescriptionTypeId";
 	public final static String dynamicSememeColumns = "dynamicSememeColumns";
 	public final static String sememeAssemblageId = "sememeAssemblageId";
-
 }
