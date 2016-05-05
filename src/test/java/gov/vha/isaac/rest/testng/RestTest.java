@@ -758,6 +758,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String result = null;
 		try {
 			// RestTaxonomyCoordinate
+			boolean taxonomyCoordinateStated;
 			result = checkFail(target(getTaxonomyCoordinate)
 					.queryParam(RequestParameters.stated, "false")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
@@ -765,7 +766,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			xpath = "/restTaxonomyCoordinate/stated";
 			node = RestTestUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
-			boolean taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
+			taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
 			Assert.assertTrue(taxonomyCoordinateStated == false);
 
 			result = checkFail(target(getTaxonomyCoordinate)

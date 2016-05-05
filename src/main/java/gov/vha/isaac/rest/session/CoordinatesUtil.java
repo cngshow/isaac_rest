@@ -20,11 +20,13 @@
 package gov.vha.isaac.rest.session;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +66,40 @@ public class CoordinatesUtil {
 
 	private CoordinatesUtil() {}
 
+	public static String encodeCoordinateParameters(Map<String, List<String>> params) {
+		Map<String,List<String>> coordinateParams = getCoordinateParameters(params);
+		
+		StringBuilder sb = new StringBuilder(coordinateParams.size() * 32);
+		for (Map.Entry<String, List<String>> entry : coordinateParams.entrySet()) {
+			String key = entry.getKey();
+			List<String> parameterValueList = entry.getValue();
+			Collections.sort(parameterValueList);
+			
+			sb.append(key + ':');
+			for (int i = 0; i < parameterValueList.size(); ++i) {
+				sb.append(parameterValueList.get(i));
+				if (i < (parameterValueList.size() - 1)) {
+					sb.append(',');
+				}
+			}
+			sb.append(';');
+		}
+		
+		return sb.toString();
+	}
+	public static  Map<String, List<String>> getCoordinateParameters(Map<String, List<String>> params) {
+		Map<String, List<String>> coordinateParams = new TreeMap<>();
+		
+		if (params.containsKey(RequestParameters.coordToken) && params.get(RequestParameters.coordToken) != null && params.get(RequestParameters.coordToken).size() > 0) {
+			coordinateParams.put(RequestParameters.coordToken, params.get(RequestParameters.coordToken));
+		}
+		coordinateParams.putAll(getTaxonomyCoordinateParameters(params));
+		coordinateParams.putAll(getStampCoordinateParameters(params));
+		coordinateParams.putAll(getLanguageCoordinateParameters(params));
+		coordinateParams.putAll(getLogicCoordinateParameters(params));
+		
+		return coordinateParams;
+	}
 	public static Map<String,List<String>> getTaxonomyCoordinateParameters(Map<String, List<String>> params) {
 		Map<String,List<String>> coordinateParams = new HashMap<>();
 

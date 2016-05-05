@@ -116,55 +116,71 @@ public class RequestInfo
 	{
 		readExpandables(parameters);
 
-		// Set RequestInfo coordinatesToken string to parameter value if set, otherwise set to default
-		Optional<String> tokenStringFromParameters = CoordinatesUtil.getCoordinatesTokenStringFromParameters(parameters);
-		Optional<CoordinatesToken> token = Optional.empty();
-		if (tokenStringFromParameters.isPresent()) {
-			try {
-				CoordinatesTokens.put(coordinatesToken_ = tokenStringFromParameters.get());
-				token = Optional.of(CoordinatesTokens.get(coordinatesToken_));
-			} catch (Exception e) {
-				log.warn("Failed creating CoordinatesToken from parameters. caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-				e.printStackTrace();
-				throw new RestException(RequestParameters.coordToken, tokenStringFromParameters.get(), "caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-			}
+		String serializedTokenByParams = CoordinatesTokens.get(CoordinatesUtil.getCoordinateParameters(parameters));
+		if (serializedTokenByParams != null) {
+			log.debug("Using CoordinatesToken value cached by parameter");
+			requestInfo.get().coordinatesToken_ = serializedTokenByParams;
 		} else {
-			coordinatesToken_ = CoordinatesTokens.getDefaultCoordinatesTokenString();
-			token = Optional.of(CoordinatesTokens.getDefaultCoordinatesTokenObject());
-		}
+			log.debug("Constructing CoordinatesToken from parameters");
+			
+			// Set RequestInfo coordinatesToken string to parameter value if set, otherwise set to default
+			Optional<String> tokenStringFromParameters = CoordinatesUtil.getCoordinatesTokenStringFromParameters(parameters);
+			Optional<CoordinatesToken> token = Optional.empty();
+			if (tokenStringFromParameters.isPresent()) {
+				log.debug("Applying CoordinatesToken " + RequestParameters.coordToken + " parameter \"" + tokenStringFromParameters.get() + "\"");
 
-		// Determine if any relevant coordinate parameters set
-		Map<String,List<String>> coordinateParameters = new HashMap<>();
-		coordinateParameters.putAll(CoordinatesUtil.getTaxonomyCoordinateParameters(parameters));
-		coordinateParameters.putAll(CoordinatesUtil.getStampCoordinateParameters(parameters));
-		coordinateParameters.putAll(CoordinatesUtil.getLanguageCoordinateParameters(parameters));
-		coordinateParameters.putAll(CoordinatesUtil.getLogicCoordinateParameters(parameters));
-		
-		// If ANY relevant coordinate parameter values set, then calculate new CoordinatesToken string 
-		if (coordinateParameters.size() > 0) {
-			// TaxonomyCoordinate components
-			boolean stated = CoordinatesUtil.getStatedFromParameter(coordinateParameters.get(RequestParameters.stated), token);
-			
-			// LanguageCoordinate components
-			int langCoordLangSeq = CoordinatesUtil.getLanguageCoordinateLanguageSequenceFromParameter(coordinateParameters.get(RequestParameters.langCoordLang), token); 
-			int[] langCoordDialectPrefs = CoordinatesUtil.getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(coordinateParameters.get(RequestParameters.langCoordDialectsPref), token);
-			int[] langCoordDescTypePrefs = CoordinatesUtil.getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(coordinateParameters.get(RequestParameters.langCoordDescTypesPref), token);
+				try {
+					CoordinatesTokens.put(coordinatesToken_ = tokenStringFromParameters.get());
+					token = Optional.of(CoordinatesTokens.get(coordinatesToken_));
+				} catch (Exception e) {
+					log.warn("Failed creating CoordinatesToken from parameters. caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+					e.printStackTrace();
+					throw new RestException(RequestParameters.coordToken, tokenStringFromParameters.get(), "caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+				}
+			} else {
+				log.debug("Applying default coordinates");
 
-			// StampCoordinate components
-			long stampTime = CoordinatesUtil.getStampCoordinateTimeFromParameter(coordinateParameters.get(RequestParameters.stampCoordTime), token); 
-			int stampPathSeq = CoordinatesUtil.getStampCoordinatePathSequenceFromParameter(coordinateParameters.get(RequestParameters.stampCoordPath), token);
-			StampPrecedence stampPrecedence = CoordinatesUtil.getStampCoordinatePrecedenceFromParameter(coordinateParameters.get(RequestParameters.stampCoordPrecedence), token);
-			ConceptSequenceSet stampModules = CoordinatesUtil.getStampCoordinateModuleSequencesFromParameter(coordinateParameters.get(RequestParameters.stampCoordModules), token);
-			EnumSet<State> stampAllowedStates = CoordinatesUtil.getStampCoordinateAllowedStatesFromParameter(coordinateParameters.get(RequestParameters.stampCoordStates), token);
-			
-			// LogicCoordinate components
-			int logicStatedSeq = CoordinatesUtil.getLogicCoordinateStatedAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordStated), token);
-			int logicInferredSeq = CoordinatesUtil.getLogicCoordinateInferredAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordInferred), token);
-			int logicDescProfileSeq = CoordinatesUtil.getLogicCoordinateDescProfileAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordDesc), token);
-			int logicClassifierSeq = CoordinatesUtil.getLogicCoordinateClassifierAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordClassifier), token);
-			
-			try {
-				requestInfo.get().coordinatesToken_ = CoordinatesToken.get(
+				requestInfo.get().coordinatesToken_ = CoordinatesTokens.getDefaultCoordinatesTokenString();
+				token = Optional.of(CoordinatesTokens.getDefaultCoordinatesTokenObject());
+			}
+
+			// Determine if any relevant coordinate parameters set
+			Map<String,List<String>> coordinateParameters = new HashMap<>();
+			coordinateParameters.putAll(CoordinatesUtil.getTaxonomyCoordinateParameters(parameters));
+			coordinateParameters.putAll(CoordinatesUtil.getStampCoordinateParameters(parameters));
+			coordinateParameters.putAll(CoordinatesUtil.getLanguageCoordinateParameters(parameters));
+			coordinateParameters.putAll(CoordinatesUtil.getLogicCoordinateParameters(parameters));
+
+			// If ANY relevant coordinate parameter values set, then calculate new CoordinatesToken string
+			if (coordinateParameters.size() == 0) {
+				log.debug("No individual coordinate parameters to apply to token \"" + requestInfo.get().coordinatesToken_ + "\"");
+
+			} else { // if (coordinateParameters.size() > 0)
+				log.debug("Applying {} individual parameters to coordinates token \"{}\": {}", requestInfo.get().coordinatesToken_, coordinateParameters.size(), coordinateParameters.toString());
+
+				// TaxonomyCoordinate components
+				boolean stated = CoordinatesUtil.getStatedFromParameter(coordinateParameters.get(RequestParameters.stated), token);
+
+				// LanguageCoordinate components
+				int langCoordLangSeq = CoordinatesUtil.getLanguageCoordinateLanguageSequenceFromParameter(coordinateParameters.get(RequestParameters.langCoordLang), token); 
+				int[] langCoordDialectPrefs = CoordinatesUtil.getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(coordinateParameters.get(RequestParameters.langCoordDialectsPref), token);
+				int[] langCoordDescTypePrefs = CoordinatesUtil.getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(coordinateParameters.get(RequestParameters.langCoordDescTypesPref), token);
+
+				// StampCoordinate components
+				long stampTime = CoordinatesUtil.getStampCoordinateTimeFromParameter(coordinateParameters.get(RequestParameters.stampCoordTime), token); 
+				int stampPathSeq = CoordinatesUtil.getStampCoordinatePathSequenceFromParameter(coordinateParameters.get(RequestParameters.stampCoordPath), token);
+				StampPrecedence stampPrecedence = CoordinatesUtil.getStampCoordinatePrecedenceFromParameter(coordinateParameters.get(RequestParameters.stampCoordPrecedence), token);
+				ConceptSequenceSet stampModules = CoordinatesUtil.getStampCoordinateModuleSequencesFromParameter(coordinateParameters.get(RequestParameters.stampCoordModules), token);
+				EnumSet<State> stampAllowedStates = CoordinatesUtil.getStampCoordinateAllowedStatesFromParameter(coordinateParameters.get(RequestParameters.stampCoordStates), token);
+
+				// LogicCoordinate components
+				int logicStatedSeq = CoordinatesUtil.getLogicCoordinateStatedAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordStated), token);
+				int logicInferredSeq = CoordinatesUtil.getLogicCoordinateInferredAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordInferred), token);
+				int logicDescProfileSeq = CoordinatesUtil.getLogicCoordinateDescProfileAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordDesc), token);
+				int logicClassifierSeq = CoordinatesUtil.getLogicCoordinateClassifierAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicCoordClassifier), token);
+
+				try {
+					CoordinatesToken tokenObj = CoordinatesToken.get(
 							stampTime,
 							stampPathSeq,
 							(byte)stampPrecedence.ordinal(),
@@ -177,10 +193,18 @@ public class RequestInfo
 							logicStatedSeq,
 							logicInferredSeq,
 							logicDescProfileSeq,
-							logicClassifierSeq).serialize();
-			} catch (Exception e) {
-				e.printStackTrace();
-				throw new RestException("Failed setting CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+							logicClassifierSeq);
+
+					requestInfo.get().coordinatesToken_ = tokenObj.serialize();
+
+					CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), requestInfo.get().coordinatesToken_);
+					
+					log.debug("Created CoordinatesToken \"" + requestInfo.get().coordinatesToken_ + "\"");
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					throw new RestException("Failed setting CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+				}
 			}
 		}
 		
