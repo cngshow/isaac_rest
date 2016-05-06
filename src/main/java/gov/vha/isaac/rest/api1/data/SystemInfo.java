@@ -48,31 +48,56 @@ public class SystemInfo
 	String[] supportedAPIVersions = new String[] {"1.0"};
 	
 	/**
-	 * DB Maven dependency
+	 * ISAAC DB Maven dependency
 	 */
 	@XmlElement
-	public RestDependencyInfo dbDependency;
+	public RestDependencyInfo isaacDbDependency;
 
 	/**
-	 * SCM URL
+	 * Source Code Management URL
 	 */
 	@XmlElement
 	public String scmUrl;
 	
+	/**
+	 * ISAAC Version
+	 */
 	@XmlElement
 	public String isaacVersion;
+	
+	/**
+	 * ISAAC GUI Version
+	 */
 	@XmlElement
 	public String isaacGuiVersion;
+	
+	/**
+	 * ISAAC Assembly Version
+	 */
 	@XmlElement
 	public String assemblyVersion;
+	
+	/**
+	 * Metadata Version
+	 */
 	@XmlElement
 	public String metadataVersion = "?";
 
-	//TODO add more system config info, such as the following
+	/**
+	 * Software Licenses
+	 */
 	@XmlElement
 	List<RestLicenseInfo> appLicenses = new ArrayList<>();
+	
+	/**
+	 * Database Licenses
+	 */
 	@XmlElement
 	List<RestLicenseInfo> dbLicenses = new ArrayList<>();
+	
+	/**
+	 * Additional Database Maven Dependencies
+	 */
 	@XmlElement
 	List<RestDependencyInfo> dbDependencies = new ArrayList<>();
 
@@ -83,16 +108,18 @@ public class SystemInfo
 
 	/**
 	 * @param supportedAPIVersions the supportedAPIVersions to set
+	 * 
+	 * TODO Set supportedAPIVersions from available packages, directories, files or file contents
 	 */
 	public void setSupportedAPIVersions(String[] supportedAPIVersions) {
 		this.supportedAPIVersions = supportedAPIVersions;
 	}
 
 	/**
-	 * @param RestDependencyInfo to set
+	 * @param ISAAC DB Maven dependency to set
 	 */
-	public void setDbDependency(RestDependencyInfo dbDependency) {
-		this.dbDependency = dbDependency;
+	public void setIsaacDbDependency(RestDependencyInfo dbDependency) {
+		this.isaacDbDependency = dbDependency;
 	}
 
 	/**

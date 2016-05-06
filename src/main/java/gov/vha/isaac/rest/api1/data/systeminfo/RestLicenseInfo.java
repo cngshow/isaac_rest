@@ -34,12 +34,21 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLicenseInfo
 {
+	/**
+	 * Name of the license
+	 */
 	@XmlElement
 	String name;
 	
+	/**
+	 * URL to the license text
+	 */
 	@XmlElement
 	String url;
 	
+	/**
+	 * Comments related to the license
+	 */
 	@XmlElement
 	String comments;
 	
@@ -49,9 +58,9 @@ public class RestLicenseInfo
 	}
 
 	/**
-	 * @param name
-	 * @param url
-	 * @param comments
+	 * @param name of the license
+	 * @param url of the license text
+	 * @param comments related to the license
 	 */
 	public RestLicenseInfo(String name, String url, String comments) {
 		super();

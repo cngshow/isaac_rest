@@ -440,7 +440,7 @@ public class SystemAPIs
 											p.getProperty("project.version"),
 											p.getProperty("resultArtifactClassifier"),
 											p.getProperty("chronicles.type"));
-							data.setDbDependency(dbDependency);
+							data.setIsaacDbDependency(dbDependency);
 							
 							data.setMetadataVersion(p.getProperty("isaac-metadata.version"));
 							readDbMetadataFromProperties.set(true);
@@ -468,7 +468,7 @@ public class SystemAPIs
 												new RestLicenseInfo(
 														name,
 														((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/url", dDoc, XPathConstants.NODE)).getTextContent(),
-														((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/url", dDoc, XPathConstants.NODE)).getTextContent());
+														((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/comments", dDoc, XPathConstants.NODE)).getTextContent());
 										data.addDbLicense(license);
 
 										log_.debug("Extracted license \"{}\" from DB pom.xml: {}", name, license.toString());
@@ -532,7 +532,7 @@ public class SystemAPIs
 					}
 				}
 				log_.debug("Successfully read db properties from maven config files.  dbGroupId: {} dbArtifactId: {} dbVersion: {} dbClassifier: {} dbType: {}", 
-						data.dbDependency.groupId, data.dbDependency.artifactId, data.dbDependency.version, data.dbDependency.classifier, data.dbDependency.type);
+						data.isaacDbDependency.groupId, data.isaacDbDependency.artifactId, data.isaacDbDependency.version, data.isaacDbDependency.classifier, data.isaacDbDependency.type);
 			}
 			
 			//read the app metadata

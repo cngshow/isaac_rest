@@ -34,18 +34,33 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestDependencyInfo
 {
+	/**
+	 * Maven Dependency Group ID
+	 */
 	@XmlElement
 	public String groupId;
 	
+	/**
+	 * Maven Dependency Artifact ID
+	 */
 	@XmlElement
 	public String artifactId;
 
+	/**
+	 * Maven Dependency Version
+	 */
 	@XmlElement
 	public String version;
 	
+	/**
+	 * Maven Dependency Classifier
+	 */
 	@XmlElement
 	public String classifier;
 	
+	/**
+	 * Maven Dependency Type
+	 */
 	@XmlElement
 	public String type;
 	
@@ -55,11 +70,11 @@ public class RestDependencyInfo
 	}
 
 	/**
-	 * @param groupId
-	 * @param artifactId
-	 * @param version
-	 * @param classifier
-	 * @param type
+	 * @param groupId Maven Dependency Group ID
+	 * @param artifactId Maven Dependency Artifact ID
+	 * @param version Maven Dependency Version
+	 * @param classifier Maven Dependency Classifier
+	 * @param type Maven Dependency Type
 	 */
 	public RestDependencyInfo(String groupId, String artifactId, String version, String classifier, String type) {
 		super();

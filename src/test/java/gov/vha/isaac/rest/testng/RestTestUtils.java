@@ -22,12 +22,17 @@ package gov.vha.isaac.rest.testng;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -56,6 +61,28 @@ public class RestTestUtils {
 	public static String toString(Node node) {
 		return "Node {name=" + node.getNodeName() + ", value=" + node.getNodeValue() + ", type=" + node.getNodeType() + ", text=" + node.getTextContent() + "}";
 	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T unmarshalObject(Class<T> classType, String xmlString)
+	{
+		try
+		{
+			T object = null;
+			StringReader stringReader = new StringReader(xmlString);
+			StreamSource streamSource = new StreamSource(stringReader);
+
+			JAXBContext jaxbContext = JAXBContext.newInstance(classType);
+
+			Unmarshaller unMarshaller = jaxbContext.createUnmarshaller();
+			object = (T)unMarshaller.unmarshal(streamSource);
+			return (T)object;
+		}
+		catch (JAXBException e)
+		{
+			e.printStackTrace();
+			throw new RuntimeException("Error unmarshalling class : " + classType.getName() + ". " + "Caught " + e.getClass().getName() + " " + e.getMessage());
+		}
+	} 
 
 	public static Double getNumberFromXml(String xmlStr, String xPathStr) {
 		return (Double)getFromXml(xmlStr, xPathStr, XPathConstants.NUMBER);
@@ -151,17 +178,8 @@ public class RestTestUtils {
 		
 		return null;
 	}
-
-	public static String toString(TaxonomyCoordinate coordinate) {
-		return "";
-	}
-	public static String toString(StampCoordinate coordinate) {
-		return "";
-	}
-	public static String toString(LanguageCoordinate coordinate) {
-		return "";
-	}
-	public static String toString(LogicCoordinate coordinate) {
-		return "";
+	
+	public static void main(String...argv) {
+		
 	}
 }
