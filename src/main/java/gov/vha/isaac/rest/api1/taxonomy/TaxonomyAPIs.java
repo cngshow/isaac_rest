@@ -60,7 +60,6 @@ public class TaxonomyAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.
-	 * @param stated - true for stated, false for inferred
 	 * @param parentHeight - How far to walk up (expand) the parent tree
 	 * @param countParents - true to count the number of parents above this node.  May be used with or without the parentHeight parameter
 	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
@@ -69,6 +68,10 @@ public class TaxonomyAPIs
 	 * @param countChildren - true to count the number of children below this node.  May be used with or without the childDepth parameter
 	 *  - it works independently.  When used in combination with the childDepth parameter, only the last level of items returned will return
 	 *  child counts.  
+	 * @param sememeMembership - when true, the sememeMembership field of the RestConceptVersion object will be populated with the set of unique
+	 * concept sequences that describe sememes that this concept is referenced by.  (there exists a sememe instance where the referencedComponent 
+	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion).
+	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.  
 	 * @return the concept version object
 	 * @throws RestException 
@@ -83,13 +86,14 @@ public class TaxonomyAPIs
 			@QueryParam("countParents") @DefaultValue("false") String countParents,
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth,
 			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
-			@QueryParam(RequestParameters.expand) String expand
-			) throws RestException
+			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 		
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
+		boolean includeSememeMembership = Boolean.parseBoolean(sememeMembership.trim());
 		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);
@@ -97,15 +101,16 @@ public class TaxonomyAPIs
 		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 		if (cv.isPresent())
 		{
+			//parent / child expansion is handled here by providing a depth, not with expandables.
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					false, false, false, false, RequestInfo.get().getStated());  //parent / child expansion is handled here by providing a depth, not with expandables.
+					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership);  
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, new ConceptSequenceSet());
+				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, includeSememeMembership, new ConceptSequenceSet());
 			}
 			else if (countParentsBoolean)
 			{
@@ -114,7 +119,7 @@ public class TaxonomyAPIs
 			
 			if (childDepth > 0)
 			{
-				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1, new ConceptSequenceSet());
+				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1, includeSememeMembership, new ConceptSequenceSet());
 			}
 			else if (countChildrenBoolean)
 			{
@@ -131,6 +136,7 @@ public class TaxonomyAPIs
 			Tree tree,
 			boolean countLeafChildren,
 			int remainingChildDepth,
+			boolean includeSemmemMembership,
 			ConceptSequenceSet alreadyAddedChildren)
 	{
 		if (alreadyAddedChildren.contains(conceptSequence)) {
@@ -157,11 +163,13 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated());
+				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated(), 
+					includeSemmemMembership);
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
-					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, remainingChildDepth - 1, alreadyAddedChildren);
+					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, remainingChildDepth - 1, includeSemmemMembership, 
+						alreadyAddedChildren);
 				}
 				else if (countLeafChildren)
 				{
@@ -222,7 +230,8 @@ public class TaxonomyAPIs
 		rcv.setChildCount(count);
 	}
 
-	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth, ConceptSequenceSet handledConcepts)
+	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth, 
+		boolean includeSememeMembership, ConceptSequenceSet handledConcepts)
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
@@ -248,11 +257,13 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated());
+				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated(), 
+					includeSememeMembership);
 				rcv.addParent(parentVersion);
 				if (remainingParentDepth > 0)
 				{
-					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, handledConcepts);
+					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
+						handledConcepts);
 				}
 				else if (countLeafParents)
 				{

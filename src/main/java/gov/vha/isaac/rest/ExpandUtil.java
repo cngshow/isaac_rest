@@ -34,10 +34,6 @@ public class ExpandUtil
 	public static final String versionsLatestOnlyExpandable = "versionsLatestOnly";
 	public static final String versionExpandable = "version";
 	public static final String chronologyExpandable = "chronology";
-	public static final String parentsExpandable = "parents";
-	public static final String parentCountExpandable = "countParents";
-	public static final String childrenExpandable = "children";
-	public static final String childCountExpandable = "countChildren";
 	public static final String uuid = "uuid";
 	public static final String referencedConcept = "referencedConcept";
 	public static final String nestedSememesExpandable = "nestedSememes";

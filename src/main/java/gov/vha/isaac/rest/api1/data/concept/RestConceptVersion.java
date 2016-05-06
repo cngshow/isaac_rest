@@ -19,17 +19,22 @@
 package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.SememeType;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.tree.Tree;
+import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
@@ -92,6 +97,15 @@ public class RestConceptVersion
 	@XmlElement
 	Integer parentCount;
 	
+	/**
+	 * The concept sequences of the sememe assemblage concepts that this concept is a member of (there exists a sememe instance where the referencedComponent 
+	 * is this concept, and the assemblage is the value returned).  Note that this field is typically not populated - and when it is populated, it is only 
+	 * in response to a request via the Taxonomy or Concept APIs, when the parameter 'sememeMembership=true' is passed.
+	 * See more details on {@link TaxonomyAPIs#getConceptVersionTaxonomy(String, String, int, String, int, String, String, String)}
+	 */
+	@XmlElement
+	Set<Integer> sememeMembership;
+	
 	protected RestConceptVersion()
 	{
 		//for Jaxb
@@ -99,15 +113,44 @@ public class RestConceptVersion
 	
 	@SuppressWarnings({ "rawtypes" }) 
 	public RestConceptVersion(ConceptVersion cv, boolean includeChronology) {
-		this(cv, includeChronology, false, false, false, false, false);
+		this(cv, includeChronology, false, false, false, false, false, false);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
 	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean countParents, 
-			boolean includeChildren, boolean countChildren, boolean stated)
+			boolean includeChildren, boolean countChildren, boolean stated, boolean includeSememeMembership)
 	{
 		conVersion = new RestStampedVersion(cv);
-		if (includeChronology || includeParents || includeChildren)
+		
+		if (includeSememeMembership)
+		{
+			sememeMembership = new HashSet<>();
+			
+			Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
+			{
+				@Override
+				public void accept(SememeChronology sc)
+				{
+					if (!sememeMembership.contains(sc.getAssemblageSequence()) 
+						&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
+						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
+						&& sc.getSememeType() != SememeType.DESCRIPTION 
+						&& sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate()).isPresent()) 
+					{
+						sememeMembership.add(sc.getAssemblageSequence());
+					}
+				}
+			};
+			
+			Stream<SememeChronology<? extends SememeVersion<?>>> sememes = Get.sememeService().getSememesForComponent(cv.getNid());
+			sememes.forEach(consumer);
+		}
+		else
+		{
+			sememeMembership = null;
+		}
+		
+		if (includeChronology || includeParents || includeChildren || countChildren || countParents)
 		{
 			expandables = new Expandables();
 			if (includeChronology)
@@ -122,66 +165,31 @@ public class RestConceptVersion
 					expandables
 						.add(new Expandable(ExpandUtil.chronologyExpandable, RestPaths.conceptChronologyAppPathComponent + cv.getChronology().getConceptSequence()));
 				}
-						
 			}
 			Tree tree = null;
 			if (includeParents || includeChildren || countChildren || countParents)
 			{
 				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
 			}
+			
 			if (includeParents)
 			{
-				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, new ConceptSequenceSet());
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, includeSememeMembership, new ConceptSequenceSet());
 			}
-			else
+			else if (countParents)
 			{
-				if (RequestInfo.get().returnExpandableLinks())
-				{
-					expandables.add(
-						new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.parentsExpandable + "&stated=" + stated));
-				}
-				if (countParents)
-				{
-					TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree);
-				}
-				else
-				{
-					if (RequestInfo.get().returnExpandableLinks())
-					{
-						expandables.add(
-							new Expandable(ExpandUtil.parentCountExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-								+ "?expand=" + ExpandUtil.parentCountExpandable + "&stated=" + stated));
-					}
-				}
+				TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree);
 			}
 			
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0, new ConceptSequenceSet());
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0, includeSememeMembership, new ConceptSequenceSet());
 			}
-			else
+			else if (countChildren)
 			{
-				if (RequestInfo.get().returnExpandableLinks())
-				{
-					expandables.add(
-						new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.childrenExpandable + "&stated=" + stated));
-				}
-				if (countChildren)
-				{
-					TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree);
-				}
-				else
-				{
-					if (RequestInfo.get().returnExpandableLinks())
-					{
-						expandables.add(
-							new Expandable(ExpandUtil.childCountExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-								+ "?expand=" + ExpandUtil.childCountExpandable + "&stated=" + stated));
-					}
-				}
+				TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree);
 			}
+			
 			if (expandables.size() == 0)
 			{
 				expandables = null;
@@ -192,11 +200,7 @@ public class RestConceptVersion
 			if (RequestInfo.get().returnExpandableLinks())
 			{
 				expandables = new Expandables(
-					new Expandable(ExpandUtil.chronologyExpandable,  RestPaths.conceptChronologyAppPathComponent + cv.getChronology().getConceptSequence()),
-					new Expandable(ExpandUtil.parentsExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.parentsExpandable + "&stated=" + stated),
-					new Expandable(ExpandUtil.childrenExpandable,  RestPaths.conceptVersionAppPathComponent + cv.getChronology().getConceptSequence() 
-							+ "?expand=" + ExpandUtil.childrenExpandable + "&stated=" + stated));
+					new Expandable(ExpandUtil.chronologyExpandable,  RestPaths.conceptChronologyAppPathComponent + cv.getChronology().getConceptSequence()));
 			}
 			else
 			{
@@ -215,10 +219,6 @@ public class RestConceptVersion
 			this.children = new ArrayList<>();
 		}
 		this.children.add(child);
-		if (expandables != null)
-		{
-			expandables.remove(ExpandUtil.childrenExpandable);
-		}
 	}
 	
 	public void addParent(RestConceptVersion parent)
@@ -228,10 +228,6 @@ public class RestConceptVersion
 			this.parents = new ArrayList<>();
 		}
 		this.parents.add(parent);
-		if (expandables != null)
-		{
-			expandables.remove(ExpandUtil.parentsExpandable);
-		}
 	}
 
 	public void setChildCount(int count)

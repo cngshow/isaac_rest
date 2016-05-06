@@ -36,7 +36,14 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 	@Override
 	public Response toResponse(Exception ex)
 	{
-		LoggerFactory.getLogger("web").error("oops", ex);
+		if (ex.getMessage().startsWith("The system is not yet ready"))
+		{
+			LoggerFactory.getLogger("web").error(ex.getMessage());
+		}
+		else
+		{
+			LoggerFactory.getLogger("web").error("Unexpected", ex);
+		}
 		return Response.status(500).entity(ex.toString()).type("text/plain").build();
 	}
 }

@@ -2,7 +2,9 @@ package gov.vha.isaac.rest;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.ws.rs.ApplicationPath;
 import org.apache.commons.lang3.StringUtils;
@@ -102,54 +104,77 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				@Override
 				public void run()
 				{
-					log.info("ISAAC Init thread begins");
-					if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)))
+					try
 					{
-						//if there isn't an official system property set, check this one.
-						String sysProp = System.getProperty("isaacDatabaseLocation");
-						File temp;
-						if (StringUtils.isBlank(sysProp))
+						log.info("ISAAC Init thread begins");
+						//First, see if there is a properties file embedded in the war (PRISME places this during deployment)
+						Properties props = new Properties();
+						try (final InputStream stream = this.getClass().getResourceAsStream("/prisme.properties"))
 						{
-							log.info("Downloading a database for use");
-							status_.set("Downloading DB");
-							try
-							{
-								temp = downloadDB();
-							}
-							catch (Exception e)
-							{
-								status_.set("Download Failed: " + e);
-								throw new RuntimeException(e);
-							}
+							props.load(stream);
 						}
-						else
+						catch (Exception e1)
 						{
-							temp = new File(sysProp);
+							log.info("Could not read a prism.properties file from the classpath");
 						}
 						
-						File dataStoreLocation = DBLocator.findDBFolder(temp);
+						System.out.println("Read property:" + props.getProperty("g"));
 						
-						if (!dataStoreLocation.exists())
+						
+						if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)))
 						{
-							throw new RuntimeException("Couldn't find a data store from the input of '" + dataStoreLocation.getAbsoluteFile().getAbsolutePath() + "'");
-						}
-						if (!dataStoreLocation.isDirectory())
-						{
-							throw new RuntimeException("The specified data store: '" + dataStoreLocation.getAbsolutePath() + "' is not a folder");
-						}
-				
-						LookupService.getService(ConfigurationService.class).setDataStoreFolderPath(dataStoreLocation.toPath());
-						System.out.println("  Setup AppContext, data store location = " + dataStoreLocation.getAbsolutePath());
-					}
-			
-					status_.set("Starting ISAAC");
-					LookupService.startupIsaac();
-					status_.set("Ready");
-					System.out.println("Done setting up ISAAC");
+							//if there isn't an official system property set, check this one.
+							String sysProp = System.getProperty("isaacDatabaseLocation");
+							File temp;
+							if (StringUtils.isBlank(sysProp))
+							{
+								log.info("Downloading a database for use");
+								status_.set("Downloading DB");
+								try
+								{
+									temp = downloadDB();
+								}
+								catch (Exception e)
+								{
+									status_.unbind();
+									status_.set("Download Failed: " + e);
+									throw new RuntimeException(e);
+								}
+							}
+							else
+							{
+								temp = new File(sysProp);
+							}
+							
+							File dataStoreLocation = DBLocator.findDBFolder(temp);
+							
+							if (!dataStoreLocation.exists())
+							{
+								throw new RuntimeException("Couldn't find a data store from the input of '" + dataStoreLocation.getAbsoluteFile().getAbsolutePath() + "'");
+							}
+							if (!dataStoreLocation.isDirectory())
+							{
+								throw new RuntimeException("The specified data store: '" + dataStoreLocation.getAbsolutePath() + "' is not a folder");
+							}
 
-					System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C", 
-						"http://localhost:8180/", RestPaths.conceptVersionAppPathComponent + MetaData.CONCRETE_DOMAIN_OPERATOR.getNid()));
-					
+							LookupService.getService(ConfigurationService.class).setDataStoreFolderPath(dataStoreLocation.toPath());
+							System.out.println("  Setup AppContext, data store location = " + dataStoreLocation.getAbsolutePath());
+						}
+
+						status_.set("Starting ISAAC");
+						LookupService.startupIsaac();
+						status_.set("Ready");
+						System.out.println("Done setting up ISAAC");
+
+						System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C", 
+							"http://localhost:8180/", RestPaths.conceptVersionAppPathComponent + MetaData.CONCRETE_DOMAIN_OPERATOR.getNid()));
+					}
+					catch (Exception e)
+					{
+						log.error("Failure starting ISAAC", e);
+						status_.unbind();
+						status_.set("FAILED!");
+					}
 				}
 			};
 			

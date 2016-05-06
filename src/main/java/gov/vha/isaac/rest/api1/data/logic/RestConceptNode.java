@@ -86,53 +86,37 @@ public class RestConceptNode extends RestLogicNode {
 	 */
 	public RestConceptNode(ConceptNodeWithSequences conceptNodeWithSequences) {
 		super(conceptNodeWithSequences);
-		conceptSequence = conceptNodeWithSequences.getConceptSequence();
-		conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(conceptSequence);
-		try {
-			// TODO Fine tune this when data problems resolved
-			Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());
-			Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
-			isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
-		} catch (Exception e) {
-			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
-			isConceptDefined = false;
-		}
-
-		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
-			@SuppressWarnings("rawtypes")
-			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
-		} else {
-			conceptVersion = null;
-		}
+		finishSetup(conceptNodeWithSequences.getConceptSequence());
 	}
 	/**
 	 * @param conceptNodeWithUuids
 	 */
 	public RestConceptNode(ConceptNodeWithUuids conceptNodeWithUuids) {
 		super(conceptNodeWithUuids);
-		conceptSequence = Get.identifierService().getConceptSequenceForUuids(conceptNodeWithUuids.getConceptUuid());
-		conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(conceptSequence);
-		try {
-			// TODO Fine tune this when data problems resolved
-			Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());
-			Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
-			isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
-		} catch (Exception e) {
-			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
-			isConceptDefined = false;
-		}
-
-		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
-			@SuppressWarnings("rawtypes")
-			ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			conceptVersion = new RestConceptVersion(olcv.get().value(), true);
-		} else {
-			conceptVersion = null;
-		}
+		finishSetup(Get.identifierService().getConceptSequenceForUuids(conceptNodeWithUuids.getConceptUuid()));
 	}
+	
+	private void finishSetup(int conceptSequence) {
+	this.conceptSequence = conceptSequence;
+	conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(conceptSequence);
+	try {
+		// TODO Fine tune this when data problems resolved
+		Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated());
+		Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
+		isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
+	} catch (Exception e) {
+		LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
+		isConceptDefined = false;
+	}
+
+	if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
+		@SuppressWarnings("rawtypes")
+		ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
+		@SuppressWarnings("unchecked")
+		Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+		conceptVersion = new RestConceptVersion(olcv.get().value(), true);
+	} else {
+		conceptVersion = null;
+	}
+}
 }
