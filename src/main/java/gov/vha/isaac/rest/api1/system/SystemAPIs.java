@@ -122,7 +122,7 @@ public class SystemAPIs
 	 * @param expand comma separated list of fields to expand.  Support depends on type of object identified by the passed id
 	 * RestConceptChronology supports 'versionsAll', 'versionsLatestOnly'
 	 * RestSememeChronology supports 'chronology', 'nestedSememes', 'referencedDetails'
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return
 	 * @throws RestException
@@ -260,7 +260,7 @@ public class SystemAPIs
 	 * If an int < 0 then assumed to be a NID, else ambiguous and treated as a sememe or concept sequence, each of which may or may not correspond to existing components
 	 * If a String then parsed and handled as a UUID of either a concept or sequence
 	 * @return Map of RestObjectChronologyType to RestId.  Will contain exactly one entry if passed a UUID or NID, or one or two entries if passed a sequence. if no corresponding ids found a RestException is thrown.
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @throws RestException
 	 */

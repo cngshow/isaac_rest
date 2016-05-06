@@ -72,7 +72,7 @@ public class IdAPIs
 	 * @param outputType -  should be one of the types from the supportedTypes call.   You can pass the name or enumId of the 
 	 * returned RestIdType object.  Currently includes [uuid, nid, conceptSequence, sememeSequence, sctid, vuid].
 	 * Defaults to uuid.
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the converted ID, if possible.  Otherwise, a RestException, if no translation is possible.  Note that for some id types, 
 	 * the translation may depend on the STAMP!

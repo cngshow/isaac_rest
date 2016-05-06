@@ -22,16 +22,16 @@
  * along with any additional modifying parameters.</p>
  *
  * <h3><u>Taxonomy Coordinate (<code>RestTaxonomyCoordinate</code>) Parameters</u></h3>
- * <p>The <code>RestTaxonomyCoordinate</code> comprises a Premise/Taxonomy type (represented as boolean <code>stated</code>)</p>, as well as the other coordinates
- * <code>RestStampCoordinate</code>, <code>RestLanguageCoordinate</code> and <code>RestLogicCoordinate</code>
+ * <p>The <code>RestTaxonomyCoordinate</code> comprises a Premise/Taxonomy type (represented as boolean <code>stated</code>), as well as the other coordinates
+ * <code>RestStampCoordinate</code>, <code>RestLanguageCoordinate</code> and <code>RestLogicCoordinate</code></p>
  * <p><code>stated</code> - specifies premise/taxonomy type of <i>stated</i> when <code>stated</code> is <code>true</code> and <i>inferred</i> when <code>false</code>.</p>
  * 
  * <h3><u>Stamp Coordinate (<code>RestStampCoordinate</code>) Parameters</u></h3>
  * <p><code>modules</code> - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
  * <p><code>path</code> - specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
  * <p><code>precedence</code> - specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
- * <p><code>allowedStates</code> - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
- * <p><code>time</code> - specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
+ * <p><code>allowedStates</code> - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".</p>
+ * <p><code>time</code> - specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".</p>
  *
  * <h3><u>Language Coordinate (<code>RestLanguageCoordinate</code>) Parameters</u></h3>
  * <p><code>descriptionTypePrefs</code> - specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>

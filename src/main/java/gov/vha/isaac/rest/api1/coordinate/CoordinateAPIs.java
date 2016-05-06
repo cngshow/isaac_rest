@@ -48,15 +48,15 @@ public class CoordinateAPIs
 {
 	/**
 	 * 
-	 * This method returns a serialized CoordinateToken string specifying all coordinate parameters
-	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * This method returns a serialized CoordinatesToken string specifying all coordinate parameters
+	 * It takes an explicit serialized CoordinatesToken string parameter <code>coordToken</code>
 	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
 	 * If no additional individual coordinate-specific parameters are specified,
-	 * then the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * then the passed <code>coordToken</code> CoordinatesToken will be returned.
 	 * If any additional individual parameters are passed, then their values will be applied to the coordinates specified by the
-	 * explicit serialized CoordinateToken string, and the resulting modified CoordinateToken will be returned.
+	 * explicit serialized CoordinatesToken string, and the resulting modified CoordinatesToken will be returned.
 	 * 
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
 	 * 
@@ -108,14 +108,14 @@ public class CoordinateAPIs
 	/**
 	 * 
 	 * This method returns a list of coordinates comprising all coordinate parameters.
-	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * It takes an explicit serialized CoordinatesToken string parameter <code>coordToken</code>
 	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
 	 * If no additional individual coordinate-specific parameters are specified,
-	 * then the coordinates corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * then the coordinates corresponding to the passed <code>coordToken</code> CoordinatesToken will be returned.
 	 * If any additional individual parameters are passed, then their values will be applied to the coordinates specified by the
-	 * explicit serialized CoordinateToken string, and the resulting coordinates will be returned.
+	 * explicit serialized CoordinatesToken string, and the resulting coordinates will be returned.
 	 * 
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return List<Object> list of all coordinates.
 	 * Note that <code>RestTaxonomyCoordinate</code> contains <code>RestStampCoordinate</code>, <code>RestLanguageCoordinate</code> and <code>RestLogicCoordinate</code>.
@@ -142,14 +142,14 @@ public class CoordinateAPIs
 	/**
 	 * 
 	 * This method returns <code>RestTaxonomyCoordinate</code>.
-	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * It takes an explicit serialized CoordinatesToken string parameter <code>coordToken</code>
 	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
 	 * If no additional individual coordinate-specific parameters are specified,
-	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinatesToken will be returned.
 	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
-	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * explicit serialized CoordinatesToken string, and the resulting coordinate will be returned.
 	 * 
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return RestTaxonomyCoordinate
 	 * Note that <code>RestTaxonomyCoordinate</code> contains <code>RestStampCoordinate</code>, <code>RestLanguageCoordinate</code> and <code>RestLogicCoordinate</code>.
@@ -169,14 +169,14 @@ public class CoordinateAPIs
 	/**
 	 * 
 	 * This method returns <code>RestStampCoordinate</code>.
-	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * It takes an explicit serialized CoordinatesToken string parameter <code>coordToken</code>
 	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
 	 * If no additional individual coordinate-specific parameters are specified,
-	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinatesToken will be returned.
 	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
-	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * explicit serialized CoordinatesToken string, and the resulting coordinate will be returned.
 	 * 
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return RestStampCoordinate
 	 * 
@@ -195,14 +195,14 @@ public class CoordinateAPIs
 	/**
 	 * 
 	 * This method returns <code>RestLanguageCoordinate</code>.
-	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * It takes an explicit serialized CoordinatesToken string parameter <code>coordToken</code>
 	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
 	 * If no additional individual coordinate-specific parameters are specified,
-	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinatesToken will be returned.
 	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
-	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * explicit serialized CoordinatesToken string, and the resulting coordinate will be returned.
 	 * 
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return RestLanguageCoordinate
 	 * 
@@ -221,14 +221,14 @@ public class CoordinateAPIs
 	/**
 	 * 
 	 * This method returns <code>RestLogicCoordinate</code>.
-	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * It takes an explicit serialized CoordinatesToken string parameter <code>coordToken</code>
 	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
 	 * If no additional individual coordinate-specific parameters are specified,
-	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinatesToken will be returned.
 	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
-	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * explicit serialized CoordinatesToken string, and the resulting coordinate will be returned.
 	 * 
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return RestLogicCoordinate
 	 * 

@@ -73,7 +73,7 @@ public class TaxonomyAPIs
 	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion).
 	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.
-	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the concept version object
 	 * @throws RestException 
