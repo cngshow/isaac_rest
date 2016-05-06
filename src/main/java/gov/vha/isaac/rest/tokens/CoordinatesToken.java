@@ -53,12 +53,13 @@ import gov.vha.isaac.ochre.model.coordinate.TaxonomyCoordinateImpl;
  */
 public class CoordinatesToken
 {
+	private static final transient Logger log = LoggerFactory.getLogger(CoordinatesToken.class);
+
 	private static final byte tokenVersion = 1;
 	private static final int hashRounds = 128;
 	private static final int hashLength = 64;
 	private static final int encodedHashLength = (int)Math.ceil(hashLength / 8f / 3f) * 4;  //http://stackoverflow.com/a/4715480
 
-	private static final transient Logger log = LoggerFactory.getLogger(CoordinatesToken.class);
 	private static transient byte[] secret_;
 
 	private final long stampTime;

@@ -19,6 +19,7 @@
 
 package gov.vha.isaac.rest.tokens;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,25 +43,25 @@ public class CoordinatesTokens {
 	public static void init(final int maxEntries) {
 		synchronized(LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
-				OBJECT_BY_TOKEN_CACHE = new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
+				OBJECT_BY_TOKEN_CACHE = Collections.synchronizedMap(new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
 					private static final long serialVersionUID = -1236481390177598762L;
 					@Override
 					protected boolean removeEldestEntry(Map.Entry<String, CoordinatesToken> eldest){
 						return size() > maxEntries;
 					}
-				};
+				});
 
 				defaultCoordinatesToken = new CoordinatesToken();
 				put(defaultCoordinatesToken);
 
-				TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
+				TOKEN_BY_PARAMS_CACHE = Collections.synchronizedMap(new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
 					private static final long serialVersionUID = -2638577900934193146L;
 
 					@Override
 					protected boolean removeEldestEntry(Map.Entry<String, String> eldest){
 						return size() > maxEntries;
 					}
-				};
+				});
 			}
 		}
 	}
@@ -73,13 +74,7 @@ public class CoordinatesTokens {
 			init(DEFAULT_MAX_SIZE);
 		}
 
-		try {
-			return defaultCoordinatesToken;
-		} catch (Exception e) {
-			// Should never fail because defaultCoordinatesTokenStr created from real coordinates
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
+		return defaultCoordinatesToken;
 	}
 
 	/**
@@ -113,9 +108,8 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		synchronized(LOCK) {
-			OBJECT_BY_TOKEN_CACHE.put(value.getSerialized(), value);
-		}
+
+		OBJECT_BY_TOKEN_CACHE.put(value.getSerialized(), value);
 	}
 	/**
 	 * 
@@ -132,11 +126,9 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		synchronized(LOCK) {
-			String serializedToken = value.getSerialized();
-			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
-			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
-		}
+		String serializedToken = value.getSerialized();
+		OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
+		TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 	}
 	/**
 	 * 
@@ -153,10 +145,8 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		synchronized(LOCK) {
-			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
-			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
-		}
+		OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
+		TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 	}
 	/**
 	 * 
