@@ -122,6 +122,8 @@ public class SystemAPIs
 	 * @param expand comma separated list of fields to expand.  Support depends on type of object identified by the passed id
 	 * RestConceptChronology supports 'versionsAll', 'versionsLatestOnly'
 	 * RestSememeChronology supports 'chronology', 'nestedSememes', 'referencedDetails'
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return
 	 * @throws RestException
 	 */
@@ -130,7 +132,8 @@ public class SystemAPIs
 	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")  
 	public List<Object> getIdentifiedObjects(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 		List<Object> identifiedObjects = new ArrayList<>();
@@ -257,12 +260,16 @@ public class SystemAPIs
 	 * If an int < 0 then assumed to be a NID, else ambiguous and treated as a sememe or concept sequence, each of which may or may not correspond to existing components
 	 * If a String then parsed and handled as a UUID of either a concept or sequence
 	 * @return Map of RestObjectChronologyType to RestId.  Will contain exactly one entry if passed a UUID or NID, or one or two entries if passed a sequence. if no corresponding ids found a RestException is thrown.
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.objectChronologyTypeComponent + "{" + RequestParameters.id + "}")  
-	public RestObjectChronologyType getObjectChronologyType(@PathParam(RequestParameters.id) String id) throws RestException
+	public RestObjectChronologyType getObjectChronologyType(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RestObjectChronologyType returnedType = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
@@ -398,6 +405,7 @@ public class SystemAPIs
 
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * TODO move functionality in getSystemInfo() into OCHRE
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

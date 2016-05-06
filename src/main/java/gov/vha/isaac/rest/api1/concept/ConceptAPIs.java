@@ -85,6 +85,8 @@ public class ConceptAPIs
 	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion)
 	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 *
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -98,7 +100,9 @@ public class ConceptAPIs
 			@QueryParam("includeChildren") @DefaultValue("false") String includeChildren,
 			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
 			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
-			@QueryParam(RequestParameters.expand) String expand ) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken
+			) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 
@@ -125,6 +129,7 @@ public class ConceptAPIs
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
 	 * @return the concept chronology object
 	 * @throws RestException 
 	 */
@@ -133,7 +138,8 @@ public class ConceptAPIs
 	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestConceptChronology getConceptChronology(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
@@ -198,6 +204,8 @@ public class ConceptAPIs
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
 	 * if they represent a concept.
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return The descriptions associated with the concept
 	 * @throws RestException 
 	 */
@@ -207,7 +215,8 @@ public class ConceptAPIs
 	public List<RestSememeDescriptionVersion> getDescriptions(
 			@PathParam(RequestParameters.id) String id, 
 			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		RequestInfo.get().readExpandables(expand);

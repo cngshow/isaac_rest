@@ -77,13 +77,17 @@ public class SememeAPIs
 	 * @param id The id for which to determine RestSememeType
 	 * If an int then assumed to be a sememe NID or sequence
 	 * If a String then parsed and handled as a sememe UUID
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return RestSememeType of the sememe corresponding to the passed id. if no corresponding sememe found a RestException is thrown.
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememeTypeComponent + "{" + RequestParameters.id + "}")  
-	public RestSememeType getSememeType(@PathParam(RequestParameters.id) String id) throws RestException
+	public RestSememeType getSememeType(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
@@ -127,6 +131,8 @@ public class SememeAPIs
 	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
 	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept, the description of that concept.
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return the sememe chronology object
 	 * @throws RestException
 	 */
@@ -135,7 +141,8 @@ public class SememeAPIs
 	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestSememeChronology getSememeChronology(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
@@ -158,6 +165,8 @@ public class SememeAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
 	 * @return the sememe version object.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @throws RestException 
 	 */
 	@GET
@@ -165,7 +174,8 @@ public class SememeAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id +"}")
 	public RestSememeVersion getSememeVersion(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 
@@ -228,6 +238,8 @@ public class SememeAPIs
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * @throws RestException 
@@ -239,7 +251,8 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 		
@@ -285,6 +298,8 @@ public class SememeAPIs
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * @throws RestException 
@@ -296,7 +311,8 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
 			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
-			@QueryParam(RequestParameters.expand) String expand) 
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) 
 			throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
@@ -320,13 +336,17 @@ public class SememeAPIs
 	/**
 	 * Return the full description of a particular sememe - including its intended use, the types of any data columns that will be attached, etc.
 	 * @param id - The UUID, nid or concept sequence of the concept that represents the sememe assemblage.
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return - the full description
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememeDefinitionComponent + "{" + RequestParameters.id + "}")
-	public RestDynamicSememeDefinition getSememeDefinition(@PathParam(RequestParameters.id) String id) throws RestException
+	public RestDynamicSememeDefinition getSememeDefinition(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		int conceptSequence = Util.convertToConceptSequence(id);
 		if (DynamicSememeUsageDescriptionImpl.isDynamicSememe(conceptSequence))

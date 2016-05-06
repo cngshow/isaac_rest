@@ -72,7 +72,9 @@ public class TaxonomyAPIs
 	 * concept sequences that describe sememes that this concept is referenced by.  (there exists a sememe instance where the referencedComponent 
 	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion).
 	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.  
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -87,7 +89,8 @@ public class TaxonomyAPIs
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth,
 			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
 			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
 		

@@ -47,6 +47,7 @@ import gov.vha.isaac.rest.api1.data.RestId;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 
 /**
@@ -71,6 +72,8 @@ public class IdAPIs
 	 * @param outputType -  should be one of the types from the supportedTypes call.   You can pass the name or enumId of the 
 	 * returned RestIdType object.  Currently includes [uuid, nid, conceptSequence, sememeSequence, sctid, vuid].
 	 * Defaults to uuid.
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @return the converted ID, if possible.  Otherwise, a RestException, if no translation is possible.  Note that for some id types, 
 	 * the translation may depend on the STAMP!
 	 * @throws RestException
@@ -78,9 +81,12 @@ public class IdAPIs
 	@SuppressWarnings("rawtypes")
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.idTranslateComponent + "{id}")  
-	public RestId translateId(@PathParam("id") String id, @QueryParam("inputType") String inputType, 
-		@QueryParam("outputType") @DefaultValue("uuid") String outputType) throws RestException
+	@Path(RestPaths.idTranslateComponent + "{" + RequestParameters.id + "}")  
+	public RestId translateId(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam("inputType") String inputType, 
+			@QueryParam("outputType") @DefaultValue("uuid") String outputType,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		IdType inputTypeFormat = IdType.parse(inputType).orElse(IdType.UUID);
 		Optional<? extends ObjectChronology> object = Optional.empty();

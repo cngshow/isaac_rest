@@ -41,25 +41,27 @@ public class CoordinatesTokens {
 
 	public static void init(final int maxEntries) {
 		synchronized(LOCK) {
-			OBJECT_BY_TOKEN_CACHE = new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
-				private static final long serialVersionUID = -1236481390177598762L;
-				@Override
-				protected boolean removeEldestEntry(Map.Entry<String, CoordinatesToken> eldest){
-					return size() > maxEntries;
-				}
-			};
-			
-			defaultCoordinatesToken = new CoordinatesToken();
-			put(defaultCoordinatesToken);
-			
-			TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
-				private static final long serialVersionUID = -2638577900934193146L;
+			if (OBJECT_BY_TOKEN_CACHE == null) {
+				OBJECT_BY_TOKEN_CACHE = new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
+					private static final long serialVersionUID = -1236481390177598762L;
+					@Override
+					protected boolean removeEldestEntry(Map.Entry<String, CoordinatesToken> eldest){
+						return size() > maxEntries;
+					}
+				};
 
-				@Override
-				protected boolean removeEldestEntry(Map.Entry<String, String> eldest){
-					return size() > maxEntries;
-				}
-			};
+				defaultCoordinatesToken = new CoordinatesToken();
+				put(defaultCoordinatesToken);
+
+				TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
+					private static final long serialVersionUID = -2638577900934193146L;
+
+					@Override
+					protected boolean removeEldestEntry(Map.Entry<String, String> eldest){
+						return size() > maxEntries;
+					}
+				};
+			}
 		}
 	}
 
@@ -67,21 +69,19 @@ public class CoordinatesTokens {
 	 * @return CoordinatesToken object containing components for default coordinates
 	 */
 	public static CoordinatesToken getDefaultCoordinatesToken() {
-		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
-			
-			try {
-				return defaultCoordinatesToken;
-			} catch (Exception e) {
-				// Should never fail because defaultCoordinatesTokenStr created from real coordinates
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
+		}
+
+		try {
+			return defaultCoordinatesToken;
+		} catch (Exception e) {
+			// Should never fail because defaultCoordinatesTokenStr created from real coordinates
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
-	
+
 	/**
 	 * 
 	 * This method attempts to cache a CoordinatesToken serialization,
@@ -91,11 +91,11 @@ public class CoordinatesTokens {
 	 * @throws Exception
 	 */
 	public static void put(String value) throws Exception {
-		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
+		}
 
+		synchronized(LOCK) {
 			if (get(value) == null) {
 				put(new CoordinatesToken(value));
 			}
@@ -110,10 +110,10 @@ public class CoordinatesTokens {
 	 * @throws Exception
 	 */
 	public static void put(CoordinatesToken value) {
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
+		}
 		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
 			OBJECT_BY_TOKEN_CACHE.put(value.getSerialized(), value);
 		}
 	}
@@ -129,10 +129,10 @@ public class CoordinatesTokens {
 	 * @throws Exception
 	 */
 	public static void put(Map<String, List<String>> params, CoordinatesToken value) {
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
+		}
 		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
 			String serializedToken = value.getSerialized();
 			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
@@ -150,10 +150,10 @@ public class CoordinatesTokens {
 	 * @throws Exception
 	 */
 	public static void put(Map<String, List<String>> params, String serializedToken, CoordinatesToken value) {
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
+		}
 		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
 			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
@@ -170,10 +170,10 @@ public class CoordinatesTokens {
 	 * @throws Exception
 	 */
 	public static void put(Map<String, List<String>> params, String serializedToken) throws Exception {
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
+		}
 		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
 			if (OBJECT_BY_TOKEN_CACHE.get(serializedToken) == null) {
 				OBJECT_BY_TOKEN_CACHE.put(serializedToken, new CoordinatesToken(serializedToken));
 			}
@@ -190,13 +190,10 @@ public class CoordinatesTokens {
 	 * @throws Exception
 	 */
 	public static CoordinatesToken get(String key) throws Exception {
-		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				init(DEFAULT_MAX_SIZE);
-			}
-			
-			return OBJECT_BY_TOKEN_CACHE.get(key);
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
 		}
+		return OBJECT_BY_TOKEN_CACHE.get(key);
 	}
 	/**
 	 * Attempt to retrieve CoordinatesToken serialization key string
@@ -206,12 +203,10 @@ public class CoordinatesTokens {
 	 * @return
 	 */
 	public static String get(Map<String, List<String>> params) {
-		synchronized(LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				return null;
-			} else {
-				return TOKEN_BY_PARAMS_CACHE.get(CoordinatesUtil.encodeCoordinateParameters(params));
-			}
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			return null;
+		} else {
+			return TOKEN_BY_PARAMS_CACHE.get(CoordinatesUtil.encodeCoordinateParameters(params));
 		}
 	}
 }

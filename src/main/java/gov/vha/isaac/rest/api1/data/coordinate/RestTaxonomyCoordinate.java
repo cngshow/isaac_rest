@@ -39,9 +39,21 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 public class RestTaxonomyCoordinate {
 	@XmlElement
 	boolean stated;
+
+	@XmlElement
+	public RestStampCoordinate stampCoordinate;
+	
+	@XmlElement
+	public RestLanguageCoordinate languageCoordinate;
+	
+	@XmlElement
+	public RestLogicCoordinate logicCoordinate;
 	
 	public RestTaxonomyCoordinate(TaxonomyCoordinate tc) {
 		stated = tc.getTaxonomyType() == PremiseType.STATED;
+		stampCoordinate = new RestStampCoordinate(tc.getStampCoordinate());
+		languageCoordinate = new RestLanguageCoordinate(tc.getLanguageCoordinate());
+		logicCoordinate = new RestLogicCoordinate(tc.getLogicCoordinate());
 	}
 
 	protected RestTaxonomyCoordinate() {

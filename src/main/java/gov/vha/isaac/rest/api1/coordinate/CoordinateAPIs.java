@@ -117,121 +117,129 @@ public class CoordinateAPIs
 	 * 
 	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
 	 * 
-	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
-	 * 
-	 * @param descriptionTypePrefs specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
-	 * @param dialectPrefs specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
-	 * @param language specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
-	 * 
-	 * @param modules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
-	 * @param path specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
-	 * @param precedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
-	 * @param allowedStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
-	 * @param time specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
-	 * 
-	 * @param logicStatedAssemblage specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicInferredAssemblage specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param descriptionLogicProfile specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param classifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * 
-	 * @return RestCoordinatesToken
+	 * @return List<Object> list of all coordinates.
+	 * Note that <code>RestTaxonomyCoordinate</code> contains <code>RestStampCoordinate</code>, <code>RestLanguageCoordinate</code> and <code>RestLogicCoordinate</code>.
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.coordinatesComponent)  
 	public List<Object> getCoordinates(
-			@QueryParam(RequestParameters.coordToken) String coordToken,
-			
-			@QueryParam(RequestParameters.stated) String stated,
-			
-			@QueryParam(RequestParameters.descriptionTypePrefs) String descriptionTypePrefs,
-			@QueryParam(RequestParameters.dialectPrefs) String dialectPrefs,
-			@QueryParam(RequestParameters.language) String language,
-			
-			@QueryParam(RequestParameters.modules) String modules,
-			@QueryParam(RequestParameters.path) String path,
-			@QueryParam(RequestParameters.precedence) String precedence,
-			@QueryParam(RequestParameters.allowedStates) String allowedStates,
-			@QueryParam(RequestParameters.time) String time,
-			
-			@QueryParam(RequestParameters.logicStatedAssemblage) String logicStatedAssemblage,
-			@QueryParam(RequestParameters.logicInferredAssemblage) String logicInferredAssemblage,
-			@QueryParam(RequestParameters.descriptionLogicProfile) String descriptionLogicProfile,
-			@QueryParam(RequestParameters.classifier) String classifier
+			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
 		List<Object> coordinates = new ArrayList<>();
 		
-		coordinates.add(getTaxonomyCoordinate());
-		coordinates.add(getStampCoordinate());
-		coordinates.add(getLanguageCoordinate());
-		coordinates.add(getLogicCoordinate());
+		RestTaxonomyCoordinate taxonomyCoordinate = getTaxonomyCoordinate(coordToken);
+		coordinates.add(taxonomyCoordinate);
+		coordinates.add(taxonomyCoordinate.stampCoordinate);
+		coordinates.add(taxonomyCoordinate.languageCoordinate);
+		coordinates.add(taxonomyCoordinate.logicCoordinate);
 		
 		return coordinates;
 	}
 
 	/**
-	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
+	 * 
+	 * This method returns <code>RestTaxonomyCoordinate</code>.
+	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
+	 * If no additional individual coordinate-specific parameters are specified,
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
+	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * 
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
 	 * 
 	 * @return RestTaxonomyCoordinate
+	 * Note that <code>RestTaxonomyCoordinate</code> contains <code>RestStampCoordinate</code>, <code>RestLanguageCoordinate</code> and <code>RestLogicCoordinate</code>.
+	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.taxonomyCoordinatePathComponent)  
-	public RestTaxonomyCoordinate getTaxonomyCoordinate() throws RestException
+	public RestTaxonomyCoordinate getTaxonomyCoordinate(
+			@QueryParam(RequestParameters.coordToken) String coordToken
+			) throws RestException
 	{
 		return new RestTaxonomyCoordinate(RequestInfo.get().getTaxonomyCoordinate());
 	}
 
 	/**
-	 * @param modules specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
-	 * @param path specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
-	 * @param precedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
-	 * @param allowedStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
-	 * @param time specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
+	 * 
+	 * This method returns <code>RestStampCoordinate</code>.
+	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
+	 * If no additional individual coordinate-specific parameters are specified,
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
+	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * 
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
 	 * 
 	 * @return RestStampCoordinate
+	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.stampCoordinatePathComponent)  
-	public RestStampCoordinate getStampCoordinate() throws RestException
+	public RestStampCoordinate getStampCoordinate(
+			@QueryParam(RequestParameters.coordToken) String coordToken
+			) throws RestException
 	{
 		return new RestStampCoordinate(RequestInfo.get().getStampCoordinate());
 	}
 
 	/**
-	 * @param descriptionTypePrefs specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
-	 * @param dialectPrefs specifies the order preference of dialects for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "us" or "gb".  The default is "us,gb".</p>
-	 * @param language specifies language of the LanguageCoordinate. Value may be a language UUID, int id or one of the following terms: "english", "spanish", "french", "danish", "polish", "dutch", "lithuanian", "chinese", "japanese", or "swedish".  The default is "english".</p>
+	 * 
+	 * This method returns <code>RestLanguageCoordinate</code>.
+	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
+	 * If no additional individual coordinate-specific parameters are specified,
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
+	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * 
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
 	 * 
 	 * @return RestLanguageCoordinate
+	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.languageCoordinatePathComponent)  
-	public RestLanguageCoordinate getLanguageCoordinate() throws RestException
+	public RestLanguageCoordinate getLanguageCoordinate(
+			@QueryParam(RequestParameters.coordToken) String coordToken
+			) throws RestException
 	{
 		return new RestLanguageCoordinate(RequestInfo.get().getLanguageCoordinate());
 	}
 
 	/**
-	 * @param logicStatedAssemblage specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param logicInferredAssemblage specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param descriptionLogicProfile specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
-	 * @param classifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
+	 * 
+	 * This method returns <code>RestLogicCoordinate</code>.
+	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
+	 * If no additional individual coordinate-specific parameters are specified,
+	 * then the coordinate corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * If any additional individual parameters are passed, then their values will be applied to the coordinate specified by the
+	 * explicit serialized CoordinateToken string, and the resulting coordinate will be returned.
+	 * 
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
 	 * 
 	 * @return RestLogicCoordinate
+	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.logicCoordinatePathComponent)  
-	public RestLogicCoordinate getLogicCoordinate() throws RestException
+	public RestLogicCoordinate getLogicCoordinate(
+			@QueryParam(RequestParameters.coordToken) String coordToken
+			) throws RestException
 	{
 		return new RestLogicCoordinate(RequestInfo.get().getLogicCoordinate());
 	}
