@@ -72,7 +72,6 @@ public class ConceptAPIs
 	 * Returns a single version of a concept.
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
-	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
 	 * @param includeParents - Include the direct parent concepts of the requested concept in the response.  Defaults to false.
 	 * @param countParents - true to count the number of parents above this node.  May be used with or without the includeParents parameter
 	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
@@ -94,7 +93,6 @@ public class ConceptAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestConceptVersion getConceptVersion(
 			@PathParam(RequestParameters.id) String id, 
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
 			@QueryParam("includeParents") @DefaultValue("false") String includeParents,
 			@QueryParam("countParents") @DefaultValue("false") String countParents,
 			@QueryParam("includeChildren") @DefaultValue("false") String includeChildren,
@@ -103,7 +101,6 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.expand) String expand ) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
 
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
@@ -117,7 +114,7 @@ public class ConceptAPIs
 					Boolean.parseBoolean(countParents.trim()), 
 					Boolean.parseBoolean(includeChildren.trim()),
 					Boolean.parseBoolean(countChildren.trim()),
-					Boolean.parseBoolean(stated.trim()),
+					RequestInfo.get().getStated(),
 					Boolean.parseBoolean(sememeMembership.trim()));
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
@@ -133,7 +130,7 @@ public class ConceptAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.chronologyComponent + "{id}")
+	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestConceptChronology getConceptChronology(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand
@@ -207,9 +204,10 @@ public class ConceptAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
-	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, 
-		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes,
-		@QueryParam("expand") String expand) throws RestException
+	public List<RestSememeDescriptionVersion> getDescriptions(
+			@PathParam(RequestParameters.id) String id, 
+			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		RequestInfo.get().readExpandables(expand);

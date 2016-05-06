@@ -60,7 +60,6 @@ public class TaxonomyAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.
-	 * @param stated - true for stated, false for inferred
 	 * @param parentHeight - How far to walk up (expand) the parent tree
 	 * @param countParents - true to count the number of parents above this node.  May be used with or without the parentHeight parameter
 	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
@@ -83,17 +82,14 @@ public class TaxonomyAPIs
 	public RestConceptVersion getConceptVersionTaxonomy(
 			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
 			@QueryParam(RequestParameters.id) @DefaultValue("7c21b6c5-cf11-5af9-893b-743f004c97f5") String id,
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated, 
 			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight,
 			@QueryParam("countParents") @DefaultValue("false") String countParents,
 			@QueryParam("childDepth") @DefaultValue("1") int childDepth,
 			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
 			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
-			@QueryParam(RequestParameters.expand) String expand
-			) throws RestException
+			@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
 		
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
@@ -108,7 +104,7 @@ public class TaxonomyAPIs
 			//parent / child expansion is handled here by providing a depth, not with expandables.
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					false, false, false, false, Boolean.parseBoolean(stated.trim()), includeSememeMembership);  
+					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership);  
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
