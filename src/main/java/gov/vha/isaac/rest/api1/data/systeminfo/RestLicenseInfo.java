@@ -68,4 +68,12 @@ public class RestLicenseInfo
 		this.url = url;
 		this.comments = comments;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestLicenseInfo [name=" + name + ", url=" + url + ", comments=" + comments + "]";
+	}
 }

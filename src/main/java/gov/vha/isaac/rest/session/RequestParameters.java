@@ -19,6 +19,10 @@
 
 package gov.vha.isaac.rest.session;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * 
  * {@link RequestParameters}
@@ -36,53 +40,48 @@ public class RequestParameters {
 	public final static String stated = "stated";
 	public final static String statedDefault = "true";
 
-	// Language Coordinate
-	public static enum LanguageCoordinateParamNames {
-		language,
-		dialectPrefs,
-		descriptionTypePrefs
-	};
-	public final static String language = LanguageCoordinateParamNames.language.name();
+	public final static String language = "language";
 	public final static String languageDefault = "english";
-	public final static String dialectPrefs = LanguageCoordinateParamNames.dialectPrefs.name();
+	public final static String dialectPrefs = "dialectPrefs";
 	public final static String dialectPrefsDefault = "us,gb";
-	public final static String descriptionTypePrefs = LanguageCoordinateParamNames.descriptionTypePrefs.name();
+	public final static String descriptionTypePrefs = "descriptionTypePrefs";
 	public final static String descriptionTypePrefsDefault = "fsn,synonym";
-	
-	// Stamp Coordinate
-	public static enum StampCoordinateParamNames {
-		time,
-		path,
-		precedence,
-		modules,
-		allowedStates
-	};
-	public final static String time = StampCoordinateParamNames.time.name();
-	public final static String timeDefault = "latest";
-	public final static String path = StampCoordinateParamNames.path.name();
-	public final static String pathDefault = "development";
-	public final static String precedence = StampCoordinateParamNames.precedence.name();
-	public final static String precedenceDefault = "path";
-	public final static String modules = StampCoordinateParamNames.modules.name();
-	public final static String modulesDefault = "";
-	public final static String allowedStates = StampCoordinateParamNames.allowedStates.name();
-	public final static String allowedStatesDefault = "active";
+	public final static Set<String> LANGUAGE_COORDINATE_PARAM_NAMES =
+			unmodifiableSet(language, dialectPrefs, descriptionTypePrefs);
 
-	// Logic Coordinate
-	public static enum LogicCoordinateParamNames {
-		logicStatedAssemblage,
-		logicInferredAssemblage,
-		descriptionLogicProfile,
-		classifier
-	};
-	public final static String logicStatedAssemblage = LogicCoordinateParamNames.logicStatedAssemblage.name();
+	// Stamp Coordinate
+	public final static String time = "time";
+	public final static String timeDefault = "latest";
+	public final static String path = "path";
+	public final static String pathDefault = "development";
+	public final static String precedence = "precedence";
+	public final static String precedenceDefault = "path";
+	public final static String modules = "modules";
+	public final static String modulesDefault = "";
+	public final static String allowedStates = "allowedStates";
+	public final static String allowedStatesDefault = "active";
+	public final static Set<String> STAMP_COORDINATE_PARAM_NAMES =
+			unmodifiableSet(
+					time,
+					path,
+					precedence,
+					modules,
+					allowedStates);
+
+	public final static String logicStatedAssemblage = "logicStatedAssemblage";
 	public final static String logicStatedAssemblageDefault = "1f201994-960e-11e5-8994-feff819cdc9f";
-	public final static String logicInferredAssemblage = LogicCoordinateParamNames.logicInferredAssemblage.name();
+	public final static String logicInferredAssemblage = "logicInferredAssemblage";
 	public final static String logicInferredAssemblageDefault = "1f20182c-960e-11e5-8994-feff819cdc9f";
-	public final static String descriptionLogicProfile = LogicCoordinateParamNames.descriptionLogicProfile.name();
+	public final static String descriptionLogicProfile = "descriptionLogicProfile";
 	public final static String descriptionLogicProfileDefault = "1f201e12-960e-11e5-8994-feff819cdc9f";
-	public final static String classifier = LogicCoordinateParamNames.classifier.name();
+	public final static String classifier = "classifier";
 	public final static String classifierDefault = "1f201fac-960e-11e5-8994-feff819cdc9f";
+	public final static Set<String> LOGIC_COORDINATE_PARAM_NAMES =
+			unmodifiableSet(
+					logicStatedAssemblage,
+					logicInferredAssemblage,
+					descriptionLogicProfile,
+					classifier);
 
 	public final static String id = "id";
 	public final static String nid = "nid";
@@ -105,4 +104,12 @@ public class RequestParameters {
 	public final static String extendedDescriptionTypeId = "extendedDescriptionTypeId";
 	public final static String dynamicSememeColumns = "dynamicSememeColumns";
 	public final static String sememeAssemblageId = "sememeAssemblageId";
+	
+	private final static <T> Set<T> unmodifiableSet(@SuppressWarnings("unchecked") T...elements) {
+		Set<T> list = new HashSet<>(elements.length);
+		for (T element : elements) {
+			list.add(element);
+		}
+		return Collections.unmodifiableSet(list);
+	}
 }

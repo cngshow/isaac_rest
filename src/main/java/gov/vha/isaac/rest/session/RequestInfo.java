@@ -40,9 +40,6 @@ import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.session.RequestParameters.LanguageCoordinateParamNames;
-import gov.vha.isaac.rest.session.RequestParameters.LogicCoordinateParamNames;
-import gov.vha.isaac.rest.session.RequestParameters.StampCoordinateParamNames;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 
@@ -147,10 +144,11 @@ public class RequestInfo
 
 			// Determine if any relevant coordinate parameters set
 			Map<String,List<String>> coordinateParameters = new HashMap<>();
-			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, RequestParameters.stated));
-			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, StampCoordinateParamNames.values()));
-			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, LanguageCoordinateParamNames.values()));
-			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters, LogicCoordinateParamNames.values()));
+			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters,
+					RequestParameters.stated,
+					RequestParameters.STAMP_COORDINATE_PARAM_NAMES,
+					RequestParameters.LANGUAGE_COORDINATE_PARAM_NAMES,
+					RequestParameters.LOGIC_COORDINATE_PARAM_NAMES));
 
 			// If ANY relevant coordinate parameter values set, then calculate new CoordinatesToken string
 			if (coordinateParameters.size() == 0) {

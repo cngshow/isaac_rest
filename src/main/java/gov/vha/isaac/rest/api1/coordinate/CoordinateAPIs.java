@@ -24,6 +24,7 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -34,6 +35,7 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestLogicCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestStampCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 
 /**
@@ -45,6 +47,17 @@ import gov.vha.isaac.rest.session.RequestInfo;
 public class CoordinateAPIs
 {
 	/**
+	 * 
+	 * This method returns a serialized CoordinateToken string specifying all coordinate parameters
+	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
+	 * If no additional individual coordinate-specific parameters are specified,
+	 * then the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * If any additional individual parameters are passed, then their values will be applied to the coordinates specified by the
+	 * explicit serialized CoordinateToken string, and the resulting modified CoordinateToken will be returned.
+	 * 
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
 	 * 
 	 * @param descriptionTypePrefs specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
@@ -68,12 +81,42 @@ public class CoordinateAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.coordinatesTokenComponent)  
-	public RestCoordinatesToken getCoordinatesToken() throws RestException
+	public RestCoordinatesToken getCoordinatesToken(
+			@QueryParam(RequestParameters.coordToken) String coordToken,
+			
+			@QueryParam(RequestParameters.stated) String stated,
+			
+			@QueryParam(RequestParameters.descriptionTypePrefs) String descriptionTypePrefs,
+			@QueryParam(RequestParameters.dialectPrefs) String dialectPrefs,
+			@QueryParam(RequestParameters.language) String language,
+			
+			@QueryParam(RequestParameters.modules) String modules,
+			@QueryParam(RequestParameters.path) String path,
+			@QueryParam(RequestParameters.precedence) String precedence,
+			@QueryParam(RequestParameters.allowedStates) String allowedStates,
+			@QueryParam(RequestParameters.time) String time,
+			
+			@QueryParam(RequestParameters.logicStatedAssemblage) String logicStatedAssemblage,
+			@QueryParam(RequestParameters.logicInferredAssemblage) String logicInferredAssemblage,
+			@QueryParam(RequestParameters.descriptionLogicProfile) String descriptionLogicProfile,
+			@QueryParam(RequestParameters.classifier) String classifier) throws RestException
 	{
+		// All parameters, including defaults, are handled by the RestContainerRequestFilter
 		return new RestCoordinatesToken(RequestInfo.get().getCoordinatesToken());
 	}
 
 	/**
+	 * 
+	 * This method returns a list of coordinates comprising all coordinate parameters.
+	 * It takes an explicit serialized CoordinateToken string parameter <code>coordToken</code>
+	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
+	 * If no additional individual coordinate-specific parameters are specified,
+	 * then the coordinates corresponding to the passed <code>coordToken</code> CoordinateToken will be returned.
+	 * If any additional individual parameters are passed, then their values will be applied to the coordinates specified by the
+	 * explicit serialized CoordinateToken string, and the resulting coordinates will be returned.
+	 * 
+	 * @param coordToken specifies an explicit serialized CoordinateToken string specifying all coordinate parameters.
+	 * 
 	 * @param stated specifies premise/taxonomy type of <code>STATED</code> when true and <code>INFERRED</code> when false.
 	 * 
 	 * @param descriptionTypePrefs specifies the order preference of description types for the LanguageCoordinate. Values are description type UUIDs, int ids or the terms "fsn", "synonym" and/or "definition".  The default is "fsn,synonym".</p>
@@ -91,13 +134,32 @@ public class CoordinateAPIs
 	 * @param descriptionLogicProfile specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * @param classifier specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * 
-	 * @return List<Object> all known coordinates
+	 * @return RestCoordinatesToken
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.coordinatesComponent)  
-	public List<Object> getCoordinates() throws RestException
+	public List<Object> getCoordinates(
+			@QueryParam(RequestParameters.coordToken) String coordToken,
+			
+			@QueryParam(RequestParameters.stated) String stated,
+			
+			@QueryParam(RequestParameters.descriptionTypePrefs) String descriptionTypePrefs,
+			@QueryParam(RequestParameters.dialectPrefs) String dialectPrefs,
+			@QueryParam(RequestParameters.language) String language,
+			
+			@QueryParam(RequestParameters.modules) String modules,
+			@QueryParam(RequestParameters.path) String path,
+			@QueryParam(RequestParameters.precedence) String precedence,
+			@QueryParam(RequestParameters.allowedStates) String allowedStates,
+			@QueryParam(RequestParameters.time) String time,
+			
+			@QueryParam(RequestParameters.logicStatedAssemblage) String logicStatedAssemblage,
+			@QueryParam(RequestParameters.logicInferredAssemblage) String logicInferredAssemblage,
+			@QueryParam(RequestParameters.descriptionLogicProfile) String descriptionLogicProfile,
+			@QueryParam(RequestParameters.classifier) String classifier
+			) throws RestException
 	{
 		List<Object> coordinates = new ArrayList<>();
 		

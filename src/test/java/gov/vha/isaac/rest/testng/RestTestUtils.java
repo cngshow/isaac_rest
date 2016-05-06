@@ -47,6 +47,8 @@ import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
+import gov.vha.isaac.rest.api1.data.SystemInfo;
+import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 
 /**
  * 
@@ -180,6 +182,10 @@ public class RestTestUtils {
 	}
 	
 	public static void main(String...argv) {
-		
+		// unmarshalObject example
+		String xml ="<restDependencyInfo> <groupId>gov.vha.isaac.db</groupId> <artifactId>solor</artifactId> <version>1.1-SNAPSHOT</version> <classifier>all</classifier> <type>cradle.zip</type> </restDependencyInfo>";
+		RestDependencyInfo object = unmarshalObject(RestDependencyInfo.class, xml);
+
+		System.out.println(object);
 	}
 }

@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -197,5 +198,17 @@ public class SystemInfo
 	 */
 	public void addAppLicense(RestLicenseInfo appLicense) {
 		this.appLicenses.add(appLicense);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "SystemInfo [supportedAPIVersions=" + Arrays.toString(supportedAPIVersions) + ", isaacDbDependency="
+				+ isaacDbDependency + ", scmUrl=" + scmUrl + ", isaacVersion=" + isaacVersion + ", isaacGuiVersion="
+				+ isaacGuiVersion + ", assemblyVersion=" + assemblyVersion + ", metadataVersion=" + metadataVersion
+				+ ", appLicenses=" + appLicenses + ", dbLicenses=" + dbLicenses + ", dbDependencies=" + dbDependencies
+				+ "]";
 	}
 }

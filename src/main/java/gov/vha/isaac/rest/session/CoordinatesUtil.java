@@ -44,9 +44,6 @@ import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.session.RequestParameters.LanguageCoordinateParamNames;
-import gov.vha.isaac.rest.session.RequestParameters.LogicCoordinateParamNames;
-import gov.vha.isaac.rest.session.RequestParameters.StampCoordinateParamNames;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 
@@ -103,28 +100,31 @@ public class CoordinatesUtil {
 		
 		coordinateParams.putAll(getParametersSubset(params, RequestParameters.coordToken));
 		coordinateParams.putAll(getParametersSubset(params, RequestParameters.stated));
-		coordinateParams.putAll(getParametersSubset(params, StampCoordinateParamNames.values()));
-		coordinateParams.putAll(getParametersSubset(params, LanguageCoordinateParamNames.values()));
-		coordinateParams.putAll(getParametersSubset(params, LogicCoordinateParamNames.values()));
+		coordinateParams.putAll(getParametersSubset(params, RequestParameters.STAMP_COORDINATE_PARAM_NAMES));
+		coordinateParams.putAll(getParametersSubset(params, RequestParameters.LANGUAGE_COORDINATE_PARAM_NAMES));
+		coordinateParams.putAll(getParametersSubset(params, RequestParameters.LOGIC_COORDINATE_PARAM_NAMES));
 		
 		return coordinateParams;
 	}
 	
 	/**
 	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
-	 * @param names array of parameter name Enums or objects for which toString() is used
+	 * @param names array of parameter collections, names or objects for which toString() is used
 	 * @return
 	 */
-	@SafeVarargs
-	public static <E extends Enum<E>> Map<String, List<String>> getParametersSubset(Map<String, List<String>> params, E...names) {
-		return getParametersSubset(params, (Object[])names);
-	}
 	public static Map<String, List<String>> getParametersSubset(Map<String, List<String>> params, Object...names) {
 		Map<String,List<String>> paramSubset = new HashMap<>();
 
-		for (Object paramName : names) {
-			if (params.containsKey(paramName.toString()) && params.get(paramName.toString()) != null && params.get(paramName.toString()).size() > 0) {
-				paramSubset.put(paramName.toString(), params.get(paramName.toString()));
+		for (Object param : names) {
+			if (param instanceof Iterable) {
+				// Passed a collection
+				for (Object paramName : (Iterable<?>)param) {
+					if (params.containsKey(paramName.toString()) && params.get(paramName.toString()) != null && params.get(paramName.toString()).size() > 0) {
+						paramSubset.put(paramName.toString(), params.get(paramName.toString()));
+					}
+				}
+			} else if (params.containsKey(param.toString()) && params.get(param.toString()) != null && params.get(param.toString()).size() > 0) {
+				paramSubset.put(param.toString(), params.get(param.toString()));
 			}
 		}
 
