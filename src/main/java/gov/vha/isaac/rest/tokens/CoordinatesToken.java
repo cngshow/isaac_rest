@@ -127,7 +127,7 @@ public class CoordinatesToken
 			return CoordinatesTokens.getDefaultCoordinatesToken();
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
-			log.error("CoordinatesTokens.getDefaultCoordinatesToken() SHOULD NEVER THROW EXCEPTIONS. CAUGHT " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			log.error("CoordinatesTokens.getDefaultCoordinatesToken() SHOULD NEVER THROW EXCEPTIONS.", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -142,7 +142,7 @@ public class CoordinatesToken
 			}
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
-			log.error("CREATING A CoordinatesToken FROM AN EXISTING TaxonomyCoordinate SHOULD NEVER THROW EXCEPTIONS. CAUGHT " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			log.error("CREATING A CoordinatesToken FROM AN EXISTING TaxonomyCoordinate SHOULD NEVER THROW EXCEPTIONS.", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -161,7 +161,7 @@ public class CoordinatesToken
 			}
 		} catch (Exception e) {
 			// This should never fail, as token is created from existing objects
-			log.error("CREATING A CoordinatesToken FROM EXISTING TaxonomyCoordinate COMPONENTS SHOULD NEVER THROW EXCEPTIONS. CAUGHT " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			log.error("CREATING A CoordinatesToken FROM EXISTING TaxonomyCoordinate COMPONENTS SHOULD NEVER THROW EXCEPTIONS.", e);
 			throw new RuntimeException(e);
 		}
 	}

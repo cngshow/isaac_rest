@@ -46,14 +46,10 @@ public class RequestInfoUtils {
 	}
 
 	public static boolean getBooleanFromParameters(String parameterName, Map<String, List<String>> parameters) throws RestException {
-		try {
-			if (parameters.get(parameterName).size() != 1) {
-				throw new RestException(parameterName, null, "invalid boolean parameter value");
-			}
-			return parseBooleanParameter(parameterName, parameters.get(parameterName).get(0));
-		} catch (Exception e) {
-			throw new RestException(parameterName, null, e.getLocalizedMessage());
+		if (parameters.get(parameterName).size() != 1) {
+			throw new RestException(parameterName, null, "invalid boolean parameter value");
 		}
+		return parseBooleanParameter(parameterName, parameters.get(parameterName).get(0));
 	}
 
 	public static List<String> expandCommaDelimitedElements(String list) {
