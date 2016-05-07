@@ -42,31 +42,87 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestStampCoordinate {
 	@XmlElement
-	long time;
+	public long time;
 
 	@XmlElement
-	int path;
+	public int path;
 	
 	@XmlElement
-	RestStampPrecedenceType precedence;
+	public RestStampPrecedenceType precedence;
 	
 	@XmlElement
-	Set<Integer> modules;
+	public Set<Integer> modules = new HashSet<>();
 	
 	@XmlElement
-	Set<RestStateType> allowedStates;
+	public Set<RestStateType> allowedStates = new HashSet<>();
 	
 	public RestStampCoordinate(StampCoordinate sc) {
 		time = sc.getStampPosition().getTime();
 		path = sc.getStampPosition().getStampPathSequence();
 		precedence = new RestStampPrecedenceType(sc.getStampPrecedence());
-		modules = new HashSet<>();
 		sc.getModuleSequences().stream().forEach((seq) -> modules.add(seq));
-		allowedStates = new HashSet<>();
 		sc.getAllowedStates().stream().forEach((state) -> allowedStates.add(new RestStateType(state)));
 	}
 
 	protected RestStampCoordinate() {
 		// For JAXB
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((allowedStates == null) ? 0 : allowedStates.hashCode());
+		result = prime * result + ((modules == null) ? 0 : modules.hashCode());
+		result = prime * result + path;
+		result = prime * result + ((precedence == null) ? 0 : precedence.hashCode());
+		result = prime * result + (int) (time ^ (time >>> 32));
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestStampCoordinate other = (RestStampCoordinate) obj;
+		if (allowedStates == null) {
+			if (other.allowedStates != null)
+				return false;
+		} else if (!allowedStates.equals(other.allowedStates))
+			return false;
+		if (modules == null) {
+			if (other.modules != null)
+				return false;
+		} else if (!modules.equals(other.modules))
+			return false;
+		if (path != other.path)
+			return false;
+		if (precedence == null) {
+			if (other.precedence != null)
+				return false;
+		} else if (!precedence.equals(other.precedence))
+			return false;
+		if (time != other.time)
+			return false;
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestStampCoordinate [time=" + time + ", path=" + path + ", precedence=" + precedence + ", modules="
+				+ modules + ", allowedStates=" + allowedStates + "]";
 	}
 }

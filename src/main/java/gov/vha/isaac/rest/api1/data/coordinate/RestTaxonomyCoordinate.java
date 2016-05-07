@@ -38,7 +38,7 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestTaxonomyCoordinate {
 	@XmlElement
-	boolean stated;
+	public boolean stated;
 
 	@XmlElement
 	public RestStampCoordinate stampCoordinate;
@@ -58,5 +58,60 @@ public class RestTaxonomyCoordinate {
 
 	protected RestTaxonomyCoordinate() {
 		// For JAXB
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((languageCoordinate == null) ? 0 : languageCoordinate.hashCode());
+		result = prime * result + ((logicCoordinate == null) ? 0 : logicCoordinate.hashCode());
+		result = prime * result + ((stampCoordinate == null) ? 0 : stampCoordinate.hashCode());
+		result = prime * result + (stated ? 1231 : 1237);
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestTaxonomyCoordinate other = (RestTaxonomyCoordinate) obj;
+		if (languageCoordinate == null) {
+			if (other.languageCoordinate != null)
+				return false;
+		} else if (!languageCoordinate.equals(other.languageCoordinate))
+			return false;
+		if (logicCoordinate == null) {
+			if (other.logicCoordinate != null)
+				return false;
+		} else if (!logicCoordinate.equals(other.logicCoordinate))
+			return false;
+		if (stampCoordinate == null) {
+			if (other.stampCoordinate != null)
+				return false;
+		} else if (!stampCoordinate.equals(other.stampCoordinate))
+			return false;
+		if (stated != other.stated)
+			return false;
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestTaxonomyCoordinate [stated=" + stated + ", stampCoordinate=" + stampCoordinate
+				+ ", languageCoordinate=" + languageCoordinate + ", logicCoordinate=" + logicCoordinate + "]";
 	}
 }

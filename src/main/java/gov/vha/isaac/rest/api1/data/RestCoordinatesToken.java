@@ -43,7 +43,7 @@ public class RestCoordinatesToken {
 	 * Serialized coordinates token
 	 */
 	@XmlElement
-	String token;
+	public String token;
 	
 	RestCoordinatesToken() {
 		// For JAXB
@@ -54,5 +54,36 @@ public class RestCoordinatesToken {
 	}
 	public RestCoordinatesToken(CoordinatesToken token) {
 		this.token = token.getSerialized();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((token == null) ? 0 : token.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestCoordinatesToken other = (RestCoordinatesToken) obj;
+		if (token == null) {
+			if (other.token != null)
+				return false;
+		} else if (!token.equals(other.token))
+			return false;
+		return true;
 	}
 }

@@ -37,16 +37,16 @@ import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLogicCoordinate {
 	@XmlElement
-	int statedAssemblage;
+	public int statedAssemblage;
 	
 	@XmlElement
-	int inferredAssemblage;
+	public int inferredAssemblage;
 	
 	@XmlElement
-	int descriptionLogicProfile;
+	public int descriptionLogicProfile;
 	
 	@XmlElement
-	int classifier;
+	public int classifier;
 	
 	public RestLogicCoordinate(LogicCoordinate lc) {
 		statedAssemblage = lc.getStatedAssemblageSequence();
@@ -57,5 +57,52 @@ public class RestLogicCoordinate {
 
 	protected RestLogicCoordinate() {
 		// For JAXB
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + classifier;
+		result = prime * result + descriptionLogicProfile;
+		result = prime * result + inferredAssemblage;
+		result = prime * result + statedAssemblage;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestLogicCoordinate other = (RestLogicCoordinate) obj;
+		if (classifier != other.classifier)
+			return false;
+		if (descriptionLogicProfile != other.descriptionLogicProfile)
+			return false;
+		if (inferredAssemblage != other.inferredAssemblage)
+			return false;
+		if (statedAssemblage != other.statedAssemblage)
+			return false;
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestLogicCoordinate [statedAssemblage=" + statedAssemblage + ", inferredAssemblage="
+				+ inferredAssemblage + ", descriptionLogicProfile=" + descriptionLogicProfile + ", classifier="
+				+ classifier + "]";
 	}
 }

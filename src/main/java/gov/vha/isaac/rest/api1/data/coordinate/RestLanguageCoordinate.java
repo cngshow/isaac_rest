@@ -43,18 +43,16 @@ public class RestLanguageCoordinate {
 	int language;
 	
 	@XmlElement
-	List<Integer> dialectAssemblagePreferences;
+	List<Integer> dialectAssemblagePreferences = new ArrayList<>();
 
 	@XmlElement
-	List<Integer> descriptionTypePreferences;
+	List<Integer> descriptionTypePreferences = new ArrayList<>();
 	
 	public RestLanguageCoordinate(LanguageCoordinate lc) {
 		language = lc.getLanguageConceptSequence();
-		dialectAssemblagePreferences = new ArrayList<>();
 		for (int seq : lc.getDialectAssemblagePreferenceList()) {
 			dialectAssemblagePreferences.add(seq);
 		}
-		descriptionTypePreferences = new ArrayList<>();
 		for (int seq : lc.getDescriptionTypePreferenceList()) {
 			descriptionTypePreferences.add(seq);
 		}
@@ -62,5 +60,55 @@ public class RestLanguageCoordinate {
 
 	protected RestLanguageCoordinate() {
 		// For JAXB
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((descriptionTypePreferences == null) ? 0 : descriptionTypePreferences.hashCode());
+		result = prime * result
+				+ ((dialectAssemblagePreferences == null) ? 0 : dialectAssemblagePreferences.hashCode());
+		result = prime * result + language;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestLanguageCoordinate other = (RestLanguageCoordinate) obj;
+		if (descriptionTypePreferences == null) {
+			if (other.descriptionTypePreferences != null)
+				return false;
+		} else if (!descriptionTypePreferences.equals(other.descriptionTypePreferences))
+			return false;
+		if (dialectAssemblagePreferences == null) {
+			if (other.dialectAssemblagePreferences != null)
+				return false;
+		} else if (!dialectAssemblagePreferences.equals(other.dialectAssemblagePreferences))
+			return false;
+		if (language != other.language)
+			return false;
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestLanguageCoordinate [language=" + language + ", dialectAssemblagePreferences="
+				+ dialectAssemblagePreferences + ", descriptionTypePreferences=" + descriptionTypePreferences + "]";
 	}
 }
