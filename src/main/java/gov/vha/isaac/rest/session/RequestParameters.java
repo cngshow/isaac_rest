@@ -86,6 +86,7 @@ public class RequestParameters {
 	public final static String id = "id";
 	public final static String nid = "nid";
 	public final static String expand = "expand";
+	public final static String expandables = "expandables";
 
 	public final static String pageNum = "pageNum";
 	public final static String pageNumDefault = "1";

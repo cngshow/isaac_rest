@@ -44,5 +44,12 @@
  * <p><code>descriptionLogicProfile</code> - specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
  * <p><code>classifier</code> - specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
  *
+ *
+ * <h2>Expandables</h2>
+ * <p>The server has the ability to return data to help understand the API in the form of "expandables".  By default, expandables are on, when the server
+ * is deployed in a debug enviornment.  Expandables are disabled when deployed in a production environment.  To override the default, and return expandable
+ * metadata in a production environment, add this parameter to any call:
+ * <code>expandables=true</code>
+  *</p>
  */
 package gov.vha.isaac.rest.api;
