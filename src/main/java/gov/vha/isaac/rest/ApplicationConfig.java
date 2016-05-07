@@ -220,6 +220,11 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			if (targetDBLocation.isDirectory())
 			{
 				log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
+				//TODO - can't do this.  Always need to do the below code first - to determine the desired artifact info.
+				//Then, we need to read the pom.xml file that we find inside of targetDBLocation - and validate that each and every 
+				//parameter perfectly matches.  If it doesn't match, then the DB must be deleted, and downloaded.
+				//If we don't do this, we won't catch the case where the isaac-rest server was undeployed, then redeployed with a different DB configuration.
+				
 				status_.set("Using existing directory");
 				return targetDBLocation;
 			}
