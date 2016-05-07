@@ -18,10 +18,6 @@
  */
 package gov.vha.isaac.rest;
 
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * 
  * {@link ExpandUtil}
@@ -39,22 +35,4 @@ public class ExpandUtil
 	public static final String nestedSememesExpandable = "nestedSememes";
 	public static final String referencedDetails = "referencedDetails";
 	public static final String logicNodeUuidsExpandable = "logicNodeUuids";
-	
-	public static Set<String> read(String expandableString)
-	{
-		if (StringUtils.isNotBlank(expandableString))
-		{
-			HashSet<String> expandables = new HashSet<>(expandableString.length() / 10);
-			for (String s : expandableString.trim().split(","))
-			{
-				if (StringUtils.isNotBlank(s))
-				{
-					expandables.add(s.trim());
-				}
-				
-			}
-			return expandables;
-		}
-		return new HashSet<>(0);
-	}
 }

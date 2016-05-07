@@ -84,11 +84,6 @@ public class RequestInfo
 		requestInfo.remove();
 	}
 
-	public RequestInfo readExpandables(String expandableString)
-	{
-		requestInfo.get().expandablesForDirectExpansion_ = ExpandUtil.read(expandableString);
-		return get();
-	}
 	public RequestInfo readExpandables(Map<String, List<String>> parameters) throws RestException
 	{
 		requestInfo.get().expandablesForDirectExpansion_ = new HashSet<>();
@@ -97,6 +92,14 @@ public class RequestInfo
 				if (expandable != null) {
 					requestInfo.get().expandablesForDirectExpansion_.add(expandable.trim());
 				}
+			}
+		}
+		if (parameters.containsKey(RequestParameters.expandables))
+		{
+			List<String> temp = parameters.get(RequestParameters.expandables);
+			if (temp.size() > 0)
+			{
+				returnExpandableLinks_ = Boolean.parseBoolean(temp.get(0).trim());
 			}
 		}
 		return get();
