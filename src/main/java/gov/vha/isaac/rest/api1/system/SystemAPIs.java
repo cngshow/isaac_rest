@@ -135,7 +135,6 @@ public class SystemAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
 		List<Object> identifiedObjects = new ArrayList<>();
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())

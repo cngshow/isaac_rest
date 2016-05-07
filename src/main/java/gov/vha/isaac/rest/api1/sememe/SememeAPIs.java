@@ -145,8 +145,6 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		
 		RestSememeChronology chronology =
 				new RestSememeChronology(
 						findSememeChronology(id),
@@ -177,8 +175,6 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = findSememeChronology(id);
 		@SuppressWarnings("unchecked")
@@ -254,8 +250,6 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		
 		HashSet<Integer> temp = new HashSet<>();
 		temp.add(Util.convertToConceptSequence(id));
 		
@@ -315,8 +309,6 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken) 
 			throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
 		for (String a : assemblage)
 		{

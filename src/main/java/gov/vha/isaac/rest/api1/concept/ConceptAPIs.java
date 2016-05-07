@@ -104,8 +104,6 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
 		@SuppressWarnings("unchecked")
@@ -142,8 +140,6 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
 		RestConceptChronology chronology =
 				new RestConceptChronology(
@@ -219,7 +215,6 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
-		RequestInfo.get().readExpandables(expand);
 		
 		List<RestSememeVersion> descriptions = SememeAPIs.get(
 				findConceptChronology(id).getNid() + "",
