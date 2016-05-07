@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import org.slf4j.LoggerFactory;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -44,6 +45,15 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 		{
 			LoggerFactory.getLogger("web").error("Unexpected", ex);
 		}
-		return Response.status(500).entity(ex.toString()).type("text/plain").build();
+		String response;
+		if (ex instanceof RestException)
+		{
+			response = ex.toString();
+		}
+		else
+		{
+			response = "Unexpected Internal Error";
+		}
+		return Response.status(500).entity(response).type("text/plain").build();
 	}
 }
