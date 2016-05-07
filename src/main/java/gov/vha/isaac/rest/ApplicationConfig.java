@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Context;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,9 +39,18 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private static ApplicationConfig instance_;
 	
 	private StringProperty status_ = new SimpleStringProperty("Not Started");
+	private boolean debugMode = true;
+	private boolean shutdown = false;
+	
+	//Note - this injection works fine, when deployed as a war to tomcat.  However, when launched in the localJettyRunner from eclipse, 
+	//this remains null.
+	@Context 
+	ServletContext context;
+	
+	private String contextPath;
 	
 	//TODO implement convenience methods for 'associations'
-	
+
 	public ApplicationConfig()
 	{
 		//If we leave everything to annotations, is picks up the eclipse moxy gson writer, which doesn't handle abstract classes properly.
@@ -61,6 +73,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	@Override
 	public void onShutdown(Container arg0)
 	{
+		shutdown = true;
 		log.info("Stopping ISAAC");
 		LookupService.shutdownIsaac();
 		log.info("ISAAC stopped");
@@ -75,6 +88,21 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			throw new RuntimeException("Unexpected!");
 		}
 		instance_ = this;
+		
+		//context is null when run from eclipse with the local jetty runner.
+		if (context == null)
+		{
+			debugMode = true;
+			contextPath = "rest";
+		}
+		else
+		{
+			contextPath = context.getContextPath().replace("/", "");
+			debugMode = (contextPath.contains("SNAPSHOT") ? true : false);
+		}
+		
+		log.info("Context path of this deployment is '" + contextPath + "' and debug mode is " + debugMode);
+		
 		issacInit();
 	}
 	
@@ -107,19 +135,6 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					try
 					{
 						log.info("ISAAC Init thread begins");
-						//First, see if there is a properties file embedded in the war (PRISME places this during deployment)
-						Properties props = new Properties();
-						try (final InputStream stream = this.getClass().getResourceAsStream("/prisme.properties"))
-						{
-							props.load(stream);
-						}
-						catch (Exception e1)
-						{
-							log.info("Could not read a prism.properties file from the classpath");
-						}
-						
-						System.out.println("Read property:" + props.getProperty("g"));
-						
 						
 						if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)))
 						{
@@ -128,6 +143,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							File temp;
 							if (StringUtils.isBlank(sysProp))
 							{
+								//No ISAAC default property set, nor the isaacDatabaseLocation property is set.  Download a DB.
 								log.info("Downloading a database for use");
 								status_.set("Downloading DB");
 								try
@@ -146,6 +162,11 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 								temp = new File(sysProp);
 							}
 							
+							if (shutdown)
+							{
+								return;
+							}
+							
 							File dataStoreLocation = DBLocator.findDBFolder(temp);
 							
 							if (!dataStoreLocation.exists())
@@ -156,11 +177,17 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							{
 								throw new RuntimeException("The specified data store: '" + dataStoreLocation.getAbsolutePath() + "' is not a folder");
 							}
-
+							
+							//use the passed in JVM parameter location
 							LookupService.getService(ConfigurationService.class).setDataStoreFolderPath(dataStoreLocation.toPath());
 							System.out.println("  Setup AppContext, data store location = " + dataStoreLocation.getAbsolutePath());
 						}
 
+						if (shutdown)
+						{
+							return;
+						}
+						
 						status_.set("Starting ISAAC");
 						LookupService.startupIsaac();
 						status_.set("Ready");
@@ -184,48 +211,136 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	
 	private File downloadDB() throws Exception
 	{
-		log.info("Checking for existing DB");
-		File targetDBLocation = new File(System.getProperty("java.io.tmpdir"), "ISAAC.db");
-		if (targetDBLocation.isDirectory())
+		File tempDbFolder = null;
+		try
 		{
-			log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
-			status_.set("Using existing directory");
-			return targetDBLocation;
-		}
-		
-		File dbFolder = File.createTempFile("ISAAC-DATA", "");
-		dbFolder.delete();
-		dbFolder.mkdirs();
-		log.info("Downloading DB to " + dbFolder.getAbsolutePath());
-		URL snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/groups/everything/" 
-				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/groups/everything/", "system", "system", 
-						"gov.vha.isaac.db", "vets", "1.0", "all", "cradle.zip"));
-		Task<File> task = new DownloadUnzipTask("system", "system", snapshot, true, true, dbFolder);
-		status_.bind(task.messageProperty());
-		Get.workExecutors().getExecutor().submit(task);
-		task.get();
-		status_.unbind();
-		
-		snapshot = new URL("http://vadev.mantech.com:8081/nexus/content/groups/everything/" 
-				+ ArtifactUtilities.makeMavenRelativePath("http://vadev.mantech.com:8081/nexus/content/groups/everything/", "system", "system", 
-						"gov.vha.isaac.db", "vets", "1.0", "all", "lucene.zip"));
-		task = new DownloadUnzipTask("system", "system", snapshot, true, true, dbFolder);
-		status_.bind(task.messageProperty());
-		Get.workExecutors().getExecutor().submit(task);
-		task.get();
-		status_.unbind();
-		status_.set("Download complete");
+			log.info("Checking for existing DB");
 
-		log.debug("Renaming " + dbFolder.getCanonicalPath() + " to " + targetDBLocation.getCanonicalPath());
-		if (dbFolder.renameTo(targetDBLocation))
-		{
-			return targetDBLocation;
+			File targetDBLocation = new File(System.getProperty("java.io.tmpdir"), "ISAAC." + contextPath + ".db");
+			if (targetDBLocation.isDirectory())
+			{
+				log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
+				status_.set("Using existing directory");
+				return targetDBLocation;
+			}
+			
+			String baseMavenURL = null;
+			String mavenUsername = null;
+			String mavenPassword = null;
+			String groupId = null;
+			String artifactId = null;
+			String version = null;
+			String classifier = null;
+			
+			//First, see if there is a properties file embedded in the war (PRISME places this during deployment)
+			Properties props = new Properties();
+			try (final InputStream stream = this.getClass().getResourceAsStream("/prisme.properties"))
+			{
+				if (stream == null)
+				{
+					log.info("No prisme.properties file was found on the classpath");
+				}
+				else
+				{
+					log.info("Reading database configuration from prisme.properties file");
+					props.load(stream);
+					baseMavenURL = props.getProperty("nexus_repository_url");
+					mavenUsername = props.getProperty("nexus_user");
+					mavenPassword = props.getProperty("nexus_pwd");
+					groupId = props.getProperty("db_group_id");
+					artifactId = props.getProperty("db_artifact_id");
+					version = props.getProperty("db_version");
+					classifier = props.getProperty("db_classifier");
+				}
+			}
+			catch (Exception e1)
+			{
+				log.error("Unexpected error trying to read properties from the prisme.properties file", e1);
+				throw new RuntimeException(e1);
+			}
+			
+			if (StringUtils.isBlank(version))
+			{
+				log.warn("Unable to determine specified DB - using developer default options!");
+				baseMavenURL = "http://vadev.mantech.com:8081/nexus/content/groups/everything/";
+				mavenUsername = "system";
+				mavenPassword = "system";
+				groupId = "gov.vha.isaac.db";
+				artifactId = "vets";
+				version = "1.0";
+				classifier = "all";
+			}
+
+			tempDbFolder = File.createTempFile("ISAAC-DATA", "");
+			tempDbFolder.delete();
+			tempDbFolder.mkdirs();
+			log.info("Downloading DB to " + tempDbFolder.getAbsolutePath());
+			URL cradle = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPassword, groupId, artifactId, version, classifier, "cradle.zip");
+			Task<File> task = new DownloadUnzipTask(mavenUsername, mavenPassword, cradle, true, true, tempDbFolder);
+			status_.bind(task.messageProperty());
+			Get.workExecutors().getExecutor().submit(task);
+			try
+			{
+				task.get();
+			}
+			catch (InterruptedException e)
+			{
+				task.cancel(true);
+				throw e;
+			}
+			status_.unbind();
+			
+			URL lucene = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPassword, groupId, artifactId, version, classifier, "lucene.zip");
+			task = new DownloadUnzipTask(mavenUsername, mavenPassword, lucene, true, true, tempDbFolder);
+			status_.bind(task.messageProperty());
+			Get.workExecutors().getExecutor().submit(task);
+			try
+			{
+				task.get();
+			}
+			catch (InterruptedException e)
+			{
+				task.cancel(true);
+				throw e;
+			}
+			status_.unbind();
+			status_.set("Download complete");
+
+			log.debug("Renaming " + tempDbFolder.getCanonicalPath() + " to " + targetDBLocation.getCanonicalPath());
+			if (tempDbFolder.renameTo(targetDBLocation))
+			{
+				return targetDBLocation;
+			}
+			else
+			{
+				log.error("Failed to rename the database");
+				throw new RuntimeException("Failed to rename the DB folder");
+			}
 		}
-		else
+		catch (Exception e)
 		{
-			log.warn("Failed to rename the database");
-			//rename failed...  perhaps we tried to cross filesystems?
-			return dbFolder;
+			log.error("existing downloadDB method with error: " + e);
+			//cleanup
+			try
+			{
+				if (tempDbFolder != null)
+				{
+					FileUtils.deleteDirectory(tempDbFolder);
+				}
+			}
+			catch (Exception e1)
+			{
+				log.error("Unexpected error during cleanup", e1);
+			}
+			throw e;
 		}
+	}
+
+	/**
+	 * @return true if this is a debug deployment (in eclipse, or context contains SNAPSHOT)
+	 */
+	public boolean isDebugDeploy()
+	{
+		return debugMode;
 	}
 }

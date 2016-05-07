@@ -36,6 +36,7 @@ import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
+import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -56,8 +57,8 @@ public class RequestInfo
 	private String coordinatesToken_ = null;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
-	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
-	//request these to be skipped in the replies, which will give them a performance boost.
+	//Default to this, users may override by specifying expandables=true
+	private boolean returnExpandableLinks_ = ApplicationConfig.getInstance().isDebugDeploy();
 	
 	private static final ThreadLocal<RequestInfo> requestInfo = new ThreadLocal<RequestInfo>()
 	{
