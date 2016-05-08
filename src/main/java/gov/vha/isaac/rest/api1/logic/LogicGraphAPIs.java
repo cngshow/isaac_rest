@@ -76,8 +76,6 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-
 		@SuppressWarnings("rawtypes")
 		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
 
@@ -108,8 +106,6 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
 		
 		return new RestSememeChronology(

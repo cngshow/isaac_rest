@@ -138,21 +138,15 @@ public class CoordinatesUtil {
 	 *
 	 * @param allParams parameter name to value-list map provided in UriInfo by ContainerRequestContext
 	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
-	 * @throws RestException
+	 * @throws Exception 
 	 */
-	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameters(Map<String, List<String>> allParams) throws RestException {
+	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameters(Map<String, List<String>> allParams) throws Exception {
 		Optional<String> tokenStringOptional = getCoordinatesTokenStringFromParameters(allParams);
 		
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			try {
-				return Optional.of(CoordinatesTokens.get(tokenStringOptional.get()));
-			} catch (Exception e) {
-				log.warn("Failed creating CoordinatesToken from parameters. caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-				e.printStackTrace();
-				throw new RestException("Failed creating CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage() + ". Parameters: " + encodeCoordinateParameters(allParams));
-			}
+			return Optional.of(CoordinatesTokens.get(tokenStringOptional.get()));
 		}
 	}
 	/**
@@ -166,14 +160,12 @@ public class CoordinatesUtil {
 	public static Optional<String> getCoordinatesTokenStringFromParameters(Map<String, List<String>> allParams) throws RestException {
 		List<String> coordinateTokenParameterValues = allParams.get(RequestParameters.coordToken);
 		
-		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0) {
+		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0 || StringUtils.isBlank(coordinateTokenParameterValues.get(0))) {
 			return Optional.empty();
 		} else if (coordinateTokenParameterValues.size() > 1) {
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues + "\"", "too many (" + coordinateTokenParameterValues.size() + " values");
-		} else if (coordinateTokenParameterValues.get(0) == null) {
-			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues.get(0) + "\"", "invalid (null) value");
-		}
-		
+			throw new RestException(RequestParameters.coordToken, "\"" + coordinateTokenParameterValues + "\"", "too many (" + coordinateTokenParameterValues.size() 
+			+ " values - should only be passed with one value");
+		}		
 		return Optional.of(coordinateTokenParameterValues.get(0));
 	}
 

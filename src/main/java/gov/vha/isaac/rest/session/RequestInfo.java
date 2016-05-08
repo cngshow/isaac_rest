@@ -26,10 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -38,7 +36,7 @@ import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
-import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -59,8 +57,8 @@ public class RequestInfo
 	private String coordinatesToken_ = null;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
-	private boolean returnExpandableLinks_ = true;  //implementations that know the API don't need to have these links returned to them - they can 
-	//request these to be skipped in the replies, which will give them a performance boost.
+	//Default to this, users may override by specifying expandables=true
+	private boolean returnExpandableLinks_ = ApplicationConfig.getInstance().isDebugDeploy();
 	
 	private static final ThreadLocal<RequestInfo> requestInfo = new ThreadLocal<RequestInfo>()
 	{
@@ -84,19 +82,22 @@ public class RequestInfo
 		requestInfo.remove();
 	}
 
-	public RequestInfo readExpandables(String expandableString)
-	{
-		requestInfo.get().expandablesForDirectExpansion_ = ExpandUtil.read(expandableString);
-		return get();
-	}
 	public RequestInfo readExpandables(Map<String, List<String>> parameters) throws RestException
 	{
-		requestInfo.get().expandablesForDirectExpansion_ = new HashSet<>();
+		requestInfo.get().expandablesForDirectExpansion_ = new HashSet<>(10);
 		if (parameters.containsKey(RequestParameters.expand)) {
 			for (String expandable : RequestInfoUtils.expandCommaDelimitedElements(parameters.get(RequestParameters.expand))) {
 				if (expandable != null) {
 					requestInfo.get().expandablesForDirectExpansion_.add(expandable.trim());
 				}
+			}
+		}
+		if (parameters.containsKey(RequestParameters.expandables))
+		{
+			List<String> temp = parameters.get(RequestParameters.expandables);
+			if (temp.size() > 0)
+			{
+				returnExpandableLinks_ = Boolean.parseBoolean(temp.get(0).trim());
 			}
 		}
 		return get();
@@ -111,8 +112,8 @@ public class RequestInfo
 		
 		return returnValue;
 	}
-	//public RequestInfo readCoordinatesToken()
-	public RequestInfo readAll(Map<String, List<String>> parameters) throws RestException
+
+	public RequestInfo readAll(Map<String, List<String>> parameters) throws Exception
 	{
 		readExpandables(parameters);
 
@@ -127,14 +128,7 @@ public class RequestInfo
 			Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameters(parameters);
 			if (token.isPresent()) {
 				log.debug("Applying CoordinatesToken " + RequestParameters.coordToken + " parameter \"" + token.get().getSerialized() + "\"");
-
-				try {
-					requestInfo.get().coordinatesToken_ = token.get().getSerialized();
-				} catch (Exception e) {
-					log.warn("Failed creating CoordinatesToken from parameters. caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-					e.printStackTrace();
-					throw new RestException(RequestParameters.coordToken, token.get().getSerialized(), "caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-				}
+				requestInfo.get().coordinatesToken_ = token.get().getSerialized();
 			} else {
 				log.debug("Applying default coordinates");
 
@@ -178,32 +172,26 @@ public class RequestInfo
 				int logicDescProfileSeq = CoordinatesUtil.getLogicCoordinateDescProfileAssemblageFromParameter(coordinateParameters.get(RequestParameters.descriptionLogicProfile), token);
 				int logicClassifierSeq = CoordinatesUtil.getLogicCoordinateClassifierAssemblageFromParameter(coordinateParameters.get(RequestParameters.classifier), token);
 
-				try {
-					CoordinatesToken tokenObj = CoordinatesToken.get(
-							stampTime,
-							stampPathSeq,
-							(byte)stampPrecedence.ordinal(),
-							stampModules.asArray(),
-							byteArrayFromEnumSet(stampAllowedStates),
-							langCoordLangSeq,
-							langCoordDialectPrefs,
-							langCoordDescTypePrefs,
-							(byte)(stated ? PremiseType.STATED : PremiseType.INFERRED).ordinal(),
-							logicStatedSeq,
-							logicInferredSeq,
-							logicDescProfileSeq,
-							logicClassifierSeq);
+				CoordinatesToken tokenObj = CoordinatesToken.get(
+						stampTime,
+						stampPathSeq,
+						(byte)stampPrecedence.ordinal(),
+						stampModules.asArray(),
+						byteArrayFromEnumSet(stampAllowedStates),
+						langCoordLangSeq,
+						langCoordDialectPrefs,
+						langCoordDescTypePrefs,
+						(byte)(stated ? PremiseType.STATED : PremiseType.INFERRED).ordinal(),
+						logicStatedSeq,
+						logicInferredSeq,
+						logicDescProfileSeq,
+						logicClassifierSeq);
 
-					requestInfo.get().coordinatesToken_ = tokenObj.getSerialized();
+				requestInfo.get().coordinatesToken_ = tokenObj.getSerialized();
 
-					CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), requestInfo.get().coordinatesToken_);
-					
-					log.debug("Created CoordinatesToken \"" + requestInfo.get().coordinatesToken_ + "\"");
-
-				} catch (Exception e) {
-					e.printStackTrace();
-					throw new RestException("Failed setting CoordinatesToken from parameters. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-				}
+				CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), requestInfo.get().coordinatesToken_);
+				
+				log.debug("Created CoordinatesToken \"" + requestInfo.get().coordinatesToken_ + "\"");
 			}
 		}
 		

@@ -92,8 +92,6 @@ public class TaxonomyAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
 		boolean includeSememeMembership = Boolean.parseBoolean(sememeMembership.trim());

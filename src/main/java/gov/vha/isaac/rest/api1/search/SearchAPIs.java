@@ -145,8 +145,6 @@ public class SearchAPIs
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
 		}
-		RequestInfo.get().readExpandables(expand);
-		
 		LuceneDescriptionType dt = null;
 		if (StringUtils.isNotBlank(descriptionType))
 		{
@@ -235,7 +233,6 @@ public class SearchAPIs
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
 		}
-		RequestInfo.get().readExpandables(expand);
 		log.debug("Performing prefix search for '" + query + "'");
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
@@ -369,7 +366,6 @@ public class SearchAPIs
 		}
 		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
 		
-		RequestInfo.get().readExpandables(expand);
 		String searchString = query.trim();
 		if (StringUtils.isBlank(searchString))
 		{
@@ -511,8 +507,6 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent
 				+ "?" + RequestParameters.nid + "=" + nid;
 		if (sememeAssemblageId != null) {
