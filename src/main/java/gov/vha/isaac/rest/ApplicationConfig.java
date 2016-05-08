@@ -214,21 +214,6 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		File tempDbFolder = null;
 		try
 		{
-			log.info("Checking for existing DB");
-
-			File targetDBLocation = new File(System.getProperty("java.io.tmpdir"), "ISAAC." + contextPath + ".db");
-			if (targetDBLocation.isDirectory())
-			{
-				log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
-				//TODO - can't do this.  Always need to do the below code first - to determine the desired artifact info.
-				//Then, we need to read the pom.xml file that we find inside of targetDBLocation - and validate that each and every 
-				//parameter perfectly matches.  If it doesn't match, then the DB must be deleted, and downloaded.
-				//If we don't do this, we won't catch the case where the isaac-rest server was undeployed, then redeployed with a different DB configuration.
-				
-				status_.set("Using existing directory");
-				return targetDBLocation;
-			}
-			
 			String baseMavenURL = null;
 			String mavenUsername = null;
 			String mavenPassword = null;
@@ -274,6 +259,22 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				artifactId = "vets";
 				version = "1.0";
 				classifier = "all";
+			}
+			
+			log.info("Checking for existing DB");
+
+			File targetDBLocation = new File(System.getProperty("java.io.tmpdir"), "ISAAC." + contextPath + ".db");
+			if (targetDBLocation.isDirectory())
+			{
+				log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
+				//TODO - we need to read the pom.xml file that we find inside of targetDBLocation - and validate that each and every 
+				//parameter perfectly matches.  If it doesn't match, then the DB must be deleted, and downloaded.
+				//If we don't do this, we won't catch the case where the isaac-rest server was undeployed, then redeployed with a different DB configuration.
+				//The pom file we need to read will be at targetDbLocation\*.data\META-INF\maven\{groupId}\{artifactId}\pom.xml
+				//We need to validate <groupId>, <artifactId>, <version> and <resultArtifactClassifier> keeping in mind that classifer
+				//is optional
+				status_.set("Using existing directory");
+				return targetDBLocation;
 			}
 
 			tempDbFolder = File.createTempFile("ISAAC-DATA", "");
