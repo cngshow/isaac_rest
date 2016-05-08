@@ -84,7 +84,7 @@ public class RequestInfo
 
 	public RequestInfo readExpandables(Map<String, List<String>> parameters) throws RestException
 	{
-		requestInfo.get().expandablesForDirectExpansion_ = new HashSet<>();
+		requestInfo.get().expandablesForDirectExpansion_ = new HashSet<>(10);
 		if (parameters.containsKey(RequestParameters.expand)) {
 			for (String expandable : RequestInfoUtils.expandCommaDelimitedElements(parameters.get(RequestParameters.expand))) {
 				if (expandable != null) {
