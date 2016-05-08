@@ -33,13 +33,16 @@ import gov.vha.isaac.rest.session.CoordinatesUtil;
  *
  */
 public class CoordinatesTokens {
+	private final static Object OBJECT_BY_TOKEN_CACHE_LOCK = new Object();
+	private final static Object TOKEN_BY_PARAMS_CACHE_LOCK = new Object();
+	
 	private static final int DEFAULT_MAX_SIZE = 1024;
 	private static CoordinatesToken defaultCoordinatesToken = null;
 	private static Map<String, CoordinatesToken> OBJECT_BY_TOKEN_CACHE = null;
 	private static Map<String, String> TOKEN_BY_PARAMS_CACHE = null;
 
 	public static void init(final int maxEntries) {
-		synchronized(OBJECT_BY_TOKEN_CACHE) {
+		synchronized(OBJECT_BY_TOKEN_CACHE_LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
 				OBJECT_BY_TOKEN_CACHE = new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
 					private static final long serialVersionUID = -1236481390177598762L;
@@ -51,7 +54,10 @@ public class CoordinatesTokens {
 
 				defaultCoordinatesToken = new CoordinatesToken();
 				put(defaultCoordinatesToken);
-
+			}
+		}
+		synchronized(TOKEN_BY_PARAMS_CACHE_LOCK) {
+			if (TOKEN_BY_PARAMS_CACHE == null) {
 				TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
 					private static final long serialVersionUID = -2638577900934193146L;
 
@@ -106,7 +112,7 @@ public class CoordinatesTokens {
 			init(DEFAULT_MAX_SIZE);
 		}
 
-		synchronized (OBJECT_BY_TOKEN_CACHE) {
+		synchronized (OBJECT_BY_TOKEN_CACHE_LOCK) {
 			OBJECT_BY_TOKEN_CACHE.put(value.getSerialized(), value);
 		}
 	}
@@ -126,10 +132,10 @@ public class CoordinatesTokens {
 			init(DEFAULT_MAX_SIZE);
 		}
 		String serializedToken = value.getSerialized();
-		synchronized (OBJECT_BY_TOKEN_CACHE) {
+		synchronized (OBJECT_BY_TOKEN_CACHE_LOCK) {
 			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
 		}
-		synchronized (TOKEN_BY_PARAMS_CACHE) {
+		synchronized (TOKEN_BY_PARAMS_CACHE_LOCK) {
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
 	}
@@ -148,10 +154,10 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		synchronized (OBJECT_BY_TOKEN_CACHE) {
+		synchronized (OBJECT_BY_TOKEN_CACHE_LOCK) {
 			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
 		}
-		synchronized (TOKEN_BY_PARAMS_CACHE) {
+		synchronized (TOKEN_BY_PARAMS_CACHE_LOCK) {
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
 	}
@@ -170,12 +176,12 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		synchronized(OBJECT_BY_TOKEN_CACHE) {
+		synchronized(OBJECT_BY_TOKEN_CACHE_LOCK) {
 			if (OBJECT_BY_TOKEN_CACHE.get(serializedToken) == null) {
 				OBJECT_BY_TOKEN_CACHE.put(serializedToken, new CoordinatesToken(serializedToken));	
 			}
 		}
-		synchronized(TOKEN_BY_PARAMS_CACHE) {
+		synchronized(TOKEN_BY_PARAMS_CACHE_LOCK) {
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
 	}
@@ -192,7 +198,7 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		synchronized (OBJECT_BY_TOKEN_CACHE) {
+		synchronized (OBJECT_BY_TOKEN_CACHE_LOCK) {
 			return OBJECT_BY_TOKEN_CACHE.get(key);
 		}
 	}
@@ -207,7 +213,7 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			return null;
 		} else {
-			synchronized (TOKEN_BY_PARAMS_CACHE) {
+			synchronized (TOKEN_BY_PARAMS_CACHE_LOCK) {
 				return TOKEN_BY_PARAMS_CACHE.get(CoordinatesUtil.encodeCoordinateParameters(params));
 			}
 		}
