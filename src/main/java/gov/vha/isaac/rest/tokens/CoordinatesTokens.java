@@ -19,7 +19,6 @@
 
 package gov.vha.isaac.rest.tokens;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,34 +33,33 @@ import gov.vha.isaac.rest.session.CoordinatesUtil;
  *
  */
 public class CoordinatesTokens {
-	private static final Object LOCK = new Object();
 	private static final int DEFAULT_MAX_SIZE = 1024;
 	private static CoordinatesToken defaultCoordinatesToken = null;
 	private static Map<String, CoordinatesToken> OBJECT_BY_TOKEN_CACHE = null;
 	private static Map<String, String> TOKEN_BY_PARAMS_CACHE = null;
 
 	public static void init(final int maxEntries) {
-		synchronized(LOCK) {
+		synchronized(OBJECT_BY_TOKEN_CACHE) {
 			if (OBJECT_BY_TOKEN_CACHE == null) {
-				OBJECT_BY_TOKEN_CACHE = Collections.synchronizedMap(new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
+				OBJECT_BY_TOKEN_CACHE = new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
 					private static final long serialVersionUID = -1236481390177598762L;
 					@Override
 					protected boolean removeEldestEntry(Map.Entry<String, CoordinatesToken> eldest){
 						return size() > maxEntries;
 					}
-				});
+				};
 
 				defaultCoordinatesToken = new CoordinatesToken();
 				put(defaultCoordinatesToken);
 
-				TOKEN_BY_PARAMS_CACHE = Collections.synchronizedMap(new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
+				TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
 					private static final long serialVersionUID = -2638577900934193146L;
 
 					@Override
 					protected boolean removeEldestEntry(Map.Entry<String, String> eldest){
 						return size() > maxEntries;
 					}
-				});
+				};
 			}
 		}
 	}
@@ -90,11 +88,10 @@ public class CoordinatesTokens {
 			init(DEFAULT_MAX_SIZE);
 		}
 
-		synchronized(LOCK) {
-			if (get(value) == null) {
-				put(new CoordinatesToken(value));
-			}
+		if (get(value) == null) {
+			put(new CoordinatesToken(value));
 		}
+
 	}
 	/**
 	 * 
@@ -109,7 +106,9 @@ public class CoordinatesTokens {
 			init(DEFAULT_MAX_SIZE);
 		}
 
-		OBJECT_BY_TOKEN_CACHE.put(value.getSerialized(), value);
+		synchronized (OBJECT_BY_TOKEN_CACHE) {
+			OBJECT_BY_TOKEN_CACHE.put(value.getSerialized(), value);
+		}
 	}
 	/**
 	 * 
@@ -127,8 +126,12 @@ public class CoordinatesTokens {
 			init(DEFAULT_MAX_SIZE);
 		}
 		String serializedToken = value.getSerialized();
-		OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
-		TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
+		synchronized (OBJECT_BY_TOKEN_CACHE) {
+			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
+		}
+		synchronized (TOKEN_BY_PARAMS_CACHE) {
+			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
+		}
 	}
 	/**
 	 * 
@@ -145,8 +148,12 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
-		TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
+		synchronized (OBJECT_BY_TOKEN_CACHE) {
+			OBJECT_BY_TOKEN_CACHE.put(serializedToken, value);
+		}
+		synchronized (TOKEN_BY_PARAMS_CACHE) {
+			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
+		}
 	}
 	/**
 	 * 
@@ -163,10 +170,12 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		synchronized(LOCK) {
+		synchronized(OBJECT_BY_TOKEN_CACHE) {
 			if (OBJECT_BY_TOKEN_CACHE.get(serializedToken) == null) {
-				OBJECT_BY_TOKEN_CACHE.put(serializedToken, new CoordinatesToken(serializedToken));
+				OBJECT_BY_TOKEN_CACHE.put(serializedToken, new CoordinatesToken(serializedToken));	
 			}
+		}
+		synchronized(TOKEN_BY_PARAMS_CACHE) {
 			TOKEN_BY_PARAMS_CACHE.put(CoordinatesUtil.encodeCoordinateParameters(params), serializedToken);
 		}
 	}
@@ -183,7 +192,9 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
-		return OBJECT_BY_TOKEN_CACHE.get(key);
+		synchronized (OBJECT_BY_TOKEN_CACHE) {
+			return OBJECT_BY_TOKEN_CACHE.get(key);
+		}
 	}
 	/**
 	 * Attempt to retrieve CoordinatesToken serialization key string
@@ -196,7 +207,9 @@ public class CoordinatesTokens {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			return null;
 		} else {
-			return TOKEN_BY_PARAMS_CACHE.get(CoordinatesUtil.encodeCoordinateParameters(params));
+			synchronized (TOKEN_BY_PARAMS_CACHE) {
+				return TOKEN_BY_PARAMS_CACHE.get(CoordinatesUtil.encodeCoordinateParameters(params));
+			}
 		}
 	}
 }
