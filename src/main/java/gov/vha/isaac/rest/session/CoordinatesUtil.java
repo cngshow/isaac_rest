@@ -30,8 +30,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
@@ -55,8 +53,6 @@ import gov.vha.isaac.rest.tokens.CoordinatesTokens;
  *
  */
 public class CoordinatesUtil {
-	private static Logger log = LogManager.getLogger();
-
 	private CoordinatesUtil() {}
 
 	/**
@@ -401,7 +397,7 @@ public class CoordinatesUtil {
 	}
 
 	public static EnumSet<State> getStampCoordinateAllowedStatesFromParameter(List<String> unexpandedStatesStrs, Optional<CoordinatesToken> token) throws RestException {
-		EnumSet<State> defaultValues = token.isPresent() ? token.get().getStampStates() : EnumSet.of(State.ACTIVE);
+		EnumSet<State> defaultValues = token.isPresent() ? token.get().getStampStates() : State.ANY_STATE_SET;
 		
 		EnumSet<State> allowedStates = EnumSet.allOf(State.class);
 		allowedStates.clear();

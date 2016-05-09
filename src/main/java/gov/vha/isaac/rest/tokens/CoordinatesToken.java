@@ -18,8 +18,6 @@
  */
 package gov.vha.isaac.rest.tokens;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.EnumSet;
 
@@ -44,6 +42,7 @@ import gov.vha.isaac.ochre.model.coordinate.LogicCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.ochre.model.coordinate.TaxonomyCoordinateImpl;
+import gov.vha.isaac.rest.Secret;
 
 /**
  * 
@@ -59,8 +58,6 @@ public class CoordinatesToken
 	private static final int hashRounds = 128;
 	private static final int hashLength = 64;
 	private static final int encodedHashLength = (int)Math.ceil(hashLength / 8f / 3f) * 4;  //http://stackoverflow.com/a/4715480
-
-	private static transient byte[] secret_;
 
 	private final long stampTime;
 	private final int stampPath;
@@ -278,7 +275,7 @@ public class CoordinatesToken
 
 		long time = System.currentTimeMillis();
 		String readHash = encodedData.substring(0, encodedHashLength);
-		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), getSecret(), hashRounds, hashLength);
+		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), Secret.getSecret(), hashRounds, hashLength);
 
 		if (!readHash.equals(calculatedHash))
 		{
@@ -475,7 +472,7 @@ public class CoordinatesToken
 		try
 		{
 			String data = Base64.getEncoder().encodeToString(token.getBytesToWrite());
-			return PasswordHasher.hash(data, token.getSecret(), hashRounds, hashLength) + data;
+			return PasswordHasher.hash(data, Secret.getSecret(), hashRounds, hashLength) + data;
 		}
 		catch (Exception e)
 		{
@@ -522,31 +519,6 @@ public class CoordinatesToken
 
 		buffer.trimToSize();
 		return buffer.getData();
-	}
-
-	private byte[] getSecret()
-	{
-		if (secret_ == null)
-		{
-			try
-			{
-				synchronized (CoordinatesToken.class)
-				{
-					if (secret_ == null)
-					{
-						byte[] temp = new byte[20];
-
-						SecureRandom.getInstanceStrong().nextBytes(temp);
-						secret_ = temp;
-					}
-				}
-			}
-			catch (NoSuchAlgorithmException e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		return secret_;
 	}
 
 	public static void main(String[] args) throws Exception

@@ -2,7 +2,13 @@ package gov.vha.isaac.rest;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -79,6 +85,76 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		log.info("ISAAC stopped");
 	}
 
+	private void configureSecret() {
+		String tempDirName = System.getProperty("java.io.tmpdir");
+		String secretFileBaseName = contextPath.replaceAll("/", "_");
+		String secretFileFullPathName = tempDirName + "/" + secretFileBaseName;
+		File file = new File(secretFileFullPathName);
+
+		if (file.exists()) {
+			ObjectInputStream oin;
+			try {
+				oin = new ObjectInputStream(new FileInputStream(file));
+				log.debug("Opened for read secret file {}", secretFileFullPathName);
+
+			} catch (IOException e1) {
+				log.error("Failed opening secret file {}. Caught {} {}", secretFileFullPathName, e1.getClass().getName(), e1.getLocalizedMessage());
+
+				Secret.setSecret();
+				return;
+			}
+
+			try {
+				try {
+					Secret.setSecret((byte[])oin.readObject());
+					log.debug("Read secret from file {}", secretFileFullPathName);
+				} catch (IOException | ClassNotFoundException e) {
+					log.error("Failed reading secret from file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
+
+					Secret.setSecret();
+					return;					}
+			} finally {
+				try {
+					oin.close();
+				} catch (IOException e) {
+					log.error("Failed closing secret file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
+
+					return;
+				}
+			}
+		} else {
+			ObjectOutputStream oout;
+			try {
+				oout = new ObjectOutputStream(new FileOutputStream(file));
+				log.debug("Opened for write secret file {}", secretFileFullPathName);
+			} catch (IOException e1) {
+				log.error("Failed opening secret file {}. Caught {} {}", secretFileFullPathName, e1.getClass().getName(), e1.getLocalizedMessage());
+
+				Secret.setSecret();
+				return;
+			}
+			try {
+				Secret.setSecret();
+				try {
+					oout.writeObject(Secret.getSecret());
+					log.debug("Wrote secret to file {}", secretFileFullPathName);
+				} catch (IOException e) {
+					log.error("Failed writing to secret file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
+
+					return;
+				}
+			} finally {
+				try {
+					oout.close();
+				} catch (IOException e) {
+					log.error("Failed closing secret file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
+
+					return;
+				}
+			}
+		}
+	}
+
 	@Override
 	public void onStartup(Container container)
 	{
@@ -102,7 +178,9 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		}
 		
 		log.info("Context path of this deployment is '" + contextPath + "' and debug mode is " + debugMode);
-		
+
+		configureSecret();
+
 		issacInit();
 	}
 	
