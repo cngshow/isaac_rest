@@ -46,7 +46,7 @@ public class SystemInfo
 	 * the API may simultaneously support versions such as [1.3, 2.0] for reverse compatibility.
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.2"};
+	String[] supportedAPIVersions = new String[] {"1.3"};
 	
 	/**
 	 * ISAAC DB Maven dependency
