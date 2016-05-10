@@ -18,18 +18,19 @@
  */
 package gov.vha.isaac.rest.api1.coordinate;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
+import gov.vha.isaac.rest.api1.data.coordinate.RestCoordinates;
 import gov.vha.isaac.rest.api1.data.coordinate.RestLanguageCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestLogicCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestStampCoordinate;
@@ -46,6 +47,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.coordinatePathComponent)
 public class CoordinateAPIs
 {
+	private static Logger log = LogManager.getLogger(CoordinateAPIs.class);
+
 	/**
 	 * 
 	 * This method returns a serialized CoordinatesToken string specifying all coordinate parameters
@@ -102,12 +105,14 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.classifier) String classifier) throws RestException
 	{
 		// All parameters, including defaults, are handled by the RestContainerRequestFilter
+		
+		log.debug("Returning RestCoordinatesToken...");
 		return new RestCoordinatesToken(RequestInfo.get().getCoordinatesToken());
 	}
 
 	/**
 	 * 
-	 * This method returns a list of coordinates comprising all coordinate parameters.
+	 * This method returns an object comprising all coordinate parameters.
 	 * It takes an explicit serialized CoordinatesToken string parameter <code>coordToken</code>
 	 * specifying all coordinate parameters in addition to all of the other coordinate-specific parameters.
 	 * If no additional individual coordinate-specific parameters are specified,
@@ -117,24 +122,28 @@ public class CoordinateAPIs
 	 * 
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
-	 * @return List<Object> list of all coordinates.
+	 * @return RestCoordinates Object containing all coordinates.
 	 * Note that <code>RestTaxonomyCoordinate</code> contains <code>RestStampCoordinate</code>, <code>RestLanguageCoordinate</code> and <code>RestLogicCoordinate</code>.
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.coordinatesComponent)  
-	public List<Object> getCoordinates(
+	public RestCoordinates getCoordinates(
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		List<Object> coordinates = new ArrayList<>();
-		
+
 		RestTaxonomyCoordinate taxonomyCoordinate = getTaxonomyCoordinate(coordToken);
-		coordinates.add(taxonomyCoordinate);
-		coordinates.add(taxonomyCoordinate.stampCoordinate);
-		coordinates.add(taxonomyCoordinate.languageCoordinate);
-		coordinates.add(taxonomyCoordinate.logicCoordinate);
+		RestCoordinates coordinates =
+				new RestCoordinates(
+						taxonomyCoordinate,
+						taxonomyCoordinate.stampCoordinate,
+						taxonomyCoordinate.languageCoordinate,
+						taxonomyCoordinate.logicCoordinate
+				);
+
+		log.debug("Returning REST Coordinates...");
 		
 		return coordinates;
 	}
