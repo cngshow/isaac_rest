@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api.exceptions;
 
+import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -26,7 +27,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-public class RestException extends Exception
+public class RestException extends IOException
 {
 	private static final long serialVersionUID = 1L;
 
