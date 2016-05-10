@@ -20,10 +20,8 @@ package gov.vha.isaac.rest.tokens;
 
 import java.util.Base64;
 import java.util.EnumSet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -42,7 +40,7 @@ import gov.vha.isaac.ochre.model.coordinate.LogicCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.ochre.model.coordinate.TaxonomyCoordinateImpl;
-import gov.vha.isaac.rest.Secret;
+import gov.vha.isaac.rest.ApplicationConfig;
 
 /**
  * 
@@ -276,7 +274,7 @@ public class CoordinatesToken
 
 		long time = System.currentTimeMillis();
 		String readHash = encodedData.substring(0, encodedHashLength);
-		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), Secret.getSecret(), hashRounds, hashLength);
+		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
 
 		if (!readHash.equals(calculatedHash))
 		{
@@ -473,7 +471,7 @@ public class CoordinatesToken
 		try
 		{
 			String data = Base64.getEncoder().encodeToString(token.getBytesToWrite());
-			return PasswordHasher.hash(data, Secret.getSecret(), hashRounds, hashLength) + data;
+			return PasswordHasher.hash(data, ApplicationConfig.getSecret(), hashRounds, hashLength) + data;
 		}
 		catch (Exception e)
 		{

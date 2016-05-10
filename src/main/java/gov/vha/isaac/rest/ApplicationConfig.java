@@ -2,15 +2,12 @@ package gov.vha.isaac.rest;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
@@ -55,6 +52,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	
 	private String contextPath;
 	
+	private static byte[] secret_;
+	
 	//TODO implement convenience methods for 'associations'
 
 	public ApplicationConfig()
@@ -85,72 +84,48 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		log.info("ISAAC stopped");
 	}
 
-	private void configureSecret() {
-		String tempDirName = System.getProperty("java.io.tmpdir");
-		String secretFileBaseName = contextPath.replaceAll("/", "_");
-		String secretFileFullPathName = tempDirName + "/" + secretFileBaseName;
-		File file = new File(secretFileFullPathName);
-
-		if (file.exists()) {
-			ObjectInputStream oin;
-			try {
-				oin = new ObjectInputStream(new FileInputStream(file));
-				log.debug("Opened for read secret file {}", secretFileFullPathName);
-
-			} catch (IOException e1) {
-				log.error("Failed opening secret file {}. Caught {} {}", secretFileFullPathName, e1.getClass().getName(), e1.getLocalizedMessage());
-
-				Secret.setSecret();
-				return;
-			}
-
-			try {
-				try {
-					Secret.setSecret((byte[])oin.readObject());
-					log.debug("Read secret from file {}", secretFileFullPathName);
-				} catch (IOException | ClassNotFoundException e) {
-					log.error("Failed reading secret from file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
-
-					Secret.setSecret();
-					return;					}
-			} finally {
-				try {
-					oin.close();
-				} catch (IOException e) {
-					log.error("Failed closing secret file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
-
-					return;
+	private void configureSecret() 
+	{
+		File tempDirName = new File(System.getProperty("java.io.tmpdir"));
+		File file = new File(tempDirName, contextPath.replaceAll("/", "_"));
+		
+		log.debug("Secret file for token encoding " + file.getAbsolutePath() + " " + (file.exists() ? "exists" : "does not exist"));
+		
+		if (file.exists()) 
+		{
+			try 
+			{
+				byte[] temp = Files.readAllBytes(file.toPath());
+				if (temp.length == 20)
+				{
+					secret_ = temp;
+					log.info("Restored token secret");
 				}
-			}
-		} else {
-			ObjectOutputStream oout;
-			try {
-				oout = new ObjectOutputStream(new FileOutputStream(file));
-				log.debug("Opened for write secret file {}", secretFileFullPathName);
-			} catch (IOException e1) {
-				log.error("Failed opening secret file {}. Caught {} {}", secretFileFullPathName, e1.getClass().getName(), e1.getLocalizedMessage());
-
-				Secret.setSecret();
-				return;
-			}
-			try {
-				Secret.setSecret();
-				try {
-					oout.writeObject(Secret.getSecret());
-					log.debug("Wrote secret to file {}", secretFileFullPathName);
-				} catch (IOException e) {
-					log.error("Failed writing to secret file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
-
-					return;
+				else
+				{
+					log.warn("Unexpected data in token secret file.  Will calculate a new token. " + file.getCanonicalPath());
 				}
-			} finally {
-				try {
-					oout.close();
-				} catch (IOException e) {
-					log.error("Failed closing secret file {}. Caught {} {}", secretFileFullPathName, e.getClass().getName(), e.getLocalizedMessage());
-
-					return;
-				}
+			} 
+			catch (IOException e1) 
+			{
+				log.warn("Failed opening token secret file.  Will calculate a new token.", e1);
+			}
+		}
+		if (secret_ == null)
+		{
+			byte[] temp = new byte[20];
+			
+			log.info("Calculating a new token");
+			//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
+			new Random().nextBytes(temp);
+			secret_ = temp;
+			try
+			{
+				Files.write(file.toPath(), secret_);
+			}
+			catch (IOException e)
+			{
+				log.warn("Unexpected error storing token secret file", e);
 			}
 		}
 	}
@@ -426,5 +401,13 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	public boolean isDebugDeploy()
 	{
 		return debugMode;
+	}
+
+	/**
+	 * @return
+	 */
+	public static byte[] getSecret()
+	{
+		return secret_;
 	}
 }
