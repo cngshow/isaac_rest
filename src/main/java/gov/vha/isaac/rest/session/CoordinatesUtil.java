@@ -142,7 +142,14 @@ public class CoordinatesUtil {
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			return Optional.of(CoordinatesTokens.get(tokenStringOptional.get()));
+			CoordinatesToken ct = CoordinatesTokens.get(tokenStringOptional.get());
+			if (ct == null)
+			{
+				//Not in cche
+				ct = new CoordinatesToken(tokenStringOptional.get());
+			}
+			
+			return Optional.of(ct);
 		}
 	}
 	/**
