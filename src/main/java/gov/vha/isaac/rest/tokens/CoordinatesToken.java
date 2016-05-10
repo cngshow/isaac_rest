@@ -195,63 +195,76 @@ public class CoordinatesToken
 		}
 	}
 
-	public CoordinatesToken(String encodedData) throws Exception
+	public CoordinatesToken(String encodedData) throws RestException
 	{
-		serialization = encodedData;
-
-		long time = System.currentTimeMillis();
-		String readHash = encodedData.substring(0, encodedHashLength);
-		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
-
-		if (!readHash.equals(calculatedHash))
+		try
 		{
-			throw new RestException("Invalid token!");
+			serialization = encodedData;
+
+			long time = System.currentTimeMillis();
+			String readHash = encodedData.substring(0, encodedHashLength);
+			String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
+
+			if (!readHash.equals(calculatedHash))
+			{
+				throw new RestException("Invalid token!");
+			}
+
+			byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
+			ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
+			byte version = buffer.getByte();
+			if (version != tokenVersion)
+			{
+				log.warn("Expected token version " + tokenVersion + " but read " + version);
+				throw new RestException("Invalid token - old token?");
+			}
+			stampTime = buffer.getLong();
+			stampPath = buffer.getInt();
+			stampPrecedence = buffer.getByte();
+			stampModules = new int[buffer.getInt()];
+			for (int i = 0; i < stampModules.length; i++)
+			{
+				stampModules[i] = buffer.getInt();
+			}
+			stampStates = new byte[buffer.getInt()];
+			for (int i = 0; i < stampStates.length; i++)
+			{
+				stampStates[i] = buffer.getByte();
+			}
+
+			langCoord = buffer.getInt();
+			langDialects = new int[buffer.getInt()];
+			for (int i = 0; i < langDialects.length; i++)
+			{
+				langDialects[i] = buffer.getInt();
+			}
+			langTypePrefs = new int[buffer.getInt()];
+			for (int i = 0; i < langTypePrefs.length; i++)
+			{
+				langTypePrefs[i] = buffer.getInt();
+			}
+
+			taxonomyType = buffer.getByte();
+
+			logicStatedAssemblage = buffer.getInt();
+			logicInferredAssemblage = buffer.getInt();
+			logicDescLogicProfile = buffer.getInt();
+			logicClassifier = buffer.getInt();
+
+			log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
+			if (CoordinatesTokens.get(serialization) == null) 
+			{
+				CoordinatesTokens.put(this);
+			}
 		}
-
-		byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
-		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
-		byte version = buffer.getByte();
-		if (version != tokenVersion)
+		catch (RestException e)
 		{
-			throw new Exception("Expected token version " + tokenVersion + " but read " + version);
+			throw e;
 		}
-		stampTime = buffer.getLong();
-		stampPath = buffer.getInt();
-		stampPrecedence = buffer.getByte();
-		stampModules = new int[buffer.getInt()];
-		for (int i = 0; i < stampModules.length; i++)
+		catch (Exception e)
 		{
-			stampModules[i] = buffer.getInt();
-		}
-		stampStates = new byte[buffer.getInt()];
-		for (int i = 0; i < stampStates.length; i++)
-		{
-			stampStates[i] = buffer.getByte();
-		}
-
-		langCoord = buffer.getInt();
-		langDialects = new int[buffer.getInt()];
-		for (int i = 0; i < langDialects.length; i++)
-		{
-			langDialects[i] = buffer.getInt();
-		}
-		langTypePrefs = new int[buffer.getInt()];
-		for (int i = 0; i < langTypePrefs.length; i++)
-		{
-			langTypePrefs[i] = buffer.getInt();
-		}
-
-		taxonomyType = buffer.getByte();
-
-		logicStatedAssemblage = buffer.getInt();
-		logicInferredAssemblage = buffer.getInt();
-		logicDescLogicProfile = buffer.getInt();
-		logicClassifier = buffer.getInt();
-
-		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
-		if (CoordinatesTokens.get(serialization) == null) 
-		{
-			CoordinatesTokens.put(this);
+			log.error("Unexpected", e);
+			throw new RuntimeException(e);
 		}
 	}
 
