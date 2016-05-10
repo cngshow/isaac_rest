@@ -72,4 +72,8 @@ public class RestCoordinates {
 		this.languageCoordinate = languageCoordinate;
 		this.logicCoordinate = logicCoordinate;
 	}
+	
+	RestCoordinates() {
+		// For JAXB
+	}
 }
