@@ -87,7 +87,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private void configureSecret() 
 	{
 		File tempDirName = new File(System.getProperty("java.io.tmpdir"));
-		File file = new File(tempDirName, contextPath.replaceAll("/", "_"));
+		File file = new File(tempDirName, contextPath.replaceAll("/", "_") + "-tokenSecret");
 		
 		log.debug("Secret file for token encoding " + file.getAbsolutePath() + " " + (file.exists() ? "exists" : "does not exist"));
 		
