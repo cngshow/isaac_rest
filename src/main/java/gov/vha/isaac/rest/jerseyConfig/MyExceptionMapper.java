@@ -37,8 +37,10 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 	@Override
 	public Response toResponse(Exception ex)
 	{
+		boolean notReady = false;
 		if (ex.getMessage().startsWith("The system is not yet ready"))
 		{
+			notReady = true;
 			LoggerFactory.getLogger("web").error(ex.getMessage());
 		}
 		else
@@ -46,7 +48,7 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 			LoggerFactory.getLogger("web").error("Unexpected", ex);
 		}
 		String response;
-		if (ex instanceof RestException)
+		if (ex instanceof RestException || notReady)
 		{
 			response = ex.toString();
 		}
