@@ -154,13 +154,6 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		
 		log.info("Context path of this deployment is '" + contextPath + "' and debug mode is " + debugMode);
 
-		//api
-		log.info("Log4j API: " + org.apache.logging.log4j.Logger.class.getResource("/org/ap‌​ache/logging/log4j/Logger.class"));
-		//core
-		log.info("Log4j CORE: " + org.apache.logging.log4j.core.Appender.class.getResource("/org/ap‌​ache/logging/log4j/core/Appender.class"));
-		//config
-		log.info("Log4j XML: " + org.apache.logging.log4j.Logger.class.getResource("/log4j2.xml"));
-
 		configureSecret();
 
 		issacInit();
