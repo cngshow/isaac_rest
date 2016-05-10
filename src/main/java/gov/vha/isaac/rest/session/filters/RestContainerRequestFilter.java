@@ -80,9 +80,13 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 			LOG.debug("Query parameter \"" + parameter.getKey() + "\"=\"" + parameter.getValue() + "\"");
 		}
 
-		try {
+		try  {
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
-		} catch (Exception e) {
+		} 
+		catch (IOException e) {
+			throw e;
+		} 
+		catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
