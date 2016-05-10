@@ -230,7 +230,8 @@ public class CoordinatesToken
 	}
 
 	CoordinatesToken() {
-		this(TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest().makeAnalog(State.ACTIVE),LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate()));
+		this(TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(),
+			LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate()));
 	}
 
 	// This constructor handles everything with the TaxonomyCoordinate with no overlap
