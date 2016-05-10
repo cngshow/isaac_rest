@@ -18,19 +18,30 @@
  */
 package gov.vha.isaac.rest.tokens;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.EnumSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
 import gov.vha.isaac.ochre.api.util.PasswordHasher;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
+import gov.vha.isaac.ochre.model.coordinate.LanguageCoordinateImpl;
+import gov.vha.isaac.ochre.model.coordinate.LogicCoordinateImpl;
+import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
+import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
+import gov.vha.isaac.ochre.model.coordinate.TaxonomyCoordinateImpl;
+import gov.vha.isaac.rest.ApplicationConfig;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -40,45 +51,114 @@ import gov.vha.isaac.ochre.api.util.PasswordHasher;
  */
 public class CoordinatesToken
 {
+	private static final transient Logger log = LoggerFactory.getLogger(CoordinatesToken.class);
+
 	private static final byte tokenVersion = 1;
 	private static final int hashRounds = 128;
 	private static final int hashLength = 64;
 	private static final int encodedHashLength = (int)Math.ceil(hashLength / 8f / 3f) * 4;  //http://stackoverflow.com/a/4715480
-	
-	private static final Logger log = LoggerFactory.getLogger(CoordinatesToken.class);
-	private static transient byte[] secret_;
-	
-	private long stampTime;
-	private int stampPath;
-	private byte stampPrecedence;
-	private int[] stampModules;
-	private byte[] stampStates;
-	
-	private int langCoord;
-	private int[] langDialects;
-	private int[] langTypePrefs;
-	
-	private byte taxonomyType;
 
-	private int logicStatedAssemblage;
-	private int logicInferredAssemblage;
-	private int logicDescLogicProfile;
-	private int logicClassifier;
-	
-	public CoordinatesToken()
-	{
-		
+	private final long stampTime;
+	private final int stampPath;
+	private final byte stampPrecedence;
+	private final int[] stampModules;
+	private final byte[] stampStates;
+
+	private final int langCoord;
+	private final int[] langDialects;
+	private final int[] langTypePrefs;
+
+	private final byte taxonomyType;
+
+	private final int logicStatedAssemblage;
+	private final int logicInferredAssemblage;
+	private final int logicDescLogicProfile;
+	private final int logicClassifier;
+
+	private transient TaxonomyCoordinate taxonomyCoordinate = null;
+	private transient StampCoordinate stampCoordinate = null;
+	private transient LanguageCoordinate languageCoordinate = null;
+	private transient LogicCoordinate logicCoordinate = null;
+
+	private final transient String serialization;
+
+	private static <E extends Enum<E>> E getFromOrdinal(Class<E> clazz, int ordinal) {
+		for (E value : clazz.getEnumConstants()) {
+			if (value.ordinal() == ordinal) {
+				return value;
+			}
+		}
+
+		throw new IllegalArgumentException("invalid " + clazz.getName() + " ordinal value " + ordinal + ". Must be one of " + clazz.getEnumConstants());
 	}
-	
+
+	/**
+	 * @param stampTime
+	 * @param stampPath
+	 * @param stampPrecedence
+	 * @param stampModules
+	 * @param stampStates
+	 * @param langCoord
+	 * @param langDialects
+	 * @param langTypePrefs
+	 * @param taxonomyType
+	 * @param logicStatedAssemblage
+	 * @param logicInferredAssemblage
+	 * @param logicDescLogicProfile
+	 * @param logicClassifier
+	 */
+	public CoordinatesToken(
+			long stampTime,
+			int stampPath,
+			byte stampPrecedence,
+			int[] stampModules,
+			byte[] stampStates,
+			int langCoord,
+			int[] langDialects,
+			int[] langTypePrefs,
+			byte taxonomyType,
+			int logicStatedAssemblage,
+			int logicInferredAssemblage,
+			int logicDescLogicProfile,
+			int logicClassifier) {
+		super();
+		this.stampTime = stampTime;
+		this.stampPath = stampPath;
+		this.stampPrecedence = stampPrecedence;
+		this.stampModules = stampModules;
+		this.stampStates = stampStates;
+		this.langCoord = langCoord;
+		this.langDialects = langDialects;
+		this.langTypePrefs = langTypePrefs;
+		this.taxonomyType = taxonomyType;
+		this.logicStatedAssemblage = logicStatedAssemblage;
+		this.logicInferredAssemblage = logicInferredAssemblage;
+		this.logicDescLogicProfile = logicDescLogicProfile;
+		this.logicClassifier = logicClassifier;
+
+		serialization = serialize(this);
+		if (CoordinatesTokens.get(serialization) == null) 
+		{
+			CoordinatesTokens.put(this);
+		}
+	}
+
+	/**
+	 * Construct a default coordinate token 
+	 * TODO Joel, should we really have defaults in two places?
+	 */
+	CoordinatesToken() 
+	{
+		this(TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(),
+			LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate()));
+	}
+
 	// This constructor handles everything with the TaxonomyCoordinate with no overlap
-	public CoordinatesToken(TaxonomyCoordinate tax) {
+	public CoordinatesToken(TaxonomyCoordinate tax) 
+	{
 		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
 	}
-	// This constructor passes overlapping/redundant data
-//	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, TaxonomyCoordinate tax) {
-//		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
-//	}
-	// This constructor handles everything with constituents of the TaxonomyCoordinate with no overlap
+	
 	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, PremiseType taxType)
 	{
 		stampTime = stamp.getStampPosition().getTime();
@@ -96,86 +176,253 @@ public class CoordinatesToken
 		{
 			stampStates[pos++] = (byte)s.ordinal(); 
 		}
-		
+
 		langCoord = lang.getLanguageConceptSequence();
 		langDialects = lang.getDialectAssemblagePreferenceList();
 		langTypePrefs = lang.getDescriptionTypePreferenceList();
-		
+
 		taxonomyType = (byte)taxType.ordinal();
-		
+
 		logicStatedAssemblage = logic.getStatedAssemblageSequence();
 		logicInferredAssemblage = logic.getInferredAssemblageSequence();
 		logicDescLogicProfile = logic.getDescriptionLogicProfileSequence();
 		logicClassifier = logic.getClassifierSequence();
+
+		serialization = serialize(this);
+		if (CoordinatesTokens.get(serialization) == null) 
+		{
+			CoordinatesTokens.put(this);
+		}
 	}
-	
-	public CoordinatesToken(String encodedData) throws Exception
-	{
-		long time = System.currentTimeMillis();
-		String readHash = encodedData.substring(0, encodedHashLength);
-		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), getSecret(), hashRounds, hashLength);
-		
-		if (!readHash.equals(calculatedHash))
-		{
-			throw new RuntimeException("Invalid token!");
-		}
-		
-		byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
-		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
-		byte version = buffer.getByte();
-		if (version != tokenVersion)
-		{
-			throw new Exception("Expected token version " + tokenVersion + " but read " + version);
-		}
-		stampTime = buffer.getLong();
-		stampPath = buffer.getInt();
-		stampPrecedence = buffer.getByte();
-		stampModules = new int[buffer.getInt()];
-		for (int i = 0; i < stampModules.length; i++)
-		{
-			stampModules[i] = buffer.getInt();
-		}
-		stampStates = new byte[buffer.getInt()];
-		for (int i = 0; i < stampStates.length; i++)
-		{
-			stampStates[i] = buffer.getByte();
-		}
-		
-		langCoord = buffer.getInt();
-		langDialects = new int[buffer.getInt()];
-		for (int i = 0; i < langDialects.length; i++)
-		{
-			langDialects[i] = buffer.getInt();
-		}
-		langTypePrefs = new int[buffer.getInt()];
-		for (int i = 0; i < langTypePrefs.length; i++)
-		{
-			langTypePrefs[i] = buffer.getInt();
-		}
-		
-		taxonomyType = buffer.getByte();
-		
-		logicStatedAssemblage = buffer.getInt();
-		logicInferredAssemblage = buffer.getInt();
-		logicDescLogicProfile = buffer.getInt();
-		logicClassifier = buffer.getInt();
-		
-		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
-	}
-	
-	public String serialize()
+
+	public CoordinatesToken(String encodedData) throws RestException
 	{
 		try
 		{
-			String data = Base64.getEncoder().encodeToString(getBytesToWrite());
-			return PasswordHasher.hash(data, getSecret(), hashRounds, hashLength) + data;
+			serialization = encodedData;
+
+			long time = System.currentTimeMillis();
+			String readHash = encodedData.substring(0, encodedHashLength);
+			String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
+
+			if (!readHash.equals(calculatedHash))
+			{
+				throw new RestException("Invalid token!");
+			}
+
+			byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
+			ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
+			byte version = buffer.getByte();
+			if (version != tokenVersion)
+			{
+				log.warn("Expected token version " + tokenVersion + " but read " + version);
+				throw new RestException("Invalid token - old token?");
+			}
+			stampTime = buffer.getLong();
+			stampPath = buffer.getInt();
+			stampPrecedence = buffer.getByte();
+			stampModules = new int[buffer.getInt()];
+			for (int i = 0; i < stampModules.length; i++)
+			{
+				stampModules[i] = buffer.getInt();
+			}
+			stampStates = new byte[buffer.getInt()];
+			for (int i = 0; i < stampStates.length; i++)
+			{
+				stampStates[i] = buffer.getByte();
+			}
+
+			langCoord = buffer.getInt();
+			langDialects = new int[buffer.getInt()];
+			for (int i = 0; i < langDialects.length; i++)
+			{
+				langDialects[i] = buffer.getInt();
+			}
+			langTypePrefs = new int[buffer.getInt()];
+			for (int i = 0; i < langTypePrefs.length; i++)
+			{
+				langTypePrefs[i] = buffer.getInt();
+			}
+
+			taxonomyType = buffer.getByte();
+
+			logicStatedAssemblage = buffer.getInt();
+			logicInferredAssemblage = buffer.getInt();
+			logicDescLogicProfile = buffer.getInt();
+			logicClassifier = buffer.getInt();
+
+			log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
+			if (CoordinatesTokens.get(serialization) == null) 
+			{
+				CoordinatesTokens.put(this);
+			}
+		}
+		catch (RestException e)
+		{
+			throw e;
+		}
+		catch (Exception e)
+		{
+			log.error("Unexpected", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	public TaxonomyCoordinate getTaxonomyCoordinate() {
+		if (taxonomyCoordinate == null) {
+			taxonomyCoordinate = new TaxonomyCoordinateImpl(
+					getTaxonomyType(),
+					getStampCoordinate(),
+					getLanguageCoordinate(),
+					getLogicCoordinate());
+		}
+
+		return taxonomyCoordinate;
+	}
+	public StampCoordinate getStampCoordinate() {
+		if (stampCoordinate == null) {
+			stampCoordinate = new StampCoordinateImpl(
+					getStampPrecedence(),
+					new StampPositionImpl(stampTime, stampPath),
+					getStampModules(),
+					getStampStates());
+		}
+
+		return stampCoordinate;
+	}
+	public LanguageCoordinate getLanguageCoordinate() {
+		if (languageCoordinate == null) {
+				languageCoordinate = new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs);
+		}
+
+		return languageCoordinate;
+	}
+	public LogicCoordinate getLogicCoordinate() {
+		if (logicCoordinate == null) {
+				logicCoordinate = new LogicCoordinateImpl(
+						logicStatedAssemblage,
+						logicInferredAssemblage,
+						logicDescLogicProfile,
+						logicClassifier);
+		}
+
+		return logicCoordinate;
+	}
+
+	/**
+	 * @return the stampTime
+	 */
+	public long getStampTime() {
+		return stampTime;
+	}
+
+	/**
+	 * @return the stampPath
+	 */
+	public int getStampPath() {
+		return stampPath;
+	}
+
+	/**
+	 * @return the stampPrecedence
+	 */
+	public StampPrecedence getStampPrecedence() {
+		return getFromOrdinal(StampPrecedence.class, this.stampPrecedence);
+	}
+
+	/**
+	 * @return the stampModules
+	 */
+	public ConceptSequenceSet getStampModules() {
+		return ConceptSequenceSet.of(stampModules);
+	}
+
+	/**
+	 * @return the stampStates
+	 */
+	public EnumSet<State> getStampStates() {
+		EnumSet<State> allowedStates = EnumSet.allOf(State.class);
+		allowedStates.clear();
+		for (byte state : stampStates) {
+			allowedStates.add(getFromOrdinal(State.class, state));
+		}
+
+		return allowedStates;
+	}
+
+	/**
+	 * @return the langCoord
+	 */
+	public int getLangCoord() {
+		return langCoord;
+	}
+
+	/**
+	 * @return the langDialects
+	 */
+	public ConceptSequenceSet getLangDialects() {
+		return ConceptSequenceSet.of(langDialects);
+	}
+
+	/**
+	 * @return the langTypePrefs
+	 */
+	public ConceptSequenceSet getLangTypePrefs() {
+		return ConceptSequenceSet.of(langTypePrefs);
+	}
+
+	/**
+	 * @return the taxonomyType
+	 */
+	public PremiseType getTaxonomyType() {
+		return getFromOrdinal(PremiseType.class, taxonomyType);
+	}
+
+	/**
+	 * @return the logicStatedAssemblage
+	 */
+	public int getLogicStatedAssemblage() {
+		return logicStatedAssemblage;
+	}
+
+	/**
+	 * @return the logicInferredAssemblage
+	 */
+	public int getLogicInferredAssemblage() {
+		return logicInferredAssemblage;
+	}
+
+	/**
+	 * @return the logicDescLogicProfile
+	 */
+	public int getLogicDescLogicProfile() {
+		return logicDescLogicProfile;
+	}
+
+	/**
+	 * @return the logicClassifier
+	 */
+	public int getLogicClassifier() {
+		return logicClassifier;
+	}
+
+	public String getSerialized()
+	{
+		return serialization;
+	}
+
+	private static String serialize(CoordinatesToken token) {
+		try
+		{
+			String data = Base64.getEncoder().encodeToString(token.getBytesToWrite());
+			return PasswordHasher.hash(data, ApplicationConfig.getSecret(), hashRounds, hashLength) + data;
 		}
 		catch (Exception e)
 		{
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private byte[] getBytesToWrite()
 	{
 		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer();
@@ -193,7 +440,7 @@ public class CoordinatesToken
 		{
 			buffer.putByte(x);
 		}
-		
+
 		buffer.putInt(langCoord);
 		buffer.putInt(langDialects.length);
 		for (int x: langDialects)
@@ -205,78 +452,71 @@ public class CoordinatesToken
 		{
 			buffer.putInt(x);
 		}
-		
+
 		buffer.putByte(taxonomyType);
-		
+
 		buffer.putInt(logicStatedAssemblage);
 		buffer.putInt(logicInferredAssemblage);
 		buffer.putInt(logicDescLogicProfile);
 		buffer.putInt(logicClassifier);
-		
+
 		buffer.trimToSize();
 		return buffer.getData();
 	}
-	
-	private byte[] getSecret()
-	{
-		if (secret_ == null)
-		{
-			try
-			{
-				synchronized (CoordinatesToken.class)
-				{
-					if (secret_ == null)
-					{
-						byte[] temp = new byte[20];
-						
-						SecureRandom.getInstanceStrong().nextBytes(temp);
-						secret_ = temp;
-					}
-				}
-			}
-			catch (NoSuchAlgorithmException e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		return secret_;
-	}
-	
+
 	public static void main(String[] args) throws Exception
 	{
-		CoordinatesToken t = new CoordinatesToken();
-		t.langCoord = 456;
-		t.langDialects = new int[] {123};
-		t.langTypePrefs = new int[] {3,4,5,2,1};
-		t.stampModules = new int[] {4,5,6};
-		t.stampPath = 4;
-		t.stampPrecedence = 5;
-		t.stampStates = new byte[] {2};
-		t.stampTime = Long.MAX_VALUE;
-		t.taxonomyType = 5;
-		
-		
-		String token = t.serialize();
+		/*
+		 * 	long stampTime,
+			int stampPath,
+			byte stampPrecedence,
+			int[] stampModules,
+			byte[] stampStates,
+			int langCoord,
+			int[] langDialects,
+			int[] langTypePrefs,
+			byte taxonomyType,
+			int logicStatedAssemblage,
+			int logicInferredAssemblage,
+			int logicDescLogicProfile,
+			int logicClassifier)
+		 */
+		CoordinatesToken t = new CoordinatesToken(
+				Long.MAX_VALUE, // stampTime
+				4, // stampPath
+				(byte)5, // stampPrecedence
+				new int[] {4,5,6}, // stampModules
+				new byte[] {2}, // stampStates
+				456, // langCoord
+				new int[] {123}, // langDialects
+				new int[] {3,4,5,2,1}, // langTypePrefs
+				(byte)5, // taxonomyType
+				1, // logicStatedAssemblage
+				2, // logicInferredAssemblage
+				3, // logicDescLogicProfile
+				4); // logicClassifier
+
+
+		String token = t.getSerialized();
 		System.out.println(token);
 		new CoordinatesToken(token);
-		
-		CoordinatesToken r = new CoordinatesToken();
-		r.langCoord = 456;
-		r.langDialects = new int[] {123};
-		r.langTypePrefs = new int[] {3,4,5,2,1};
-		r.stampModules = new int[] {4,5,6,7};
-		r.stampPath = 4;
-		r.stampPrecedence = 5;
-		r.stampStates = new byte[] {2};
-		r.stampTime = Long.MAX_VALUE;
-		r.taxonomyType = 5;
 
-		r.logicStatedAssemblage = 1;
-		r.logicInferredAssemblage = 2;
-		r.logicDescLogicProfile = 3;
-		r.logicClassifier = 4;
-		
-		String token1 = r.serialize();
+		CoordinatesToken r = new CoordinatesToken(
+				Long.MAX_VALUE, // stampTime
+				4, // stampPath
+				(byte)5, // stampPrecedence
+				new int[] {4,5,6}, // stampModules
+				new byte[] {2}, // stampStates
+				456, // langCoord
+				new int[] {123}, // langDialects
+				new int[] {3,4,5,2,1}, // langTypePrefs
+				(byte)5, // taxonomyType
+				1, // logicStatedAssemblage
+				2, // logicInferredAssemblage
+				3, // logicDescLogicProfile
+				4); // logicClassifier
+
+		String token1 = r.getSerialized();
 		System.out.println(token1);
 		new CoordinatesToken(token1);
 	}

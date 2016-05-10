@@ -21,7 +21,6 @@ package gov.vha.isaac.rest.api1.logic;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -65,7 +64,7 @@ public class LogicGraphAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'version'
-	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @return the logic graph version object
 	 * @throws RestException 
 	 */
@@ -74,14 +73,11 @@ public class LogicGraphAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestSememeLogicGraphVersion getLogicGraphVersion(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand, 
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
-
 		@SuppressWarnings("rawtypes")
-		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
+		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
@@ -96,8 +92,9 @@ public class LogicGraphAPIs
 	 * Returns the chronology of a logic graph.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
 	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'logicNodeUuids' and/or 'version'
-
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * 
 	 * @return the concept chronology object
 	 * @throws RestException 
 	 */
@@ -106,13 +103,10 @@ public class LogicGraphAPIs
 	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestSememeChronology getLogicGraphChronology(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand, 
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
-
-		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology = findLogicGraphChronology(id, Boolean.parseBoolean(stated.trim()));
+		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
 		
 		return new RestSememeChronology(
 				logicGraphSememeChronology,

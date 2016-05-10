@@ -123,6 +123,8 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * 
 	 * @return the list of descriptions that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
 	 * @throws RestException 
@@ -136,14 +138,13 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.extendedDescriptionTypeId) String extendedDescriptionTypeId,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		if (StringUtils.isBlank(query))
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
 		}
-		RequestInfo.get().readExpandables(expand);
-		
 		LuceneDescriptionType dt = null;
 		if (StringUtils.isNotBlank(descriptionType))
 		{
@@ -211,7 +212,10 @@ public class SearchAPIs
 	 *  - 'versionsLatestOnly' if 'referencedConcept' is included in the expand list, you may also include 'versionsLatestOnly' to return the 
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
-	 *  referencedConcept.	 * @return the list of descriptions that matched, along with their score. Note that the textual value may _NOT_ be included,
+	 *  referencedConcept.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 *  	 
+	 * @return the list of descriptions that matched, along with their score. Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
 	 * @throws RestException 
 	 */
@@ -222,13 +226,13 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.query) String query,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		if (StringUtils.isBlank(query))
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
 		}
-		RequestInfo.get().readExpandables(expand);
 		log.debug("Performing prefix search for '" + query + "'");
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
@@ -328,6 +332,7 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 *
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
@@ -343,7 +348,8 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.dynamicSememeColumns) Set<Integer> dynamicSememeColumns, 
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.sememesComponent
 				+ "?" + RequestParameters.query + "=" + query
@@ -360,7 +366,6 @@ public class SearchAPIs
 		}
 		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
 		
-		RequestInfo.get().readExpandables(expand);
 		String searchString = query.trim();
 		if (StringUtils.isBlank(searchString))
 		{
@@ -483,7 +488,10 @@ public class SearchAPIs
 	 *  - 'versionsLatestOnly' if 'referencedConcept' is included in the expand list, you may also include 'versionsLatestOnly' to return the 
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
-	 *  referencedConcept.	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
+	 *  referencedConcept.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 *  
+	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
 	 * @throws RestException
 	 */
@@ -496,10 +504,9 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.dynamicSememeColumns) Set<Integer> dynamicSememeColumns,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
-			@QueryParam(RequestParameters.expand) String expand) throws RestException
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent
 				+ "?" + RequestParameters.nid + "=" + nid;
 		if (sememeAssemblageId != null) {

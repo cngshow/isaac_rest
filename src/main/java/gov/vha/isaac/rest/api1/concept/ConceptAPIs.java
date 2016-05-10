@@ -72,9 +72,21 @@ public class ConceptAPIs
 	 * Returns a single version of a concept.
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
-	 * 
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'parents', 'children', 'countChildren', 'countParents'
-	 * @param stated - if expansion of parents or children is requested - should the stated or inferred taxonomy be used.  true for stated, false for inferred.
+	 * @param includeParents - Include the direct parent concepts of the requested concept in the response.  Defaults to false.
+	 * @param countParents - true to count the number of parents above this node.  May be used with or without the includeParents parameter
+	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
+	 *  parent counts.  Defaults to false if not provided.
+	 * @param includeChildren - Include the direct child concepts of the request concept inthe resonse.  Defaults to false. 
+	 * @param countChildren - true to count the number of children below this node.  May be used with or without the includeChildren parameter
+	 *  - it works independently.  When used in combination with the childDepth parameter, only the last level of items returned will return
+	 *  child counts.  Defaults to false.  
+	 * @param sememeMembership - when true, the sememeMembership field of the RestConceptVersion object will be populated with the set of unique
+	 * concept sequences that describe sememes that this concept is referenced by.  (there exists a sememe instance where the referencedComponent 
+	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion)
+	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
+	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 *
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -83,12 +95,15 @@ public class ConceptAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestConceptVersion getConceptVersion(
 			@PathParam(RequestParameters.id) String id, 
-			@QueryParam(RequestParameters.stated) @DefaultValue(RequestParameters.statedDefault) String stated,
-			@QueryParam(RequestParameters.expand) String expand ) throws RestException
+			@QueryParam("includeParents") @DefaultValue("false") String includeParents,
+			@QueryParam("countParents") @DefaultValue("false") String countParents,
+			@QueryParam("includeChildren") @DefaultValue("false") String includeChildren,
+			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
+			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken
+			) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-		RequestInfo.get().readStated(stated);
-
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
 		@SuppressWarnings("unchecked")
@@ -97,11 +112,12 @@ public class ConceptAPIs
 		{
 			return new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.parentsExpandable),
-					RequestInfo.get().shouldExpand(ExpandUtil.parentCountExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.childrenExpandable),
-					RequestInfo.get().shouldExpand(ExpandUtil.childCountExpandable),
-					Boolean.parseBoolean(stated.trim()));
+					Boolean.parseBoolean(includeParents.trim()),
+					Boolean.parseBoolean(countParents.trim()), 
+					Boolean.parseBoolean(includeChildren.trim()),
+					Boolean.parseBoolean(countChildren.trim()),
+					RequestInfo.get().getStated(),
+					Boolean.parseBoolean(sememeMembership.trim()));
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
 	}
@@ -111,19 +127,19 @@ public class ConceptAPIs
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @return the concept chronology object
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.chronologyComponent + "{id}")
+	@Path(RestPaths.chronologyComponent + "{" + RequestParameters.id + "}")
 	public RestConceptChronology getConceptChronology(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.expand) String expand
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestInfo.get().readExpandables(expand);
-
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
 		RestConceptChronology chronology =
 				new RestConceptChronology(
@@ -184,18 +200,21 @@ public class ConceptAPIs
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
 	 * if they represent a concept.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * 
 	 * @return The descriptions associated with the concept
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
-	public List<RestSememeDescriptionVersion> getDescriptions(@PathParam(RequestParameters.id) String id, 
-		@QueryParam("includeAttributes") @DefaultValue("true") String includeAttributes,
-		@QueryParam("expand") String expand) throws RestException
+	public List<RestSememeDescriptionVersion> getDescriptions(
+			@PathParam(RequestParameters.id) String id, 
+			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
-		RequestInfo.get().readExpandables(expand);
 		
 		List<RestSememeVersion> descriptions = SememeAPIs.get(
 				findConceptChronology(id).getNid() + "",

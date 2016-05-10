@@ -50,11 +50,9 @@ public class ThreadLocalCleanupContainerResponseFilter implements ContainerRespo
 	 * @see javax.ws.rs.container.ContainerResponseFilter#filter(javax.ws.rs.container.ContainerRequestContext, javax.ws.rs.container.ContainerResponseContext)
 	 */
 	@Override
-	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
-			throws IOException {
+	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException 
+	{
 		log.debug("Removing RequestInfo state in ThreadLocal after server response to client request...");
-		//TODO  - note that this probabably isn't what we want to do when we move to keeping track of things per user... we need an LRU / timed
-		// cache that expires things when the user is done with them.
 		RequestInfo.remove();
 	}
 }

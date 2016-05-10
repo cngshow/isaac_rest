@@ -18,10 +18,6 @@
  */
 package gov.vha.isaac.rest;
 
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * 
  * {@link ExpandUtil}
@@ -34,31 +30,9 @@ public class ExpandUtil
 	public static final String versionsLatestOnlyExpandable = "versionsLatestOnly";
 	public static final String versionExpandable = "version";
 	public static final String chronologyExpandable = "chronology";
-	public static final String parentsExpandable = "parents";
-	public static final String parentCountExpandable = "countParents";
-	public static final String childrenExpandable = "children";
-	public static final String childCountExpandable = "countChildren";
 	public static final String uuid = "uuid";
 	public static final String referencedConcept = "referencedConcept";
 	public static final String nestedSememesExpandable = "nestedSememes";
 	public static final String referencedDetails = "referencedDetails";
 	public static final String logicNodeUuidsExpandable = "logicNodeUuids";
-	
-	public static Set<String> read(String expandableString)
-	{
-		if (StringUtils.isNotBlank(expandableString))
-		{
-			HashSet<String> expandables = new HashSet<>(expandableString.length() / 10);
-			for (String s : expandableString.trim().split(","))
-			{
-				if (StringUtils.isNotBlank(s))
-				{
-					expandables.add(s.trim());
-				}
-				
-			}
-			return expandables;
-		}
-		return new HashSet<>(0);
-	}
 }

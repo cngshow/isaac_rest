@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import org.slf4j.LoggerFactory;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -36,7 +37,25 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 	@Override
 	public Response toResponse(Exception ex)
 	{
-		LoggerFactory.getLogger("web").error("oops", ex);
-		return Response.status(500).entity(ex.toString()).type("text/plain").build();
+		boolean notReady = false;
+		if (ex.getMessage().startsWith("The system is not yet ready"))
+		{
+			notReady = true;
+			LoggerFactory.getLogger("web").error(ex.getMessage());
+		}
+		else
+		{
+			LoggerFactory.getLogger("web").error("Unexpected", ex);
+		}
+		String response;
+		if (ex instanceof RestException || notReady)
+		{
+			response = ex.toString();
+		}
+		else
+		{
+			response = "Unexpected Internal Error";
+		}
+		return Response.status(500).entity(response).type("text/plain").build();
 	}
 }

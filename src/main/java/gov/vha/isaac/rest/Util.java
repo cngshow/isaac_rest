@@ -38,6 +38,10 @@ public class Util
 			if (Get.identifierService().hasUuid(uuidId.get()))
 			{
 				Optional<? extends ConceptChronology<?>> con = Get.conceptService().getOptionalConcept(uuidId.get());
+				if (!con.isPresent())
+				{
+					throw new RestException("The UUID '" + conceptId + "' is known by the system, but it is not a concept (perhaps a sememe)");
+				}
 				sequence = Optional.of(con.get().getConceptSequence());
 			}
 			else

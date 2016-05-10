@@ -79,6 +79,14 @@ public class RestPaths
 	public static final String systemPathComponent = apiVersionComponent + "system/";
 	public static final String requestPathComponent = apiVersionComponent + "request/";
 
+	public static final String coordinatePathComponent = apiVersionComponent + "coordinate/";
+	public static final String coordinatesComponent = "coordinates/";
+	public static final String coordinatesTokenComponent = "coordinatesToken/";
+	public static final String taxonomyCoordinatePathComponent = "taxonomyCoordinate/";
+	public static final String languageCoordinatePathComponent = "languageCoordinate/";
+	public static final String stampCoordinatePathComponent = "stampCoordinate/";
+	public static final String logicCoordinatePathComponent = "logicCoordinate/";
+
 	public static final String logicGraphPathComponent = apiVersionComponent + "logicGraph/";
 	public static final String logicGraphVersionAppPathComponent = appPathComponent + logicGraphPathComponent + versionComponent;
 	public static final String logicGraphChronologyAppPathComponent = appPathComponent + logicGraphPathComponent + chronologyComponent;
