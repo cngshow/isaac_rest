@@ -41,6 +41,7 @@ import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.ochre.model.coordinate.TaxonomyCoordinateImpl;
 import gov.vha.isaac.rest.ApplicationConfig;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -80,95 +81,6 @@ public class CoordinatesToken
 	private transient LogicCoordinate logicCoordinate = null;
 
 	private final transient String serialization;
-
-	public static CoordinatesToken get(
-			long stampTime,
-			int stampPath,
-			byte stampPrecedence,
-			int[] stampModules,
-			byte[] stampStates,
-			int langCoord,
-			int[] langDialects,
-			int[] langTypePrefs,
-			byte taxonomyType,
-			int logicStatedAssemblage,
-			int logicInferredAssemblage,
-			int logicDescLogicProfile,
-			int logicClassifier) throws Exception {
-		CoordinatesToken token =
-				new CoordinatesToken(
-						stampTime,
-						stampPath,
-						stampPrecedence,
-						stampModules,
-						stampStates,
-						langCoord,
-						langDialects,
-						langTypePrefs,
-						taxonomyType,
-						logicStatedAssemblage,
-						logicInferredAssemblage,
-						logicDescLogicProfile,
-						logicClassifier);
-		if (CoordinatesTokens.get(token.serialization) != null) {
-			return CoordinatesTokens.get(token.serialization);
-		} else {
-			CoordinatesTokens.put(token);
-			return token;
-		}
-	}
-	public static CoordinatesToken get() {
-		try {
-			return CoordinatesTokens.getDefaultCoordinatesToken();
-		} catch (Exception e) {
-			// This should never fail, as token is created from existing objects
-			log.error("CoordinatesTokens.getDefaultCoordinatesToken() SHOULD NEVER THROW EXCEPTIONS.", e);
-			throw new RuntimeException(e);
-		}
-	}
-	public static CoordinatesToken get(TaxonomyCoordinate tax) {
-		try {
-			CoordinatesToken token = new CoordinatesToken(tax);
-			if (CoordinatesTokens.get(token.getSerialized()) != null) {
-				return CoordinatesTokens.get(token.getSerialized());
-			} else {
-				CoordinatesTokens.put(token); 
-				return token;
-			}
-		} catch (Exception e) {
-			// This should never fail, as token is created from existing objects
-			log.error("CREATING A CoordinatesToken FROM AN EXISTING TaxonomyCoordinate SHOULD NEVER THROW EXCEPTIONS.", e);
-			throw new RuntimeException(e);
-		}
-	}
-	public static CoordinatesToken get(
-			StampCoordinate stamp,
-			LanguageCoordinate lang,
-			LogicCoordinate logic,
-			PremiseType taxType) {
-		try {
-			CoordinatesToken token = new CoordinatesToken(stamp, lang, logic, taxType);
-			if (CoordinatesTokens.get(token.serialization) != null) {
-				return CoordinatesTokens.get(token.serialization);
-			} else {
-				CoordinatesTokens.put(token);
-				return token;
-			}
-		} catch (Exception e) {
-			// This should never fail, as token is created from existing objects
-			log.error("CREATING A CoordinatesToken FROM EXISTING TaxonomyCoordinate COMPONENTS SHOULD NEVER THROW EXCEPTIONS.", e);
-			throw new RuntimeException(e);
-		}
-	}
-	public static CoordinatesToken get(String tokenStr) throws Exception {
-		if (CoordinatesTokens.get(tokenStr) != null) {
-			return CoordinatesTokens.get(tokenStr);
-		} else {
-			CoordinatesToken token = new CoordinatesToken(tokenStr);
-			CoordinatesTokens.put(token);
-			return token;
-		}
-	}
 
 	private static <E extends Enum<E>> E getFromOrdinal(Class<E> clazz, int ordinal) {
 		for (E value : clazz.getEnumConstants()) {
@@ -225,18 +137,29 @@ public class CoordinatesToken
 		this.logicClassifier = logicClassifier;
 
 		serialization = serialize(this);
+		if (CoordinatesTokens.get(serialization) == null) 
+		{
+			CoordinatesTokens.put(this);
+		}
 	}
 
-	CoordinatesToken() {
+	/**
+	 * Construct a default coordinate token 
+	 * TODO Joel, should we really have defaults in two places?
+	 */
+	CoordinatesToken() 
+	{
 		this(TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(),
 			LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate()));
 	}
 
 	// This constructor handles everything with the TaxonomyCoordinate with no overlap
-	private CoordinatesToken(TaxonomyCoordinate tax) {
+	public CoordinatesToken(TaxonomyCoordinate tax) 
+	{
 		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
 	}
-	private CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, PremiseType taxType)
+	
+	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, PremiseType taxType)
 	{
 		stampTime = stamp.getStampPosition().getTime();
 		stampPath = stamp.getStampPosition().getStampPathSequence();
@@ -266,9 +189,13 @@ public class CoordinatesToken
 		logicClassifier = logic.getClassifierSequence();
 
 		serialization = serialize(this);
+		if (CoordinatesTokens.get(serialization) == null) 
+		{
+			CoordinatesTokens.put(this);
+		}
 	}
 
-	CoordinatesToken(String encodedData) throws Exception
+	public CoordinatesToken(String encodedData) throws Exception
 	{
 		serialization = encodedData;
 
@@ -278,7 +205,7 @@ public class CoordinatesToken
 
 		if (!readHash.equals(calculatedHash))
 		{
-			throw new RuntimeException("Invalid token!");
+			throw new RestException("Invalid token!");
 		}
 
 		byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
@@ -322,6 +249,10 @@ public class CoordinatesToken
 		logicClassifier = buffer.getInt();
 
 		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
+		if (CoordinatesTokens.get(serialization) == null) 
+		{
+			CoordinatesTokens.put(this);
+		}
 	}
 
 	public TaxonomyCoordinate getTaxonomyCoordinate() {
@@ -335,7 +266,7 @@ public class CoordinatesToken
 
 		return taxonomyCoordinate;
 	}
-	public synchronized StampCoordinate getStampCoordinate() {
+	public StampCoordinate getStampCoordinate() {
 		if (stampCoordinate == null) {
 			stampCoordinate = new StampCoordinateImpl(
 					getStampPrecedence(),
@@ -346,14 +277,14 @@ public class CoordinatesToken
 
 		return stampCoordinate;
 	}
-	public synchronized LanguageCoordinate getLanguageCoordinate() {
+	public LanguageCoordinate getLanguageCoordinate() {
 		if (languageCoordinate == null) {
 				languageCoordinate = new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs);
 		}
 
 		return languageCoordinate;
 	}
-	public synchronized LogicCoordinate getLogicCoordinate() {
+	public LogicCoordinate getLogicCoordinate() {
 		if (logicCoordinate == null) {
 				logicCoordinate = new LogicCoordinateImpl(
 						logicStatedAssemblage,

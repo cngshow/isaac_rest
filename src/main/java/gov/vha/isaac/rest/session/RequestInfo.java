@@ -172,7 +172,7 @@ public class RequestInfo
 				int logicDescProfileSeq = CoordinatesUtil.getLogicCoordinateDescProfileAssemblageFromParameter(coordinateParameters.get(RequestParameters.descriptionLogicProfile), token);
 				int logicClassifierSeq = CoordinatesUtil.getLogicCoordinateClassifierAssemblageFromParameter(coordinateParameters.get(RequestParameters.classifier), token);
 
-				CoordinatesToken tokenObj = CoordinatesToken.get(
+				CoordinatesToken tokenObj = new CoordinatesToken(
 						stampTime,
 						stampPathSeq,
 						(byte)stampPrecedence.ordinal(),
@@ -189,7 +189,7 @@ public class RequestInfo
 
 				requestInfo.get().coordinatesToken_ = tokenObj.getSerialized();
 
-				CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), requestInfo.get().coordinatesToken_);
+				CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), tokenObj);
 				
 				log.debug("Created CoordinatesToken \"" + requestInfo.get().coordinatesToken_ + "\"");
 			}
@@ -278,7 +278,7 @@ public class RequestInfo
 				return CoordinatesTokens.get(coordinatesToken_);
 			} catch (Exception e) {
 				// Should never fail because validated on readAll()
-				e.printStackTrace();
+				log.error("Unexpected", e);
 				throw new RuntimeException(e);
 			}
 		} else {
