@@ -31,6 +31,7 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
@@ -145,8 +146,12 @@ public class CoordinatesUtil {
 			CoordinatesToken ct = CoordinatesTokens.get(tokenStringOptional.get());
 			if (ct == null)
 			{
-				//Not in cche
-				ct = new CoordinatesToken(tokenStringOptional.get());
+				// Not in cache
+				try {
+					ct = new CoordinatesToken(tokenStringOptional.get());
+				} catch (Exception e) {
+					throw new RestException(RequestParameters.coordToken, tokenStringOptional.get(), "invalid value");
+				}
 			}
 			
 			return Optional.of(ct);
@@ -255,13 +260,20 @@ public class CoordinatesUtil {
 			Optional<Integer> languageIntIdOptional = NumericUtils.getInt(languageParamStr.trim());
 			if (languageIntIdOptional.isPresent()) {
 				int nid = Get.identifierService().getConceptNid(languageIntIdOptional.get());
-				if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT)
-					return Get.identifierService().getConceptSequence(nid);
-			}
-
-			Optional<UUID> languageUuidOptional = UUIDUtil.getUUID(languageParamStr.trim());
-			if (languageUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(languageUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-				return Get.identifierService().getConceptSequenceForUuids(languageUuidOptional.get());
+				if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequence(nid);
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LANGUAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
+			} else {
+				Optional<UUID> languageUuidOptional = UUIDUtil.getUUID(languageParamStr.trim());
+				if (languageUuidOptional.isPresent() && Get.identifierService().hasUuid(languageUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(languageUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequenceForUuids(languageUuidOptional.get());
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LANGUAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
 			}
 		}
 
@@ -278,21 +290,28 @@ public class CoordinatesUtil {
 			{
 				if (StringUtils.isNotBlank(dialectId))
 				{
+					Optional<UUID> dialectUuidOptional = Optional.empty();
 					Optional<Integer> dialectIdIntIdOptional = NumericUtils.getInt(dialectId.trim());
 					if (dialectIdIntIdOptional.isPresent()) {
 						int nid = Get.identifierService().getConceptNid(dialectIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
-							seqList.add(Get.identifierService().getConceptSequence(dialectIdIntIdOptional.get()));
-							continue;
+							int seq = Get.identifierService().getConceptSequence(dialectIdIntIdOptional.get());
+							if (seq == TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence()
+									|| seq == TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence()) {
+								seqList.add(seq);
+								continue;
+							}
 						}
-					}
-
-					Optional<UUID> dialectUuidOptional = UUIDUtil.getUUID(dialectId.trim());
-					if (dialectUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(dialectUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-						seqList.add(Get.identifierService().getConceptSequenceForUuids(dialectUuidOptional.get()));
-						continue;
-					}
-					if (dialectId.trim().toLowerCase().startsWith("us")) {
+					} else if ((dialectUuidOptional = UUIDUtil.getUUID(dialectId.trim())).isPresent()) {
+						if (dialectUuidOptional.isPresent() && Get.identifierService().hasUuid(dialectUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(dialectUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+							int seq = Get.identifierService().getConceptSequenceForUuids(dialectUuidOptional.get());
+							if (seq == TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence()
+									|| seq == TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence()) {
+								seqList.add(seq);
+								continue;
+							}
+						}
+					} else if (dialectId.trim().toLowerCase().startsWith("us")) {
 						seqList.add(TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence());
 						continue;
 					} else if (dialectId.trim().toLowerCase().startsWith("gb")) {
@@ -327,21 +346,27 @@ public class CoordinatesUtil {
 			{
 				if (StringUtils.isNotBlank(descTypeId))
 				{
+					Optional<UUID> descTypeUuidOptional = Optional.empty();
 					Optional<Integer> descTypeIdIntIdOptional = NumericUtils.getInt(descTypeId.trim());
+					
 					if (descTypeIdIntIdOptional.isPresent()) {
 						int nid = Get.identifierService().getConceptNid(descTypeIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
-							seqList.add(Get.identifierService().getConceptSequence(descTypeIdIntIdOptional.get()));
-							continue;
+							int seq = Get.identifierService().getConceptSequence(descTypeIdIntIdOptional.get());
+							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_TYPE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+								seqList.add(seq);
+								continue;
+							}
 						}
-					}
-
-					Optional<UUID> descTypeUuidOptional = UUIDUtil.getUUID(descTypeId.trim());
-					if (descTypeUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(descTypeUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-						seqList.add(Get.identifierService().getConceptSequenceForUuids(descTypeUuidOptional.get()));
-						continue;
-					}
-					if (descTypeId.trim().toLowerCase().startsWith("fsn")) {
+					} else if ((descTypeUuidOptional = UUIDUtil.getUUID(descTypeId.trim())).isPresent()) {
+						if (descTypeUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(descTypeUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+							int seq = Get.identifierService().getConceptSequenceForUuids(descTypeUuidOptional.get());
+							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_TYPE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+								seqList.add(seq);
+								continue;
+							}
+						}
+					} else if (descTypeId.trim().toLowerCase().startsWith("fsn")) {
 						seqList.add(TermAux.FULLY_SPECIFIED_DESCRIPTION_TYPE.getConceptSequence());
 						continue;
 					} else if (descTypeId.trim().toLowerCase().startsWith("synonym")) {
@@ -473,15 +498,21 @@ public class CoordinatesUtil {
 					if (moduleIdIntIdOptional.isPresent()) {
 						int nid = Get.identifierService().getConceptNid(moduleIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
-							valuesFromParameters.add(Get.identifierService().getConceptSequence(moduleIdIntIdOptional.get()));
-							continue;
+							int seq = Get.identifierService().getConceptSequence(nid);
+							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+								valuesFromParameters.add(seq);
+								continue;
+							}
 						}
-					}
-
-					Optional<UUID> moduleUuidOptional = UUIDUtil.getUUID(moduleId.trim());
-					if (moduleUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(moduleUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-						valuesFromParameters.add(Get.identifierService().getConceptSequenceForUuids(moduleUuidOptional.get()));
-						continue;
+					} else {
+						Optional<UUID> moduleUuidOptional = UUIDUtil.getUUID(moduleId.trim());
+						if (moduleUuidOptional.isPresent() && Get.identifierService().hasUuid(moduleUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(moduleUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+							int seq = Get.identifierService().getConceptSequenceForUuids(moduleUuidOptional.get());
+							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+								valuesFromParameters.add(seq);
+								continue;
+							}
+						}
 					}
 
 					throw new RestException("modules", "\"" + moduleId + "\"", "Invalid stamp coordinate module value");
@@ -649,12 +680,18 @@ public class CoordinatesUtil {
 
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
 			if (pathIntIdOptional.isPresent()) {
-				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-			}
-
-			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
-			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_CLASSIFIER.getConceptSequence()).anyMatch((i) -> i == seq)) {
+					return seq;
+				}
+			} else {
+				Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
+				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_CLASSIFIER.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
 			}
 		}
 

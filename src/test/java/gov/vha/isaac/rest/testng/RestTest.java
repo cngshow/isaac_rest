@@ -871,9 +871,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			result = checkFail(target(getStampCoordinate)
 					.queryParam(RequestParameters.time, 123456789)
 					.queryParam(RequestParameters.precedence, StampPrecedence.TIME)
-					.queryParam(RequestParameters.modules, 1)
-					.queryParam(RequestParameters.modules, 2)
-					.queryParam(RequestParameters.modules, 3)
+					.queryParam(RequestParameters.modules, MetaData.AMT_MODULE.getConceptSequence())
+					.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
+					.queryParam(RequestParameters.modules, MetaData.SNOMED_CT_CORE_MODULE.getConceptSequence())
 					.queryParam(RequestParameters.allowedStates, State.INACTIVE)
 					.queryParam(RequestParameters.allowedStates, State.PRIMORDIAL)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
@@ -892,9 +892,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				stampCoordinateModules.add(Integer.valueOf(nodeList.item(i).getTextContent()));
 			}
 			Assert.assertTrue(stampCoordinateModules.size() == 3);
-			Assert.assertTrue(stampCoordinateModules.contains(1));
-			Assert.assertTrue(stampCoordinateModules.contains(2));
-			Assert.assertTrue(stampCoordinateModules.contains(3));
+			Assert.assertTrue(stampCoordinateModules.contains(MetaData.AMT_MODULE.getConceptSequence()));
+			Assert.assertTrue(stampCoordinateModules.contains(MetaData.ISAAC_MODULE.getConceptSequence()));
+			Assert.assertTrue(stampCoordinateModules.contains(MetaData.SNOMED_CT_CORE_MODULE.getConceptSequence()));
 
 			xpath = "/restStampCoordinate/allowedStates/enumId";
 			List<Integer> allowedStates = new ArrayList<>();
@@ -909,25 +909,25 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			
 			// LanguageCoordinate
 			result = checkFail(target(getLanguageCoordinate)
-					.queryParam(RequestParameters.language, 11)
+					.queryParam(RequestParameters.language, MetaData.ENGLISH_LANGUAGE.getConceptSequence())
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/language";
 			node = RestTestUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			int languageCoordinateLangSeq = Integer.parseInt(node.getTextContent());
-			Assert.assertTrue(languageCoordinateLangSeq == 11);
+			Assert.assertTrue(languageCoordinateLangSeq == MetaData.ENGLISH_LANGUAGE.getConceptSequence());
 
 			// LogicCoordinate
 			result = checkFail(target(getLogicCoordinate)
-					.queryParam(RequestParameters.classifier, 22)
+					.queryParam(RequestParameters.classifier, MetaData.SNOROCKET_CLASSIFIER.getConceptSequence())
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLogicCoordinate/classifier";
 			node = RestTestUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			int logicCoordinateClassifierSeq = Integer.parseInt(node.getTextContent());
-			Assert.assertTrue(logicCoordinateClassifierSeq == 22);	
+			Assert.assertTrue(logicCoordinateClassifierSeq == MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());	
 		} catch (Error error) {
 			System.out.println("Failing result XPath: " + xpath);
 			System.out.println("Failing result Node: " + RestTestUtils.toString(node));
