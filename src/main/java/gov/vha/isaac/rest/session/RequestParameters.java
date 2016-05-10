@@ -38,28 +38,19 @@ public class RequestParameters {
 
 	// Taxonomy Coordinate
 	public final static String stated = "stated";
-	public final static String statedDefault = "true";
 
 	public final static String language = "language";
-	public final static String languageDefault = "english";
 	public final static String dialectPrefs = "dialectPrefs";
-	public final static String dialectPrefsDefault = "us,gb";
 	public final static String descriptionTypePrefs = "descriptionTypePrefs";
-	public final static String descriptionTypePrefsDefault = "fsn,synonym";
 	public final static Set<String> LANGUAGE_COORDINATE_PARAM_NAMES =
 			unmodifiableSet(language, dialectPrefs, descriptionTypePrefs);
 
 	// Stamp Coordinate
 	public final static String time = "time";
-	public final static String timeDefault = "latest";
 	public final static String path = "path";
-	public final static String pathDefault = "development";
 	public final static String precedence = "precedence";
-	public final static String precedenceDefault = "path";
 	public final static String modules = "modules";
-	public final static String modulesDefault = "";
 	public final static String allowedStates = "allowedStates";
-	public final static String allowedStatesDefault = "active";
 	public final static Set<String> STAMP_COORDINATE_PARAM_NAMES =
 			unmodifiableSet(
 					time,
@@ -69,13 +60,9 @@ public class RequestParameters {
 					allowedStates);
 
 	public final static String logicStatedAssemblage = "logicStatedAssemblage";
-	public final static String logicStatedAssemblageDefault = "1f201994-960e-11e5-8994-feff819cdc9f";
 	public final static String logicInferredAssemblage = "logicInferredAssemblage";
-	public final static String logicInferredAssemblageDefault = "1f20182c-960e-11e5-8994-feff819cdc9f";
 	public final static String descriptionLogicProfile = "descriptionLogicProfile";
-	public final static String descriptionLogicProfileDefault = "1f201e12-960e-11e5-8994-feff819cdc9f";
 	public final static String classifier = "classifier";
-	public final static String classifierDefault = "1f201fac-960e-11e5-8994-feff819cdc9f";
 	public final static Set<String> LOGIC_COORDINATE_PARAM_NAMES =
 			unmodifiableSet(
 					logicStatedAssemblage,

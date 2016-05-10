@@ -41,7 +41,6 @@ import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
-import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -185,7 +184,7 @@ public class CoordinatesUtil {
 	 * @throws RestException if contains multiple values or non boolean-parseable non-empty string
 	 */
 	public static boolean getStatedFromParameter(List<String> params, Optional<CoordinatesToken> token) throws RestException {
-		boolean defaultValue = token.isPresent() ? (token.get().getTaxonomyType() == PremiseType.STATED) : Boolean.parseBoolean(RequestParameters.statedDefault);
+		boolean defaultValue = token.isPresent() ? (token.get().getTaxonomyType() == PremiseType.STATED) : CoordinatesTokens.getDefaultCoordinatesToken().getTaxonomyType() == PremiseType.STATED;
 		
 		List<String> statedParamStrs = RequestInfoUtils.expandCommaDelimitedElements(params);
 
@@ -222,7 +221,7 @@ public class CoordinatesUtil {
 //	}
 
 	public static int getLanguageCoordinateLanguageSequenceFromParameter(List<String> unexpandedLanguageParamStrs, Optional<CoordinatesToken> token) throws RestException {
-		int defaultValue = token.isPresent() ? token.get().getLangCoord() : TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+		int defaultValue = token.isPresent() ? token.get().getLangCoord() : CoordinatesTokens.getDefaultCoordinatesToken().getLangCoord();
 		
 		List<String> languageParamStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedLanguageParamStrs);
 
@@ -235,7 +234,25 @@ public class CoordinatesUtil {
 				return defaultValue;
 			}
 
-			if (languageParamStr.trim().toLowerCase().startsWith("english")) {
+			Optional<UUID> languageUuidOptional = Optional.empty();
+			Optional<Integer> languageIntIdOptional = NumericUtils.getInt(languageParamStr.trim());
+			if (languageIntIdOptional.isPresent()) {
+				int nid = Get.identifierService().getConceptNid(languageIntIdOptional.get());
+				if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequence(nid);
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LANGUAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
+			} else if ((languageUuidOptional = UUIDUtil.getUUID(languageParamStr.trim())).isPresent()) {
+
+				if (languageUuidOptional.isPresent() && Get.identifierService().hasUuid(languageUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(languageUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequenceForUuids(languageUuidOptional.get());
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LANGUAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
+			} else if (languageParamStr.trim().toLowerCase().startsWith("english")) {
 				return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase().startsWith("spanish")) {
 				return TermAux.SPANISH_LANGUAGE.getConceptSequence();
@@ -256,32 +273,13 @@ public class CoordinatesUtil {
 			} else if (languageParamStr.trim().toLowerCase().startsWith("swedish")) {
 				return TermAux.SWEDISH_LANGUAGE.getConceptSequence();
 			}
-
-			Optional<Integer> languageIntIdOptional = NumericUtils.getInt(languageParamStr.trim());
-			if (languageIntIdOptional.isPresent()) {
-				int nid = Get.identifierService().getConceptNid(languageIntIdOptional.get());
-				if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
-					int seq = Get.identifierService().getConceptSequence(nid);
-					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LANGUAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
-						return seq;
-					}
-				}
-			} else {
-				Optional<UUID> languageUuidOptional = UUIDUtil.getUUID(languageParamStr.trim());
-				if (languageUuidOptional.isPresent() && Get.identifierService().hasUuid(languageUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(languageUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-					int seq = Get.identifierService().getConceptSequenceForUuids(languageUuidOptional.get());
-					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LANGUAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
-						return seq;
-					}
-				}
-			}
 		}
 
 		throw new RestException(RequestParameters.language, languageParamStrs.toString(), "Invalid language coordinate language value");
 	}
 
 	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(List<String> unexpandedDialectsStrs, Optional<CoordinatesToken> token) throws RestException {
-		int[] defaultValues = token.isPresent() ? token.get().getLangDialects().asArray() : LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate().getDialectAssemblagePreferenceList();
+		int[] defaultValues = token.isPresent() ? token.get().getLangDialects().asArray() : CoordinatesTokens.getDefaultCoordinatesToken().getLangDialects().asArray();
 		List<Integer> seqList = new ArrayList<>();
 
 		List<String> dialectsStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDialectsStrs);
@@ -335,7 +333,7 @@ public class CoordinatesUtil {
 		}
 	}
 	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(List<String> unexpandedDescTypesStrs, Optional<CoordinatesToken> token) throws RestException {
-		int[] defaultValues = token.isPresent() ? token.get().getLangTypePrefs().asArray() : LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate().getDescriptionTypePreferenceList();
+		int[] defaultValues = token.isPresent() ? token.get().getLangTypePrefs().asArray() : CoordinatesTokens.getDefaultCoordinatesToken().getLangTypePrefs().asArray();
 
 		List<Integer> seqList = new ArrayList<>();
 
@@ -395,7 +393,7 @@ public class CoordinatesUtil {
 	}
 
 	public static StampPrecedence getStampCoordinatePrecedenceFromParameter(List<String> unexpandedPrecedenceStrs, Optional<CoordinatesToken> token) throws RestException {
-		StampPrecedence defaultValue = token.isPresent() ? token.get().getStampPrecedence() : StampPrecedence.PATH;
+		StampPrecedence defaultValue = token.isPresent() ? token.get().getStampPrecedence() : CoordinatesTokens.getDefaultCoordinatesToken().getStampPrecedence();
 
 		List<String> precedenceStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedPrecedenceStrs);
 
@@ -429,7 +427,7 @@ public class CoordinatesUtil {
 	}
 
 	public static EnumSet<State> getStampCoordinateAllowedStatesFromParameter(List<String> unexpandedStatesStrs, Optional<CoordinatesToken> token) throws RestException {
-		EnumSet<State> defaultValues = token.isPresent() ? token.get().getStampStates() : State.ANY_STATE_SET;
+		EnumSet<State> defaultValues = token.isPresent() ? token.get().getStampStates() : CoordinatesTokens.getDefaultCoordinatesToken().getStampStates();
 		
 		EnumSet<State> allowedStates = EnumSet.allOf(State.class);
 		allowedStates.clear();
@@ -482,7 +480,7 @@ public class CoordinatesUtil {
 	}
 
 	public static ConceptSequenceSet getStampCoordinateModuleSequencesFromParameter(List<String> unexpandedModulesStrs, Optional<CoordinatesToken> token) throws RestException {
-		ConceptSequenceSet defaultValue = token.isPresent() ? token.get().getStampModules() : new ConceptSequenceSet();
+		ConceptSequenceSet defaultValue = token.isPresent() ? token.get().getStampModules() : CoordinatesTokens.getDefaultCoordinatesToken().getStampModules();
 
 		ConceptSequenceSet valuesFromParameters = new ConceptSequenceSet();
 		List<String> modulesStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedModulesStrs);
@@ -524,7 +522,7 @@ public class CoordinatesUtil {
 	}
 
 	public static int getStampCoordinatePathSequenceFromParameter(List<String> unexpandedPathStrs, Optional<CoordinatesToken> token) throws RestException {
-		int defaultValue = token.isPresent() ? token.get().getStampPath() : TermAux.DEVELOPMENT_PATH.getConceptSequence();
+		int defaultValue = token.isPresent() ? token.get().getStampPath() : CoordinatesTokens.getDefaultCoordinatesToken().getStampPath();
 
 		List<String> pathStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedPathStrs);
 
@@ -537,17 +535,21 @@ public class CoordinatesUtil {
 				return defaultValue;
 			}
 
+			Optional<UUID> pathUuidOptional = Optional.empty();
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(pathStr.trim());
 			if (pathIntIdOptional.isPresent()) {
-				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-			}
-
-			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(pathStr.trim());
-			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-			}
-
-			if (pathStr.trim().equalsIgnoreCase("development")) {
+				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+				if (Get.taxonomyService().getTaxonomyChildSequences(TermAux.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
+					return seq;
+				}
+			} else if ((pathUuidOptional = UUIDUtil.getUUID(pathStr.trim())).isPresent()) {
+				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+					if (Get.taxonomyService().getTaxonomyChildSequences(TermAux.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
+			} else if (pathStr.trim().equalsIgnoreCase("development")) {
 				return TermAux.DEVELOPMENT_PATH.getConceptSequence();
 			} else if (pathStr.trim().equalsIgnoreCase("master")) {
 				return TermAux.MASTER_PATH.getConceptSequence();
@@ -558,7 +560,7 @@ public class CoordinatesUtil {
 	}
 
 	public static long getStampCoordinateTimeFromParameter(List<String> unexpandedTimeStrs, Optional<CoordinatesToken> token) throws RestException {
-		long defaultValue = token.isPresent() ? token.get().getStampTime() : Long.MAX_VALUE;
+		long defaultValue = token.isPresent() ? token.get().getStampTime() : CoordinatesTokens.getDefaultCoordinatesToken().getStampTime();
 
 		List<String> timeStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedTimeStrs);
 
@@ -584,7 +586,7 @@ public class CoordinatesUtil {
 		throw new RestException("time", "\"" + timeStrs + "\"", "invalid stamp coordinate time value");
 	}
 	public static int getLogicCoordinateStatedAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
-		final int defaultSeq = token.isPresent() ? token.get().getLogicStatedAssemblage() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicStatedAssemblageDefault));
+		final int defaultSeq = token.isPresent() ? token.get().getLogicStatedAssemblage() : CoordinatesTokens.getDefaultCoordinatesToken().getLogicStatedAssemblage();
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 
@@ -597,21 +599,27 @@ public class CoordinatesUtil {
 				return defaultSeq;
 			}
 
+			Optional<UUID> pathUuidOptional = Optional.empty();
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
 			if (pathIntIdOptional.isPresent()) {
-				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-			}
-
-			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
-			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+					return seq;
+				}
+			} else if ((pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim())).isPresent()) {
+				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
 			}
 		}
 
 		throw new RestException(RequestParameters.logicStatedAssemblage, "\"" + assemblageStrs + "\"", "Invalid logic coordinate stated assemblage value");
 	}
 	public static int getLogicCoordinateInferredAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
-		final int defaultSeq = token.isPresent() ? token.get().getLogicInferredAssemblage() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.logicInferredAssemblageDefault));
+		final int defaultSeq = token.isPresent() ? token.get().getLogicInferredAssemblage() : CoordinatesTokens.getDefaultCoordinatesToken().getLogicInferredAssemblage();
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 
@@ -624,21 +632,27 @@ public class CoordinatesUtil {
 				return defaultSeq;
 			}
 
+			Optional<UUID> pathUuidOptional = Optional.empty();
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
 			if (pathIntIdOptional.isPresent()) {
-				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-			}
-
-			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
-			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+					return seq;
+				}
+			} else if ((pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim())).isPresent()) {
+				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+						return seq;
+					}
+				}
 			}
 		}
 
 		throw new RestException(RequestParameters.logicInferredAssemblage, "\"" + assemblageStrs + "\"", "Invalid logic coordinate inferred assemblage value");
 	}
 	public static int getLogicCoordinateDescProfileAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
-		final int defaultSeq = token.isPresent() ? token.get().getLogicDescLogicProfile() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.descriptionLogicProfileDefault));
+		final int defaultSeq = token.isPresent() ? token.get().getLogicDescLogicProfile() : CoordinatesTokens.getDefaultCoordinatesToken().getLogicDescLogicProfile();
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 
@@ -653,19 +667,25 @@ public class CoordinatesUtil {
 
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
 			if (pathIntIdOptional.isPresent()) {
-				return Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_PROFILE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+					return seq;
+				}
 			}
 
 			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
 			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
-				return Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+				int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_PROFILE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+					return seq;
+				}
 			}
 		}
 
 		throw new RestException(RequestParameters.descriptionLogicProfile, "\"" + assemblageStrs + "\"", "Invalid logic coordinate description profile assemblage value");
 	}
 	public static int getLogicCoordinateClassifierAssemblageFromParameter(List<String> unexpandedAssemblageStrs, Optional<CoordinatesToken> token) throws RestException {
-		final int defaultSeq = token.isPresent() ? token.get().getLogicClassifier() : Get.identifierService().getConceptSequenceForUuids(UUID.fromString(RequestParameters.classifierDefault));
+		final int defaultSeq = token.isPresent() ? token.get().getLogicClassifier() : CoordinatesTokens.getDefaultCoordinatesToken().getLogicClassifier();
 
 		List<String> assemblageStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedAssemblageStrs);
 
