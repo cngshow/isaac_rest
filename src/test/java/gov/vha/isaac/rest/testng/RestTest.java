@@ -733,7 +733,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						StampCoordinates.getDevelopmentLatest(),
 						LanguageCoordinates.getUsEnglishLanguagePreferredTermCoordinate(),
 						LogicCoordinates.getStandardElProfile());
-		CoordinatesToken t = new CoordinatesToken(
+		CoordinatesToken t = CoordinatesTokens.getOrCreate(
 				taxonomyCoordinate.getStampCoordinate(),
 				taxonomyCoordinate.getLanguageCoordinate(),
 				taxonomyCoordinate.getLogicCoordinate(),

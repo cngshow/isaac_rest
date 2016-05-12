@@ -20,8 +20,10 @@ package gov.vha.isaac.rest.tokens;
 
 import java.util.Base64;
 import java.util.EnumSet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -32,9 +34,6 @@ import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
 import gov.vha.isaac.ochre.api.util.PasswordHasher;
-import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
-import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.ochre.model.coordinate.LanguageCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.LogicCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
@@ -107,7 +106,7 @@ public class CoordinatesToken
 	 * @param logicDescLogicProfile
 	 * @param logicClassifier
 	 */
-	public CoordinatesToken(
+	CoordinatesToken(
 			long stampTime,
 			int stampPath,
 			byte stampPrecedence,
@@ -137,29 +136,9 @@ public class CoordinatesToken
 		this.logicClassifier = logicClassifier;
 
 		serialization = serialize(this);
-		if (CoordinatesTokens.get(serialization) == null) 
-		{
-			CoordinatesTokens.put(this);
-		}
-	}
-
-	/**
-	 * Construct a default coordinate token 
-	 * TODO Joel, should we really have defaults in two places?
-	 */
-	CoordinatesToken() 
-	{
-		this(TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(),
-			LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate()));
-	}
-
-	// This constructor handles everything with the TaxonomyCoordinate with no overlap
-	public CoordinatesToken(TaxonomyCoordinate tax) 
-	{
-		this(tax.getStampCoordinate(), tax.getLanguageCoordinate(), tax.getLogicCoordinate(), tax.getTaxonomyType());
 	}
 	
-	public CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, PremiseType taxType)
+	CoordinatesToken(StampCoordinate stamp, LanguageCoordinate lang, LogicCoordinate logic, PremiseType taxType)
 	{
 		stampTime = stamp.getStampPosition().getTime();
 		stampPath = stamp.getStampPosition().getStampPathSequence();
@@ -189,13 +168,9 @@ public class CoordinatesToken
 		logicClassifier = logic.getClassifierSequence();
 
 		serialization = serialize(this);
-		if (CoordinatesTokens.get(serialization) == null) 
-		{
-			CoordinatesTokens.put(this);
-		}
 	}
 
-	public CoordinatesToken(String encodedData) throws RestException
+	CoordinatesToken(String encodedData) throws RestException
 	{
 		try
 		{
@@ -252,10 +227,6 @@ public class CoordinatesToken
 			logicClassifier = buffer.getInt();
 
 			log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
-			if (CoordinatesTokens.get(serialization) == null) 
-			{
-				CoordinatesTokens.put(this);
-			}
 		}
 		catch (RestException e)
 		{

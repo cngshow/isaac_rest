@@ -172,7 +172,7 @@ public class RequestInfo
 				int logicDescProfileSeq = CoordinatesUtil.getLogicCoordinateDescProfileAssemblageFromParameter(coordinateParameters.get(RequestParameters.descriptionLogicProfile), token);
 				int logicClassifierSeq = CoordinatesUtil.getLogicCoordinateClassifierAssemblageFromParameter(coordinateParameters.get(RequestParameters.classifier), token);
 
-				CoordinatesToken tokenObj = new CoordinatesToken(
+				CoordinatesToken tokenObj = CoordinatesTokens.getOrCreate(
 						stampTime,
 						stampPathSeq,
 						(byte)stampPrecedence.ordinal(),

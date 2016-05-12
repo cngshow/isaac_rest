@@ -146,7 +146,7 @@ public class CoordinatesUtil {
 			if (ct == null)
 			{
 				// Not in cache
-				ct = new CoordinatesToken(tokenStringOptional.get());
+				ct = CoordinatesTokens.get(tokenStringOptional.get());
 			}
 			
 			return Optional.of(ct);

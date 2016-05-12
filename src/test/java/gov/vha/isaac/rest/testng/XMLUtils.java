@@ -55,7 +55,7 @@ public class XMLUtils {
 	private XMLUtils() {}
 	
 	public static String toString(Node node) {
-		return "Node {name=" + node.getNodeName() + ", value=" + node.getNodeValue() + ", type=" + node.getNodeType() + ", text=" + node.getTextContent() + "}";
+		return "Node {name=" + (node != null ? node.getNodeName() : null) + ", value=" + (node != null ? node.getNodeValue() : null) + ", type=" + (node != null ? node.getNodeType() : null) + ", text=" + (node != null ? node.getTextContent() : null) + "}";
 	}
 
 	@SuppressWarnings("unchecked")
