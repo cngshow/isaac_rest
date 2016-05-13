@@ -57,6 +57,9 @@ public class SystemInfo
 	@XmlElement
 	String[] supportedAPIVersions = new String[] {"1.3.0"};
 	
+	@XmlElement
+	public String restVersion;
+	
 	/**
 	 * ISAAC DB Maven dependency
 	 */
@@ -196,13 +199,6 @@ public class SystemInfo
 	}
 
 	/**
-	 * @return the appLicenses
-	 */
-	public List<RestLicenseInfo> getAppLicenses() {
-		return appLicenses;
-	}
-
-	/**
 	 * @param appLicenses the appLicenses to set
 	 */
 	public void addAppLicense(RestLicenseInfo appLicense) {
@@ -214,10 +210,10 @@ public class SystemInfo
 	 */
 	@Override
 	public String toString() {
-		return "SystemInfo [supportedAPIVersions=" + Arrays.toString(supportedAPIVersions) + ", isaacDbDependency="
-				+ isaacDbDependency + ", scmUrl=" + scmUrl + ", isaacVersion=" + isaacVersion + ", isaacGuiVersion="
-				+ isaacGuiVersion + ", assemblyVersion=" + assemblyVersion + ", metadataVersion=" + metadataVersion
-				+ ", appLicenses=" + appLicenses + ", dbLicenses=" + dbLicenses + ", dbDependencies=" + dbDependencies
-				+ "]";
+		return "SystemInfo [supportedAPIVersions=" + Arrays.toString(supportedAPIVersions) + ", restVersion="
+				+ restVersion + ", isaacDbDependency=" + isaacDbDependency + ", scmUrl=" + scmUrl + ", isaacVersion="
+				+ isaacVersion + ", isaacGuiVersion=" + isaacGuiVersion + ", assemblyVersion=" + assemblyVersion
+				+ ", metadataVersion=" + metadataVersion + ", appLicenses=" + appLicenses + ", dbLicenses=" + dbLicenses
+				+ ", dbDependencies=" + dbDependencies + "]";
 	}
 }
