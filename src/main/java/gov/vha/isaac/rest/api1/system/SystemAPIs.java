@@ -672,9 +672,11 @@ public class SystemAPIs
 			log_.debug("Successfully read REST app properties from maven config files.  version: {}", data.restVersion);
 		}
 	}
-	
+
+	// Cached SystemInfo
+	private static SystemInfo SYSTEM_INFO = null;
 	/**
-	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * ISAAC, REST API and related DB metadata.  These values are cached.
 	 * TODO move functionality in getSystemInfo() into OCHRE
 	 */
 	@GET
@@ -682,8 +684,12 @@ public class SystemAPIs
 	@Path(RestPaths.systemInfoComponent)
 	public SystemInfo getSystemInfo()
 	{
-		final SystemInfo data = new SystemInfo();
+		if (SYSTEM_INFO != null) {
+			return SYSTEM_INFO;
+		}
 
+		final SystemInfo data = new SystemInfo();
+		
 		//Read in other information from the package (pom.properties file during normal runtime, pom.xml files if running in a dev env)
 		try
 		{						
@@ -701,7 +707,7 @@ public class SystemAPIs
 			log_.warn("Unexpected error reading app configuration information", ex);
 		}
 
-		return data;
+		return SYSTEM_INFO = data;
 	}
 	
 	//TODO the code below this point (noop, class Z) is a hack workaround for the bug 

@@ -36,6 +36,9 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
  * This class carries back various system information about this deployment.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * 
+ * TODO: Change SystemInfo to RestSystemInfo for consistency
+ * 
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
@@ -57,6 +60,9 @@ public class SystemInfo
 	@XmlElement
 	String[] supportedAPIVersions = new String[] {"1.3.1"};
 	
+	/**
+	 * REST API Version
+	 */
 	@XmlElement
 	public String restVersion;
 	
