@@ -413,6 +413,7 @@ public class SystemAPIs
 	{
 		final SystemInfo data = new SystemInfo();
 
+		//TODO this isn't setting the isaac-rest version number
 		//Read in other information from the package (pom.properties file during normal runtime, pom.xml files if running in a dev env)
 		try
 		{
