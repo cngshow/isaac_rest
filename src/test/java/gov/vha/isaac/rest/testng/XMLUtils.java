@@ -46,16 +46,16 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 
 /**
  * 
- * {@link RestTestUtils}
+ * {@link XMLUtils}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-public class RestTestUtils {
-	private RestTestUtils() {}
+public class XMLUtils {
+	private XMLUtils() {}
 	
 	public static String toString(Node node) {
-		return "Node {name=" + node.getNodeName() + ", value=" + node.getNodeValue() + ", type=" + node.getNodeType() + ", text=" + node.getTextContent() + "}";
+		return "Node {name=" + (node != null ? node.getNodeName() : null) + ", value=" + (node != null ? node.getNodeValue() : null) + ", type=" + (node != null ? node.getNodeType() : null) + ", text=" + (node != null ? node.getTextContent() : null) + "}";
 	}
 
 	@SuppressWarnings("unchecked")
@@ -97,8 +97,6 @@ public class RestTestUtils {
 	}
 	
 	private static Object getFromXml(String xmlStr, String xPathStr, QName type) {
-		//System.out.println(xmlStr);
-		
 		InputStream responseXmlStream = new ByteArrayInputStream(xmlStr.getBytes(StandardCharsets.UTF_8));
 
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -110,10 +108,11 @@ public class RestTestUtils {
 			
 			XPath xPath =  XPathFactory.newInstance().newXPath();
 			
+			// EXAMPLES:
+			
 			//String xPathStr = "/Employees/Employee[@emplid='3333']/email"
 			//String xPathStr = "/restSememeVersions/results/sememeChronology/identifiers/uuids"
-			
-			
+
 			//read a nodelist using xpath
 			Object object = xPath.compile(xPathStr).evaluate(xmlDocument, type);
 			
@@ -137,8 +136,6 @@ public class RestTestUtils {
 	}
 
 	public static NodeList getNodeList(String xmlStr, String xPathStr) {
-		//System.out.println(xmlStr);
-		
 		InputStream responseXmlStream = new ByteArrayInputStream(xmlStr.getBytes(StandardCharsets.UTF_8));
 
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -150,14 +147,13 @@ public class RestTestUtils {
 			
 			XPath xPath =  XPathFactory.newInstance().newXPath();
 			
+			// EXAMPLES:
+			
 			//String expression = "/Employees/Employee[@emplid='3333']/email"
 
-			//String xPathStr = "/restSememeVersions/results/sememeChronology/identifiers/uuids";
+			//expression = "/restSememeVersions/results/sememeChronology/identifiers/uuids";
 			//expression = "/restSememeVersions/results";
 			
-			//read a single xml node using xpath
-			//Node node = (Node) xPath.compile(expression).evaluate(xmlDocument, XPathConstants.NODE);
-			 
 			//read a nodelist using xpath
 			NodeList nodeList = (NodeList) xPath.compile(xPathStr).evaluate(xmlDocument, XPathConstants.NODESET);
 			

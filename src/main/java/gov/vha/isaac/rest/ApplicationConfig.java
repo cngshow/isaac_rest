@@ -12,6 +12,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -20,6 +28,11 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
@@ -261,7 +274,85 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			LookupService.get().getService(WorkExecutors.class).getExecutor().execute(r);
 		}
 	}
-	
+
+	private boolean validateExistingDb(File targetDBLocation, String groupId, String artifactId, String version, String classifier) {
+		//We need to read the pom.xml file that we find inside of targetDBLocation - and validate that each and every 
+		//parameter perfectly matches.  If it doesn't match, then the DB must be deleted, and downloaded.
+		//If we don't do this, we won't catch the case where the isaac-rest server was undeployed, then redeployed with a different DB configuration.
+		//The pom file we need to read will be at targetDbLocation\*.data\META-INF\maven\{groupId}\{artifactId}\pom.xml
+		//We need to validate <groupId>, <artifactId>, <version> and <resultArtifactClassifier> keeping in mind that classifer
+		//is optional
+		
+		log.info("Checking specified parameters against existing db in folder: " + targetDBLocation.getAbsolutePath() + "...");
+
+		status_.set("Validating existing DB directory");
+
+		if (! targetDBLocation.isDirectory()) {
+			log.warn("Validation of existing DB failed. Invalid DB directory: {}", targetDBLocation.getAbsoluteFile());
+
+			return false;
+		}
+		
+		File pomFile = null;
+		for (File file : targetDBLocation.listFiles()) {
+			if (file.isDirectory() && file.getName().endsWith(".data")) {
+				pomFile = new File(file.getAbsolutePath() + File.separatorChar + "META-INF" + File.separatorChar + "maven" + File.separatorChar + groupId + File.separatorChar + artifactId  + File.separatorChar + "pom.xml" );
+				if (pomFile.exists() && pomFile.isFile()) {
+					break;
+				}
+			}
+		}
+		if (pomFile == null || ! pomFile.isFile()) {
+			log.warn("Validation of existing DB failed. Invalid pom file: {}", pomFile != null ? pomFile.getAbsoluteFile() : null);
+			return false;
+		}
+		
+		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+		try {
+			DocumentBuilder builder = domFactory.newDocumentBuilder();
+			Document dDoc = builder.parse(pomFile);
+			XPath xPath = XPathFactory.newInstance().newXPath();
+			
+			String existingDbGroupId = ((Node) xPath.evaluate("/project/groupId", dDoc, XPathConstants.NODE)).getTextContent();
+			String existingDbArtifactId = ((Node) xPath.evaluate("/project/artifactId", dDoc, XPathConstants.NODE)).getTextContent();
+			String existingDbVersion = ((Node) xPath.evaluate("/project/version", dDoc, XPathConstants.NODE)).getTextContent();
+			
+			Node existingDbClassifierNode = (Node) xPath.evaluate("/project/properties/resultArtifactClassifier", dDoc, XPathConstants.NODE);
+			String existingDbClassifier = existingDbClassifierNode != null ? existingDbClassifierNode.getTextContent() : null;
+			
+			if (! existingDbGroupId.trim().equals(groupId.trim())) {
+				log.warn("Validation of existing DB pom file failed. Existing groupId {} != {}", existingDbGroupId, groupId);
+
+				return false;
+			}
+			if (! existingDbArtifactId.trim().equals(artifactId.trim())) {
+				log.warn("Validation of existing DB pom file failed. Existing artifactId {} != {}", existingDbArtifactId, artifactId);
+				return false;
+			}
+			if (! existingDbVersion.trim().equals(version.trim())) {
+				log.warn("Validation of existing DB pom file failed. Existing version {} != {}", existingDbVersion, version);
+				return false;
+			}
+			
+			if (StringUtils.isBlank(classifier) && StringUtils.isBlank(existingDbClassifier)) {
+				return true;
+			} else if (classifier == null || existingDbClassifier == null) {
+				log.warn("Validation of existing DB pom file failed. Existing classifier {} != {}", existingDbClassifier, classifier);
+
+				return false;
+			} else if (classifier.trim().equals(existingDbClassifier.trim())) {
+				return true;
+			} else {
+				log.warn("Validation of existing DB pom file failed. Existing classifier {} != {}", existingDbClassifier, classifier);
+				return false;
+			}
+		} catch (Exception e) {
+			log.warn("Validation of existing DB pom file failed", e);
+		}
+		
+		return false;
+	}
+
 	private File downloadDB() throws Exception
 	{
 		File tempDbFolder = null;
@@ -310,7 +401,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				mavenPassword = "system";
 				groupId = "gov.vha.isaac.db";
 				artifactId = "vets";
-				version = "1.0";
+				version = "1.1";
 				classifier = "all";
 			}
 			
@@ -319,15 +410,15 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			File targetDBLocation = new File(System.getProperty("java.io.tmpdir"), "ISAAC." + contextPath + ".db");
 			if (targetDBLocation.isDirectory())
 			{
-				log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
-				//TODO - we need to read the pom.xml file that we find inside of targetDBLocation - and validate that each and every 
-				//parameter perfectly matches.  If it doesn't match, then the DB must be deleted, and downloaded.
-				//If we don't do this, we won't catch the case where the isaac-rest server was undeployed, then redeployed with a different DB configuration.
-				//The pom file we need to read will be at targetDbLocation\*.data\META-INF\maven\{groupId}\{artifactId}\pom.xml
-				//We need to validate <groupId>, <artifactId>, <version> and <resultArtifactClassifier> keeping in mind that classifer
-				//is optional
-				status_.set("Using existing directory");
-				return targetDBLocation;
+				if (validateExistingDb(targetDBLocation, groupId, artifactId, version, classifier)) {
+					log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
+
+					return targetDBLocation;
+				} else {
+					log.warn("Removing existing db because consistency validation failed");
+
+					FileUtils.deleteDirectory(targetDBLocation);
+				}
 			}
 
 			tempDbFolder = File.createTempFile("ISAAC-DATA", "");

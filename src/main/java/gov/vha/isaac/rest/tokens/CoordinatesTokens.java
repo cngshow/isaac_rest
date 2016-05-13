@@ -23,6 +23,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.PremiseType;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.session.CoordinatesUtil;
 
 /**
@@ -52,7 +61,12 @@ public class CoordinatesTokens {
 					}
 				};
 
-				defaultCoordinatesToken = new CoordinatesToken();
+				defaultCoordinatesToken = CoordinatesTokens.getOrCreate(
+						getDefaultTaxonomyCoordinate().getStampCoordinate(),
+						getDefaultTaxonomyCoordinate().getLanguageCoordinate(),
+						getDefaultTaxonomyCoordinate().getLogicCoordinate(),
+						getDefaultTaxonomyCoordinate().getTaxonomyType()
+						);
 			}
 		}
 		synchronized(TOKEN_BY_PARAMS_CACHE_LOCK) {
@@ -67,6 +81,11 @@ public class CoordinatesTokens {
 				};
 			}
 		}
+	}
+
+	private static TaxonomyCoordinate getDefaultTaxonomyCoordinate() {
+		return TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(),
+				LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate());
 	}
 
 	/**
@@ -135,6 +154,81 @@ public class CoordinatesTokens {
 			return OBJECT_BY_TOKEN_CACHE.get(key);
 		}
 	}
+	
+	public static CoordinatesToken getOrCreate(String key) throws RestException {
+		CoordinatesToken token = get(key);
+		
+		if (token == null) {
+			token = new CoordinatesToken(key);
+			put(token);
+		}
+		
+		return get(key);
+	}
+
+	public static CoordinatesToken getOrCreate(
+			StampCoordinate stamp,
+			LanguageCoordinate lang,
+			LogicCoordinate logic,
+			PremiseType taxType) {
+		CoordinatesToken constructedToken =
+				new CoordinatesToken(
+						stamp,
+						lang,
+						logic,
+						taxType);
+		
+		CoordinatesToken cachedToken = get(constructedToken.getSerialized());
+		
+		if (cachedToken == null) {
+			cachedToken = constructedToken;
+			put(cachedToken);
+		}
+		
+		return get(cachedToken.getSerialized());
+	}
+
+	public static CoordinatesToken getOrCreate(
+			long stampTime,
+			int stampPath,
+			byte stampPrecedence,
+			int[] stampModules,
+			byte[] stampStates,
+			int langCoord,
+			int[] langDialects,
+			int[] langTypePrefs,
+			byte taxonomyType,
+			int logicStatedAssemblage,
+			int logicInferredAssemblage,
+			int logicDescLogicProfile,
+			int logicClassifier) {
+		
+		CoordinatesToken constructedToken =
+				new CoordinatesToken(
+						stampTime,
+						stampPath,
+						stampPrecedence,
+						stampModules,
+						stampStates,
+						langCoord,
+						langDialects,
+						langTypePrefs,
+						taxonomyType,
+						logicStatedAssemblage,
+						logicInferredAssemblage,
+						logicDescLogicProfile,
+						logicClassifier);
+		
+		CoordinatesToken cachedToken = get(constructedToken.getSerialized());
+		
+		if (cachedToken == null) {
+			cachedToken = constructedToken;
+			put(cachedToken);
+		}
+		
+		return get(cachedToken.getSerialized());
+	}
+
 	/**
 	 * Attempt to retrieve CoordinatesToken serialization key string
 	 * by a hash of the parameters presumably used to generate the object
