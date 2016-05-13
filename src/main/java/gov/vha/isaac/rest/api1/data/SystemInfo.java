@@ -55,7 +55,7 @@ public class SystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.3.0"};
+	String[] supportedAPIVersions = new String[] {"1.3.1"};
 	
 	@XmlElement
 	public String restVersion;
