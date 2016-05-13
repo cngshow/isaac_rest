@@ -136,18 +136,13 @@ public class CoordinatesUtil {
 	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
 	 * @throws Exception 
 	 */
-	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameters(Map<String, List<String>> allParams) throws RestException {
+	public static Optional<CoordinatesToken> getCoordinatesTokenFromCoordinatesTokenParameter(Map<String, List<String>> allParams) throws RestException {
 		Optional<String> tokenStringOptional = getCoordinatesTokenStringFromParameters(allParams);
 		
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			CoordinatesToken ct = CoordinatesTokens.get(tokenStringOptional.get());
-			if (ct == null)
-			{
-				// Not in cache
-				ct = CoordinatesTokens.get(tokenStringOptional.get());
-			}
+			CoordinatesToken ct = CoordinatesTokens.getOrCreate(tokenStringOptional.get());
 			
 			return Optional.of(ct);
 		}
