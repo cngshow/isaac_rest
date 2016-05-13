@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.jerseyConfig;
 
 
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -41,15 +42,24 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 		if (ex.getMessage().startsWith("The system is not yet ready"))
 		{
 			notReady = true;
-			LoggerFactory.getLogger("web").error(ex.getMessage());
+			LoggerFactory.getLogger("web").warn(ex.getMessage());
+		}
+		else if (ex  instanceof ClientErrorException)
+		{
+			LoggerFactory.getLogger("web").info("ClientError:" + ex.toString());
 		}
 		else
 		{
 			LoggerFactory.getLogger("web").error("Unexpected", ex);
 		}
 		String response;
-		if (ex instanceof RestException || notReady)
+		if (ex  instanceof ClientErrorException)
 		{
+			return ((ClientErrorException)ex).getResponse();
+		}
+		else if (ex instanceof RestException || notReady)
+		{
+			
 			response = ex.toString();
 		}
 		else
