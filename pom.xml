@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>3.04</version>
+		<version>3.05-SNAPSHOT</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
@@ -24,7 +24,7 @@
 	</scm>
 
 	<properties>
-		<isaac.version>3.04</isaac.version>
+		<isaac.version>3.05-SNAPSHOT</isaac.version>
 		<jersey.version>2.22.2</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/351-->
