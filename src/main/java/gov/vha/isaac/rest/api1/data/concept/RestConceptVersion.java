@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,7 +52,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestConceptVersion
+public class RestConceptVersion implements Comparable<RestConceptVersion>
 {
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -190,6 +191,11 @@ public class RestConceptVersion
 				TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree);
 			}
 			
+			if (includeParents || includeChildren)
+			{
+				sortParentsAndChildren();
+			}
+			
 			if (expandables.size() == 0)
 			{
 				expandables = null;
@@ -238,5 +244,38 @@ public class RestConceptVersion
 	public void setParentCount(int count)
 	{
 		this.parentCount = count;
+	}
+	
+	public void sortParentsAndChildren()
+	{
+		if (parents != null)
+		{
+			Collections.sort(parents);
+			for (RestConceptVersion rcv : parents)
+			{
+				rcv.sortParentsAndChildren();
+			}
+		}
+		if (children != null)
+		{
+			Collections.sort(children);
+			for (RestConceptVersion rcv : children)
+			{
+				rcv.sortParentsAndChildren();
+			}
+		}
+	}
+
+	/**
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(RestConceptVersion o)
+	{
+		if (this.conChronology != null && o.conChronology != null)
+		{
+			return this.conChronology.compareTo(o.conChronology);
+		}
+		return 0;  //not really anything worth sorting on, if no chronology.
 	}
 }

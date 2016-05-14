@@ -24,14 +24,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.ochre.api.util.AlphanumComparator;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
@@ -47,7 +46,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestConceptChronology 
+public class RestConceptChronology implements Comparable<RestConceptChronology>
 {
 	/**
 	 * The concept sequence identifier of this concept
@@ -162,5 +161,14 @@ public class RestConceptChronology
 		{
 			return null;
 		}
+	}
+
+	/**
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(RestConceptChronology o)
+	{
+		return AlphanumComparator.compare(description,  o.description,  true);
 	}
 }
