@@ -630,7 +630,7 @@ public class SystemAPIs
 				Document dDoc = builder.parse(pom);
 
 				XPath xPath = XPathFactory.newInstance().newXPath();
-				data.restVersion = ((Node) xPath.evaluate("/project/version", dDoc, XPathConstants.NODE)).getTextContent();
+				data.apiImplementationVersion = ((Node) xPath.evaluate("/project/version", dDoc, XPathConstants.NODE)).getTextContent();
 
 				readRestAppMetadata.set(true);
 			}
@@ -653,7 +653,7 @@ public class SystemAPIs
 						Properties p = new Properties();
 						p.load(new FileReader(visitFile));
 
-						data.restVersion = p.getProperty("version");
+						data.apiImplementationVersion = p.getProperty("version");
 						readRestAppMetadata.set(true);
 						return FileVisitResult.TERMINATE;
 					}
@@ -669,7 +669,7 @@ public class SystemAPIs
 		}
 		else
 		{
-			log_.debug("Successfully read REST app properties from maven config files.  version: {}", data.restVersion);
+			log_.debug("Successfully read REST app properties from maven config files.  version: {}", data.apiImplementationVersion);
 		}
 	}
 

@@ -58,13 +58,13 @@ public class SystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.3.1"};
+	String[] supportedAPIVersions = new String[] {"1.3.2"};
 	
 	/**
-	 * REST API Version
+	 * REST API Implementation Version
 	 */
 	@XmlElement
-	public String restVersion;
+	public String apiImplementationVersion;
 	
 	/**
 	 * ISAAC DB Maven dependency
@@ -217,7 +217,7 @@ public class SystemInfo
 	@Override
 	public String toString() {
 		return "SystemInfo [supportedAPIVersions=" + Arrays.toString(supportedAPIVersions) + ", restVersion="
-				+ restVersion + ", isaacDbDependency=" + isaacDbDependency + ", scmUrl=" + scmUrl + ", isaacVersion="
+				+ apiImplementationVersion + ", isaacDbDependency=" + isaacDbDependency + ", scmUrl=" + scmUrl + ", isaacVersion="
 				+ isaacVersion + ", isaacGuiVersion=" + isaacGuiVersion + ", assemblyVersion=" + assemblyVersion
 				+ ", metadataVersion=" + metadataVersion + ", appLicenses=" + appLicenses + ", dbLicenses=" + dbLicenses
 				+ ", dbDependencies=" + dbDependencies + "]";
