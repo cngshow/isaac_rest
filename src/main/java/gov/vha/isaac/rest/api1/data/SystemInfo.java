@@ -36,6 +36,9 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
  * This class carries back various system information about this deployment.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * 
+ * TODO: Change SystemInfo to RestSystemInfo for consistency
+ * 
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
@@ -44,9 +47,24 @@ public class SystemInfo
 	/**
 	 * The full version number of this API.  Note, this is an array, because in the future
 	 * the API may simultaneously support versions such as [1.3, 2.0] for reverse compatibility.
+	 * 
+	 * The agreement with Komet is that we do "Major.Minor.Revision"
+	 * The Major version only changes in concert with the rest API paths changing from /1/ to /2/ for example.
+	 * The Minor version is changed whenever we change a previously existing API or data structure - such that it 
+	 * may break existing code in KOMET.  Note, you can add new APIs / properties to existing data structures without 
+	 * breaking KOMET.
+	 * The Revision is changed whenever we make a change that modifies the API, but only in a way that won't impact
+	 * existing KOMET functionality - such as adding a new API, adding a new data structure, adding a field to an existing
+	 * data structure. 
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.3"};
+	String[] supportedAPIVersions = new String[] {"1.3.1"};
+	
+	/**
+	 * REST API Version
+	 */
+	@XmlElement
+	public String restVersion;
 	
 	/**
 	 * ISAAC DB Maven dependency
@@ -187,13 +205,6 @@ public class SystemInfo
 	}
 
 	/**
-	 * @return the appLicenses
-	 */
-	public List<RestLicenseInfo> getAppLicenses() {
-		return appLicenses;
-	}
-
-	/**
 	 * @param appLicenses the appLicenses to set
 	 */
 	public void addAppLicense(RestLicenseInfo appLicense) {
@@ -205,10 +216,10 @@ public class SystemInfo
 	 */
 	@Override
 	public String toString() {
-		return "SystemInfo [supportedAPIVersions=" + Arrays.toString(supportedAPIVersions) + ", isaacDbDependency="
-				+ isaacDbDependency + ", scmUrl=" + scmUrl + ", isaacVersion=" + isaacVersion + ", isaacGuiVersion="
-				+ isaacGuiVersion + ", assemblyVersion=" + assemblyVersion + ", metadataVersion=" + metadataVersion
-				+ ", appLicenses=" + appLicenses + ", dbLicenses=" + dbLicenses + ", dbDependencies=" + dbDependencies
-				+ "]";
+		return "SystemInfo [supportedAPIVersions=" + Arrays.toString(supportedAPIVersions) + ", restVersion="
+				+ restVersion + ", isaacDbDependency=" + isaacDbDependency + ", scmUrl=" + scmUrl + ", isaacVersion="
+				+ isaacVersion + ", isaacGuiVersion=" + isaacGuiVersion + ", assemblyVersion=" + assemblyVersion
+				+ ", metadataVersion=" + metadataVersion + ", appLicenses=" + appLicenses + ", dbLicenses=" + dbLicenses
+				+ ", dbDependencies=" + dbDependencies + "]";
 	}
 }

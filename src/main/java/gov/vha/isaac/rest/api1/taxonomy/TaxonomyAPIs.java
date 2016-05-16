@@ -126,6 +126,7 @@ public class TaxonomyAPIs
 			{
 				countChildren(concept.getConceptSequence(), rcv, tree);
 			}
+			rcv.sortParentsAndChildren();
 			return rcv;
 		}
 		throw new RestException("id", id, "No concept was found");
