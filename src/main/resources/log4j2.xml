@@ -18,7 +18,7 @@
         <Logger name="org.jvnet.hk2.logger" level="OFF"/>  <!-- HK2 is logging a debug message that is being mis-translated into an error by LOG4J2 https://issues.apache.org/jira/browse/LOG4J2-1003 -->
         <Root level="debug">
             <AppenderRef ref="STDOUT"/>
-            <AppenderRef ref="TestFile"/>
+            <!-- AppenderRef ref="TestFile"/ -->
         </Root>
     </Loggers>
 </Configuration>
