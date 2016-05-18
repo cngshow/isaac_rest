@@ -77,6 +77,9 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		@SuppressWarnings("rawtypes")
+		//TODO bug - the methods below findLogicGraphChronology are relying on some default logic graph coordiantes...  Also seems to be a lot 
+		//of optional to not optional to optional stuff going on below this call... look at cleaning up.
+		//See impl in RestConceptVersion constructor
 		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
