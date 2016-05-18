@@ -209,7 +209,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0, includeSememeMembership, new ConceptSequenceSet());
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, new ConceptSequenceSet());
 			}
 			else if (countChildren)
 			{
