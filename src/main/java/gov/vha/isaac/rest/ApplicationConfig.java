@@ -36,6 +36,7 @@ import gov.vha.isaac.ochre.api.util.DBLocator;
 import gov.vha.isaac.ochre.api.util.DownloadUnzipTask;
 import gov.vha.isaac.ochre.api.util.WorkExecutors;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.SystemInfo;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
@@ -60,6 +61,9 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private String contextPath;
 	
 	private static byte[] secret_;
+	
+	private SystemInfo systemInfo_;
+	private String warFileVersion_;  //read from prisme.properties
 	
 	//TODO implement convenience methods for 'associations'
 
@@ -250,6 +254,27 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						
 						status_.set("Starting ISAAC");
 						LookupService.startupIsaac();
+						
+						systemInfo_ = new SystemInfo();
+						log.info(systemInfo_.toString());
+						
+						try
+						{
+							if (StringUtils.isNotBlank(warFileVersion_) && !warFileVersion_.equals(systemInfo_.apiImplementationVersion))
+							{
+								log.warn("The WAR file version found in the prisme.properties file does not match the version from the pom.xml in the war file!  Found "
+										+ systemInfo_.apiImplementationVersion + " and " + warFileVersion_);
+							}
+						}
+						catch (Exception e)
+						{
+							log.error("Unexpected error validating war file versions!", e);
+						}
+						finally
+						{
+							warFileVersion_ = null;  //No longer need this
+						}
+						
 						status_.set("Ready");
 						System.out.println("Done setting up ISAAC");
 
@@ -379,6 +404,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					artifactId = props.getProperty("db_artifact_id");
 					version = props.getProperty("db_version");
 					classifier = props.getProperty("db_classifier");
+					warFileVersion_ = props.getProperty("war_version");
 				}
 			}
 			catch (Exception e1)
@@ -494,5 +520,10 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	public static byte[] getSecret()
 	{
 		return secret_;
+	}
+
+	public SystemInfo getSystemInfo()
+	{
+		return systemInfo_;
 	}
 }
