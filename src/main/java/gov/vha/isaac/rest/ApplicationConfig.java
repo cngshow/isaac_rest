@@ -36,7 +36,7 @@ import gov.vha.isaac.ochre.api.util.DBLocator;
 import gov.vha.isaac.ochre.api.util.DownloadUnzipTask;
 import gov.vha.isaac.ochre.api.util.WorkExecutors;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.SystemInfo;
+import gov.vha.isaac.rest.api1.data.RestSystemInfo;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
@@ -62,7 +62,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	
 	private static byte[] secret_;
 	
-	private SystemInfo systemInfo_;
+	private RestSystemInfo systemInfo_;
 	private String warFileVersion_;  //read from prisme.properties
 	
 	//TODO implement convenience methods for 'associations'
@@ -257,7 +257,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						status_.set("Starting ISAAC");
 						LookupService.startupIsaac();
 						
-						systemInfo_ = new SystemInfo();
+						systemInfo_ = new RestSystemInfo();
 						log.info(systemInfo_.toString());
 						
 						try
@@ -524,7 +524,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		return secret_;
 	}
 
-	public SystemInfo getSystemInfo()
+	public RestSystemInfo getSystemInfo()
 	{
 		return systemInfo_;
 	}
