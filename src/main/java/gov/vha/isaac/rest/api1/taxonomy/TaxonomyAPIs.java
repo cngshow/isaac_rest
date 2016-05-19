@@ -63,7 +63,8 @@ public class TaxonomyAPIs
 	 * @param parentHeight - How far to walk up (expand) the parent tree
 	 * @param countParents - true to count the number of parents above this node.  May be used with or without the parentHeight parameter
 	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
-	 *  parent counts.
+	 *  parent counts.  This parameter also applies to the expanded children - if childDepth is requested, and countParents is set, this will 
+	 *  return a count of parents of each child, which can be used to determine if a child has multiple parents.
 	 * @param childDepth - How far to walk down (expand) the tree 
 	 * @param countChildren - true to count the number of children below this node.  May be used with or without the childDepth parameter
 	 *  - it works independently.  When used in combination with the childDepth parameter, only the last level of items returned will return
@@ -120,7 +121,7 @@ public class TaxonomyAPIs
 			
 			if (childDepth > 0)
 			{
-				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, childDepth - 1, includeSememeMembership, new ConceptSequenceSet());
+				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, new ConceptSequenceSet());
 			}
 			else if (countChildrenBoolean)
 			{
@@ -137,6 +138,7 @@ public class TaxonomyAPIs
 			RestConceptVersion rcv,
 			Tree tree,
 			boolean countLeafChildren,
+			boolean countParents,
 			int remainingChildDepth,
 			boolean includeSemmemMembership,
 			ConceptSequenceSet alreadyAddedChildren)
@@ -165,12 +167,12 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated(), 
+				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
 					includeSemmemMembership);
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
-					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, remainingChildDepth - 1, includeSemmemMembership, 
+					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSemmemMembership, 
 						alreadyAddedChildren);
 				}
 				else if (countLeafChildren)

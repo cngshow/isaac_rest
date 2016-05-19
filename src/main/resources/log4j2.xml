@@ -4,6 +4,9 @@
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="%d %-5p [%t] %C{2} (%F:%L) - %m%n"/>
         </Console>
+        <File name="DebugLogFile" fileName="logs/isaac-rest.debug.log" immediateFlush="false" append="false">
+            <PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
     </Appenders>
     <Loggers>
         <Logger name="gov.vha.isaac.cradle.sequence.SequenceService" level="info"/>
@@ -15,6 +18,7 @@
         <Logger name="org.jvnet.hk2.logger" level="OFF"/>  <!-- HK2 is logging a debug message that is being mis-translated into an error by LOG4J2 https://issues.apache.org/jira/browse/LOG4J2-1003 -->
         <Root level="debug">
             <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="DebugLogFile"/>
         </Root>
     </Loggers>
 </Configuration>

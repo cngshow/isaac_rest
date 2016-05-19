@@ -36,6 +36,7 @@ import gov.vha.isaac.ochre.api.util.DBLocator;
 import gov.vha.isaac.ochre.api.util.DownloadUnzipTask;
 import gov.vha.isaac.ochre.api.util.WorkExecutors;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.SystemInfo;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
@@ -55,13 +56,18 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	//Note - this injection works fine, when deployed as a war to tomcat.  However, when launched in the localJettyRunner from eclipse, 
 	//this remains null.
 	@Context 
-	ServletContext context;
+	ServletContext context_;
 	
 	private String contextPath;
 	
 	private static byte[] secret_;
 	
+	private SystemInfo systemInfo_;
+	private String warFileVersion_;  //read from prisme.properties
+	
 	//TODO implement convenience methods for 'associations'
+	//TODO we need to deal with contradictions properly whenever we pull things from a LatestVersion object.  See code in RestConceptChonology
+	//for extracting the latest description.
 
 	public ApplicationConfig()
 	{
@@ -148,14 +154,14 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		instance_ = this;
 		
 		//context is null when run from eclipse with the local jetty runner.
-		if (context == null)
+		if (context_ == null)
 		{
 			debugMode = true;
 			contextPath = "rest";
 		}
 		else
 		{
-			contextPath = context.getContextPath().replace("/", "");
+			contextPath = context_.getContextPath().replace("/", "");
 			debugMode = (contextPath.contains("SNAPSHOT") ? true : false);
 		}
 		
@@ -250,6 +256,27 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						
 						status_.set("Starting ISAAC");
 						LookupService.startupIsaac();
+						
+						systemInfo_ = new SystemInfo();
+						log.info(systemInfo_.toString());
+						
+						try
+						{
+							if (StringUtils.isNotBlank(warFileVersion_) && !warFileVersion_.equals(systemInfo_.apiImplementationVersion))
+							{
+								log.warn("The WAR file version found in the prisme.properties file does not match the version from the pom.xml in the war file!  Found "
+										+ systemInfo_.apiImplementationVersion + " and " + warFileVersion_);
+							}
+						}
+						catch (Exception e)
+						{
+							log.error("Unexpected error validating war file versions!", e);
+						}
+						finally
+						{
+							warFileVersion_ = null;  //No longer need this
+						}
+						
 						status_.set("Ready");
 						System.out.println("Done setting up ISAAC");
 
@@ -379,6 +406,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					artifactId = props.getProperty("db_artifact_id");
 					version = props.getProperty("db_version");
 					classifier = props.getProperty("db_classifier");
+					warFileVersion_ = props.getProperty("war_version");
 				}
 			}
 			catch (Exception e1)
@@ -395,7 +423,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				mavenPassword = "system";
 				groupId = "gov.vha.isaac.db";
 				artifactId = "vets";
-				version = "1.1";
+				version = "1.2";
 				classifier = "all";
 			}
 			
@@ -495,4 +523,15 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	{
 		return secret_;
 	}
+
+	public SystemInfo getSystemInfo()
+	{
+		return systemInfo_;
+	}
+	
+	public ServletContext getServletContext()
+	{
+		return context_;
+	}
+	
 }

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -29,12 +30,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
+import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.tree.Tree;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -71,6 +75,13 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 */
 	@XmlElement
 	RestStampedVersion conVersion;
+	
+	/**
+	 * A boolean indicating whether the concept is fully-defined or primitive.  true for fully-defined, false for primitive
+	 * This value is not populated / returned if the concept does not contain a logic graph from which to derive the information.
+	 */
+	@XmlElement
+	Boolean isConceptDefined;
 
 	/**
 	 * The parent concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
@@ -122,6 +133,20 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			boolean includeChildren, boolean countChildren, boolean stated, boolean includeSememeMembership)
 	{
 		conVersion = new RestStampedVersion(cv);
+		
+		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(cv.getNid(), 
+				(RequestInfo.get().getStated() ? 
+						RequestInfo.get().getLogicCoordinate().getStatedAssemblageSequence() :
+							RequestInfo.get().getLogicCoordinate().getInferredAssemblageSequence())).findAny();
+
+		if (sememe.isPresent())
+		{
+			Optional<LatestVersion<LogicGraphSememe>> sv = ((SememeChronology)sememe.get()).getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
+			if (sv.isPresent())
+			{
+				isConceptDefined = Frills.isConceptFullyDefined(sv.get().value());
+			}
+		}
 		
 		if (includeSememeMembership)
 		{
@@ -184,7 +209,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, 0, includeSememeMembership, new ConceptSequenceSet());
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, new ConceptSequenceSet());
 			}
 			else if (countChildren)
 			{

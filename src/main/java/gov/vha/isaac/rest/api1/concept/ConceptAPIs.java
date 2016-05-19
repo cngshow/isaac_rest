@@ -75,8 +75,9 @@ public class ConceptAPIs
 	 * @param includeParents - Include the direct parent concepts of the requested concept in the response.  Defaults to false.
 	 * @param countParents - true to count the number of parents above this node.  May be used with or without the includeParents parameter
 	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
-	 *  parent counts.  Defaults to false if not provided.
-	 * @param includeChildren - Include the direct child concepts of the request concept inthe resonse.  Defaults to false. 
+	 *  parent counts.   This parameter also applies to the expanded children - if childDepth is requested, and countParents is set, this will 
+	 *  return a count of parents of each child, which can be used to determine if a child has multiple parents.  Defaults to false if not provided.
+	 * @param includeChildren - Include the direct child concepts of the request concept in the response.  Defaults to false. 
 	 * @param countChildren - true to count the number of children below this node.  May be used with or without the includeChildren parameter
 	 *  - it works independently.  When used in combination with the childDepth parameter, only the last level of items returned will return
 	 *  child counts.  Defaults to false.  
