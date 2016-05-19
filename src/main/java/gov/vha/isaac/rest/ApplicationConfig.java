@@ -56,7 +56,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	//Note - this injection works fine, when deployed as a war to tomcat.  However, when launched in the localJettyRunner from eclipse, 
 	//this remains null.
 	@Context 
-	ServletContext context;
+	ServletContext context_;
 	
 	private String contextPath;
 	
@@ -66,6 +66,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private String warFileVersion_;  //read from prisme.properties
 	
 	//TODO implement convenience methods for 'associations'
+	//TODO we need to deal with contradictions properly whenever we pull things from a LatestVersion object.  See code in RestConceptChonology
+	//for extracting the latest description.
 
 	public ApplicationConfig()
 	{
@@ -152,14 +154,14 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		instance_ = this;
 		
 		//context is null when run from eclipse with the local jetty runner.
-		if (context == null)
+		if (context_ == null)
 		{
 			debugMode = true;
 			contextPath = "rest";
 		}
 		else
 		{
-			contextPath = context.getContextPath().replace("/", "");
+			contextPath = context_.getContextPath().replace("/", "");
 			debugMode = (contextPath.contains("SNAPSHOT") ? true : false);
 		}
 		
@@ -526,4 +528,10 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	{
 		return systemInfo_;
 	}
+	
+	public ServletContext getServletContext()
+	{
+		return context_;
+	}
+	
 }

@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.SimpleFileVisitor;
@@ -50,6 +51,7 @@ import org.xml.sax.SAXException;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
 
@@ -289,78 +291,67 @@ public class SystemInfo
 
 		//if running from eclipse - our launch folder should be "ISAAC-rest".
 		File f = new File("").getAbsoluteFile();
-		if (f.getName().endsWith("ISAAC-rest"))
+		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = domFactory.newDocumentBuilder();
+
+		if (ApplicationConfig.getInstance().getServletContext() != null)
+		{
+			InputStream is = ApplicationConfig.getInstance().getServletContext().getResourceAsStream("/META-INF/maven/gov.vha.isaac.rest/isaac-rest/pom.xml");
+			if (is == null)
+			{
+				log_.warn("Can't locate pom.xml file in deployment to read metadata");
+			}
+			else
+			{
+				readFromPomFile(builder.parse(is));
+				readIsaacAppMetadata.set(true);
+			}
+		}
+		else if (f.getName().endsWith("ISAAC-rest"))  //context null, are we running in a local jetty runner?
 		{
 			File pom = new File(f, "pom.xml");
 			if (pom.isFile())
 			{
-				DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder builder = domFactory.newDocumentBuilder();
-				Document dDoc = builder.parse(pom);
-
-				XPath xPath = XPathFactory.newInstance().newXPath();
-				isaacVersion = ((Node) xPath.evaluate("/project/properties/isaac.version", dDoc, XPathConstants.NODE)).getTextContent();
-				scmUrl = ((Node) xPath.evaluate("/project/scm/url", dDoc, XPathConstants.NODE)).getTextContent();
-				apiImplementationVersion = ((Node) xPath.evaluate("/project/version", dDoc, XPathConstants.NODE)).getTextContent();
-				
-				NodeList appLicensesNodes = ((NodeList) xPath.evaluate("/project/licenses/license/name", dDoc, XPathConstants.NODESET));
-
-				log_.debug("Found {} license names", appLicensesNodes.getLength());
-				for (int i = 0; i < appLicensesNodes.getLength(); i++) {
-					Node currentLicenseNameNode = appLicensesNodes.item(i);
-					String name = currentLicenseNameNode.getTextContent();
-					
-					RestLicenseInfo appLicenseInfo =
-							new RestLicenseInfo(
-									name,
-									((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/url", dDoc, XPathConstants.NODE)).getTextContent(),
-									((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/comments", dDoc, XPathConstants.NODE)).getTextContent());
-					appLicenses.add(appLicenseInfo);
-					
-					log_.debug("Extracted license \"{}\" from ISAAC pom.xml: {}", name, appLicenseInfo.toString());
-				}
-
+				readFromPomFile(builder.parse(pom));
 				readIsaacAppMetadata.set(true);
 			}
 		}
-		//otherwise, running from an installation - we should have a META-INF folder
-		File appMetadata = new File("META-INF");
-		if (appMetadata.isDirectory())
+		else
 		{
-			Files.walkFileTree(appMetadata.toPath(), new SimpleFileVisitor<java.nio.file.Path>()
-			{
-				/**
-				 * @see java.nio.file.SimpleFileVisitor#visitFile(java.lang.Object, java.nio.file.attribute.BasicFileAttributes)
-				 */
-				@Override
-				public FileVisitResult visitFile(java.nio.file.Path path, BasicFileAttributes attrs) throws IOException
-				{
-					File visitFile = path.toFile();
-					if (visitFile.isFile() && visitFile.getName().toLowerCase().equals("pom.properties"))
-					{
-						Properties p = new Properties();
-						p.load(new FileReader(visitFile));
-
-						scmUrl = p.getProperty("scm.url");
-						isaacVersion = p.getProperty("isaac.version");
-						apiImplementationVersion = p.getProperty("project.version");
-						readIsaacAppMetadata.set(true);
-						return FileVisitResult.TERMINATE;
-					}
-					return FileVisitResult.CONTINUE;
-				}
-				
-			});
+			log_.warn("No Servlet Context available to utilize to locate the metadata!");
 		}
+		
 		
 		if (!readIsaacAppMetadata.get())
 		{
 			log_.warn("Failed to read the metadata about the ISAAC-rest instance");
 		}
-		else
-		{
-			log_.debug("Successfully read ISAAC properties from maven config files.  API implementation version: {} scmUrl: {} isaacVersion: {}",
-					apiImplementationVersion, scmUrl, isaacVersion);
+	}
+	
+	private void readFromPomFile(Document dDoc) throws DOMException, XPathExpressionException
+	{
+		XPath xPath = XPathFactory.newInstance().newXPath();
+		isaacVersion = ((Node) xPath.evaluate("/project/properties/isaac.version", dDoc, XPathConstants.NODE)).getTextContent();
+		scmUrl = ((Node) xPath.evaluate("/project/scm/url", dDoc, XPathConstants.NODE)).getTextContent();
+		apiImplementationVersion = ((Node) xPath.evaluate("/project/version", dDoc, XPathConstants.NODE)).getTextContent();
+		
+		log_.debug("API implementation version: {} scmUrl: {} isaacVersion: {}", apiImplementationVersion, scmUrl, isaacVersion);
+		
+		NodeList appLicensesNodes = ((NodeList) xPath.evaluate("/project/licenses/license/name", dDoc, XPathConstants.NODESET));
+
+		log_.debug("Found {} license names", appLicensesNodes.getLength());
+		for (int i = 0; i < appLicensesNodes.getLength(); i++) {
+			Node currentLicenseNameNode = appLicensesNodes.item(i);
+			String name = currentLicenseNameNode.getTextContent();
+			
+			RestLicenseInfo appLicenseInfo =
+					new RestLicenseInfo(
+							name,
+							((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/url", dDoc, XPathConstants.NODE)).getTextContent(),
+							((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/comments", dDoc, XPathConstants.NODE)).getTextContent());
+			appLicenses.add(appLicenseInfo);
+			
+			log_.debug("Extracted license \"{}\" from ISAAC pom.xml: {}", name, appLicenseInfo.toString());
 		}
 	}
 }
