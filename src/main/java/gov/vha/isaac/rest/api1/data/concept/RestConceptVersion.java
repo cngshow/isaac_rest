@@ -252,6 +252,11 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		this.children.add(child);
 	}
 	
+	public int getChildCount()
+	{
+		return (children == null  || children.size() == 0 ? (childCount == null ? 0 : childCount) : children.size());
+	}
+	
 	public void addParent(RestConceptVersion parent)
 	{
 		if (this.parents == null)
