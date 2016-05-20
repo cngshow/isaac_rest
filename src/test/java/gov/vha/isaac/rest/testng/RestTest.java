@@ -133,7 +133,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//System.out.println(response.readEntity(String.class));
 	}
-	
+
+	@Test
+	public void testTaxonomy()
+	{
+		Response response = target(RestPaths.taxonomyPathComponent + RestPaths.versionComponent).queryParam("childDepth", "1").queryParam("countChildren", "true").queryParam("countChildren", "true")
+				.queryParam("expand", "chronology").queryParam("id","7c21b6c5-cf11-5af9-893b-743f004c97f5")
+				.queryParam("parentHeight","1").queryParam("stated","true").request().get();
+
+		checkFail(response);
+		System.out.println("------------------Taxonomy------------------------");
+		System.out.println(response.readEntity(String.class));
+		System.out.println("-------------------------------------------");
+	}
 	private Response checkFail(Response response)
 	{
 		if (response.getStatus() != Status.OK.getStatusCode())
