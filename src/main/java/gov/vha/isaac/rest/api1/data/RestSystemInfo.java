@@ -62,7 +62,6 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  * 
- * TODO: Change SystemInfo to RestSystemInfo for consistency
  * 
  */
 @XmlRootElement
