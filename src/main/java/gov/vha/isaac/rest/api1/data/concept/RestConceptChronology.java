@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
@@ -155,6 +156,25 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 		
 		if (descriptionOptional.isPresent())
 		{
+			if (descriptionOptional.get().contradictions().isPresent())
+			{
+				//Prefer active descriptions over inactive, if there was a contradiction (which means they tied the sort - have the same time)
+				//common for a replacement description to have the same time as the retired one.
+				if (descriptionOptional.get().value().getState() == State.ACTIVE)
+				{
+					return descriptionOptional.get().value().getText();
+				}
+				else
+				{
+					for (DescriptionSememe<?> ds : descriptionOptional.get().contradictions().get())
+					{
+						if (ds.getState() == State.ACTIVE)
+						{
+							return ds.getText();
+						}
+					}
+				}
+			}
 			return descriptionOptional.get().value().getText();
 		}
 		else

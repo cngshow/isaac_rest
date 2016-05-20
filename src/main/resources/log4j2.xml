@@ -4,8 +4,8 @@
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="%d %-5p [%t] %C{2} (%F:%L) - %m%n"/>
         </Console>
-        <File name="TestFile" fileName="test.log" immediateFlush="false" append="false">
-            <PatternLayout pattern="LOGTEST TMP=${sys:TMP} TEMP=${sys:TEMP} web:servletContextName=${web:servletContextName} %d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        <File name="DebugLogFile" fileName="logs/isaac-rest.debug.log" immediateFlush="false" append="false">
+            <PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
     </Appenders>
     <Loggers>
@@ -18,7 +18,7 @@
         <Logger name="org.jvnet.hk2.logger" level="OFF"/>  <!-- HK2 is logging a debug message that is being mis-translated into an error by LOG4J2 https://issues.apache.org/jira/browse/LOG4J2-1003 -->
         <Root level="debug">
             <AppenderRef ref="STDOUT"/>
-            <!-- AppenderRef ref="TestFile"/ -->
+            <AppenderRef ref="DebugLogFile"/>
         </Root>
     </Loggers>
 </Configuration>
