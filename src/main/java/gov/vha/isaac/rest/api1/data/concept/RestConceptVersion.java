@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -252,11 +253,6 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		this.children.add(child);
 	}
 	
-	public int getChildCount()
-	{
-		return (children == null  || children.size() == 0 ? (childCount == null ? 0 : childCount) : children.size());
-	}
-	
 	public void addParent(RestConceptVersion parent)
 	{
 		if (this.parents == null)
@@ -307,5 +303,15 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			return this.conChronology.compareTo(o.conChronology);
 		}
 		return 0;  //not really anything worth sorting on, if no chronology.
+	}
+	
+	/**
+	 * This is an internal method, not part of the over the wire information.
+	 * @return number of actual children, if present, otherwise, the value of the child count variable
+	 */
+	@XmlTransient
+	public int getChildCount()
+	{
+		return (children == null  || children.size() == 0 ? (childCount == null ? 0 : childCount) : children.size());
 	}
 }
