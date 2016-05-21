@@ -754,7 +754,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		String token = t.getSerialized();
 		
-		CoordinatesToken read = CoordinatesTokens.getOrCreate(token);
+		CoordinatesToken read = CoordinatesTokens.get(token);
 		Assert.assertTrue(token.equals(read.getSerialized()));
 	}
 	
@@ -768,7 +768,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String result = null;
 		try {
 			RestCoordinatesToken defaultToken = new RestCoordinatesToken(CoordinatesTokens.getDefaultCoordinatesToken());
-			CoordinatesToken defaultTokenObject = CoordinatesTokens.getOrCreate(defaultToken.token);
+			CoordinatesToken defaultTokenObject = CoordinatesTokens.get(defaultToken.token);
 			RestCoordinatesToken retrievedToken = null;
 
 			// Test no parameters against default token
@@ -824,8 +824,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
-			Assert.assertTrue(CoordinatesTokens.getOrCreate(retrievedToken.token).getStampPrecedence() == StampPrecedence.TIME);
-			Assert.assertTrue(CoordinatesTokens.getOrCreate(retrievedToken.token).getTaxonomyType() == PremiseType.INFERRED);
+			Assert.assertTrue(CoordinatesTokens.get(retrievedToken.token).getStampPrecedence() == StampPrecedence.TIME);
+			Assert.assertTrue(CoordinatesTokens.get(retrievedToken.token).getTaxonomyType() == PremiseType.INFERRED);
 
 			// Test using a customized token with getStampPrecedence() == StampPrecedence.TIME
 			// and getTaxonomyType() == PremiseType.INFERRED

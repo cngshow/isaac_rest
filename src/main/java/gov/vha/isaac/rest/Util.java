@@ -18,8 +18,6 @@
  */
 package gov.vha.isaac.rest;
 
-import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 import gov.vha.isaac.ochre.api.Get;
@@ -31,15 +29,6 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 
 public class Util
 {
-	public static <E extends Enum<E>> byte[] byteArrayFromEnumSet(EnumSet<E> set) {
-		byte[] returnValue = new byte[set.size()];
-		int index = 0;
-		for (Iterator<E> it = set.iterator(); it.hasNext();) {
-			returnValue[index++] = (byte)it.next().ordinal();
-		}
-		
-		return returnValue;
-	}
 	public static int convertToConceptSequence(String conceptId) throws RestException
 	{
 		Optional<UUID> uuidId = UUIDUtil.getUUID(conceptId);
