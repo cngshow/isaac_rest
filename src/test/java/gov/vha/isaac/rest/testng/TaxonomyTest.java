@@ -89,7 +89,7 @@ public class TaxonomyTest extends JerseyTestNg.ContainerPerClassTest {
 		return response;
 	}
 	
-	@Test
+	//@Test
 	public void testGetConceptVersionTaxonomy() {
 		//final String url ="http://localhost:8080/isaac-rest/rest/1/taxonomy/version";
 		//RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
