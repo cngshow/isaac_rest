@@ -56,18 +56,17 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
 
 /**
- * {@link SystemInfo}
+ * {@link RestSystemInfo}
  * 
  * This class carries back various system information about this deployment.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  * 
- * TODO: Change SystemInfo to RestSystemInfo for consistency
  * 
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class SystemInfo
+public class RestSystemInfo
 {
 	private transient static Logger log_ = LogManager.getLogger();
 	/**
@@ -84,7 +83,7 @@ public class SystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.3.3"};
+	String[] supportedAPIVersions = new String[] {"1.4.0"};
 	
 	/**
 	 * REST API Implementation Version - aka the version number of the software running here.
@@ -128,7 +127,7 @@ public class SystemInfo
 	@XmlElement
 	List<RestDependencyInfo> dbDependencies = new ArrayList<>();
 
-	public SystemInfo()
+	public RestSystemInfo()
 	{
 		//Read in other information from the package (pom.properties file during normal runtime, pom.xml files if running in a dev env)
 		try

@@ -150,8 +150,15 @@ public class TaxonomyAPIs
 		} else {
 			alreadyAddedChildren.add(conceptSequence);
 		}
+		//TODO we need to guard against very large result returns - we must cap this, and, ideally, introduce paging, 
+		//or something along those lines to handle very large result sets.
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
+			if (rcv.getChildCount() > 5000)
+			{
+				log.warn("Limiting the number of taxonomy children under concept " + childSequence);
+				break;
+			}
 			@SuppressWarnings("rawtypes")
 			ConceptChronology childConcept;
 			try
