@@ -18,12 +18,11 @@
  */
 package gov.vha.isaac.rest.tokens;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,22 +158,17 @@ public class UserToken
 	{
 		if (secret_ == null)
 		{
-			try
+			synchronized (UserToken.class)
 			{
-				synchronized (UserToken.class)
+				if (secret_ == null)
 				{
-					if (secret_ == null)
-					{
-						byte[] temp = new byte[20];
-						
-						SecureRandom.getInstanceStrong().nextBytes(temp);
-						secret_ = temp;
-					}
+					byte[] temp = new byte[20];
+					
+					//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
+					new Random().nextBytes(temp);
+					//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
+					secret_ = temp;
 				}
-			}
-			catch (NoSuchAlgorithmException e)
-			{
-				throw new RuntimeException(e);
 			}
 		}
 		return secret_;
