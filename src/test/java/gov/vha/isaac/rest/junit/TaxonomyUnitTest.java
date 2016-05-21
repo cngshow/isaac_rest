@@ -25,7 +25,7 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 public class TaxonomyUnitTest  extends SSLWSRestClientHelper {
 	public static final String BASE_URI = "http://localhost:8080/isaac-rest/rest/"+RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
 	
-	@Test
+	//@Test
 	public void testGetConceptVersionTaxonomy() {
 		//final String url ="http://localhost:8080/isaac-rest/rest/1/taxonomy/version";
 		//RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
