@@ -134,7 +134,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//System.out.println(response.readEntity(String.class));
 	}
 
-	@Test
+	//@Test
 	public void testTaxonomy()
 	{
 		Response response = target(RestPaths.taxonomyPathComponent + RestPaths.versionComponent).queryParam("childDepth", "1").queryParam("countChildren", "true").queryParam("countChildren", "true")
