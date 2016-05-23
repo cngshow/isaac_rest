@@ -157,8 +157,10 @@ public class RestSememeChronology
 				expandables = new Expandables(
 						new Expandable(ExpandUtil.versionsAllExpandable, 
 								RestPaths.sememeVersionsAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsAllExpandable), 
-						new Expandable(ExpandUtil.versionsLatestOnlyExpandable, 
-								RestPaths.sememeVersionAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsLatestOnlyExpandable));
+						new Expandable(
+								ExpandUtil.versionsLatestOnlyExpandable, 
+								RestPaths.sememeVersionAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsLatestOnlyExpandable
+								+ "&" + RequestParameters.coordToken + "=" + RequestInfo.get().getCoordinatesToken().getSerialized()));
 			}
 			else
 			{
