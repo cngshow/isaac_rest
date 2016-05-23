@@ -142,6 +142,7 @@ public class CoordinatesUtil {
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
+			//TODO Joel, please fix this.
 			CoordinatesToken ct = CoordinatesTokens.getOrCreate(tokenStringOptional.get());
 			
 			return Optional.of(ct);
