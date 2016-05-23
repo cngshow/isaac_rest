@@ -135,7 +135,8 @@ public class SememeAPIs
 	 * @param id - A UUID, nid or sememe sequence
 	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
-	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept, the description of that concept.
+	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept or a description sememe, the description of that 
+	 * concept - or the description value.  
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
 	 * by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -167,6 +168,8 @@ public class SememeAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept or a description sememe.
 	 * @return the sememe version object.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
@@ -241,6 +244,8 @@ public class SememeAPIs
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept or a description sememe.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken 
 	 * may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -301,6 +306,8 @@ public class SememeAPIs
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept or a description sememe.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
 	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
