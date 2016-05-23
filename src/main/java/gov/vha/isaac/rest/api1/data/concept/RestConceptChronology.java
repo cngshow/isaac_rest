@@ -38,6 +38,7 @@ import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * 
@@ -124,7 +125,8 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 					new Expandable(ExpandUtil.versionsAllExpandable,
 						RestPaths.conceptVersionsAppPathComponent + cc.getConceptSequence() + "/"),
 					new Expandable(ExpandUtil.versionsLatestOnlyExpandable,
-						RestPaths.conceptVersionAppPathComponent + cc.getConceptSequence() + "/"));
+						RestPaths.conceptVersionAppPathComponent + cc.getConceptSequence() + "/"
+						+ "?" + RequestParameters.coordToken + "=" + RequestInfo.get().getCoordinatesToken().getSerialized()));
 			}
 			else
 			{
