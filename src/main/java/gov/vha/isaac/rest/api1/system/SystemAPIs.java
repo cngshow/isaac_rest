@@ -91,7 +91,10 @@ public class SystemAPIs
 	 * @param expand comma separated list of fields to expand.  Support depends on type of object identified by the passed id
 	 * RestConceptChronology supports 'versionsAll', 'versionsLatestOnly'
 	 * RestSememeChronology supports 'chronology', 'nestedSememes', 'referencedDetails'
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept or a description sememe.  
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken 
+	 * may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return
 	 * @throws RestException
@@ -227,8 +230,10 @@ public class SystemAPIs
 	 * @param id The id for which to determine RestObjectChronologyType
 	 * If an int < 0 then assumed to be a NID, else ambiguous and treated as a sememe or concept sequence, each of which may or may not correspond to existing components
 	 * If a String then parsed and handled as a UUID of either a concept or sequence
-	 * @return Map of RestObjectChronologyType to RestId.  Will contain exactly one entry if passed a UUID or NID, or one or two entries if passed a sequence. if no corresponding ids found a RestException is thrown.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @return Map of RestObjectChronologyType to RestId.  Will contain exactly one entry if passed a UUID or NID, or one or two entries if passed a sequence. if no 
+	 * corresponding ids found a RestException is thrown.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a 
+	 * separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @throws RestException
 	 */
@@ -260,7 +265,8 @@ public class SystemAPIs
 				int sememeNid = Get.identifierService().getSememeNid(intId.get());
 				if (sememeNid != 0) {
 					if (returnedType != null) {
-						throw new RestException(RequestParameters.id, id, "Specified int id is ambiguous, as it may be either a sememe or concept sequence. Must be a UUID, or integer NID or sequence that uniquely identifies either a sememe or concept, but not both.");
+						throw new RestException(RequestParameters.id, id, "Specified int id is ambiguous, as it may be either a sememe or concept sequence. "
+								+" Must be a UUID, or integer NID or sequence that uniquely identifies either a sememe or concept, but not both.");
 					}
 					returnedType = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(sememeNid));
 				}
@@ -269,7 +275,8 @@ public class SystemAPIs
 			if (returnedType != null) {
 				return returnedType;
 			} else {
-				throw new RestException(RequestParameters.id, id, "Specified int id is not a valid NID or sequence. Must be a UUID, or integer NID or sequence that uniquely identifies either a sememe or concept, but not both.");
+				throw new RestException(RequestParameters.id, id, "Specified int id is not a valid NID or sequence. Must be a UUID, or integer NID or sequence "
+						+"that uniquely identifies either a sememe or concept, but not both.");
 			}
 		}
 		else

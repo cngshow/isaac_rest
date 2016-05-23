@@ -200,7 +200,7 @@ public class ConceptAPIs
 	 * sememes and dialects 
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
-	 * if they represent a concept.
+	 * if they represent a concept or a description sememe.  
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return The descriptions associated with the concept
