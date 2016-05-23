@@ -125,7 +125,7 @@ public class RequestInfo
 			log.debug("Constructing CoordinatesToken from parameters");
 			
 			// Set RequestInfo coordinatesToken string to parameter value if set, otherwise set to default
-			Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenFromParameters(parameters);
+			Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenParameterTokenObjectValue(parameters);
 			if (token.isPresent()) {
 				log.debug("Applying CoordinatesToken " + RequestParameters.coordToken + " parameter \"" + token.get().getSerialized() + "\"");
 				requestInfo.get().coordinatesToken_ = token.get().getSerialized();

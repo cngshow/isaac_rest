@@ -136,20 +136,13 @@ public class CoordinatesUtil {
 	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
 	 * @throws Exception 
 	 */
-	public static Optional<CoordinatesToken> getCoordinatesTokenFromParameters(Map<String, List<String>> allParams) throws RestException {
-		Optional<String> tokenStringOptional = getCoordinatesTokenStringFromParameters(allParams);
+	public static Optional<CoordinatesToken> getCoordinatesTokenParameterTokenObjectValue(Map<String, List<String>> allParams) throws RestException {
+		Optional<String> tokenStringOptional = getCoordinatesTokenParameterStringValue(allParams);
 		
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			CoordinatesToken ct = CoordinatesTokens.get(tokenStringOptional.get());
-			if (ct == null)
-			{
-				// Not in cache
-				ct = CoordinatesTokens.get(tokenStringOptional.get());
-			}
-			
-			return Optional.of(ct);
+			return Optional.of(CoordinatesTokens.getOrCreate(tokenStringOptional.get()));
 		}
 	}
 	/**
@@ -160,7 +153,7 @@ public class CoordinatesUtil {
 	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
 	 * @throws RestException
 	 */
-	public static Optional<String> getCoordinatesTokenStringFromParameters(Map<String, List<String>> allParams) throws RestException {
+	public static Optional<String> getCoordinatesTokenParameterStringValue(Map<String, List<String>> allParams) throws RestException {
 		List<String> coordinateTokenParameterValues = allParams.get(RequestParameters.coordToken);
 		
 		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0 || StringUtils.isBlank(coordinateTokenParameterValues.get(0))) {
