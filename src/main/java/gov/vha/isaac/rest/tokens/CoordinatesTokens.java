@@ -107,7 +107,7 @@ public class CoordinatesTokens {
 	 * @param value CoordinatesToken object
 	 * @throws Exception
 	 */
-	protected static void put(CoordinatesToken value) {
+	private static void put(CoordinatesToken value) {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}
@@ -146,7 +146,7 @@ public class CoordinatesTokens {
 	 * @return CoordinatesToken object
 	 * @throws Exception
 	 */
-	public static CoordinatesToken get(String key) {
+	private static CoordinatesToken get(String key) {
 		if (OBJECT_BY_TOKEN_CACHE == null) {
 			init(DEFAULT_MAX_SIZE);
 		}

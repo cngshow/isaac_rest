@@ -275,7 +275,7 @@ public class RequestInfo
 	public CoordinatesToken getCoordinatesToken() {
 		if (coordinatesToken_ != null) {
 			try {
-				return CoordinatesTokens.get(coordinatesToken_);
+				return CoordinatesTokens.getOrCreate(coordinatesToken_);
 			} catch (Exception e) {
 				// Should never fail because validated on readAll()
 				log.error("Unexpected", e);
