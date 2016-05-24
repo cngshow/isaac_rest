@@ -79,7 +79,7 @@ public class UserToken
 			throw new RuntimeException("Invalid token!");
 		}
 		
-		byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
+		byte[] readBytes = Base64.getUrlDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
 		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
 		byte version = buffer.getByte();
 		if (version != tokenVersion)
@@ -127,7 +127,7 @@ public class UserToken
 		creationTime = System.currentTimeMillis();
 		try
 		{
-			String data = Base64.getEncoder().encodeToString(getBytesToWrite());
+			String data = Base64.getUrlEncoder().encodeToString(getBytesToWrite());
 			return PasswordHasher.hash(data, getSecret(), hashRounds, hashLength) + data;
 		}
 		catch (Exception e)

@@ -177,15 +177,15 @@ public class CoordinatesToken
 			serialization = encodedData;
 
 			long time = System.currentTimeMillis();
-			String readHash = encodedData.substring(0, encodedHashLength);
-			String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
+			String readHash = serialization.substring(0, encodedHashLength);
+			String calculatedHash = PasswordHasher.hash(serialization.substring(encodedHashLength, serialization.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
 
 			if (!readHash.equals(calculatedHash))
 			{
 				throw new RestException("Invalid token!");
 			}
 
-			byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
+			byte[] readBytes = Base64.getUrlDecoder().decode(serialization.substring(encodedHashLength, serialization.length()));
 			ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
 			byte version = buffer.getByte();
 			if (version != tokenVersion)
@@ -385,7 +385,7 @@ public class CoordinatesToken
 	private static String serialize(CoordinatesToken token) {
 		try
 		{
-			String data = Base64.getEncoder().encodeToString(token.getBytesToWrite());
+			String data = Base64.getUrlEncoder().encodeToString(token.getBytesToWrite());
 			return PasswordHasher.hash(data, ApplicationConfig.getSecret(), hashRounds, hashLength) + data;
 		}
 		catch (Exception e)
