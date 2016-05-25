@@ -268,7 +268,7 @@ public class CoordinatesUtil {
 	}
 
 	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(List<String> unexpandedDialectsStrs, Optional<CoordinatesToken> token) throws RestException {
-		int[] defaultValues = token.isPresent() ? token.get().getLangDialects().asArray() : CoordinatesTokens.getDefaultCoordinatesToken().getLangDialects().asArray();
+		int[] defaultValues = token.isPresent() ? token.get().getLangDialects() : CoordinatesTokens.getDefaultCoordinatesToken().getLangDialects();
 		List<Integer> seqList = new ArrayList<>();
 
 		List<String> dialectsStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDialectsStrs);
@@ -322,7 +322,7 @@ public class CoordinatesUtil {
 		}
 	}
 	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(List<String> unexpandedDescTypesStrs, Optional<CoordinatesToken> token) throws RestException {
-		int[] defaultValues = token.isPresent() ? token.get().getLangTypePrefs().asArray() : CoordinatesTokens.getDefaultCoordinatesToken().getLangTypePrefs().asArray();
+		int[] defaultValues = token.isPresent() ? token.get().getLangDescTypePrefs() : CoordinatesTokens.getDefaultCoordinatesToken().getLangDescTypePrefs();
 
 		List<Integer> seqList = new ArrayList<>();
 
@@ -373,8 +373,9 @@ public class CoordinatesUtil {
 			return defaultValues;
 		} else {
 			int[] seqArray = new int[seqList.size()];
-			for (int i = 0; i < seqList.size(); ++i) {
-				seqArray[i] = seqList.get(i);
+			int i = 0;
+			for (int seq : seqList) {
+				seqArray[i++] = seq;
 			}
 
 			return seqArray;

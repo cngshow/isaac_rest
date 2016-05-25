@@ -746,11 +746,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(token.equals(read.getSerialized()));
 	}
 	
+	private static final String getCoordinatesToken = RestPaths.coordinatePathComponent + RestPaths.coordinatesTokenComponent;
+	private static final String getTaxonomyCoordinate = RestPaths.coordinatePathComponent + RestPaths.taxonomyCoordinatePathComponent;
+
 	@Test
 	public void testCoordinatesToken()
 	{
-		final String getCoordinatesToken = RestPaths.coordinatePathComponent + RestPaths.coordinatesTokenComponent;
-		final String getTaxonomyCoordinate = RestPaths.coordinatePathComponent + RestPaths.taxonomyCoordinatePathComponent;
 
 
 		String result = null;
@@ -927,7 +928,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
 			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
 			node = null;
-			
 			Assert.assertTrue(nodeList.getLength() == 2);
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
@@ -940,11 +940,45 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
 			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
 			node = null;
-
 			Assert.assertTrue(nodeList.getLength() == 2);
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 
+			// Get token with specified non-default descriptionTypePrefs (SYNONYM,FSN)
+			// then test token passed as argument along with RequestParameters.stated parameter
+			result = checkFail(target(getCoordinatesToken)
+					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.SYNONYM.getConceptSequence() + "," + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence())
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			RestCoordinatesToken retrievedToken = (RestCoordinatesToken) XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
+
+			// confirm that constructed token has descriptionTypePrefs ordered as in
+			// parameters used to construct token
+			result = checkFail(target(getLanguageCoordinate)
+					.queryParam(RequestParameters.coordToken, retrievedToken.token)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
+			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
+			node = null;
+			Assert.assertTrue(nodeList.getLength() == 2);
+			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+
+			// test token passed as argument along with RequestParameters.stated parameter
+			// ensure that descriptionTypePrefs order specified in token is maintained
+			result = checkFail(target(getLanguageCoordinate)
+					.queryParam(RequestParameters.coordToken, retrievedToken.token)
+					.queryParam(RequestParameters.stated, "true")
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
+			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
+			node = null;
+			Assert.assertTrue(nodeList.getLength() == 2);
+			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+						
 			// LogicCoordinate
 			result = checkFail(target(getLogicCoordinate)
 					.queryParam(RequestParameters.classifier, MetaData.SNOROCKET_CLASSIFIER.getConceptSequence())
@@ -954,7 +988,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			node = XMLUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			int logicCoordinateClassifierSeq = Integer.parseInt(node.getTextContent());
-			Assert.assertTrue(logicCoordinateClassifierSeq == MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());	
+			Assert.assertTrue(logicCoordinateClassifierSeq == MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());
+			
+			// Ensure explicitly-passed token components are not ignored when passed token
+			// accompanied by additional parameters
 		} catch (Exception error) {
 			System.out.println("Failing result XPath: " + xpath);
 			System.out.println("Failing result Node: " + XMLUtils.toString(node));
