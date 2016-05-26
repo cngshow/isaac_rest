@@ -58,6 +58,20 @@ public class XMLUtils {
 		return "Node {name=" + (node != null ? node.getNodeName() : null) + ", value=" + (node != null ? node.getNodeValue() : null) + ", type=" + (node != null ? node.getNodeType() : null) + ", text=" + (node != null ? node.getTextContent() : null) + "}";
 	}
 
+	public static String toString(NodeList nodeList) {
+		if (nodeList == null) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("NodeList {");
+		for (int i = 0; i < nodeList.getLength(); ++i) {
+			sb.append(toString(nodeList.item(i)));
+		}
+		sb.append("}");
+		return sb.toString();
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static <T> T unmarshalObject(Class<T> classType, String xmlString)
 	{

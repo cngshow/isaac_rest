@@ -77,7 +77,8 @@ public class SememeAPIs
 	 * @param id The id for which to determine RestSememeType
 	 * If an int then assumed to be a sememe NID or sequence
 	 * If a String then parsed and handled as a sememe UUID
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A 
+	 *  CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return RestSememeType of the sememe corresponding to the passed id. if no corresponding sememe found a RestException is thrown.
 	 * @throws RestException
@@ -98,7 +99,8 @@ public class SememeAPIs
 			}
 			else
 			{
-				throw new RestException(RequestParameters.id, id, "Specified sememe int id NID or sequence does not correspond to an existing sememe chronology. Must pass a UUID or integer NID or sequence that corresponds to an existing sememe chronology.");
+				throw new RestException(RequestParameters.id, id, "Specified sememe int id NID or sequence does not correspond to"
+						+ " an existing sememe chronology. Must pass a UUID or integer NID or sequence that corresponds to an existing sememe chronology.");
 			}
 		}
 		else
@@ -109,18 +111,21 @@ public class SememeAPIs
 				// id is uuid
 
 				Integer sememeSequence = null;
-				if (Get.identifierService().hasUuid(uuidId.get()) && (sememeSequence = Get.identifierService().getSememeSequenceForUuids(uuidId.get())) != 0 && Get.sememeService().hasSememe(sememeSequence))
+				if (Get.identifierService().hasUuid(uuidId.get()) && (sememeSequence = Get.identifierService().getSememeSequenceForUuids(uuidId.get())) != 0 
+						&& Get.sememeService().hasSememe(sememeSequence))
 				{
 					return new RestSememeType(Get.sememeService().getSememe(sememeSequence).getSememeType());
 				}
 				else
 				{
-					throw new RestException(RequestParameters.id, id, "Specified sememe UUID does not correspond to an existing sememe chronology. Must pass a UUID or integer NID or sequence that corresponds to an existing sememe chronology.");
+					throw new RestException(RequestParameters.id, id, "Specified sememe UUID does not correspond to an existing sememe chronology. Must pass a "
+							+ "UUID or integer NID or sequence that corresponds to an existing sememe chronology.");
 				}
 			}
 			else
 			{
-				throw new RestException(RequestParameters.id, id, "Specified sememe string id is not a valid UUID identifier.  Must be a UUID, or integer NID or sequence.");
+				throw new RestException(RequestParameters.id, id, "Specified sememe string id is not a valid UUID identifier.  Must be a UUID, or integer NID or "
+						+ "sequence.");
 			}
 		}
 	}
@@ -130,8 +135,10 @@ public class SememeAPIs
 	 * @param id - A UUID, nid or sememe sequence
 	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
-	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept, the description of that concept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept or a description sememe, the description of that 
+	 * concept - or the description value.  
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the sememe chronology object
 	 * @throws RestException
@@ -161,9 +168,12 @@ public class SememeAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept or a description sememe.
 	 * @return the sememe version object.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
+	 * be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @throws RestException 
 	 */
@@ -234,7 +244,10 @@ public class SememeAPIs
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept or a description sememe.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken 
+	 * may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
@@ -261,6 +274,7 @@ public class SememeAPIs
 						pageNum,
 						maxPageSize,
 						true);
+		//TODO this is a performance mess, we only should be converting the page of results they want.
 		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
 		for (SememeVersion<?> sv : versions.getValues()) {
 			restSememeVersions.add(
@@ -292,7 +306,10 @@ public class SememeAPIs
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
+	 * if they represent a concept or a description sememe.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
+	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the sememe version objects.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
@@ -328,7 +345,8 @@ public class SememeAPIs
 	/**
 	 * Return the full description of a particular sememe - including its intended use, the types of any data columns that will be attached, etc.
 	 * @param id - The UUID, nid or concept sequence of the concept that represents the sememe assemblage.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
+	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return - the full description
 	 * @throws RestException
@@ -358,7 +376,8 @@ public class SememeAPIs
 		throw new RestException("The specified concept identifier is not configured as a dynamic sememe, and it is not used as a static sememe");
 	}
 
-	public static Stream<SememeChronology<? extends SememeVersion<?>>> getSememesForComponentFromAssemblagesFilteredBySememeType(int componentNid, Set<Integer> allowedAssemblageSequences, Set<SememeType> typesToExclude) {
+	public static Stream<SememeChronology<? extends SememeVersion<?>>> getSememesForComponentFromAssemblagesFilteredBySememeType(int componentNid, 
+			Set<Integer> allowedAssemblageSequences, Set<SememeType> typesToExclude) {
 		SememeSequenceSet sememeSequences = Get.sememeService().getSememeSequencesForComponentFromAssemblages(componentNid, allowedAssemblageSequences);
 		if (typesToExclude == null || typesToExclude.size() == 0) {
 			return sememeSequences.stream().mapToObj((int sememeSequence) -> Get.sememeService().getSememe(sememeSequence));
@@ -450,7 +469,8 @@ public class SememeAPIs
 			
 			if (refCompNid.isPresent() && refCompNid.get() < 0)
 			{
-				Stream<SememeChronology<? extends SememeVersion<?>>> sememes = getSememesForComponentFromAssemblagesFilteredBySememeType(refCompNid.get(), allowedAssemblages, excludedSememeTypes);
+				Stream<SememeChronology<? extends SememeVersion<?>>> sememes = getSememesForComponentFromAssemblagesFilteredBySememeType(refCompNid.get(), 
+						allowedAssemblages, excludedSememeTypes);
 				
 				int approximateTotal = 0;
 				for (Iterator<SememeChronology<? extends SememeVersion<?>>> it = sememes.iterator(); it.hasNext();) {

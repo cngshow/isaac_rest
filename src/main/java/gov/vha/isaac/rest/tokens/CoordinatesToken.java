@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.tokens;
 
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.EnumSet;
 
@@ -65,7 +66,7 @@ public class CoordinatesToken
 
 	private final int langCoord;
 	private final int[] langDialects;
-	private final int[] langTypePrefs;
+	private final int[] langDescTypePrefs;
 
 	private final byte taxonomyType;
 
@@ -99,7 +100,7 @@ public class CoordinatesToken
 	 * @param stampStates
 	 * @param langCoord
 	 * @param langDialects
-	 * @param langTypePrefs
+	 * @param langDescTypePrefs
 	 * @param taxonomyType
 	 * @param logicStatedAssemblage
 	 * @param logicInferredAssemblage
@@ -114,7 +115,7 @@ public class CoordinatesToken
 			byte[] stampStates,
 			int langCoord,
 			int[] langDialects,
-			int[] langTypePrefs,
+			int[] langDescTypePrefs,
 			byte taxonomyType,
 			int logicStatedAssemblage,
 			int logicInferredAssemblage,
@@ -128,7 +129,7 @@ public class CoordinatesToken
 		this.stampStates = stampStates;
 		this.langCoord = langCoord;
 		this.langDialects = langDialects;
-		this.langTypePrefs = langTypePrefs;
+		this.langDescTypePrefs = langDescTypePrefs;
 		this.taxonomyType = taxonomyType;
 		this.logicStatedAssemblage = logicStatedAssemblage;
 		this.logicInferredAssemblage = logicInferredAssemblage;
@@ -158,7 +159,7 @@ public class CoordinatesToken
 
 		langCoord = lang.getLanguageConceptSequence();
 		langDialects = lang.getDialectAssemblagePreferenceList();
-		langTypePrefs = lang.getDescriptionTypePreferenceList();
+		langDescTypePrefs = lang.getDescriptionTypePreferenceList();
 
 		taxonomyType = (byte)taxType.ordinal();
 
@@ -177,15 +178,15 @@ public class CoordinatesToken
 			serialization = encodedData;
 
 			long time = System.currentTimeMillis();
-			String readHash = encodedData.substring(0, encodedHashLength);
-			String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
+			String readHash = serialization.substring(0, encodedHashLength);
+			String calculatedHash = PasswordHasher.hash(serialization.substring(encodedHashLength, serialization.length()), ApplicationConfig.getSecret(), hashRounds, hashLength);
 
 			if (!readHash.equals(calculatedHash))
 			{
 				throw new RestException("Invalid token!");
 			}
 
-			byte[] readBytes = Base64.getDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
+			byte[] readBytes = Base64.getUrlDecoder().decode(serialization.substring(encodedHashLength, serialization.length()));
 			ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
 			byte version = buffer.getByte();
 			if (version != tokenVersion)
@@ -213,10 +214,10 @@ public class CoordinatesToken
 			{
 				langDialects[i] = buffer.getInt();
 			}
-			langTypePrefs = new int[buffer.getInt()];
-			for (int i = 0; i < langTypePrefs.length; i++)
+			langDescTypePrefs = new int[buffer.getInt()];
+			for (int i = 0; i < langDescTypePrefs.length; i++)
 			{
-				langTypePrefs[i] = buffer.getInt();
+				langDescTypePrefs[i] = buffer.getInt();
 			}
 
 			taxonomyType = buffer.getByte();
@@ -263,7 +264,7 @@ public class CoordinatesToken
 	}
 	public LanguageCoordinate getLanguageCoordinate() {
 		if (languageCoordinate == null) {
-				languageCoordinate = new LanguageCoordinateImpl(langCoord, langDialects, langTypePrefs);
+				languageCoordinate = new LanguageCoordinateImpl(langCoord, langDialects, langDescTypePrefs);
 		}
 
 		return languageCoordinate;
@@ -331,15 +332,15 @@ public class CoordinatesToken
 	/**
 	 * @return the langDialects
 	 */
-	public ConceptSequenceSet getLangDialects() {
-		return ConceptSequenceSet.of(langDialects);
+	public int[] getLangDialects() {
+		return Arrays.copyOf(langDialects, langDialects.length);
 	}
 
 	/**
-	 * @return the langTypePrefs
+	 * @return the langDescTypePrefs
 	 */
-	public ConceptSequenceSet getLangTypePrefs() {
-		return ConceptSequenceSet.of(langTypePrefs);
+	public int[] getLangDescTypePrefs() {
+		return Arrays.copyOf(langDescTypePrefs, langDescTypePrefs.length);
 	}
 
 	/**
@@ -385,7 +386,7 @@ public class CoordinatesToken
 	private static String serialize(CoordinatesToken token) {
 		try
 		{
-			String data = Base64.getEncoder().encodeToString(token.getBytesToWrite());
+			String data = Base64.getUrlEncoder().encodeToString(token.getBytesToWrite());
 			return PasswordHasher.hash(data, ApplicationConfig.getSecret(), hashRounds, hashLength) + data;
 		}
 		catch (Exception e)
@@ -418,8 +419,8 @@ public class CoordinatesToken
 		{
 			buffer.putInt(x);
 		}
-		buffer.putInt(langTypePrefs.length);
-		for (int x: langTypePrefs)
+		buffer.putInt(langDescTypePrefs.length);
+		for (int x: langDescTypePrefs)
 		{
 			buffer.putInt(x);
 		}
@@ -435,6 +436,21 @@ public class CoordinatesToken
 		return buffer.getData();
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "CoordinatesToken [getStampTime()=" + getStampTime() + ", getStampPath()=" + getStampPath()
+				+ ", getStampPrecedence()=" + getStampPrecedence() + ", getStampModules()=" + getStampModules()
+				+ ", getStampStates()=" + getStampStates() + ", getLangCoord()=" + getLangCoord()
+				+ ", getLangDialects()=" + getLangDialects() + ", getLangDescTypePrefs()=" + getLangDescTypePrefs()
+				+ ", getTaxonomyType()=" + getTaxonomyType() + ", getLogicStatedAssemblage()="
+				+ getLogicStatedAssemblage() + ", getLogicInferredAssemblage()=" + getLogicInferredAssemblage()
+				+ ", getLogicDescLogicProfile()=" + getLogicDescLogicProfile() + ", getLogicClassifier()="
+				+ getLogicClassifier() + ", getSerialized()=" + getSerialized() + "]";
+	}
+
 	public static void main(String[] args) throws Exception
 	{
 		/*
@@ -445,7 +461,7 @@ public class CoordinatesToken
 			byte[] stampStates,
 			int langCoord,
 			int[] langDialects,
-			int[] langTypePrefs,
+			int[] langDescTypePrefs,
 			byte taxonomyType,
 			int logicStatedAssemblage,
 			int logicInferredAssemblage,
@@ -460,7 +476,7 @@ public class CoordinatesToken
 				new byte[] {2}, // stampStates
 				456, // langCoord
 				new int[] {123}, // langDialects
-				new int[] {3,4,5,2,1}, // langTypePrefs
+				new int[] {3,4,5,2,1}, // langDescTypePrefs
 				(byte)5, // taxonomyType
 				1, // logicStatedAssemblage
 				2, // logicInferredAssemblage
@@ -480,7 +496,7 @@ public class CoordinatesToken
 				new byte[] {2}, // stampStates
 				456, // langCoord
 				new int[] {123}, // langDialects
-				new int[] {3,4,5,2,1}, // langTypePrefs
+				new int[] {3,4,5,2,1}, // langDescTypePrefs
 				(byte)5, // taxonomyType
 				1, // logicStatedAssemblage
 				2, // logicInferredAssemblage

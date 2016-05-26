@@ -136,15 +136,13 @@ public class CoordinatesUtil {
 	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
 	 * @throws Exception 
 	 */
-	public static Optional<CoordinatesToken> getCoordinatesTokenFromCoordinatesTokenParameter(Map<String, List<String>> allParams) throws RestException {
-		Optional<String> tokenStringOptional = getCoordinatesTokenStringFromParameters(allParams);
+	public static Optional<CoordinatesToken> getCoordinatesTokenParameterTokenObjectValue(Map<String, List<String>> allParams) throws RestException {
+		Optional<String> tokenStringOptional = getCoordinatesTokenParameterStringValue(allParams);
 		
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			CoordinatesToken ct = CoordinatesTokens.getOrCreate(tokenStringOptional.get());
-			
-			return Optional.of(ct);
+			return Optional.of(CoordinatesTokens.getOrCreate(tokenStringOptional.get()));
 		}
 	}
 	/**
@@ -155,7 +153,7 @@ public class CoordinatesUtil {
 	 * @return an Optional containing a CoordinatesToken string if it exists in the parameters map
 	 * @throws RestException
 	 */
-	public static Optional<String> getCoordinatesTokenStringFromParameters(Map<String, List<String>> allParams) throws RestException {
+	public static Optional<String> getCoordinatesTokenParameterStringValue(Map<String, List<String>> allParams) throws RestException {
 		List<String> coordinateTokenParameterValues = allParams.get(RequestParameters.coordToken);
 		
 		if (coordinateTokenParameterValues == null || coordinateTokenParameterValues.size() == 0 || StringUtils.isBlank(coordinateTokenParameterValues.get(0))) {
@@ -270,7 +268,7 @@ public class CoordinatesUtil {
 	}
 
 	public static int[] getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(List<String> unexpandedDialectsStrs, Optional<CoordinatesToken> token) throws RestException {
-		int[] defaultValues = token.isPresent() ? token.get().getLangDialects().asArray() : CoordinatesTokens.getDefaultCoordinatesToken().getLangDialects().asArray();
+		int[] defaultValues = token.isPresent() ? token.get().getLangDialects() : CoordinatesTokens.getDefaultCoordinatesToken().getLangDialects();
 		List<Integer> seqList = new ArrayList<>();
 
 		List<String> dialectsStrs = RequestInfoUtils.expandCommaDelimitedElements(unexpandedDialectsStrs);
@@ -324,7 +322,7 @@ public class CoordinatesUtil {
 		}
 	}
 	public static int[] getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(List<String> unexpandedDescTypesStrs, Optional<CoordinatesToken> token) throws RestException {
-		int[] defaultValues = token.isPresent() ? token.get().getLangTypePrefs().asArray() : CoordinatesTokens.getDefaultCoordinatesToken().getLangTypePrefs().asArray();
+		int[] defaultValues = token.isPresent() ? token.get().getLangDescTypePrefs() : CoordinatesTokens.getDefaultCoordinatesToken().getLangDescTypePrefs();
 
 		List<Integer> seqList = new ArrayList<>();
 
@@ -375,8 +373,9 @@ public class CoordinatesUtil {
 			return defaultValues;
 		} else {
 			int[] seqArray = new int[seqList.size()];
-			for (int i = 0; i < seqList.size(); ++i) {
-				seqArray[i] = seqList.get(i);
+			int i = 0;
+			for (int seq : seqList) {
+				seqArray[i++] = seq;
 			}
 
 			return seqArray;

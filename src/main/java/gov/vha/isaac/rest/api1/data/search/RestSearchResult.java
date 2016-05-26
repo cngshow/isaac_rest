@@ -41,6 +41,7 @@ import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * 
@@ -158,8 +159,12 @@ public class RestSearchResult
 					}
 					if (!RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable))
 					{
-						expandables.add(new Expandable(ExpandUtil.versionsLatestOnlyExpandable, RestPaths.conceptVersionAppPathComponent + conceptSequence + "?expand=" 
-								+ ExpandUtil.versionsLatestOnlyExpandable));
+						expandables.add(
+								new Expandable(
+										ExpandUtil.versionsLatestOnlyExpandable,
+										RestPaths.conceptVersionAppPathComponent + conceptSequence + "?expand=" 
+												+ ExpandUtil.versionsLatestOnlyExpandable
+												+ "&" + RequestParameters.coordToken + "=" + RequestInfo.get().getCoordinatesToken().getSerialized()));
 					}
 				}
 			}

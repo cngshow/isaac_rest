@@ -36,6 +36,9 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -80,7 +83,12 @@ public class LogicGraphAPIs
 		//TODO bug - the methods below findLogicGraphChronology are relying on some default logic graph coordiantes...  Also seems to be a lot 
 		//of optional to not optional to optional stuff going on below this call... look at cleaning up.
 		//See impl in RestConceptVersion constructor
-		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
+		SememeChronology logicGraphSememeChronology = findLogicGraphChronology(
+				id,
+				RequestInfo.get().getStated(),
+				RequestInfo.get().getStampCoordinate(),
+				RequestInfo.get().getLanguageCoordinate(),
+				RequestInfo.get().getLogicCoordinate());
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
@@ -109,7 +117,13 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology = findLogicGraphChronology(id, RequestInfo.get().getStated());
+		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology =
+				findLogicGraphChronology(
+						id,
+						RequestInfo.get().getStated(),
+						RequestInfo.get().getStampCoordinate(),
+						RequestInfo.get().getLanguageCoordinate(),
+						RequestInfo.get().getLogicCoordinate());
 		
 		return new RestSememeChronology(
 				logicGraphSememeChronology,
@@ -132,13 +146,13 @@ public class LogicGraphAPIs
 	 * 
 	 * If the passed String id is a UUID, it will be interpreted as the id of either the LogicGraphSememe or the referenced concept
 	 */
-	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id, boolean stated) throws RestException
+	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id, boolean stated, StampCoordinate stampCoordinate, LanguageCoordinate languageCoordinate, LogicCoordinate logicCoordinate) throws RestException
 	{
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
 		{
 			// id interpreted as the id of the referenced concept
-			Optional<SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(intId.get(), stated);
+			Optional<SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(intId.get(), stated, stampCoordinate, languageCoordinate, logicCoordinate);
 			if (defChronologyOptional.isPresent())
 			{
 				return defChronologyOptional.get();
@@ -172,7 +186,7 @@ public class LogicGraphAPIs
 					throw new RestException(RequestParameters.id, id, "LogicGraph chronology cannot be retrieved by id of unsupported ObjectChronologyType " + typeOfPassedId);
 				}
 
-				final Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated);
+				final Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated, stampCoordinate, languageCoordinate, logicCoordinate);
 				if (defChronologyOptional.isPresent())
 				{
 					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology {}", () -> defChronologyOptional.get());

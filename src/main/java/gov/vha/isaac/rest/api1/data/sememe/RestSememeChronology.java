@@ -30,6 +30,8 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.SememeType;
+import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -125,6 +127,26 @@ public class RestSememeChronology
 			{
 				referencedComponentNidDescription = RestConceptChronology.readBestDescription(referencedComponentNid);
 			}
+			else if (cronType == ObjectChronologyType.SEMEME)
+			{
+				@SuppressWarnings("rawtypes")
+				SememeChronology<? extends SememeVersion> referencedComponentSememe = Get.sememeService().getSememe(referencedComponentNid);
+				if (SememeType.DESCRIPTION == referencedComponentSememe.getSememeType())
+				{
+					@SuppressWarnings({ "rawtypes", "unchecked" })
+					Optional<LatestVersion<DescriptionSememe>> ds = ((SememeChronology)referencedComponentSememe)
+							.getLatestVersion(DescriptionSememe.class, RequestInfo.get().getStampCoordinate());
+					if (ds.isPresent())
+					{
+						referencedComponentNidDescription = ds.get().value().getText();
+					}
+				}
+				
+				if (referencedComponentNidDescription == null)
+				{
+					referencedComponentNidDescription = "[" + referencedComponentSememe.getSememeType().name() + "]";
+				}
+			}
 		}
 		
 		if (includeAllVersions || includeLatestVersion)
@@ -157,8 +179,10 @@ public class RestSememeChronology
 				expandables = new Expandables(
 						new Expandable(ExpandUtil.versionsAllExpandable, 
 								RestPaths.sememeVersionsAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsAllExpandable), 
-						new Expandable(ExpandUtil.versionsLatestOnlyExpandable, 
-								RestPaths.sememeVersionAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsLatestOnlyExpandable));
+						new Expandable(
+								ExpandUtil.versionsLatestOnlyExpandable, 
+								RestPaths.sememeVersionAppPathComponent + sc.getSememeSequence() + "?" + RequestParameters.expand + "=" + ExpandUtil.versionsLatestOnlyExpandable
+								+ "&" + RequestParameters.coordToken + "=" + RequestInfo.get().getCoordinatesToken().getSerialized()));
 			}
 			else
 			{

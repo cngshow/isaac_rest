@@ -49,9 +49,6 @@ public class RestCoordinatesToken {
 		// For JAXB
 	}
 	
-	public RestCoordinatesToken(String token) {
-		this.token = token;
-	}
 	public RestCoordinatesToken(CoordinatesToken token) {
 		this.token = token.getSerialized();
 	}
