@@ -626,7 +626,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(byRefSearch)
-				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
+				.queryParam(RequestParameters.nid, MetaData.ISAAC_METADATA.getNid())
 				.queryParam(RequestParameters.maxPageSize, "100")
 				.queryParam(RequestParameters.expand, "uuid," + ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
@@ -634,7 +634,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(result.contains(MetaData.MODULE.getPrimordialUuid().toString()));
 		
 		result = checkFail(target(byRefSearch)
-				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
+				.queryParam(RequestParameters.nid, MetaData.ISAAC_METADATA.getNid())
 				.queryParam(RequestParameters.maxPageSize, "100")
 				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
