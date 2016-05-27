@@ -25,10 +25,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -80,6 +83,28 @@ import gov.vha.isaac.rest.tokens.CoordinatesTokens;
  */
 public class RestTest extends JerseyTestNg.ContainerPerClassTest
 {
+	private final static String taxonomyCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.taxonomyCoordinatePathComponent;
+	private final static String stampCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.stampCoordinatePathComponent;
+	private final static String languageCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.languageCoordinatePathComponent;
+	private final static String logicCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.logicCoordinatePathComponent;
+	private final static String descriptionSearchRequestPath = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
+	private final static String taxonomyRequestPath = RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
+
+	private final static String sememeSearchRequestPath = RestPaths.searchPathComponent + RestPaths.sememesComponent;
+	private final static String prefixSearchRequestPath = RestPaths.searchPathComponent + RestPaths.prefixComponent;
+	private final static String byRefSearchRequestPath = RestPaths.searchPathComponent + RestPaths.byReferencedComponentComponent;
+	
+	private final static String sememeSearchrequestPath = RestPaths.searchPathComponent + RestPaths.sememesComponent;
+	
+	private final static String conceptDescriptionsRequestPath = RestPaths.conceptPathComponent +  RestPaths.descriptionsComponent;
+	private final static String conceptVersionRequestPath = RestPaths.conceptPathComponent +  RestPaths.versionComponent;
+
+	private static final String coordinatesTokenRequestPath = RestPaths.coordinatePathComponent + RestPaths.coordinatesTokenComponent;
+
+	private final static String sememeByAssemblageRequestPath = RestPaths.sememePathComponent + RestPaths.byAssemblageComponent;
+	
+	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememePathComponent + RestPaths.byReferencedComponentComponent;
+	
 	@Override
 	protected Application configure()
 	{
@@ -126,7 +151,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	public void testMe()
 	{
 		//TODO write many more interesting tests, using some sort of pattern like this....
-		Response response = target(RestPaths.conceptPathComponent + RestPaths.versionComponent +
+		Response response = target(conceptVersionRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid()).request().get();
 		
 		checkFail(response);
@@ -143,6 +168,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		return response;
 	}
+	private WebTarget target(String url, Map<String, Object> testParameters)
+	{
+		WebTarget target = target(url);
+		for (Map.Entry<String, Object> testPatameter : testParameters.entrySet()) {
+			target = target.queryParam(testPatameter.getKey(), testPatameter.getValue());
+		}
+		
+		return target;
+	}
 	
 	
 	
@@ -157,7 +191,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Test to confirm that requested maxPageSize of results returned
 		for (int pageSize : new int[] { 1, 5, 10 }) {
 			Response response = target(
-					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					sememeByAssemblageRequestPath + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
 					.queryParam(RequestParameters.expand, "chronology")
 					.queryParam(RequestParameters.maxPageSize, pageSize)
 					.request()
@@ -174,7 +208,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		{
 			// Get first page of 10 results
 			Response response = target(
-					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					sememeByAssemblageRequestPath + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
 					.queryParam(RequestParameters.expand, "chronology")
 					.queryParam(RequestParameters.maxPageSize, 10)
 					.request()
@@ -185,7 +219,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			
 			// Get 10th page of 1 result
 			response = target(
-					RestPaths.sememePathComponent + RestPaths.byAssemblageComponent + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
+					sememeByAssemblageRequestPath + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
 					.queryParam(RequestParameters.expand, "chronology")
 					.queryParam(RequestParameters.pageNum, 10)
 					.queryParam(RequestParameters.maxPageSize, 1)
@@ -208,11 +242,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	{
 		String xpathExpr = "/restSearchResults/results/matchNid";
 		
-		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
-
 		// Test to confirm that requested maxPageSize of results returned
 		for (int pageSize : new int[] { 2, 3, 8 }) {
-			String resultXmlString = checkFail(target(descriptionSearch)
+			String resultXmlString = checkFail(target(descriptionSearchRequestPath)
 					.queryParam(RequestParameters.query,"dynamic*")
 					.queryParam(RequestParameters.expand, "uuid")
 					.queryParam(RequestParameters.maxPageSize, pageSize)
@@ -227,7 +259,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Test to confirm that pageNum works
 		{
 			// Get first page of 7 results
-			String resultXmlString = checkFail(target(descriptionSearch)
+			String resultXmlString = checkFail(target(descriptionSearchRequestPath)
 					.queryParam(RequestParameters.query,"dynamic*")
 					.queryParam(RequestParameters.expand, "uuid")
 					.queryParam(RequestParameters.maxPageSize, 7)
@@ -237,7 +269,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			String idOf7thResultOfFirst7ResultPage = nodeList.item(6).getTextContent();
 			
 			// Get 7th page of 1 result
-			resultXmlString = checkFail(target(descriptionSearch)
+			resultXmlString = checkFail(target(descriptionSearchRequestPath)
 					.queryParam(RequestParameters.query,"dynamic*")
 					.queryParam(RequestParameters.expand, "uuid")
 					.queryParam(RequestParameters.pageNum, 7)
@@ -258,13 +290,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testArraySememeReturn()
 	{
-		Response response = target(RestPaths.sememePathComponent + RestPaths.byAssemblageComponent +
+		Response response = target(sememeByAssemblageRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid()).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		
 		checkFail(response);
 		
-		response = target(RestPaths.sememePathComponent + RestPaths.byAssemblageComponent +
+		response = target(sememeByAssemblageRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid()).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
 		
@@ -274,7 +306,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testReferencedDetailsExpansion()
 	{
-		Response response = target(RestPaths.sememePathComponent + RestPaths.byReferencedComponentComponent +
+		Response response = target(sememeByReferencedComponentRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid()).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		
@@ -284,7 +316,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertFalse(result.contains("</referencedComponentNidObjectType>"));
 		Assert.assertFalse(result.contains("<referencedComponentNidDescription>dynamic sememe extension definition (ISAAC)</referencedComponentNidDescription>"));
 		
-		response = target(RestPaths.sememePathComponent + RestPaths.byReferencedComponentComponent +
+		response = target(sememeByReferencedComponentRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid())
 				.queryParam("expand", "chronology,referencedDetails,nestedSememes")
 				.queryParam("includeDescriptions", "true")
@@ -325,7 +357,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testConceptReturn()
 	{
-		final String url = RestPaths.conceptPathComponent + RestPaths.versionComponent +
+		final String url = conceptVersionRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
 		
 		Response response = target(url).request()
@@ -411,9 +443,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		//System.out.println("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with referencedConceptDescription of type " + referencedConceptDescriptionNode.getNodeType());
 		
-		final String rootLogicNodeFieldName = "rootLogicNode";
-		if (rootNode.with("rootLogicNode").with("nodeSemantic").get("name") == null || ! rootNode.with("rootLogicNode").with("nodeSemantic").get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
-			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with("rootLogicNode").with("nodeSemantic").get("name") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
+		final String rootLogicNodeFieldName = "rootLogicNode";		
+		final String nodeSemanticNodeFieldName = "nodeSemantic";
+		if (rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") == null || ! rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
 		}
 	}
 
@@ -424,15 +457,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testTaxonomyReturn()
 	{
-		final String url = RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
 
-		Response response = target(url).request()
+		Response response = target(taxonomyRequestPath).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-	//	System.out.println(target(url).request().get().toString());
+	//	System.out.println(target(taxonomyRequestUrl).request().get().toString());
 		
 		checkFail(response);
 
-		response = target(url).request()
+		response = target(taxonomyRequestPath).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
 		
 		checkFail(response);
@@ -443,9 +475,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	public void testSearchAssemblageRestriction1()
 	{
 		//Check with UUID
-		final String url = RestPaths.searchPathComponent + RestPaths.sememesComponent;
 
-		String result = checkFail(target(url)
+		String result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"3")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getUUID().toString())
@@ -456,7 +487,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_DEFAULT_VALUE.getPrimordialUuid().toString()));
 		
 		//Check with nid
-		result = checkFail(target(url)
+		result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"3")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
@@ -468,7 +499,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//Check with sequence
 		//Check with nid
-		result = checkFail(target(url)
+		result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"3")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getConceptSequence() + "")
@@ -479,7 +510,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_DEFAULT_VALUE.getPrimordialUuid().toString()));
 		
 		//sanity check search
-		result = checkFail(target(url)
+		result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"55")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
@@ -493,18 +524,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testSearchExpandsUUID()
 	{
-		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
-		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
-		final String prefixSearch = RestPaths.searchPathComponent + RestPaths.prefixComponent;
-		final String byRefSearch = RestPaths.searchPathComponent + RestPaths.byReferencedComponentComponent;
-		
 		//Make sure it contains a random (type 4) UUID with this pattern...
 		//<uuids>12604572-254c-49d2-8d9f-39d485af0fa0</uuids>
 		final Pattern pXml = Pattern.compile(".*uuids.{9}-.{4}-4.{3}-.{4}-.{14}uuids.*", Pattern.DOTALL);
 		
 		//Test expand uuid on/off for each search type
 
-		String result = checkFail(target(sememeSearch)
+		String result = checkFail(target(sememeSearchrequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"1")
 				.queryParam(RequestParameters.expand, "uuid")
@@ -512,47 +538,47 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
-		result = checkFail(target(sememeSearch)
+		result = checkFail(target(sememeSearchrequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"1")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pXml.matcher(result).matches());
 		
-		result = checkFail(target(descriptionSearch)
+		result = checkFail(target(descriptionSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic*")
 				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
-		result = checkFail(target(descriptionSearch)
+		result = checkFail(target(descriptionSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic*")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pXml.matcher(result).matches());
 		
-		result = checkFail(target(prefixSearch)
+		result = checkFail(target(prefixSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic")
 				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
-		result = checkFail(target(prefixSearch)
+		result = checkFail(target(prefixSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(pXml.matcher(result).matches());
 		
-		result = checkFail(target(byRefSearch)
+		result = checkFail(target(byRefSearchRequestPath)
 				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
 				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 		
-		result = checkFail(target(byRefSearch)
+		result = checkFail(target(byRefSearchRequestPath)
 				.queryParam(RequestParameters.nid, MetaData.ISAAC_ROOT.getNid())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
@@ -562,14 +588,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Make sure it contains a random (type 4) UUID with this pattern...
 		// "uuids" : [ "bcf22234-a736-5f6b-9ce3-d016594ca5cd" ]
 		final Pattern pJson = Pattern.compile(".*uuids.{15}-.{4}-4.{3}-.{4}-.{12}.*", Pattern.DOTALL);
-		result = checkFail(target(prefixSearch)
+		result = checkFail(target(prefixSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic")
 				.queryParam(RequestParameters.expand, "uuid")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
 				.readEntity(String.class);
 		Assert.assertTrue(pJson.matcher(result).matches());
 		
-		result = checkFail(target(prefixSearch)
+		result = checkFail(target(prefixSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get())
 				.readEntity(String.class);
@@ -579,53 +605,48 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testSearchExpandsRefConcept()
 	{
-		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
-		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
-		final String prefixSearch = RestPaths.searchPathComponent + RestPaths.prefixComponent;
-		final String byRefSearch = RestPaths.searchPathComponent + RestPaths.byReferencedComponentComponent;
-		
 		//Test expand uuid on/off for each search type
 
-		String result = checkFail(target(sememeSearch)
+		String result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.query, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
 				.queryParam("expand", ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(sememeSearch)
+		result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.query, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_NAME.getPrimordialUuid().toString())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(descriptionSearch)
+		result = checkFail(target(descriptionSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
 				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(descriptionSearch)
+		result = checkFail(target(descriptionSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(prefixSearch)
+		result = checkFail(target(prefixSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic sememe Asse")
 				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(prefixSearch)
+		result = checkFail(target(prefixSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic sememe Asse")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertFalse(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(byRefSearch)
+		result = checkFail(target(byRefSearchRequestPath)
 				.queryParam(RequestParameters.nid, MetaData.ISAAC_METADATA.getNid())
 				.queryParam(RequestParameters.maxPageSize, "100")
 				.queryParam(RequestParameters.expand, "uuid," + ExpandUtil.referencedConcept)
@@ -633,7 +654,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(MetaData.MODULE.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(byRefSearch)
+		result = checkFail(target(byRefSearchRequestPath)
 				.queryParam(RequestParameters.nid, MetaData.ISAAC_METADATA.getNid())
 				.queryParam(RequestParameters.maxPageSize, "100")
 				.queryParam(RequestParameters.expand, "uuid")
@@ -645,17 +666,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testSearchExpandsRefConceptVersion()
 	{
-		final String descriptionSearch = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
 		//Test expand uuid on/off for each search type
 
-		String result = checkFail(target(descriptionSearch)
+		String result = checkFail(target(descriptionSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
 				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept + "," + ExpandUtil.versionsLatestOnlyExpandable)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains("<state>ACTIVE</state>"));
 		
-		result = checkFail(target(descriptionSearch)
+		result = checkFail(target(descriptionSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
@@ -665,9 +685,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testSearchRecursiveRefComponentLookup()
 	{
-		final String sememeSearch = RestPaths.searchPathComponent + RestPaths.sememesComponent;
-
-		String result = checkFail(target(sememeSearch)
+		String result = checkFail(target(sememeSearchrequestPath)
 				.queryParam(RequestParameters.query, MetaData.PREFERRED.getNid() + "")
 				.queryParam(RequestParameters.treatAsString, "true")
 				.queryParam(RequestParameters.maxPageSize, 500)
@@ -676,7 +694,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 		
-		result = checkFail(target(sememeSearch)
+		result = checkFail(target(sememeSearchrequestPath)
 				.queryParam(RequestParameters.query, MetaData.PREFERRED.getNid() + "")
 				.queryParam(RequestParameters.treatAsString, "true")
 				.queryParam(RequestParameters.maxPageSize, 500)
@@ -688,9 +706,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testDescriptionsFetch()
 	{
-		final String descriptions = RestPaths.conceptPathComponent +  RestPaths.descriptionsComponent;
-
-		String result = checkFail(target(descriptions + MetaData.USER.getConceptSequence())
+		String result = checkFail(target(conceptDescriptionsRequestPath + MetaData.USER.getConceptSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -746,45 +762,53 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(token.equals(read.getSerialized()));
 	}
 	
-	private static final String getCoordinatesToken = RestPaths.coordinatePathComponent + RestPaths.coordinatesTokenComponent;
-	private static final String getTaxonomyCoordinate = RestPaths.coordinatePathComponent + RestPaths.taxonomyCoordinatePathComponent;
 
 	@Test
 	public void testCoordinatesToken()
 	{
-
-
+		/*
+		 * These tests display the following values on fail
+		 * Each test should initialize or set-to-null each of the following values
+		 */
+		Map<String, Object> parameters = new HashMap<>();
+		WebTarget target = null;
 		String result = null;
+		RestCoordinatesToken retrievedToken = null;
+		CoordinatesToken defaultTokenObject = null;
+		RestCoordinatesToken defaultToken = null;
 		try {
-			RestCoordinatesToken defaultToken = new RestCoordinatesToken(CoordinatesTokens.getDefaultCoordinatesToken());
-			CoordinatesToken defaultTokenObject = CoordinatesTokens.getOrCreate(defaultToken.token);
-			RestCoordinatesToken retrievedToken = null;
+			defaultToken = new RestCoordinatesToken(CoordinatesTokens.getDefaultCoordinatesToken());
+			defaultTokenObject = CoordinatesTokens.getOrCreate(defaultToken.token);
 
 			// Test no parameters against default token
-			result = checkFail(target(getCoordinatesToken)
+			parameters.clear();
+			result = checkFail((target = target(coordinatesTokenRequestPath))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
 			Assert.assertTrue(retrievedToken.equals(defaultToken));
 
 			// Test default token passed as argument against default token
-			result = checkFail(target(getCoordinatesToken)
-					.queryParam(RequestParameters.coordToken, defaultToken.token)
+			parameters.clear();
+			parameters.put(RequestParameters.coordToken, defaultToken.token);
+			result = checkFail((target = target(coordinatesTokenRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
 			Assert.assertTrue(retrievedToken.equals(defaultToken));
 
 			// Test default token passed as argument against default token
-			result = checkFail(target(getCoordinatesToken)
-					.queryParam(RequestParameters.coordToken, defaultToken.token)
+			parameters.clear();
+			parameters.put(RequestParameters.coordToken, defaultToken.token);
+			result = checkFail((target = target(coordinatesTokenRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
 			Assert.assertTrue(retrievedToken.equals(defaultToken));
 
 			// Compare retrieved coordinates with default generated by default token
-			result = checkFail(target(getTaxonomyCoordinate)
+			parameters.clear();
+			result = checkFail((target = target(taxonomyCoordinateRequestPath))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			RestTaxonomyCoordinate retrievedTaxonomyCoordinate = XMLUtils.unmarshalObject(RestTaxonomyCoordinate.class, result);
@@ -807,9 +831,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				System.out.println(defaultTokenObject.getTaxonomyCoordinate());
 				throw e;
 			}
-			result = checkFail(target(getCoordinatesToken)
-					.queryParam(RequestParameters.precedence, StampPrecedence.TIME.name())
-					.queryParam(RequestParameters.stated, "false")
+			parameters.clear();
+			parameters.put(RequestParameters.precedence, StampPrecedence.TIME.name());
+			parameters.put(RequestParameters.stated, "false");
+			result = checkFail((target = target(coordinatesTokenRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
@@ -818,39 +843,46 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// Test using a customized token with getStampPrecedence() == StampPrecedence.TIME
 			// and getTaxonomyType() == PremiseType.INFERRED
-			result = checkFail(target(getTaxonomyCoordinate)
-					.queryParam(RequestParameters.coordToken, retrievedToken.token)
+			parameters.clear();
+			parameters.put(RequestParameters.coordToken, retrievedToken.token);
+			result = checkFail((target = target(taxonomyCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedTaxonomyCoordinate = XMLUtils.unmarshalObject(RestTaxonomyCoordinate.class, result);
 			Assert.assertTrue(retrievedTaxonomyCoordinate.stampCoordinate.precedence.getEnumId() == StampPrecedence.TIME.ordinal());
 			Assert.assertTrue(retrievedTaxonomyCoordinate.stated == false);
-		} catch (Error error) {
+		} catch (Throwable error) {
+			System.out.println("Failing target: " + target);
+			System.out.println("Failing parameters: " + parameters);
 			System.out.println("Failing result XML: " + result);
-			throw error;
-		} catch (Exception e) {
-			System.out.println("Failing result XML: " + result);
-			throw new Error(e);
+			System.out.println("Failing retrievedToken: " + retrievedToken);
+			System.out.println("Failing defaultToken: " + defaultToken);
+			System.out.println("Failing defaultTokenObject: " + defaultTokenObject);
+			throw new Error(error);
 		}
 	}
 
 	@Test
 	public void testGetCoordinates()
 	{
-		final String getTaxonomyCoordinate = RestPaths.coordinatePathComponent + RestPaths.taxonomyCoordinatePathComponent;
-		final String getStampCoordinate = RestPaths.coordinatePathComponent + RestPaths.stampCoordinatePathComponent;
-		final String getLanguageCoordinate = RestPaths.coordinatePathComponent + RestPaths.languageCoordinatePathComponent;
-		final String getLogicCoordinate = RestPaths.coordinatePathComponent + RestPaths.logicCoordinatePathComponent;
-
+		/*
+		 * These tests display the following values on fail
+		 * Each test should initialize or set-to-null each of the following values
+		 */
+		Map<String, Object> parameters = new HashMap<>();
+		WebTarget target = null;
 		String xpath = null;
 		Node node = null;
 		NodeList nodeList = null;
 		String result = null;
+		String requestUrl = null;
 		try {
 			// RestTaxonomyCoordinate
 			boolean taxonomyCoordinateStated;
-			result = checkFail(target(getTaxonomyCoordinate)
-					.queryParam(RequestParameters.stated, "false")
+			parameters.clear();
+			parameters.put(RequestParameters.stated, "false");
+			result = checkFail(
+					(target = target(requestUrl = taxonomyCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restTaxonomyCoordinate/stated";
@@ -859,8 +891,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
 			Assert.assertTrue(taxonomyCoordinateStated == false);
 
-			result = checkFail(target(getTaxonomyCoordinate)
-					.queryParam(RequestParameters.stated, "true")
+			parameters.clear();
+			parameters.put(RequestParameters.stated, "true");
+			result = checkFail(
+					(target = target(requestUrl = taxonomyCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			node = XMLUtils.getNodeFromXml(result, xpath);
@@ -869,14 +903,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(taxonomyCoordinateStated == true);
 
 			// RestStampCoordinate
-			result = checkFail(target(getStampCoordinate)
-					.queryParam(RequestParameters.time, 123456789)
-					.queryParam(RequestParameters.precedence, StampPrecedence.TIME)
-					.queryParam(RequestParameters.modules, MetaData.AMT_MODULE.getConceptSequence())
-					.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
-					.queryParam(RequestParameters.modules, MetaData.SNOMED_CT_CORE_MODULE.getConceptSequence())
-					.queryParam(RequestParameters.allowedStates, State.INACTIVE)
-					.queryParam(RequestParameters.allowedStates, State.PRIMORDIAL)
+			parameters.clear();
+			parameters.put(RequestParameters.time, 123456789);
+			parameters.put(RequestParameters.precedence, StampPrecedence.TIME);
+			parameters.put(RequestParameters.modules, MetaData.AMT_MODULE.getConceptSequence() + "," + MetaData.ISAAC_MODULE.getConceptSequence() + "," + MetaData.SNOMED_CT_CORE_MODULE.getConceptSequence());
+			parameters.put(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation() + "," + State.PRIMORDIAL.getAbbreviation());
+			result = checkFail(
+					(target = target(requestUrl = stampCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restStampCoordinate/time";
@@ -884,7 +917,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			nodeList = null;
 			long stampCoordinateTime = Long.parseLong(node.getTextContent());
 			Assert.assertTrue(stampCoordinateTime == 123456789);
-
 			xpath = "/restStampCoordinate/modules";
 			List<Integer> stampCoordinateModules = new ArrayList<>();
 			node = null;
@@ -910,8 +942,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			
 			// LanguageCoordinate
 				// language
-			result = checkFail(target(getLanguageCoordinate)
-					.queryParam(RequestParameters.language, MetaData.ENGLISH_LANGUAGE.getConceptSequence())
+			parameters.clear();
+			parameters.put(RequestParameters.language, MetaData.ENGLISH_LANGUAGE.getConceptSequence());
+			result = checkFail(
+					(target = target(requestUrl = languageCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/language";
@@ -921,8 +955,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(languageCoordinateLangSeq == MetaData.ENGLISH_LANGUAGE.getConceptSequence());
 			
 				// descriptionTypePrefs
-			result = checkFail(target(getLanguageCoordinate)
-					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.FULLY_SPECIFIED_NAME.getConceptSequence() + "," + MetaData.SYNONYM.getConceptSequence())
+			parameters.clear();
+			parameters.put(RequestParameters.descriptionTypePrefs, "fsn,synonym");
+			result = checkFail(
+					(target = target(requestUrl = languageCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
@@ -933,8 +969,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
 			
 				// descriptionTypePrefs (reversed)
-			result = checkFail(target(getLanguageCoordinate)
-					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.SYNONYM.getConceptSequence() + "," + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence())
+			parameters.clear();
+			parameters.put(RequestParameters.descriptionTypePrefs, "synonym,fsn");
+			result = checkFail(
+					(target = target(requestUrl = languageCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
@@ -946,16 +984,28 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// Get token with specified non-default descriptionTypePrefs (SYNONYM,FSN)
 			// then test token passed as argument along with RequestParameters.stated parameter
-			result = checkFail(target(getCoordinatesToken)
-					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.SYNONYM.getConceptSequence() + "," + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence())
+			parameters.clear();
+			parameters.put(RequestParameters.descriptionTypePrefs, "synonym,fsn");
+			result = checkFail(
+					(target = target(requestUrl = coordinatesTokenRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			RestCoordinatesToken retrievedToken = (RestCoordinatesToken) XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
+			final RestCoordinatesToken synonymDescriptionPreferredToken = (RestCoordinatesToken) XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
+			// Get token with specified default descriptionTypePrefs (FSN,SYNONYM)
+			parameters.clear();
+			parameters.put(RequestParameters.descriptionTypePrefs, "fsn,synonym");
+			result = checkFail(
+					(target = target(requestUrl = coordinatesTokenRequestPath, parameters))
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			final RestCoordinatesToken fsnDescriptionPreferredToken = (RestCoordinatesToken) XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
 
 			// confirm that constructed token has descriptionTypePrefs ordered as in
 			// parameters used to construct token
-			result = checkFail(target(getLanguageCoordinate)
-					.queryParam(RequestParameters.coordToken, retrievedToken.token)
+			parameters.clear();
+			parameters.put(RequestParameters.coordToken, synonymDescriptionPreferredToken.token);
+			result = checkFail(
+					(target = target(requestUrl = languageCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
@@ -967,9 +1017,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// test token passed as argument along with RequestParameters.stated parameter
 			// ensure that descriptionTypePrefs order specified in token is maintained
-			result = checkFail(target(getLanguageCoordinate)
-					.queryParam(RequestParameters.coordToken, retrievedToken.token)
-					.queryParam(RequestParameters.stated, "true")
+			parameters.clear();
+			parameters.put(RequestParameters.coordToken, synonymDescriptionPreferredToken.token);
+			parameters.put(RequestParameters.stated, "true");
+			result = checkFail(
+					(target = target(requestUrl = languageCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
@@ -978,10 +1030,55 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(nodeList.getLength() == 2);
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
-						
+			
+			// test passed descriptionTypePrefs on taxonomy
+			// test synonym as preference
+			parameters.clear();
+			parameters.put("childDepth", 1);
+			parameters.put(RequestParameters.descriptionTypePrefs, "synonym,fsn");
+			result = checkFail(
+					(target = target(requestUrl = taxonomyRequestPath, parameters))
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			node = XMLUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
+			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
+			Assert.assertTrue(node.getTextContent().equals(MetaData.HEALTH_CONCEPT.getConceptDescriptionText()));
+
+			// test fsn as preference using token
+			parameters.clear();
+			parameters.put("childDepth", 1);
+			parameters.put(RequestParameters.coordToken, fsnDescriptionPreferredToken.token);
+			result = checkFail(
+					(target = target(requestUrl = taxonomyRequestPath, parameters))
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			node = XMLUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
+			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
+			Assert.assertTrue(node.getTextContent().equals(MetaData.HEALTH_CONCEPT.getConceptDescriptionText() + " (ISAAC)"));
+			
+			// test fsn as preference
+			parameters.clear();
+			parameters.put("childDepth", 1);
+			parameters.put(RequestParameters.descriptionTypePrefs, "fsn,synonym");
+			result = checkFail(
+					(target = target(requestUrl = taxonomyRequestPath, parameters))
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			node = XMLUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
+			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
+			Assert.assertTrue(node.getTextContent().equals(MetaData.HEALTH_CONCEPT.getConceptDescriptionText() + " (ISAAC)"));
+
 			// LogicCoordinate
-			result = checkFail(target(getLogicCoordinate)
-					.queryParam(RequestParameters.classifier, MetaData.SNOROCKET_CLASSIFIER.getConceptSequence())
+			parameters.clear();
+			parameters.put(RequestParameters.classifier, MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());
+			result = checkFail(
+					(target = target(requestUrl = logicCoordinateRequestPath, parameters))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLogicCoordinate/classifier";
@@ -992,7 +1089,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			
 			// Ensure explicitly-passed token components are not ignored when passed token
 			// accompanied by additional parameters
-		} catch (Exception error) {
+		} catch (Throwable error) {
+			System.out.println("Failing request target: " + target);
+			System.out.println("Failing request URL: " + requestUrl);
+			System.out.println("Failing request parameters: " + parameters);
 			System.out.println("Failing result XPath: " + xpath);
 			System.out.println("Failing result Node: " + XMLUtils.toString(node));
 			System.out.println("Failing result NodeList: " + XMLUtils.toString(nodeList));
