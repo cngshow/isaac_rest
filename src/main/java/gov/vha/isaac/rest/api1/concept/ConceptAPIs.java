@@ -62,7 +62,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.conceptPathComponent)
+@Path(RestPaths.conceptAPIsPathComponent)
 public class ConceptAPIs
 {
 	private static Logger log = LogManager.getLogger();

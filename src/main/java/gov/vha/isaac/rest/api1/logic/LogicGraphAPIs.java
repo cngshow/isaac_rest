@@ -56,7 +56,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a> 
  */
 
-@Path(RestPaths.logicGraphPathComponent)
+@Path(RestPaths.logicGraphAPIsPathComponent)
 public class LogicGraphAPIs
 {	
 	private static Logger LOG = LogManager.getLogger();

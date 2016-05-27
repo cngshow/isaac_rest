@@ -83,27 +83,27 @@ import gov.vha.isaac.rest.tokens.CoordinatesTokens;
  */
 public class RestTest extends JerseyTestNg.ContainerPerClassTest
 {
-	private final static String taxonomyCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.taxonomyCoordinatePathComponent;
-	private final static String stampCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.stampCoordinatePathComponent;
-	private final static String languageCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.languageCoordinatePathComponent;
-	private final static String logicCoordinateRequestPath = RestPaths.coordinatePathComponent + RestPaths.logicCoordinatePathComponent;
-	private final static String descriptionSearchRequestPath = RestPaths.searchPathComponent + RestPaths.descriptionsComponent;
-	private final static String taxonomyRequestPath = RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
+	private final static String taxonomyCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.taxonomyCoordinatePathComponent;
+	private final static String stampCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.stampCoordinatePathComponent;
+	private final static String languageCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.languageCoordinatePathComponent;
+	private final static String logicCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.logicCoordinatePathComponent;
+	private final static String descriptionSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.descriptionsComponent;
+	private final static String taxonomyRequestPath = RestPaths.taxonomyAPIsPathComponent + RestPaths.versionComponent;
 
-	private final static String sememeSearchRequestPath = RestPaths.searchPathComponent + RestPaths.sememesComponent;
-	private final static String prefixSearchRequestPath = RestPaths.searchPathComponent + RestPaths.prefixComponent;
-	private final static String byRefSearchRequestPath = RestPaths.searchPathComponent + RestPaths.byReferencedComponentComponent;
+	private final static String sememeSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.sememesComponent;
+	private final static String prefixSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.prefixComponent;
+	private final static String byRefSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 	
-	private final static String sememeSearchrequestPath = RestPaths.searchPathComponent + RestPaths.sememesComponent;
+	private final static String sememeSearchrequestPath = RestPaths.searchAPIsPathComponent + RestPaths.sememesComponent;
 	
-	private final static String conceptDescriptionsRequestPath = RestPaths.conceptPathComponent +  RestPaths.descriptionsComponent;
-	private final static String conceptVersionRequestPath = RestPaths.conceptPathComponent +  RestPaths.versionComponent;
+	private final static String conceptDescriptionsRequestPath = RestPaths.conceptAPIsPathComponent +  RestPaths.descriptionsComponent;
+	private final static String conceptVersionRequestPath = RestPaths.conceptAPIsPathComponent +  RestPaths.versionComponent;
 
-	private static final String coordinatesTokenRequestPath = RestPaths.coordinatePathComponent + RestPaths.coordinatesTokenComponent;
+	private static final String coordinatesTokenRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.coordinatesTokenComponent;
 
-	private final static String sememeByAssemblageRequestPath = RestPaths.sememePathComponent + RestPaths.byAssemblageComponent;
+	private final static String sememeByAssemblageRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byAssemblageComponent;
 	
-	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememePathComponent + RestPaths.byReferencedComponentComponent;
+	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 	
 	@Override
 	protected Application configure()
@@ -337,7 +337,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testIdReturn()
 	{
-		final String url = RestPaths.idPathComponent + RestPaths.idTranslateComponent +
+		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
 		
 		Response response = target(url).request()
@@ -377,7 +377,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testLogicGraphReturn()
 	{
-		final String url = RestPaths.logicGraphPathComponent + RestPaths.versionComponent +
+		final String url = RestPaths.logicGraphAPIsPathComponent + RestPaths.versionComponent +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
 		
 		Response response = target(url).request()
@@ -398,7 +398,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testRestSememeLogicGraphVersionReturn()
 	{
-		final String url = RestPaths.logicGraphPathComponent + RestPaths.versionComponent +
+		final String url = RestPaths.logicGraphAPIsPathComponent + RestPaths.versionComponent +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString();
 		Response returnedResponse = target(url)
 				//.queryParam(RequestParameters.expand,"version")

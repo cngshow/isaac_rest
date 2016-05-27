@@ -67,7 +67,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
-@Path(RestPaths.searchPathComponent)
+@Path(RestPaths.searchAPIsPathComponent)
 public class SearchAPIs
 {
 	private static Logger log = LogManager.getLogger();
