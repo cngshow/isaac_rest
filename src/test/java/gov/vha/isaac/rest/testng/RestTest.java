@@ -411,9 +411,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		//System.out.println("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with referencedConceptDescription of type " + referencedConceptDescriptionNode.getNodeType());
 		
-		final String rootLogicNodeFieldName = "rootLogicNode";
-		if (rootNode.with("rootLogicNode").with("nodeSemantic").get("name") == null || ! rootNode.with("rootLogicNode").with("nodeSemantic").get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
-			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with("rootLogicNode").with("nodeSemantic").get("name") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
+		final String rootLogicNodeFieldName = "rootLogicNode";		
+		final String nodeSemanticNodeFieldName = "nodeSemantic";
+		if (rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") == null || ! rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
 		}
 	}
 
@@ -421,18 +422,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
 	 * taxonomy data.
 	 */
+	final private static String taxonomyRequestUrl = RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
 	@Test
 	public void testTaxonomyReturn()
 	{
-		final String url = RestPaths.taxonomyPathComponent + RestPaths.versionComponent;
 
-		Response response = target(url).request()
+		Response response = target(taxonomyRequestUrl).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-	//	System.out.println(target(url).request().get().toString());
+	//	System.out.println(target(taxonomyRequestUrl).request().get().toString());
 		
 		checkFail(response);
 
-		response = target(url).request()
+		response = target(taxonomyRequestUrl).request()
 					.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
 		
 		checkFail(response);
@@ -752,13 +753,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testCoordinatesToken()
 	{
-
-
 		String result = null;
+		RestCoordinatesToken retrievedToken = null;
+		CoordinatesToken defaultTokenObject = null;
+		RestCoordinatesToken defaultToken = null;
 		try {
-			RestCoordinatesToken defaultToken = new RestCoordinatesToken(CoordinatesTokens.getDefaultCoordinatesToken());
-			CoordinatesToken defaultTokenObject = CoordinatesTokens.getOrCreate(defaultToken.token);
-			RestCoordinatesToken retrievedToken = null;
+			defaultToken = new RestCoordinatesToken(CoordinatesTokens.getDefaultCoordinatesToken());
+			defaultTokenObject = CoordinatesTokens.getOrCreate(defaultToken.token);
 
 			// Test no parameters against default token
 			result = checkFail(target(getCoordinatesToken)
@@ -827,9 +828,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(retrievedTaxonomyCoordinate.stated == false);
 		} catch (Error error) {
 			System.out.println("Failing result XML: " + result);
+			System.out.println("Failing retrievedToken: " + retrievedToken);
+			System.out.println("Failing defaultToken: " + defaultToken);
+			System.out.println("Failing defaultTokenObject: " + defaultTokenObject);
 			throw error;
 		} catch (Exception e) {
 			System.out.println("Failing result XML: " + result);
+			System.out.println("Failing retrievedToken: " + retrievedToken);
+			System.out.println("Failing defaultToken: " + defaultToken);
+			System.out.println("Failing defaultTokenObject: " + defaultTokenObject);
 			throw new Error(e);
 		}
 	}
@@ -846,10 +853,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Node node = null;
 		NodeList nodeList = null;
 		String result = null;
+		String requestUrl = null;
 		try {
 			// RestTaxonomyCoordinate
 			boolean taxonomyCoordinateStated;
-			result = checkFail(target(getTaxonomyCoordinate)
+			result = checkFail(target(requestUrl = getTaxonomyCoordinate)
 					.queryParam(RequestParameters.stated, "false")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -859,7 +867,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			taxonomyCoordinateStated = Boolean.valueOf(node.getTextContent());
 			Assert.assertTrue(taxonomyCoordinateStated == false);
 
-			result = checkFail(target(getTaxonomyCoordinate)
+			result = checkFail(target(requestUrl = getTaxonomyCoordinate)
 					.queryParam(RequestParameters.stated, "true")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -869,7 +877,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(taxonomyCoordinateStated == true);
 
 			// RestStampCoordinate
-			result = checkFail(target(getStampCoordinate)
+			result = checkFail(target(requestUrl = getStampCoordinate)
 					.queryParam(RequestParameters.time, 123456789)
 					.queryParam(RequestParameters.precedence, StampPrecedence.TIME)
 					.queryParam(RequestParameters.modules, MetaData.AMT_MODULE.getConceptSequence())
@@ -910,7 +918,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			
 			// LanguageCoordinate
 				// language
-			result = checkFail(target(getLanguageCoordinate)
+			result = checkFail(target(requestUrl = getLanguageCoordinate)
 					.queryParam(RequestParameters.language, MetaData.ENGLISH_LANGUAGE.getConceptSequence())
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -921,7 +929,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(languageCoordinateLangSeq == MetaData.ENGLISH_LANGUAGE.getConceptSequence());
 			
 				// descriptionTypePrefs
-			result = checkFail(target(getLanguageCoordinate)
+			result = checkFail(target(requestUrl = getLanguageCoordinate)
 					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.FULLY_SPECIFIED_NAME.getConceptSequence() + "," + MetaData.SYNONYM.getConceptSequence())
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -933,7 +941,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
 			
 				// descriptionTypePrefs (reversed)
-			result = checkFail(target(getLanguageCoordinate)
+			result = checkFail(target(requestUrl = getLanguageCoordinate)
 					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.SYNONYM.getConceptSequence() + "," + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence())
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -946,7 +954,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// Get token with specified non-default descriptionTypePrefs (SYNONYM,FSN)
 			// then test token passed as argument along with RequestParameters.stated parameter
-			result = checkFail(target(getCoordinatesToken)
+			result = checkFail(target(requestUrl = getCoordinatesToken)
 					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.SYNONYM.getConceptSequence() + "," + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence())
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -954,7 +962,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// confirm that constructed token has descriptionTypePrefs ordered as in
 			// parameters used to construct token
-			result = checkFail(target(getLanguageCoordinate)
+			result = checkFail(target(requestUrl = getLanguageCoordinate)
 					.queryParam(RequestParameters.coordToken, retrievedToken.token)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -967,7 +975,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			// test token passed as argument along with RequestParameters.stated parameter
 			// ensure that descriptionTypePrefs order specified in token is maintained
-			result = checkFail(target(getLanguageCoordinate)
+			result = checkFail(target(requestUrl = getLanguageCoordinate)
 					.queryParam(RequestParameters.coordToken, retrievedToken.token)
 					.queryParam(RequestParameters.stated, "true")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
@@ -978,9 +986,33 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(nodeList.getLength() == 2);
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
 			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
-						
+			
+			// test passed descriptionTypePrefs on taxonomy
+			// test synonym as preference
+			result = checkFail(target(requestUrl = taxonomyRequestUrl)
+					.queryParam("childDepth", 1)
+					.queryParam(RequestParameters.descriptionTypePrefs, "synonym,fsn")
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			node = XMLUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
+			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
+			Assert.assertTrue(node.getTextContent().equals(MetaData.HEALTH_CONCEPT.getConceptDescriptionText()));
+			// test fsn as preference
+			result = checkFail(target(requestUrl = taxonomyRequestUrl)
+					.queryParam("childDepth", 1)
+					.queryParam(RequestParameters.descriptionTypePrefs, "fsn,synonym")
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			node = XMLUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
+			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
+			Assert.assertTrue(node.getTextContent().equals(MetaData.HEALTH_CONCEPT.getConceptDescriptionText() + " (ISAAC)"));
+
 			// LogicCoordinate
-			result = checkFail(target(getLogicCoordinate)
+			result = checkFail(target(requestUrl = getLogicCoordinate)
 					.queryParam(RequestParameters.classifier, MetaData.SNOROCKET_CLASSIFIER.getConceptSequence())
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -992,7 +1024,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			
 			// Ensure explicitly-passed token components are not ignored when passed token
 			// accompanied by additional parameters
-		} catch (Exception error) {
+		} catch (Throwable error) {
+			System.out.println("Failing request URL: " + requestUrl);
 			System.out.println("Failing result XPath: " + xpath);
 			System.out.println("Failing result Node: " + XMLUtils.toString(node));
 			System.out.println("Failing result NodeList: " + XMLUtils.toString(nodeList));
