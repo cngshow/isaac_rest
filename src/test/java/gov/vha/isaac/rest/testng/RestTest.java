@@ -955,15 +955,21 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			// Get token with specified non-default descriptionTypePrefs (SYNONYM,FSN)
 			// then test token passed as argument along with RequestParameters.stated parameter
 			result = checkFail(target(requestUrl = getCoordinatesToken)
-					.queryParam(RequestParameters.descriptionTypePrefs, MetaData.SYNONYM.getConceptSequence() + "," + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence())
+					.queryParam(RequestParameters.descriptionTypePrefs, "synonym,fsn")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			RestCoordinatesToken retrievedToken = (RestCoordinatesToken) XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
+			final RestCoordinatesToken synonymDescriptionPreferredToken = (RestCoordinatesToken) XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
+			// Get token with specified default descriptionTypePrefs (FSN,SYNONYM)
+			result = checkFail(target(requestUrl = getCoordinatesToken)
+					.queryParam(RequestParameters.descriptionTypePrefs, "fsn,synonym")
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			final RestCoordinatesToken fsnDescriptionPreferredToken = (RestCoordinatesToken) XMLUtils.unmarshalObject(RestCoordinatesToken.class, result);
 
 			// confirm that constructed token has descriptionTypePrefs ordered as in
 			// parameters used to construct token
 			result = checkFail(target(requestUrl = getLanguageCoordinate)
-					.queryParam(RequestParameters.coordToken, retrievedToken.token)
+					.queryParam(RequestParameters.coordToken, synonymDescriptionPreferredToken.token)
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
@@ -976,7 +982,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			// test token passed as argument along with RequestParameters.stated parameter
 			// ensure that descriptionTypePrefs order specified in token is maintained
 			result = checkFail(target(requestUrl = getLanguageCoordinate)
-					.queryParam(RequestParameters.coordToken, retrievedToken.token)
+					.queryParam(RequestParameters.coordToken, synonymDescriptionPreferredToken.token)
 					.queryParam(RequestParameters.stated, "true")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -999,6 +1005,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			nodeList = null;
 			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
 			Assert.assertTrue(node.getTextContent().equals(MetaData.HEALTH_CONCEPT.getConceptDescriptionText()));
+
+			// test fsn as preference using token
+			result = checkFail(target(requestUrl = taxonomyRequestUrl)
+					.queryParam("childDepth", 1)
+					.queryParam(RequestParameters.coordToken, fsnDescriptionPreferredToken.token)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			node = XMLUtils.getNodeFromXml(result, xpath);
+			nodeList = null;
+			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
+			Assert.assertTrue(node.getTextContent().equals(MetaData.HEALTH_CONCEPT.getConceptDescriptionText() + " (ISAAC)"));
+			
 			// test fsn as preference
 			result = checkFail(target(requestUrl = taxonomyRequestUrl)
 					.queryParam("childDepth", 1)
