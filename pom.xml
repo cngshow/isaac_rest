@@ -293,8 +293,8 @@
 					</configuration>
 				</plugin>
 			</plugins>
-		</pluginManagement></build>
-		</build>
+		</pluginManagement>
+	</build>
 <profiles>
   <profile>
     <id>cargo</id>
