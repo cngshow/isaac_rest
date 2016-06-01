@@ -63,4 +63,12 @@ public class RestIdentifiedObjectsResult
 		this.concept = concept;
 		this.sememe = sememe;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestIdentifiedObjectsResult [concept=" + (concept != null ? concept.description : null) + ", sememe=" + (sememe != null ? sememe.identifiers.uuids : null) + "]";
+	}
 }

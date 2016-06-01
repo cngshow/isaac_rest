@@ -1139,6 +1139,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		WebTarget target = null;
 		String result = null;
 		String requestUrl = null;
+		RestIdentifiedObjectsResult identifiedObjectsResult = null;
 		try {
 			// Get a sememe chronology by assemblage and extract one of its UUIDs
 			result = checkFail(
@@ -1176,14 +1177,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			// Test RestObjectChronologyType enumId ordinal
 			Assert.assertTrue(objectChronologyType.getEnumId() == ObjectChronologyType.CONCEPT.ordinal());
 
-			// Test sytemInfo
+			// Test SystemInfo
 			result = checkFail(
 					(target = target(
 							requestUrl = RestPaths.systemAPIsPathComponent + RestPaths.systemInfoComponent))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			RestSystemInfo systemInfo = XMLUtils.unmarshalObject(RestSystemInfo.class, result);
-			Assert.assertTrue(! StringUtils.isBlank(systemInfo.apiImplementationVersion));
+			Assert.assertTrue(systemInfo.supportedAPIVersions.length > 0 && ! StringUtils.isBlank(systemInfo.supportedAPIVersions[0]));
+//			Assert.assertTrue(! StringUtils.isBlank(systemInfo.apiImplementationVersion));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacVersion));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.scmUrl));
 //			Assert.assertNotNull(systemInfo.isaacDbDependency);
@@ -1215,10 +1217,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							requestUrl = RestPaths.systemAPIsPathComponent + RestPaths.identifiedObjectsComponent + sememeUuid.toString()))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			RestIdentifiedObjectsResult identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
+			identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
 			// Test RestSememeChronology
 			Assert.assertTrue(identifiedObjectsResult.sememe.identifiers.uuids.contains(sememeUuid));
-			Assert.assertTrue(identifiedObjectsResult.concept == null);
+			Assert.assertNull(identifiedObjectsResult.concept);
 			
 			// Test identifiedObjectsComponent request of specified concept UUID
 			result = checkFail(
@@ -1229,10 +1231,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
 			// Test RestSememeChronology
 			Assert.assertTrue(identifiedObjectsResult.concept.identifiers.uuids.contains(MetaData.ISAAC_ROOT.getPrimordialUuid()));
-			Assert.assertTrue(identifiedObjectsResult.sememe == null);
+			Assert.assertNull(identifiedObjectsResult.sememe);
 
+			// Iterate and test first 10000 sequence numbers until a value found which corresponds to both concept and sememe
 			boolean foundSequenceCorrespondingToBothConceptAndSememe = false;
-			for (int sequence = 0; sequence < 1000; ++sequence) {
+			for (int sequence = 1; sequence < 10000; ++sequence) {
 				if (Get.sememeService().hasSememe(sequence) && Get.conceptService().hasConcept(sequence)) {
 					foundSequenceCorrespondingToBothConceptAndSememe = true;
 					result = checkFail(
@@ -1254,6 +1257,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			System.out.println("Failing request URL: " + requestUrl);
 			System.out.println("Failing request parameters: " + parameters);
 			System.out.println("Failing result XML: " + result);
+			System.out.println("Failing identified objects result: " + identifiedObjectsResult);
 
 			throw error;
 		}
