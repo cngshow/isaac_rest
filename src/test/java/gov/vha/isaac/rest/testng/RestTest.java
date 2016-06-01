@@ -76,8 +76,7 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersions;
-import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
-import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
+import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -1185,8 +1184,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.readEntity(String.class);
 			RestSystemInfo systemInfo = XMLUtils.unmarshalObject(RestSystemInfo.class, result);
 			Assert.assertTrue(! StringUtils.isBlank(systemInfo.apiImplementationVersion));
-			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacVersion));
-			Assert.assertTrue(! StringUtils.isBlank(systemInfo.scmUrl));
+//			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacVersion));
+//			Assert.assertTrue(! StringUtils.isBlank(systemInfo.scmUrl));
 //			Assert.assertNotNull(systemInfo.isaacDbDependency);
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacDbDependency.groupId));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacDbDependency.artifactId));
@@ -1209,6 +1208,47 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //				Assert.assertTrue(! StringUtils.isBlank(licenseInfo.url));
 //				Assert.assertTrue(! StringUtils.isBlank(licenseInfo.comments));
 //			}		
+			
+			// Test identifiedObjectsComponent request of specified sememe UUID
+			result = checkFail(
+					(target = target(
+							requestUrl = RestPaths.systemAPIsPathComponent + RestPaths.identifiedObjectsComponent + sememeUuid.toString()))
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			RestIdentifiedObjectsResult identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
+			// Test RestSememeChronology
+			Assert.assertTrue(identifiedObjectsResult.sememe.identifiers.uuids.contains(sememeUuid));
+			Assert.assertTrue(identifiedObjectsResult.concept == null);
+			
+			// Test identifiedObjectsComponent request of specified concept UUID
+			result = checkFail(
+					(target = target(
+							requestUrl = RestPaths.systemAPIsPathComponent + RestPaths.identifiedObjectsComponent + MetaData.ISAAC_ROOT.getPrimordialUuid().toString()))
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
+			// Test RestSememeChronology
+			Assert.assertTrue(identifiedObjectsResult.concept.identifiers.uuids.contains(MetaData.ISAAC_ROOT.getPrimordialUuid()));
+			Assert.assertTrue(identifiedObjectsResult.sememe == null);
+
+			boolean foundSequenceCorrespondingToBothConceptAndSememe = false;
+			for (int sequence = 0; sequence < 1000; ++sequence) {
+				if (Get.sememeService().hasSememe(sequence) && Get.conceptService().hasConcept(sequence)) {
+					foundSequenceCorrespondingToBothConceptAndSememe = true;
+					result = checkFail(
+							(target = target(
+									requestUrl = RestPaths.systemAPIsPathComponent + RestPaths.identifiedObjectsComponent + sequence))
+							.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+							.readEntity(String.class);
+					identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
+					// Test RestSememeChronology AND RestConceptChronology
+					Assert.assertTrue(identifiedObjectsResult.concept.conceptSequence == sequence);
+					Assert.assertTrue(identifiedObjectsResult.sememe.sememeSequence == sequence);
+
+					break;
+				}
+			}
+			Assert.assertTrue(foundSequenceCorrespondingToBothConceptAndSememe);
 		} catch (Throwable error) {
 			System.out.println("Failing request target: " + target);
 			System.out.println("Failing request URL: " + requestUrl);

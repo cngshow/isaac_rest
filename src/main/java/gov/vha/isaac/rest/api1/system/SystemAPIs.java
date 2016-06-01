@@ -18,10 +18,9 @@
  */
 package gov.vha.isaac.rest.api1.system;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,7 +29,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import com.webcohesion.enunciate.metadata.Facet;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
@@ -74,6 +75,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
+import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -102,12 +104,13 @@ public class SystemAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")  
-	public List<Object> getIdentifiedObjects(
+	public RestIdentifiedObjectsResult getIdentifiedObjects(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		List<Object> identifiedObjects = new ArrayList<>();
+		RestConceptChronology concept = null;
+		RestSememeChronology sememe = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
 		{
@@ -117,31 +120,31 @@ public class SystemAPIs
 				ObjectChronologyType objectChronologyType = Get.identifierService().getChronologyTypeForNid(intId.get());
 				switch(objectChronologyType) {
 				case CONCEPT:
-					identifiedObjects.add(
+					concept =
 							new RestConceptChronology(
 									Get.conceptService().getConcept(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 					break;
 				case SEMEME:
-					identifiedObjects.add(
+					sememe =
 							new RestSememeChronology(
 									Get.sememeService().getSememe(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 					break;
 				case UNKNOWN_NID:
 				default:
 					throw new RestException(RequestParameters.id, id, "Specified NID is for unsupported ObjectChronologyType " + objectChronologyType);
 				}
 				
-				if (identifiedObjects.size() == 0) {
+				if (concept == null && sememe == null) {
 					throw new RestException(RequestParameters.id, id, "Specified NID does not correspond to an existing concept or sememe");
 				}
 
-				return identifiedObjects;
+				return new RestIdentifiedObjectsResult(concept, sememe);
 			}
 			else
 			{
@@ -149,30 +152,30 @@ public class SystemAPIs
 
 				int conceptNid = Get.identifierService().getConceptNid(intId.get());
 				if (conceptNid != 0) {
-					identifiedObjects.add(
+					concept =
 							new RestConceptChronology(
 									Get.conceptService().getConcept(conceptNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 				}
 
 				int sememeNid = Get.identifierService().getSememeNid(intId.get());
 				if (sememeNid != 0) {
-					identifiedObjects.add(
+					sememe =
 							new RestSememeChronology(
 									Get.sememeService().getSememe(sememeNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 				}
 			}
 
-			if (identifiedObjects.size() == 0) {
+			if (concept == null && sememe == null) {
 				throw new RestException(RequestParameters.id, id, "Specified sequence does not correspond to an existing concept or sememe");
 			}
 
-			return identifiedObjects;
+			return new RestIdentifiedObjectsResult(concept, sememe);
 		}
 		else
 		{
@@ -188,32 +191,31 @@ public class SystemAPIs
 				
 					switch(objectChronologyType) {
 					case CONCEPT:
-						identifiedObjects.add(
+						concept =
 								new RestConceptChronology(
 										Get.conceptService().getConcept(nid),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 						break;
 					case SEMEME:
-						identifiedObjects.add(
+						sememe =
 								new RestSememeChronology(
 										Get.sememeService().getSememe(nid),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 						break;
 					case UNKNOWN_NID:
 					default:
 						throw new RestException(RequestParameters.id, id, "Specified UUID is for NID " + nid + " for unsupported ObjectChronologyType " + objectChronologyType);
 					}
 					
-					if (identifiedObjects.size() == 0) {
+					if (concept == null && sememe == null) {
 						throw new RestException(RequestParameters.id, id, "Specified UUID is for NID " + nid + " that does not correspond to an existing concept or sememe");
 					}
 
-					return identifiedObjects;
-				
+					return new RestIdentifiedObjectsResult(concept, sememe);
 				} else {
 					throw new RestException(RequestParameters.id, id, "No concept or sememe exists corresponding to the passed UUID id.");
 				}
