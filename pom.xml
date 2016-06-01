@@ -293,8 +293,9 @@
 					</configuration>
 				</plugin>
 			</plugins>
-		</pluginManagement>
-		<profiles>
+		</pluginManagement></build>
+		</build>
+<profiles>
   <profile>
     <id>cargo</id>
       <build>
@@ -316,7 +317,7 @@
               <cargo.tomcat.manager.url>http://vadev.mantech.com:4848/manager/html</cargo.tomcat.manager.url>
               <remote.context>/isaac-rest</remote.context>
             </properties>
-      </configuration>
+     </configuration>
  	<deployables>
     		<deployable>
       		  <groupId>gov.vha.isaac.rest</groupId>
@@ -335,5 +336,4 @@
     </build>
   </profile>
 </profiles>
-	</build>
 </project>
