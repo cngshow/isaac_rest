@@ -1140,6 +1140,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String result = null;
 		String requestUrl = null;
 		RestIdentifiedObjectsResult identifiedObjectsResult = null;
+		RestSystemInfo systemInfo = null;
 		try {
 			// Get a sememe chronology by assemblage and extract one of its UUIDs
 			result = checkFail(
@@ -1183,7 +1184,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							requestUrl = RestPaths.systemAPIsPathComponent + RestPaths.systemInfoComponent))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			RestSystemInfo systemInfo = XMLUtils.unmarshalObject(RestSystemInfo.class, result);
+			systemInfo = XMLUtils.unmarshalObject(RestSystemInfo.class, result);
 			Assert.assertTrue(systemInfo.supportedAPIVersions.length > 0 && ! StringUtils.isBlank(systemInfo.supportedAPIVersions[0]));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.apiImplementationVersion));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacVersion));
@@ -1258,6 +1259,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			System.out.println("Failing request parameters: " + parameters);
 			System.out.println("Failing result XML: " + result);
 			System.out.println("Failing identified objects result: " + identifiedObjectsResult);
+			System.out.println("Failing systemInfo result: " + systemInfo);
 
 			throw error;
 		}
