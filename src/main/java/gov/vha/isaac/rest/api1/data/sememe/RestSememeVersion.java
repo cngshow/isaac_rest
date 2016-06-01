@@ -73,14 +73,14 @@ public abstract class RestSememeVersion
 	 * The sememe chronology for this concept.  Depending on the expand parameter, may be empty.
 	 */
 	@XmlElement
-	RestSememeChronology sememeChronology;
+	public RestSememeChronology sememeChronology;
 	
 	
 	/**
 	 * The StampedVersion details for this version of this sememe.
 	 */
 	@XmlElement
-	RestStampedVersion sememeVersion;
+	public RestStampedVersion sememeVersion;
 	
 	/**
 	 * The nested sememes attached to this sememe.  Not populated by default, include expand=nested to expand these.

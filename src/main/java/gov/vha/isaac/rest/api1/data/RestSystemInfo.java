@@ -113,19 +113,19 @@ public class RestSystemInfo
 	 * Software Licenses
 	 */
 	@XmlElement
-	List<RestLicenseInfo> appLicenses = new ArrayList<>();
+	public List<RestLicenseInfo> appLicenses = new ArrayList<>();
 	
 	/**
 	 * Database Licenses
 	 */
 	@XmlElement
-	List<RestLicenseInfo> dbLicenses = new ArrayList<>();
+	public List<RestLicenseInfo> dbLicenses = new ArrayList<>();
 	
 	/**
 	 * The source content that was built into the underlying database.
 	 */
 	@XmlElement
-	List<RestDependencyInfo> dbDependencies = new ArrayList<>();
+	public List<RestDependencyInfo> dbDependencies = new ArrayList<>();
 
 	public RestSystemInfo()
 	{

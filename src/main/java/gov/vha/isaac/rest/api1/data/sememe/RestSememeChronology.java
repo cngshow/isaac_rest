@@ -65,26 +65,26 @@ public class RestSememeChronology
 	 * The sememe sequence identifier of this sememe instance
 	 */
 	@XmlElement
-	int sememeSequence;
+	public int sememeSequence;
 	
 	/**
 	 * The concept sequence identifier of the concept that represents the type of this sememe
 	 */
 	@XmlElement
-	int assemblageSequence;
+	public int assemblageSequence;
 	
 	/**
 	 * The NID identifier of the object that is referenced by this sememe instance.  This could represent a concept or a sememe.
 	 */
 	@XmlElement
-	int referencedComponentNid;
+	public int referencedComponentNid;
 	
 	/**
 	 * The type of the object that is referenced by the referencedComponentNid value.  This would tell you if the nid represents a concept or a sememe.
 	 * Only populated when the expand parameter 'referencedDetails' is passed.
 	 */
 	@XmlElement
-	RestObjectChronologyType referencedComponentNidObjectType;
+	public RestObjectChronologyType referencedComponentNidObjectType;
 	
 	/**
 	 * If the referencedComponentNid represents a concept, then this carries the "best" description for that concept.  This is selected based on the 
@@ -93,13 +93,13 @@ public class RestSememeChronology
 	 * Only populated when the expand parameter 'referencedDetails' is passed.
 	 */
 	@XmlElement
-	String referencedComponentNidDescription;
+	public String referencedComponentNidDescription;
 	
 	/**
 	 * The permanent identifier object(s) attached to this sememe instance
 	 */
 	@XmlElement
-	RestIdentifiedObject identifiers;
+	public RestIdentifiedObject identifiers;
 	
 	/**
 	 * The list of sememe versions.  Depending on the expand parameter, may be empty, the latest only, or all versions.

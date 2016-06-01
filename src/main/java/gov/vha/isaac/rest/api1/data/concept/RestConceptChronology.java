@@ -54,14 +54,14 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 * The concept sequence identifier of this concept
 	 */
 	@XmlElement
-	int conceptSequence;
+	public int conceptSequence;
 	
 	/**
 	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
 	 * stamp and language coordinates - or - if none present - the server default.
 	 */
 	@XmlElement
-	String description;
+	public String description;
 	
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -73,13 +73,13 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 * The identifier data for the object
 	 */
 	@XmlElement
-	RestIdentifiedObject identifiers;
+	public RestIdentifiedObject identifiers;
 	
 	/**
 	 * The list of concept versions.  Depending on the expand parameter, may be empty, the latest only, or all versions.
 	 */
 	@XmlElement
-	List<RestConceptVersion> versions;
+	public List<RestConceptVersion> versions;
 
 	protected RestConceptChronology()
 	{

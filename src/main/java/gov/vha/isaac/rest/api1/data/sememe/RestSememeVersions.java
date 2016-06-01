@@ -51,7 +51,7 @@ public class RestSememeVersions
 	 * The contained results
 	 */
 	@XmlElement
-	List<RestSememeVersion> results = null;
+	public List<RestSememeVersion> results = null;
 
 	protected RestSememeVersions()
 	{

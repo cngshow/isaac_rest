@@ -20,12 +20,15 @@ package gov.vha.isaac.rest.api.data;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * 
  * {@link Expandable}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class Expandable
 {
 	/**
@@ -39,6 +42,10 @@ public class Expandable
 	 */
 	@XmlElement
 	String url;
+	
+	Expandable() {
+		// For JAXB only
+	}
 	
 	public Expandable(String name, String url)
 	{

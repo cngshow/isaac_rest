@@ -38,19 +38,19 @@ public class RestLicenseInfo
 	 * Name of the license
 	 */
 	@XmlElement
-	String name;
+	public String name;
 	
 	/**
 	 * URL to the license text
 	 */
 	@XmlElement
-	String url;
+	public String url;
 	
 	/**
 	 * Comments related to the license
 	 */
 	@XmlElement
-	String comments;
+	public String comments;
 	
 	public RestLicenseInfo()
 	{
