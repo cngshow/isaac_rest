@@ -298,7 +298,9 @@
 <profiles>
   <profile>
     <id>cargo</id>
-     <activation>
+  <activation>
+        <activeByDefault>true</activeByDefault>
+  </activation>
         <plugins>
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
@@ -334,7 +336,6 @@
         </plugin>
       </plugins>
     </build>
-   </activation>
   </profile>
 </profiles>
 </project>
