@@ -306,24 +306,8 @@
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
             <artifactId>cargo-maven2-plugin</artifactId>
-            <version>1.4.19</version>
-          </plugin>
-  </plugins>
-    <configuration>
-        <container>
-          <containerId>tomcat7x</containerId>
-          <type>remote</type>
-  	</container>
-      <configuration>          
-          <type>runtime</type>
-            <properties>
-              <cargo.remote.username>devtest</cargo.remote.username>
-              <cargo.remote.password>devtest</cargo.remote.password>
-              <cargo.tomcat.manager.url>http://vadev.mantech.com:4848/manager/html</cargo.tomcat.manager.url>
-              <remote.context>/isaac-rest</remote.context>
-            </properties>
-      </configuration>
- 	<deployables>
+           <configuration>
+               <deployables>
     		<deployable>
       		  <groupId>gov.vha.isaac.rest</groupId>
       		  <artifactId>isaac-rest</artifactId>
@@ -335,7 +319,22 @@
       		        <pingTimeout>20000</pingTimeout>
     	        </deployable>
   	</deployables>
-     </configuration>
+       <container>
+          <containerId>tomcat7x</containerId>
+          <type>remote</type>
+  	</container>
+          </plugin>
+      <configuration>          
+          <type>runtime</type>
+            <properties>
+              <cargo.remote.username>devtest</cargo.remote.username>
+              <cargo.remote.password>devtest</cargo.remote.password>
+              <cargo.tomcat.manager.url>http://vadev.mantech.com:4848/manager/html</cargo.tomcat.manager.url>
+              <remote.context>/isaac-rest</remote.context>
+            </properties>
+       </configuration>
+      </configuration>
+     </plugins>
     </build>
   </profile>
 </profiles>
