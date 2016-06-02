@@ -21,7 +21,13 @@ package gov.vha.isaac.rest.session;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import org.apache.mahout.math.Arrays;
+
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -168,7 +174,49 @@ public class RequestParameters {
 
 	// Parameter default constants
 	public final static String ISAAC_ROOT_UUID = "7c21b6c5-cf11-5af9-893b-743f004c97f5";
-	
+
+	private final static boolean IGNORE_CASE_VALIDATING_PARAM_NAMES = false;
+	/**
+	 * @param parameters
+	 * @param validParameterNames
+	 * @throws RestException
+	 * 
+	 * This method validates the context request parameters against passed valid parameters
+	 * It takes multiple parameter types in order to allow passing the constant parameter sets
+	 * from RequestParameters as well as any individual parameters passed in specific methods
+	 */
+	public final static void validateParameterNames(Map<String, List<String>> parameters, Object...validParameterNames) throws RestException {
+		Set<String> validParameterNamesSet = new HashSet<>();
+		if (validParameterNames != null && validParameterNames.length > 0) {
+			for (Object parameter : validParameterNames) {
+				if (parameter instanceof Iterable) {
+					for (Object obj : (Iterable<?>)parameter) {
+						validParameterNamesSet.add(obj.toString());
+					}
+				} else if (parameter.getClass().isArray()) {
+					for (Object obj : (Object[])parameter) {
+						validParameterNamesSet.add(obj.toString());
+					}
+				} else {
+					validParameterNamesSet.add(parameter.toString());
+				}
+			}
+		}
+		for (String parameterName : parameters.keySet()) {
+			String parameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? parameterName.toUpperCase() : parameterName;
+			boolean foundMatch = false;
+			for (String validParameterName : validParameterNamesSet) {
+				String validParameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? validParameterName.toUpperCase() : validParameterName;
+				if (validParameterNameToCompare.equals(parameterNameToCompare)) {
+					foundMatch = true;
+					break;
+				}
+			}
+			if (!foundMatch) {
+				throw new RestException(parameterName, Arrays.toString(parameters.get(parameterName).toArray()), "Invalid or unexpected parameter name.  Must be one of " + Arrays.toString(validParameterNamesSet.toArray(new String[validParameterNamesSet.size()])));
+			}
+		}
+	}
 	private final static <T> Set<T> unmodifiableSet(@SuppressWarnings("unchecked") T...elements) {
 		Set<T> list = new HashSet<>(elements.length);
 		for (T element : elements) {

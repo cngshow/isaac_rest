@@ -79,6 +79,12 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		@SuppressWarnings("rawtypes")
 		//TODO bug - the methods below findLogicGraphChronology are relying on some default logic graph coordiantes...  Also seems to be a lot 
 		//of optional to not optional to optional stuff going on below this call... look at cleaning up.
@@ -117,6 +123,12 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology =
 				findLogicGraphChronology(
 						id,

@@ -141,6 +141,16 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.query,
+				RequestParameters.descriptionType,
+				RequestParameters.extendedDescriptionTypeId,
+				RequestParameters.pageNum,
+				RequestParameters.maxPageSize,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		if (StringUtils.isBlank(query))
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
@@ -229,6 +239,14 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.query,
+				RequestParameters.pageNum,
+				RequestParameters.maxPageSize,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		if (StringUtils.isBlank(query))
 		{
 			throw new RestException("The parameter 'query' must contain at least one character");
@@ -351,6 +369,17 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.query,
+				RequestParameters.treatAsString,
+				RequestParameters.sememeAssemblageId,
+				RequestParameters.dynamicSememeColumns,
+				RequestParameters.pageNum,
+				RequestParameters.maxPageSize,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.sememesComponent
 				+ "?" + RequestParameters.query + "=" + query
 				+ "&" + RequestParameters.treatAsString + "=" + treatAsString;
@@ -507,6 +536,16 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.nid,
+				RequestParameters.sememeAssemblageId,
+				RequestParameters.dynamicSememeColumns,
+				RequestParameters.pageNum,
+				RequestParameters.maxPageSize,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent
 				+ "?" + RequestParameters.nid + "=" + nid;
 		if (sememeAssemblageId != null) {

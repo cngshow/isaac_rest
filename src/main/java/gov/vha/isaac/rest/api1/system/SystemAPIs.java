@@ -109,6 +109,12 @@ public class SystemAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
 		RestConceptChronology concept = null;
 		RestSememeChronology sememe = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
@@ -246,6 +252,11 @@ public class SystemAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		RestObjectChronologyType returnedType = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
@@ -305,90 +316,130 @@ public class SystemAPIs
 
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestDynamicSememeDataTypeComponent)  
-	public RestDynamicSememeDataType[] getRestDynamicSememeDataTypes()
+	public RestDynamicSememeDataType[] getRestDynamicSememeDataTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestDynamicSememeDataType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestDynamicSememeValidatorTypeComponent)  
-	public RestDynamicSememeValidatorType[] getRestDynamicSememeValidatorTypes()
+	public RestDynamicSememeValidatorType[] getRestDynamicSememeValidatorTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestDynamicSememeValidatorType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestObjectChronologyTypeComponent)
-	public RestObjectChronologyType[] getRestObjectChronologyTypes()
+	public RestObjectChronologyType[] getRestObjectChronologyTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestObjectChronologyType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestSememeTypeComponent)
-	public RestSememeType[] getRestObjectSememeTypes()
+	public RestSememeType[] getRestObjectSememeTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestSememeType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
-	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes()
+	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestConcreteDomainOperatorsType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestNodeSemanticTypes)
-	public RestNodeSemanticType[] getRestNodeSemanticTypes()
+	public RestNodeSemanticType[] getRestNodeSemanticTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestNodeSemanticType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestSupportedIdTypes)
-	public RestSupportedIdType[] getRestSupportedIdTypes()
+	public RestSupportedIdType[] getRestSupportedIdTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestSupportedIdType.getAll();
 	}
 
 	/**
 	 * ISAAC, REST API and related DB metadata.  These values are cached.
 	 * TODO move functionality in getSystemInfo() into OCHRE
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.systemInfoComponent)
-	public RestSystemInfo getSystemInfo()
+	public RestSystemInfo getSystemInfo() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return ApplicationConfig.getInstance().getSystemInfo();
 	}
 	

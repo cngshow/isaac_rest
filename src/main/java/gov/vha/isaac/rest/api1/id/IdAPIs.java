@@ -88,6 +88,13 @@ public class IdAPIs
 			@QueryParam(RequestParameters.outputType) @DefaultValue("uuid") String outputType,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.inputType,
+				RequestParameters.outputType,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
 		IdType inputTypeFormat = IdType.parse(inputType).orElse(IdType.UUID);
 		Optional<? extends ObjectChronology> object = Optional.empty();
 		switch (inputTypeFormat)
@@ -193,6 +200,10 @@ public class IdAPIs
 	@Path(RestPaths.idTypesComponent)  
 	public RestSupportedIdType[] getSupportedTypes() throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+	
 		return RestSupportedIdType.getAll();
 	}
 }

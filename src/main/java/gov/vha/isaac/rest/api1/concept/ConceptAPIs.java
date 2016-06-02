@@ -105,6 +105,17 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.includeParents,
+				RequestParameters.countParents,
+				RequestParameters.includeChildren,
+				RequestParameters.countChildren,
+				RequestParameters.sememeMembership,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
 		@SuppressWarnings("unchecked")
@@ -141,6 +152,12 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.expand,
+				RequestParameters.id,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
 		RestConceptChronology chronology =
 				new RestConceptChronology(
@@ -215,6 +232,13 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.includeAttributes,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		
 		List<RestSememeVersion> descriptions = SememeAPIs.get(
