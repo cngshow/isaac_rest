@@ -93,12 +93,8 @@ public class CoordinatesUtil {
 	 */
 	public static Map<String, List<String>> getCoordinateParameters(Map<String, List<String>> params) {
 		Map<String, List<String>> coordinateParams = new TreeMap<>();
-		
-		coordinateParams.putAll(getParametersSubset(params, RequestParameters.coordToken));
-		coordinateParams.putAll(getParametersSubset(params, RequestParameters.stated));
-		coordinateParams.putAll(getParametersSubset(params, RequestParameters.STAMP_COORDINATE_PARAM_NAMES));
-		coordinateParams.putAll(getParametersSubset(params, RequestParameters.LANGUAGE_COORDINATE_PARAM_NAMES));
-		coordinateParams.putAll(getParametersSubset(params, RequestParameters.LOGIC_COORDINATE_PARAM_NAMES));
+
+		coordinateParams.putAll(getParametersSubset(params, RequestParameters.COORDINATE_PARAM_NAMES));
 		
 		return coordinateParams;
 	}

@@ -96,11 +96,11 @@ public class ConceptAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestConceptVersion getConceptVersion(
 			@PathParam(RequestParameters.id) String id, 
-			@QueryParam("includeParents") @DefaultValue("false") String includeParents,
-			@QueryParam("countParents") @DefaultValue("false") String countParents,
-			@QueryParam("includeChildren") @DefaultValue("false") String includeChildren,
-			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
-			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
+			@QueryParam(RequestParameters.includeParents) @DefaultValue("false") String includeParents,
+			@QueryParam(RequestParameters.countParents) @DefaultValue("false") String countParents,
+			@QueryParam(RequestParameters.includeChildren) @DefaultValue("false") String includeChildren,
+			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
+			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException

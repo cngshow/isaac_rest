@@ -84,8 +84,8 @@ public class IdAPIs
 	@Path(RestPaths.idTranslateComponent + "{" + RequestParameters.id + "}")  
 	public RestId translateId(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam("inputType") String inputType, 
-			@QueryParam("outputType") @DefaultValue("uuid") String outputType,
+			@QueryParam(RequestParameters.inputType) String inputType, 
+			@QueryParam(RequestParameters.outputType) @DefaultValue("uuid") String outputType,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		IdType inputTypeFormat = IdType.parse(inputType).orElse(IdType.UUID);

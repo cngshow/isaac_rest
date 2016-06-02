@@ -69,6 +69,18 @@ public class RequestParameters {
 					logicInferredAssemblage,
 					descriptionLogicProfile,
 					classifier);
+	
+	public final static Set<String> COORDINATE_PARAM_NAMES;
+	static {
+		Set<String> params = new HashSet<>();
+		params.add(coordToken);
+		params.add(stated);
+		params.addAll(LANGUAGE_COORDINATE_PARAM_NAMES);
+		params.addAll(STAMP_COORDINATE_PARAM_NAMES);
+		params.addAll(LOGIC_COORDINATE_PARAM_NAMES);
+		
+		COORDINATE_PARAM_NAMES = Collections.unmodifiableSet(params);
+	}
 
 	public final static String id = "id";
 	public final static String nid = "nid";
@@ -92,6 +104,70 @@ public class RequestParameters {
 	public final static String extendedDescriptionTypeId = "extendedDescriptionTypeId";
 	public final static String dynamicSememeColumns = "dynamicSememeColumns";
 	public final static String sememeAssemblageId = "sememeAssemblageId";
+	
+	// Taxonomy
+	public final static String childDepth = "childDepth";
+	public final static String parentHeight = "parentHeight";
+	public final static String countParents = "countParents";
+	public final static String countChildren = "countChildren";
+	public final static String sememeMembership = "sememeMembership";
+	
+	// Concept
+	public final static String includeParents = "includeParents";
+	public final static String includeChildren = "includeChildren";
+	
+	// IdAPIs
+	public final static String inputType = "inputType";
+	public final static String outputType = "outputType";
+	/**
+	 * Set of all known parameters usable to detect malformed or incorrect parameters
+	 */
+	public final static Set<String> ALL_VALID_PARAMETERS;
+	static {
+		Set<String> params = new HashSet<>();
+		params.addAll(COORDINATE_PARAM_NAMES);
+		params.addAll(unmodifiableSet(
+			id,
+			nid,
+			expand,
+			expandables,
+
+			pageNum,
+
+			maxPageSize,
+
+			assemblage,
+			includeDescriptions,
+			includeAttributes,
+
+			query,
+			treatAsString,
+			descriptionType,
+			extendedDescriptionTypeId,
+			dynamicSememeColumns,
+			sememeAssemblageId,
+
+			// Taxonomy
+			childDepth,
+			parentHeight,
+			countParents,
+
+			countChildren,
+			sememeMembership,
+			
+			// Concept
+			includeParents,
+			includeChildren,
+			
+			//IdAPIs
+			inputType,
+			outputType
+			));
+		ALL_VALID_PARAMETERS = params;
+	}
+
+	// Parameter default constants
+	public final static String ISAAC_ROOT_UUID = "7c21b6c5-cf11-5af9-893b-743f004c97f5";
 	
 	private final static <T> Set<T> unmodifiableSet(@SuppressWarnings("unchecked") T...elements) {
 		Set<T> list = new HashSet<>(elements.length);

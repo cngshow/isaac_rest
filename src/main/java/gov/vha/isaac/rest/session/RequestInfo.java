@@ -139,16 +139,13 @@ public class RequestInfo
 			// Determine if any relevant coordinate parameters set
 			Map<String,List<String>> coordinateParameters = new HashMap<>();
 			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters,
-					RequestParameters.stated,
-					RequestParameters.STAMP_COORDINATE_PARAM_NAMES,
-					RequestParameters.LANGUAGE_COORDINATE_PARAM_NAMES,
-					RequestParameters.LOGIC_COORDINATE_PARAM_NAMES));
+					RequestParameters.COORDINATE_PARAM_NAMES));
 
-			// If ANY relevant coordinate parameter values set, then calculate new CoordinatesToken string
-			if (coordinateParameters.size() == 0) {
+			// If no coordinate parameter or only coordToken value set, then use
+			if (coordinateParameters.size() == 0 || (coordinateParameters.size() == 1 && coordinateParameters.containsKey(RequestParameters.coordToken))) {
 				log.debug("No individual coordinate parameters to apply to token \"" + requestInfo.get().coordinatesToken_ + "\"");
 
-			} else { // if (coordinateParameters.size() > 0)
+			} else { // If ANY coordinate parameter other than coordToken value set, then calculate new CoordinatesToken string
 				log.debug("Applying {} individual parameters to coordinates token \"{}\": {}", requestInfo.get().coordinatesToken_, coordinateParameters.size(), coordinateParameters.toString());
 
 				// TaxonomyCoordinate components

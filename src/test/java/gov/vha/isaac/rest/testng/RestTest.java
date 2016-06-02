@@ -1063,7 +1063,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					(target = target(
 							requestUrl = taxonomyRequestPath,
 							parameters = buildParams(
-									param("childDepth", 1),
+									param(RequestParameters.childDepth, 1),
 									param(RequestParameters.descriptionTypePrefs, "synonym,fsn"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -1078,7 +1078,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					(target = target(
 							requestUrl = taxonomyRequestPath,
 							parameters = buildParams(
-									param("childDepth", 1),
+									param(RequestParameters.childDepth, 1),
 									param(RequestParameters.coordToken, fsnDescriptionPreferredToken.token))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -1093,7 +1093,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					(target = target(
 							requestUrl = taxonomyRequestPath,
 							parameters = buildParams(
-									param("childDepth", 1),
+									param(RequestParameters.childDepth, 1),
 									param(RequestParameters.descriptionTypePrefs, "fsn,synonym"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
