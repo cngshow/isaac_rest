@@ -301,11 +301,14 @@
   <activation>
         <activeByDefault>true</activeByDefault>
   </activation>
-        <plugins>
+ <build>
+  <plugins>
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
-              <artifactId>cargo-maven2-plugin</artifactId>
-                <version>1.4.19</version>
+            <artifactId>cargo-maven2-plugin</artifactId>
+            <version>1.4.19</version>
+          </plugin>
+  </plugins>
     <configuration>
         <container>
           <containerId>tomcat7x</containerId>
@@ -333,8 +336,6 @@
     	        </deployable>
   	</deployables>
      </configuration>
-        </plugin>
-      </plugins>
     </build>
   </profile>
 </profiles>
