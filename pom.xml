@@ -323,7 +323,6 @@
           <containerId>tomcat7x</containerId>
           <type>remote</type>
   	</container>
-          </plugin>
       <configuration>          
           <type>runtime</type>
             <properties>
@@ -334,6 +333,7 @@
             </properties>
        </configuration>
       </configuration>
+      </plugin>
      </plugins>
     </build>
   </profile>
