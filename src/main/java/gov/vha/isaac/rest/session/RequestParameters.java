@@ -90,15 +90,19 @@ public class RequestParameters {
 
 	public final static String id = "id";
 	public final static String nid = "nid";
+	
+	// Expandables
 	public final static String expand = "expand";
 	public final static String expandables = "expandables";
+	public final static Set<String> EXPANDABLES_PARAM_NAMES = unmodifiableSet(expand, expandables);
 
+	// Pagination
 	public final static String pageNum = "pageNum";
 	public final static String pageNumDefault = "1";
-
 	public final static String maxPageSize = "maxPageSize";
 	public final static String maxPageSizeDefault = "10";
-
+	public final static Set<String> PAGINATION_PARAM_NAMES = unmodifiableSet(pageNum, maxPageSize);
+	
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
 	public final static String includeAttributes = "includeAttributes";
@@ -132,15 +136,11 @@ public class RequestParameters {
 	static {
 		Set<String> params = new HashSet<>();
 		params.addAll(COORDINATE_PARAM_NAMES);
+		params.addAll(EXPANDABLES_PARAM_NAMES);
+		params.addAll(PAGINATION_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
 			id,
 			nid,
-			expand,
-			expandables,
-
-			pageNum,
-
-			maxPageSize,
 
 			assemblage,
 			includeDescriptions,

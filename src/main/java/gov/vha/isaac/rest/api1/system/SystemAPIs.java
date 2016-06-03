@@ -113,6 +113,7 @@ public class SystemAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.expandables,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		RestConceptChronology concept = null;

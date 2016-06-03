@@ -146,9 +146,8 @@ public class SearchAPIs
 				RequestParameters.query,
 				RequestParameters.descriptionType,
 				RequestParameters.extendedDescriptionTypeId,
-				RequestParameters.pageNum,
-				RequestParameters.maxPageSize,
-				RequestParameters.expand,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		if (StringUtils.isBlank(query))
@@ -242,9 +241,8 @@ public class SearchAPIs
 		RequestParameters.validateParameterNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.query,
-				RequestParameters.pageNum,
-				RequestParameters.maxPageSize,
-				RequestParameters.expand,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		if (StringUtils.isBlank(query))
@@ -375,9 +373,8 @@ public class SearchAPIs
 				RequestParameters.treatAsString,
 				RequestParameters.sememeAssemblageId,
 				RequestParameters.dynamicSememeColumns,
-				RequestParameters.pageNum,
-				RequestParameters.maxPageSize,
-				RequestParameters.expand,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.sememesComponent
@@ -541,9 +538,8 @@ public class SearchAPIs
 				RequestParameters.nid,
 				RequestParameters.sememeAssemblageId,
 				RequestParameters.dynamicSememeColumns,
-				RequestParameters.pageNum,
-				RequestParameters.maxPageSize,
-				RequestParameters.expand,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent

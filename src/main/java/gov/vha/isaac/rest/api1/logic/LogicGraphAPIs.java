@@ -82,7 +82,7 @@ public class LogicGraphAPIs
 		RequestParameters.validateParameterNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.expand,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		@SuppressWarnings("rawtypes")
@@ -126,7 +126,7 @@ public class LogicGraphAPIs
 		RequestParameters.validateParameterNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.expand,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology =

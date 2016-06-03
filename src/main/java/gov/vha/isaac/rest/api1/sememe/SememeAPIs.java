@@ -200,6 +200,7 @@ public class SememeAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.expandables,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		@SuppressWarnings("rawtypes")
@@ -283,9 +284,8 @@ public class SememeAPIs
 		RequestParameters.validateParameterNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.pageNum,
-				RequestParameters.maxPageSize,
-				RequestParameters.expand,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		HashSet<Integer> temp = new HashSet<>();
@@ -357,6 +357,7 @@ public class SememeAPIs
 				RequestParameters.assemblage,
 				RequestParameters.includeDescriptions,
 				RequestParameters.expand,
+				RequestParameters.expandables,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
