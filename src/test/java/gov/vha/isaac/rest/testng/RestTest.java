@@ -1265,6 +1265,123 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 	}
 	
+
+	@Test
+	public void testParameterValidation()
+	{
+		/*
+		 * These tests display the following values on fail
+		 * Each test should initialize or set-to-null each of the following values
+		 */
+		Map<String, Object> parameters = new HashMap<>();
+		WebTarget target = null;
+		String result = null;
+		String requestUrl = null;
+		String caughtExceptionMessage = null;
+		try {
+			// Test any call with valid parameters
+			result = checkFail(
+					(target = target(
+							requestUrl = sememeByAssemblageRequestPath + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(),
+							parameters = buildParams(
+									param(RequestParameters.expand, "chronology"), // Expand the chronology
+									param(RequestParameters.maxPageSize, 1)))) // Request exactly 1 result
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+			
+			// Test same call with a bogus additional parameter
+			String badParamName = "bogusParam";
+			String badParamValue = "testValue";
+			try {
+				result = checkFail(
+						(target = target(
+								requestUrl = sememeByAssemblageRequestPath + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(),
+								parameters = buildParams(
+										param(RequestParameters.expand, "chronology"), // Expand the chronology
+										param(RequestParameters.maxPageSize, 1),
+										param("bogusParam", "testValue"))))
+						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+						.readEntity(String.class);
+			} catch (Throwable t) {
+				caughtExceptionMessage = getCaughtParameterValidationExceptionMessage(badParamName, badParamValue, t);
+			}
+			Assert.assertNotNull(caughtExceptionMessage);
+			
+			// Test same call with a valid parameter made uppercase when IGNORE_CASE_VALIDATING_PARAM_NAMES == false
+			badParamName = RequestParameters.maxPageSize.toUpperCase();
+			badParamValue = "1";
+			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = false;
+			caughtExceptionMessage = null;
+			try {
+				result = checkFail(
+						(target = target(
+								requestUrl = sememeByAssemblageRequestPath + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(),
+								parameters = buildParams(
+										param(RequestParameters.expand, "chronology"), // Expand the chronology
+										param(badParamName, badParamValue))))
+						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+						.readEntity(String.class);
+			} catch (Throwable t) {
+				caughtExceptionMessage = getCaughtParameterValidationExceptionMessage(badParamName, badParamValue, t);
+			}
+			Assert.assertNotNull(caughtExceptionMessage);
+
+			// Test same call with a valid parameter made uppercase when IGNORE_CASE_VALIDATING_PARAM_NAMES == true
+			badParamName = RequestParameters.maxPageSize.toUpperCase();
+			badParamValue = "1";
+			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = true;
+			caughtExceptionMessage = null;
+			try {
+				result = checkFail(
+						(target = target(
+								requestUrl = sememeByAssemblageRequestPath + DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(),
+								parameters = buildParams(
+										param(RequestParameters.expand, "chronology"), // Expand the chronology
+										param(badParamName, badParamValue))))
+						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+						.readEntity(String.class);
+			} catch (Throwable t) {
+				caughtExceptionMessage = getCaughtParameterValidationExceptionMessage(badParamName, badParamValue, t);
+			}
+			Assert.assertNull(caughtExceptionMessage);
+			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES_DEFAULT;
+
+		} catch (Throwable error) {
+			System.out.println("Failing request target: " + target);
+			System.out.println("Failing request URL: " + requestUrl);
+			System.out.println("Failing request parameters: " + parameters);
+			System.out.println("Failing result XML: " + result);
+			System.out.println("Failing exception: " + caughtExceptionMessage);
+
+			throw error;
+		} finally {
+			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES_DEFAULT;
+		}
+	}
+
+	private static String getCaughtParameterValidationExceptionMessage(String badParamName, String badParamValue, Throwable t) {
+		for (Throwable ex : getAllExceptionsAndCauses(t)) {
+			if (ex.getLocalizedMessage().contains("The parameter '" + badParamName + "' with value '[" + badParamValue + "]'  resulted in the error: Invalid or unsupported parameter name")) {
+				return ex.getLocalizedMessage();
+			}
+		}
+		
+		return null;
+	}
+	private static List<Throwable> getAllExceptionsAndCauses(Throwable t) {
+		List<Throwable> list = new ArrayList<>();
+
+		if (t != null) {
+			if (t.getCause() == null || t.getCause() == t) {
+				list.add(t);
+			} else {
+				list.addAll(getAllExceptionsAndCauses(t.getCause()));
+			}
+		}
+		
+		return list;
+	}
+
 	public static void main(String[] argv) {
 	}
 }

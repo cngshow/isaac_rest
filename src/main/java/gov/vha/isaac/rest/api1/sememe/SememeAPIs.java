@@ -90,7 +90,7 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -157,7 +157,7 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
@@ -196,7 +196,7 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
@@ -281,7 +281,7 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.PAGINATION_PARAM_NAMES,
@@ -351,7 +351,7 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken) 
 			throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.assemblage,
@@ -392,7 +392,7 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES);

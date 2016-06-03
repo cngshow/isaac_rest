@@ -104,7 +104,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.descriptionLogicProfile) String descriptionLogicProfile,
 			@QueryParam(RequestParameters.classifier) String classifier) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
@@ -137,7 +137,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
@@ -179,7 +179,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
@@ -209,7 +209,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
@@ -239,7 +239,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
@@ -269,7 +269,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
 

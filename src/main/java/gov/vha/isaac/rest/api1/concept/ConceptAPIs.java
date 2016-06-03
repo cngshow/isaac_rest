@@ -105,7 +105,7 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.includeParents,
@@ -152,7 +152,7 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.EXPANDABLES_PARAM_NAMES,
@@ -232,7 +232,7 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.includeAttributes,

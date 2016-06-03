@@ -79,7 +79,7 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.EXPANDABLES_PARAM_NAMES,
@@ -123,7 +123,7 @@ public class LogicGraphAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.EXPANDABLES_PARAM_NAMES,

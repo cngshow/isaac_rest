@@ -45,6 +45,7 @@ public class RequestParameters {
 	// Taxonomy Coordinate
 	public final static String stated = "stated";
 
+	// Language Coordinate
 	public final static String language = "language";
 	public final static String dialectPrefs = "dialectPrefs";
 	public final static String descriptionTypePrefs = "descriptionTypePrefs";
@@ -65,6 +66,7 @@ public class RequestParameters {
 					modules,
 					allowedStates);
 
+	// Logic Coordinate
 	public final static String logicStatedAssemblage = "logicStatedAssemblage";
 	public final static String logicInferredAssemblage = "logicInferredAssemblage";
 	public final static String descriptionLogicProfile = "descriptionLogicProfile";
@@ -76,6 +78,7 @@ public class RequestParameters {
 					descriptionLogicProfile,
 					classifier);
 	
+	// All Coordinates
 	public final static Set<String> COORDINATE_PARAM_NAMES;
 	static {
 		Set<String> params = new HashSet<>();
@@ -129,6 +132,7 @@ public class RequestParameters {
 	// IdAPIs
 	public final static String inputType = "inputType";
 	public final static String outputType = "outputType";
+
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */
@@ -175,45 +179,53 @@ public class RequestParameters {
 	// Parameter default constants
 	public final static String ISAAC_ROOT_UUID = "7c21b6c5-cf11-5af9-893b-743f004c97f5";
 
-	private final static boolean IGNORE_CASE_VALIDATING_PARAM_NAMES = false;
+	/**
+	 * This should only be modified for testing purposes.  Otherwise should always be IGNORE_CASE_VALIDATING_PARAM_NAMES_DEFAULT
+	 * 
+	 * Changing this to ignore case will probably break lots of things,
+	 * as most comparisons do not ignore case, as currenlt coded
+	 */
+	public final static boolean IGNORE_CASE_VALIDATING_PARAM_NAMES_DEFAULT = false;
+	public static boolean IGNORE_CASE_VALIDATING_PARAM_NAMES = IGNORE_CASE_VALIDATING_PARAM_NAMES_DEFAULT;
+
 	/**
 	 * @param parameters
-	 * @param validParameterNames
+	 * @param supportedParameterNames
 	 * @throws RestException
 	 * 
 	 * This method validates the context request parameters against passed valid parameters
 	 * It takes multiple parameter types in order to allow passing the constant parameter sets
 	 * from RequestParameters as well as any individual parameters passed in specific methods
 	 */
-	public final static void validateParameterNames(Map<String, List<String>> parameters, Object...validParameterNames) throws RestException {
-		Set<String> validParameterNamesSet = new HashSet<>();
-		if (validParameterNames != null && validParameterNames.length > 0) {
-			for (Object parameter : validParameterNames) {
+	public final static void validateParameterNamesAgainstSupportedNames(Map<String, List<String>> parameters, Object...supportedParameterNames) throws RestException {
+		Set<String> supportedParameterNamesSet = new HashSet<>();
+		if (supportedParameterNames != null && supportedParameterNames.length > 0) {
+			for (Object parameter : supportedParameterNames) {
 				if (parameter instanceof Iterable) {
 					for (Object obj : (Iterable<?>)parameter) {
-						validParameterNamesSet.add(obj.toString());
+						supportedParameterNamesSet.add(obj.toString());
 					}
 				} else if (parameter.getClass().isArray()) {
 					for (Object obj : (Object[])parameter) {
-						validParameterNamesSet.add(obj.toString());
+						supportedParameterNamesSet.add(obj.toString());
 					}
 				} else {
-					validParameterNamesSet.add(parameter.toString());
+					supportedParameterNamesSet.add(parameter.toString());
 				}
 			}
 		}
 		for (String parameterName : parameters.keySet()) {
 			String parameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? parameterName.toUpperCase() : parameterName;
 			boolean foundMatch = false;
-			for (String validParameterName : validParameterNamesSet) {
-				String validParameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? validParameterName.toUpperCase() : validParameterName;
-				if (validParameterNameToCompare.equals(parameterNameToCompare)) {
+			for (String supportedParameterName : supportedParameterNamesSet) {
+				String supportedParameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? supportedParameterName.toUpperCase() : supportedParameterName;
+				if (supportedParameterNameToCompare.equals(parameterNameToCompare)) {
 					foundMatch = true;
 					break;
 				}
 			}
 			if (!foundMatch) {
-				throw new RestException(parameterName, Arrays.toString(parameters.get(parameterName).toArray()), "Invalid or unexpected parameter name.  Must be one of " + Arrays.toString(validParameterNamesSet.toArray(new String[validParameterNamesSet.size()])));
+				throw new RestException(parameterName, Arrays.toString(parameters.get(parameterName).toArray()), "Invalid or unsupported parameter name.  Must be one of " + Arrays.toString(supportedParameterNamesSet.toArray(new String[supportedParameterNamesSet.size()])));
 			}
 		}
 	}

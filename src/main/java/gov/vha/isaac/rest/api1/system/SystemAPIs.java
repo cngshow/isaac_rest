@@ -109,7 +109,7 @@ public class SystemAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
@@ -253,7 +253,7 @@ public class SystemAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -324,7 +324,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestDynamicSememeDataTypeComponent)  
 	public RestDynamicSememeDataType[] getRestDynamicSememeDataTypes() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
@@ -340,7 +340,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestDynamicSememeValidatorTypeComponent)  
 	public RestDynamicSememeValidatorType[] getRestDynamicSememeValidatorTypes() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
@@ -356,7 +356,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestObjectChronologyTypeComponent)
 	public RestObjectChronologyType[] getRestObjectChronologyTypes() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
@@ -372,7 +372,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestSememeTypeComponent)
 	public RestSememeType[] getRestObjectSememeTypes() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
@@ -388,7 +388,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
 	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
@@ -404,7 +404,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestNodeSemanticTypes)
 	public RestNodeSemanticType[] getRestNodeSemanticTypes() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
@@ -420,7 +420,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestSupportedIdTypes)
 	public RestSupportedIdType[] getRestSupportedIdTypes() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
@@ -437,7 +437,7 @@ public class SystemAPIs
 	@Path(RestPaths.systemInfoComponent)
 	public RestSystemInfo getSystemInfo() throws RestException
 	{
-		RequestParameters.validateParameterNames(
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 
