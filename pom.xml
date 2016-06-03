@@ -305,4 +305,33 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+	<profiles>
+	 <profile>
+	  <id>load-test</id>
+	  <build>
+	   <plugins>
+	    <plugin>
+	     <groupId>org.codehaus.mojo</groupId>
+	     <artifactId>exec-maven-plugin</artifactId>
+	     <!-- version>1.1.1</version>
+	     <executions>
+	      <execution>
+	       <phase>loadTest</phase>
+	       <goals>
+	        <goal>java</goal>
+	       </goals-->
+	       <configuration>
+	        <classpathScope>test</classpathScope>
+	        <mainClass>gov.vha.isaac.rest.junit.TaxonomyUnitTest</mainClass>
+	        <arguments>
+	         <argument>http://localhost:8080/isaac-rest/rest/</argument>
+	        </arguments>
+	       </configuration>
+	      <!-- /execution>
+	     </executions-->
+	    </plugin>
+	   </plugins>
+	  </build>
+	 </profile>
+	</profiles>
 </project>
