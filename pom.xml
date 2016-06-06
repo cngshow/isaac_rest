@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>3.06</version>
+		<version>3.07-SNAPSHOT</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
@@ -24,8 +24,8 @@
 	</scm>
 
 	<properties>
-		<isaac.version>3.06</isaac.version>
-		<jersey.version>2.22.2</jersey.version>
+		<isaac.version>3.07-SNAPSHOT</isaac.version>
+		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/351-->
 		<enunciate.version>2.3.0-patch1</enunciate.version>
@@ -190,17 +190,6 @@
 			<artifactId>enunciate-core-annotations</artifactId>
 			<version>${enunciate.version}</version>
 		</dependency>
-        <!-- Jersey -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.4</version>
-        </dependency>
-                <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>1.10</version>
-        </dependency>		
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-web</artifactId>
@@ -305,75 +294,65 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-<profiles>
-  <profile>
-    <id>cargo</id>
-  <activation>
-        <activeByDefault>true</activeByDefault>
-  </activation>
- <build>
-  <plugins>
-          <plugin>
-            <groupId>org.codehaus.cargo</groupId>
-            <artifactId>cargo-maven2-plugin</artifactId>
-            <version>1.0.2</version>
-           <configuration>
-               <deployables>
-    		<deployable>
-      		  <groupId>gov.vha.isaac.rest</groupId>
-      		  <artifactId>isaac-rest</artifactId>
-      		  <type>war</type>
-      		<properties>
-        	  <context>/isaac-rest</context>
-      		</properties>
-      		        <pingURL>http://vadev.mantech.com:4848/manager</pingURL>
-      		        <pingTimeout>20000</pingTimeout>
-    	        </deployable>
-  	</deployables>
-       <container>
-          <containerId>tomcat7x</containerId>
-          <type>remote</type>
-  	</container>
-      <configuration>          
-          <type>runtime</type>
-            <properties>
-              <cargo.remote.username>devtest</cargo.remote.username>
-              <cargo.remote.password>devtest</cargo.remote.password>
-              <cargo.tomcat.manager.url>http://vadev.mantech.com:4848/manager/html</cargo.tomcat.manager.url>
-              <remote.context>/isaac-rest</remote.context>
-            </properties>
-       </configuration>
-      </configuration>
-      </plugin>
-     </plugins>
-    </build>
-  </profile>
-	 <profile>
-	  <id>load-test</id>
-	  <build>
-	   <plugins>
-	    <plugin>
-	     <groupId>org.codehaus.mojo</groupId>
-	     <artifactId>exec-maven-plugin</artifactId>
-	     <!-- version>1.1.1</version>
-	     <executions>
-	      <execution>
-	       <phase>loadTest</phase>
-	       <goals>
-	        <goal>java</goal>
-	       </goals-->
-	       <configuration>
-	        <classpathScope>test</classpathScope>
-	        <mainClass>gov.vha.isaac.rest.junit.TaxonomyUnitTest</mainClass>
-	        <arguments>
-	         <argument>http://localhost:8080/isaac-rest/rest/</argument>
-	        </arguments>
-	       </configuration>
-	      <!-- /execution>
-	     </executions-->
-	    </plugin>
-	   </plugins>
-	  </build>
-	 </profile>
+	<profiles>
+		<profile>
+			<id>cargo</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.cargo</groupId>
+						<artifactId>cargo-maven2-plugin</artifactId>
+						<version>1.0.2</version>
+						<configuration>
+							<deployables>
+								<deployable>
+									<groupId>gov.vha.isaac.rest</groupId>
+									<artifactId>isaac-rest</artifactId>
+									<type>war</type>
+									<properties>
+										<context>/isaac-rest</context>
+									</properties>
+									<pingURL>http://vadev.mantech.com:4848/manager</pingURL>
+									<pingTimeout>20000</pingTimeout>
+								</deployable>
+							</deployables>
+							<container>
+								<containerId>tomcat7x</containerId>
+								<type>remote</type>
+							</container>
+							<configuration>
+								<type>runtime</type>
+								<properties>
+									<cargo.tomcat.manager.url>http://vadev.mantech.com:4848/manager/html</cargo.tomcat.manager.url>
+									<remote.context>/isaac-rest</remote.context>
+								</properties>
+							</configuration>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<profile>
+			<id>load-test</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<classpathScope>test</classpathScope>
+							<mainClass>gov.vha.isaac.rest.junit.TaxonomyUnitTest</mainClass>
+							<arguments>
+								<argument>http://localhost:8080/isaac-rest/rest/</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 </project>
