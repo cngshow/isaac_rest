@@ -297,12 +297,6 @@
 	<profiles>
 		<profile>
     			<id>cargo</id>
-    				<activation>
-      					<property>
-        					<name>env</name>
-        					<value>cargo</value>
-      					</property>
-    				</activation>
 			<build>
   				<plugins>
 					<plugin>
