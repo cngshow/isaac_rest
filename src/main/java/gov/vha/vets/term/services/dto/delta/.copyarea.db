@@ -1,0 +1,14 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\dto\delta
+2
+a
+10:SubsetDelta.java|1|14be2acf1a0|65d|9a97d6fa|0c6ff732914d4e158291aadf50c3e048|0
+1d:DesignationPropertyDelta.java|1|14be2acf141|6c4|5cbacfad|ac4452a9fc084f439c9f3c11175ed943|0
+16:DiscoveryDeltaDTO.java|1|14be2acf14e|394|8afe1499|6363cb5ddf9c4271ab4534d31668c98c|0
+12:PropertyDelta.java|1|14be2acf17f|680|57d2b694|a55aeab8f60941d99b9c2a921e7c0a61|0
+1c:SubsetRelationshipDelta.java|1|14be2acf1ac|466|4ff755c5|1102513570ef40c487748799f7c15714|0
+11:ConceptDelta.java|1|14be2acf116|5e3|b1f6a81d|724a6c8e8bdf48a38de8ea6ad636053b|0
+15:DesignationDelta.java|1|14be2acf12b|9ab|e066ab82|0f3cbb0720bd4a5ab049b0b10211daa6|0
+1f:DiscoveryMappingResultsDTO.java|1|14be2acf162|525|af5a3d0|66874f9400e711e18f0200188b3d5198|0
+16:RelationshipDelta.java|1|14be2acf190|5cf|7f98b75e|7d28eb923d094e2a991f637e52a82fff|0
+18:DiscoveryResultsDTO.java|1|14be2acf170|3ba|384345d7|b09b131b6d3949e39f55cd74dd8d066e|0

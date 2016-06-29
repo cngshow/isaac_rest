@@ -1,0 +1,7 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\util\comparator
+2
+3
+14:VersionSortById.java|1|14be2acf8bd|17f|dbbb7ed0|ce49e780b7f64ea8976be74fb145ce4c|0
+26:MapEntryVersionDetailSortbyEntity.java|1|14be2acf8ab|259|922cc1de|ebbf8b84f82b11e288ae00188b3d5198|0
+2f:MapEntryVersionDetailSortbySequenceVersion.java|1|14be2acf8cd|548|7334a7d0|d98ffcf4f82c11e288b800188b3d5198|0

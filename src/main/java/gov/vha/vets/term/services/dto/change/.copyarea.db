@@ -1,0 +1,12 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\dto\change
+2
+8
+20:SubsetRelationshipChangeDTO.java|1|14be2acefe3|86e|3d1fb2c3|50f2e2b607494fe6b4896ac2651f3910|0
+15:ConceptChangeDTO.java|1|14be2acef8a|845|61b0764a|61b74f0c00e711e18f0200188b3d5198|0
+12:BaseChangeDTO.java|1|14be2acef72|868|c0764c33|6725dafe73bd4fc2a6ac2704a13e38ed|0
+1a:RelationshipChangeDTO.java|1|14be2acefc7|aff|42598391|4c205903eae743a4acde57827edf0d90|0
+19:DesignationChangeDTO.java|1|14be2acefab|aa1|6ff52cca|fcdb489091e445188dcac191a2a8c940|0
+16:PropertyChangeDTO.java|1|14be2acefb9|4e7|43d376d0|fcfcf686ffcb44e195df81e2c2b00b65|0
+14:SubsetChangeDTO.java|1|14be2acefd5|316|2c55e038|a6834fdeda0d49588c7c2ad8249447b1|0
+16:ConceptChangesDTO.java|1|14be2acef9a|b14|d8d7893a|01ac85c497c64ee8a3b439a30bd15270|0

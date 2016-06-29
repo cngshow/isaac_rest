@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2007 sp2 (http://www.altova.com) by Brent Jacox (Dept of Veterans Affairs) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="Config">
+		<xs:annotation>
+			<xs:documentation>Comment describing your root element</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded">
+				<xs:element name="Environment">
+					<xs:complexType>
+						<xs:sequence maxOccurs="unbounded">
+							<xs:element name="DataSource">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Name" type="xs:string" nillable="false"/>
+										<xs:element name="url" type="xs:string" nillable="false"/>
+										<xs:element name="serverName" type="xs:string" nillable="false"/>
+										<xs:element name="sid" type="xs:string" nillable="false"/>
+										<xs:element name="userName" type="xs:string"/>
+										<xs:element name="password" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="Name" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

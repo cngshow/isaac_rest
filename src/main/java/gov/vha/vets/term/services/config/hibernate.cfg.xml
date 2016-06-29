@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+          "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+          "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+<session-factory  ><!--name="java:comp/env/hibernate/SessionFactory">-->
+    <property name="connection.datasource">jdbc/gov.vha.vets.term.services</property>
+	<property name="dialect">org.hibernate.dialect.Oracle10gDialect</property>
+    <property name="show_sql">true</property>
+    <property name="use_outer_join">true</property>
+   	<property name="jta.UserTransaction">java:comp/UserTransaction</property>
+	<property name="jdbc.batch_size">30</property>
+	<property name="jdbc.fetch_size">500</property>
+	<property name="use_sql_comments">true</property>
+	
+ 	<mapping class="gov.vha.vets.term.services.model.Concept" />
+ 	<mapping class="gov.vha.vets.term.services.model.CodedConcept" />
+ 	<mapping class="gov.vha.vets.term.services.model.Designation" />
+ 	<mapping class="gov.vha.vets.term.services.model.Subset" />
+ 	<mapping class="gov.vha.vets.term.services.model.Version" />
+ 	<mapping class="gov.vha.vets.term.services.model.CodeSystem" />
+ 	<mapping class="gov.vha.vets.term.services.model.Type" />
+ 	<mapping class="gov.vha.vets.term.services.model.ChangeGroup" />
+ 	<mapping class="gov.vha.vets.term.services.model.DesignationType" />
+ 	<mapping class="gov.vha.vets.term.services.model.RelationshipType" />
+ 	<mapping class="gov.vha.vets.term.services.model.Property" />
+ 	<mapping class="gov.vha.vets.term.services.model.PropertyType" />
+ 	<mapping class="gov.vha.vets.term.services.model.Relationship" />
+ 	<mapping class="gov.vha.vets.term.services.model.ConceptRelationship" />
+ 	<mapping class="gov.vha.vets.term.services.model.DesignationRelationship" />
+ 	<mapping class="gov.vha.vets.term.services.model.SubsetRelationship" />
+ 	<mapping class="gov.vha.vets.term.services.model.State" />
+ 	<mapping class="gov.vha.vets.term.services.model.ConceptState" />
+ 	<mapping class="gov.vha.vets.term.services.model.MapSet" />
+ 	<mapping class="gov.vha.vets.term.services.model.MapEntry" />
+ 	<mapping class="gov.vha.vets.term.services.model.MapSetRelationship" />
+
+</session-factory>
+
+</hibernate-configuration>

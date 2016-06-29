@@ -1,0 +1,16 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\dto\importer
+2
+c
+14:EntityImportDTO.java|1|14be2acf37e|2c7|5857c85c|5f7fa571a1db417d8eb0752d1820c7ad|0
+12:BaseImportDTO.java|1|14be2acf24c|2ad|aafbc15f|1cb4eeae049a481b981e7a57d4d66aa9|0
+1a:RelationshipImportDTO.java|1|14be2acf3c6|567|7da7a5e2|7e6a6fd4646940d9b11c296697601fff|0
+14:MapSetImportDTO.java|1|14be2acf3aa|70f|73ad6270|9ad2f22676bd4749841cc43d6e0c1fc1|0
+19:DesignationImportDTO.java|1|14be2acf36b|917|5d35c5da|14a72f37c6b44f2ca588b4f4fe97483e|0
+16:MapEntryImportDTO.java|1|14be2acf399|63a|59aa0a53|b6d5f4dfa7904c40949a4b54b0c2a3c7|0
+1e:SubsetMembershipImportDTO.java|1|14be2acf3e1|1e0|e24c9108|9c0178b4cfcb43038fbf3084ad0b2b94|0
+15:ConceptImportDTO.java|1|14be2acf25f|426|ab7849e6|096f9c2dda244ece8886af37c2aa4038|0
+16:PropertyImportDTO.java|1|14be2acf3b9|3df|124c298a|afa565b2992c4aa8b6acdf54e72f1cec|0
+12:TypeImportDTO.java|1|14be2acf3ee|23e|8859a109|d85f8ef5deb44525a2d76e884586bc50|0
+12:FileImportDTO.java|1|14be2acf38c|498|485173ac|0ab364676a004fc7b88e4346087ff288|0
+14:SubsetImportDTO.java|1|14be2acf3d4|2b9|76c0d8a6|171ad2434e3c45cdbcec3438a8fd4130|0

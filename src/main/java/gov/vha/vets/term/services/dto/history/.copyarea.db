@@ -1,0 +1,11 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\dto\history
+2
+7
+16:ConceptHistoryDTO.java|1|14be2acf1c9|1084|35f26004|3b16b1c71bf041b0949e411bdc6f0ddf|0
+14:EntityChangeDTO.java|1|14be2acf1f6|394|46cf0d58|2215e99875fd4591aecb1774e476128d|0
+20:RelationshipEntityChangeDTO.java|1|14be2acf21d|3dc|778b2dc5|ff94687e71c14c0786ab384b65830f6b|0
+15:EntityHistoryDTO.java|1|14be2acf207|ca1|461acfa9|da3053a8e0584e06a882c58d42950f7f|0
+1f:DesignationEntityChangeDTO.java|1|14be2acf1da|2a7|5531ce22|2613175e0d794d7dbb9cfa4512226d85|0
+20:DesignationEntityHistoryDTO.java|1|14be2acf1e9|511|7aa38b45|9afc86487d0d46358fa766e562054408|0
+1a:SubsetEntityChangeDTO.java|1|14be2acf231|295|5c45c774|13e82f15609648d3a78f3ce51af4f1c3|0

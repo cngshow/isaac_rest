@@ -29,6 +29,7 @@ public class RestPaths
 	public static final String appPathComponent = "rest/";
 	public static final String apiVersionComponent = "1/";
 
+	public static final String ct = "ct/";
 	public static final String chronologyComponent = "chronology/";
 	public static final String versionsComponent = "versions/";	
 	public static final String versionComponent = "version/";

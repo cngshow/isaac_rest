@@ -1,0 +1,22 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\dto\api
+2
+12
+16:DomainListViewDTO.java|1|14be2aceeb0|2ea|ad31fcc6|ce2cbaa112154e738c31483852bde70a|0
+1e:RelationshipDetailViewDTO.java|1|14be2aceede|7a3|c9bc9ea9|0a7389f081f243c981cfdcbb520bf1b7|0
+17:SubsetContentsView.java|1|14be2acef0d|3fa|84ca484d|ff057f954d2843cd9eca95b56960af16|0
+16:SubsetListViewDTO.java|1|14be2acef1b|2d0|278bf358|73363e30452445609bc703c1f0adaf31|0
+12:DomainViewDTO.java|1|14be2aceebf|375|30602a9e|12098913f89b4cef9e34a66cbeedd404|0
+22:RelationshipDetailListViewDTO.java|1|14be2aceece|324|385a1751|44a3510bf3294f568921d85a544fd062|0
+1a:CodeSystemListViewDTO.java|1|14be2acee76|287|bb0cd97f|63eb889b2c9148e19e2c023e0d62f686|0
+1b:SubsetContentsListView.java|1|14be2aceefe|27d|ee89db32|d0222ead77d647209e0d36f47c8cd427|0
+18:TotalEntityListView.java|1|14be2acef38|21d|a382b316|a92be0fb7d2d4102a664594400813c22|0
+1e:UsageContextDetailViewDTO.java|1|14be2acef48|268|cd20c64c|6bf75f0111d2455ab58191bf81834be0|0
+16:CodeSystemViewDTO.java|1|14be2acee84|326|c83607a4|c3c7241502ce420facb1ea8125aac5df|0
+1e:CodeSystemConceptsViewDTO.java|1|14be2acee63|416|d57f6811|79bb9019104041658c27fee0d633eec5|0
+17:DesignationViewDTO.java|1|14be2aceea1|35a|732e1e3e|5c08b66312774fa7bfcee2300b95f4c5|0
+18:RelationshipViewDTO.java|1|14be2aceeed|44a|c6c33377|4a326633c03a40f49bd7244a4f7d9293|0
+13:ConceptViewDTO.java|1|14be2acee93|69f|50b0e4b|d573a32cfc9e4c37814e34464309c80c|0
+12:SubsetViewDTO.java|1|14be2acef2a|172|76de7523|bb31bdc7b1e940eab7089219d7152433|0
+1c:CodedConceptListViewDTO.java|1|14be2acee53|315|ca4b072c|2a828e71249549b0a582f0000f6b7601|0
+1c:UsageContextListViewDTO.java|1|14be2acef57|320|397a1407|fa69fc35491342d48292b1e690618cf6|0

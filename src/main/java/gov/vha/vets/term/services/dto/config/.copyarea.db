@@ -1,0 +1,15 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\dto\config
+2
+b
+15:CodeSystemConfig.java|1|14be2acf0b7|296|47b9d6e9|62e74f3800e711e18f0200188b3d5198|0
+10:StateConfig.java|1|14be2acf09a|37c|4a85fddc|bead9c0abdb64493b197fe2182480531|0
+11:DomainConfig.java|1|14be2acf036|646|c7c810b0|63874f4800e711e18f0200188b3d5198|0
+17:RelationshipConfig.java|1|14be2acf08b|7e8|e60479de|167fd3ab67f24b57a12d3facaaad32e7|0
+f:BaseConfig.java|1|14be2acf000|57e|1bc88b7c|b378ddcd1418424fbc182834704aba16|0
+18:DependentSubsetRule.java|1|14be2acf019|4ce|1d66e84|93fe65a63f804596ae3edd74120583b1|0
+11:SubsetConfig.java|1|14be2acf0a8|16a0|a468d6db|77dc64417b0211e286b800188b3d5198|0
+16:DesignationConfig.java|1|14be2acf029|141|c35c5fb6|8303149ad5744bf7920494f5b7d18e9a|0
+11:MapSetConfig.java|1|14be2acf044|69b|34b32513|1458893df57e42c1b7139cf37d4f4143|0
+11:RegionConfig.java|1|14be2acf0f9|f98|fc3ed2fa|64b74f6400e711e18f0200188b3d5198|0
+13:PropertyConfig.java|1|14be2acf07f|16c|e3806cba|af2123b1011e48a49f4e50be8bd8e4a3|0

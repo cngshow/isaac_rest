@@ -1,0 +1,8 @@
+ClearCase CopyAreaDB|4
+vobs\STS_services\src\gov\va\med\term\services\dto\publish
+2
+4
+11:NameValueDTO.java|1|14be2acf40d|310|94b6de2d|4769f4149f3b4541b17c5e528a5a1dca|0
+16:PublishConceptDTO.java|1|14be2acf41d|934|74a9e975|8ecd0058de9d4a3d8f957c82680b1b82|0
+15:PublishMapSetDTO.java|1|14be2acf42c|6d3|8b11636|cbd0e13bbe444e919010731196802943|0
+15:PublishRegionDTO.java|1|14be2acf43a|49b|951c729f|9377d65e42ec4af99ab5140eb6b09599|0
