@@ -37,7 +37,11 @@ public class RestIdentifiedObject
 	 * The globally unique, fixed, stable set of identifiers for the object
 	 */
 	@XmlElement
-	List<UUID> uuids;
+	public List<UUID> uuids;
+	
+	RestIdentifiedObject() {
+		// For JAXB only
+	}
 	
 	public RestIdentifiedObject(List<UUID> uuids)
 	{

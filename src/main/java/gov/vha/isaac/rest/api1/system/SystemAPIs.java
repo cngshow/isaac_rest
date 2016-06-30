@@ -18,8 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.system;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.ws.rs.GET;
@@ -28,9 +26,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import com.webcohesion.enunciate.metadata.Facet;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
@@ -48,32 +43,8 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestNodeSemanticType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
-import gov.vha.isaac.rest.api1.data.logic.RestConceptNode;
-import gov.vha.isaac.rest.api1.data.logic.RestFeatureNode;
-import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeBoolean;
-import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeFloat;
-import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeInstant;
-import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeInteger;
-import gov.vha.isaac.rest.api1.data.logic.RestLiteralNodeString;
-import gov.vha.isaac.rest.api1.data.logic.RestRoleNode;
-import gov.vha.isaac.rest.api1.data.logic.RestTypedConnectorNode;
-import gov.vha.isaac.rest.api1.data.logic.RestUntypedConnectorNode;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeDouble;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeFloat;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
+import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -83,7 +54,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.systemPathComponent)
+@Path(RestPaths.systemAPIsPathComponent)
 public class SystemAPIs
 {
 	/**
@@ -102,12 +73,20 @@ public class SystemAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")  
-	public List<Object> getIdentifiedObjects(
+	public RestIdentifiedObjectsResult getIdentifiedObjects(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		List<Object> identifiedObjects = new ArrayList<>();
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.expand,
+				RequestParameters.expandables,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		RestConceptChronology concept = null;
+		RestSememeChronology sememe = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
 		{
@@ -117,31 +96,31 @@ public class SystemAPIs
 				ObjectChronologyType objectChronologyType = Get.identifierService().getChronologyTypeForNid(intId.get());
 				switch(objectChronologyType) {
 				case CONCEPT:
-					identifiedObjects.add(
+					concept =
 							new RestConceptChronology(
 									Get.conceptService().getConcept(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 					break;
 				case SEMEME:
-					identifiedObjects.add(
+					sememe =
 							new RestSememeChronology(
 									Get.sememeService().getSememe(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 					break;
 				case UNKNOWN_NID:
 				default:
 					throw new RestException(RequestParameters.id, id, "Specified NID is for unsupported ObjectChronologyType " + objectChronologyType);
 				}
 				
-				if (identifiedObjects.size() == 0) {
+				if (concept == null && sememe == null) {
 					throw new RestException(RequestParameters.id, id, "Specified NID does not correspond to an existing concept or sememe");
 				}
 
-				return identifiedObjects;
+				return new RestIdentifiedObjectsResult(concept, sememe);
 			}
 			else
 			{
@@ -149,30 +128,30 @@ public class SystemAPIs
 
 				int conceptNid = Get.identifierService().getConceptNid(intId.get());
 				if (conceptNid != 0) {
-					identifiedObjects.add(
+					concept =
 							new RestConceptChronology(
 									Get.conceptService().getConcept(conceptNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 				}
 
 				int sememeNid = Get.identifierService().getSememeNid(intId.get());
 				if (sememeNid != 0) {
-					identifiedObjects.add(
+					sememe =
 							new RestSememeChronology(
 									Get.sememeService().getSememe(sememeNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 				}
 			}
 
-			if (identifiedObjects.size() == 0) {
+			if (concept == null && sememe == null) {
 				throw new RestException(RequestParameters.id, id, "Specified sequence does not correspond to an existing concept or sememe");
 			}
 
-			return identifiedObjects;
+			return new RestIdentifiedObjectsResult(concept, sememe);
 		}
 		else
 		{
@@ -188,32 +167,31 @@ public class SystemAPIs
 				
 					switch(objectChronologyType) {
 					case CONCEPT:
-						identifiedObjects.add(
+						concept =
 								new RestConceptChronology(
 										Get.conceptService().getConcept(nid),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable)));
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
 						break;
 					case SEMEME:
-						identifiedObjects.add(
+						sememe =
 								new RestSememeChronology(
 										Get.sememeService().getSememe(nid),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 						break;
 					case UNKNOWN_NID:
 					default:
 						throw new RestException(RequestParameters.id, id, "Specified UUID is for NID " + nid + " for unsupported ObjectChronologyType " + objectChronologyType);
 					}
 					
-					if (identifiedObjects.size() == 0) {
+					if (concept == null && sememe == null) {
 						throw new RestException(RequestParameters.id, id, "Specified UUID is for NID " + nid + " that does not correspond to an existing concept or sememe");
 					}
 
-					return identifiedObjects;
-				
+					return new RestIdentifiedObjectsResult(concept, sememe);
 				} else {
 					throw new RestException(RequestParameters.id, id, "No concept or sememe exists corresponding to the passed UUID id.");
 				}
@@ -244,6 +222,11 @@ public class SystemAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		RestObjectChronologyType returnedType = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
@@ -303,146 +286,130 @@ public class SystemAPIs
 
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestDynamicSememeDataTypeComponent)  
-	public RestDynamicSememeDataType[] getRestDynamicSememeDataTypes()
+	public RestDynamicSememeDataType[] getRestDynamicSememeDataTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestDynamicSememeDataType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestDynamicSememeValidatorTypeComponent)  
-	public RestDynamicSememeValidatorType[] getRestDynamicSememeValidatorTypes()
+	public RestDynamicSememeValidatorType[] getRestDynamicSememeValidatorTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestDynamicSememeValidatorType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestObjectChronologyTypeComponent)
-	public RestObjectChronologyType[] getRestObjectChronologyTypes()
+	public RestObjectChronologyType[] getRestObjectChronologyTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestObjectChronologyType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestSememeTypeComponent)
-	public RestSememeType[] getRestObjectSememeTypes()
+	public RestSememeType[] getRestObjectSememeTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestSememeType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
-	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes()
+	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestConcreteDomainOperatorsType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestNodeSemanticTypes)
-	public RestNodeSemanticType[] getRestNodeSemanticTypes()
+	public RestNodeSemanticType[] getRestNodeSemanticTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestNodeSemanticType.getAll();
 	}
 	
 	/**
 	 * Enumerate the valid types for the system.  These values can be cached for the life of the connection.
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.enumerationRestSupportedIdTypes)
-	public RestSupportedIdType[] getRestSupportedIdTypes()
+	public RestSupportedIdType[] getRestSupportedIdTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return RestSupportedIdType.getAll();
 	}
 
 	/**
 	 * ISAAC, REST API and related DB metadata.  These values are cached.
 	 * TODO move functionality in getSystemInfo() into OCHRE
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.systemInfoComponent)
-	public RestSystemInfo getSystemInfo()
+	public RestSystemInfo getSystemInfo() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+
 		return ApplicationConfig.getInstance().getSystemInfo();
-	}
-	
-	//TODO the code below this point (noop, class Z) is a hack workaround for the bug 
-	//https://github.com/stoicflame/enunciate/issues/336
-	/**
-	 * This is not a valid operation.  Do not call.
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path("/noop")
-	@Facet ("ignore")  //prevent enunciate from documenting this method
-	public Z noop() throws RestException
-	{
-		throw new RestException("These are not the droids you are looking for");
-	}
-	
-	/**
-	 * The {@link Z} object will never be returned by an API call.
-	 */
-	//Any class that is only referenced by an @XmlSeeAlso should be referenced here, otherwise
-	//the generated ruby library code will miss the class.
-	@XmlRootElement
-	@Facet ("ignore")
-	private class Z
-	{
-		//Put a reference here to any class that is only referenced by an @XmlSeeAlso
-		@XmlElement RestConceptNode a1 = null;
-		@XmlElement RestUntypedConnectorNode a2 = null;
-		@XmlElement RestTypedConnectorNode a3 = null;
-		@XmlElement RestLiteralNodeBoolean a4 = null;
-		@XmlElement RestLiteralNodeInteger a5 = null;
-		@XmlElement RestLiteralNodeFloat a6 = null;
-		@XmlElement RestLiteralNodeString a7 = null;
-		@XmlElement RestLiteralNodeInstant a8 = null;
-		@XmlElement RestRoleNode a9 = null;
-		@XmlElement RestDynamicSememeValidatorType a10 = null;
-		@XmlElement RestDynamicSememeDataType a11 = null;
-		@XmlElement RestObjectChronologyType a12 = null;
-		@XmlElement RestSememeType a13 = null;
-		@XmlElement RestFeatureNode a14 = null;
-		@XmlElement RestSememeDescriptionVersion a15 = null;
-		@XmlElement RestDynamicSememeVersion a16 = null;
-		@XmlElement RestSememeLogicGraphVersion a17 = null;
-		@XmlElement RestDynamicSememeVersion a19 = null;
-		@XmlElement RestDynamicSememeArray a20 = null;
-		@XmlElement RestDynamicSememeBoolean a21 = null;
-		@XmlElement RestDynamicSememeByteArray a22 = null;
-		@XmlElement RestDynamicSememeDouble a23 = null;
-		@XmlElement RestDynamicSememeFloat a24 = null;
-		@XmlElement RestDynamicSememeInteger a25 = null;
-		@XmlElement RestDynamicSememeLong a26 = null;
-		@XmlElement RestDynamicSememeNid a27 = null;
-		@XmlElement RestDynamicSememeSequence a28 = null;
-		@XmlElement RestDynamicSememeString a29 = null;
-		@XmlElement RestDynamicSememeUUID a30 = null;
-		@XmlElement RestDynamicSememeTypedData a31 = null;
 	}
 }

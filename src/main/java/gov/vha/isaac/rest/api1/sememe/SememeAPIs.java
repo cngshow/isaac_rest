@@ -69,7 +69,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.sememePathComponent)
+@Path(RestPaths.sememeAPIsPathComponent)
 public class SememeAPIs
 {
 	/**
@@ -90,6 +90,11 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
 		{
@@ -152,6 +157,12 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		RestSememeChronology chronology =
 				new RestSememeChronology(
 						findSememeChronology(id),
@@ -185,6 +196,13 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.expand,
+				RequestParameters.expandables,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = findSememeChronology(id);
 		@SuppressWarnings("unchecked")
@@ -263,6 +281,13 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		HashSet<Integer> temp = new HashSet<>();
 		temp.add(Util.convertToConceptSequence(id));
 		
@@ -326,6 +351,15 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken) 
 			throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.assemblage,
+				RequestParameters.includeDescriptions,
+				RequestParameters.expand,
+				RequestParameters.expandables,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
 		for (String a : assemblage)
 		{
@@ -358,6 +392,11 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		int conceptSequence = Util.convertToConceptSequence(id);
 		if (DynamicSememeUsageDescriptionImpl.isDynamicSememe(conceptSequence))
 		{

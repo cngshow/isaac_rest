@@ -44,7 +44,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.coordinatePathComponent)
+@Path(RestPaths.coordinateAPIsPathComponent)
 public class CoordinateAPIs
 {
 	private static Logger log = LogManager.getLogger(CoordinateAPIs.class);
@@ -104,6 +104,10 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.descriptionLogicProfile) String descriptionLogicProfile,
 			@QueryParam(RequestParameters.classifier) String classifier) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
 		// All parameters, including defaults, are handled by the RestContainerRequestFilter
 		
 		log.debug("Returning RestCoordinatesToken...");
@@ -133,6 +137,9 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		RestTaxonomyCoordinate taxonomyCoordinate = getTaxonomyCoordinate(coordToken);
 		RestCoordinates coordinates =
@@ -172,6 +179,10 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		return new RestTaxonomyCoordinate(RequestInfo.get().getTaxonomyCoordinate());
 	}
 
@@ -198,6 +209,10 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		return new RestStampCoordinate(RequestInfo.get().getStampCoordinate());
 	}
 
@@ -224,6 +239,10 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		return new RestLanguageCoordinate(RequestInfo.get().getLanguageCoordinate());
 	}
 
@@ -250,6 +269,10 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		return new RestLogicCoordinate(RequestInfo.get().getLogicCoordinate());
 	}
 }

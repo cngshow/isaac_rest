@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>3.06</version>
+		<version>3.07</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>1.8</version>
+	<version>1.9</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -24,11 +24,11 @@
 	</scm>
 
 	<properties>
-		<isaac.version>3.06</isaac.version>
-		<jersey.version>2.22.2</jersey.version>
+		<isaac.version>3.07</isaac.version>
+		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
-		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/351-->
-		<enunciate.version>2.3.0-patch1</enunciate.version>
+		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
+		<enunciate.version>2.4.0-patch1</enunciate.version>
 	</properties>
 
 	<dependencies>
@@ -190,7 +190,6 @@
 			<artifactId>enunciate-core-annotations</artifactId>
 			<version>${enunciate.version}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-web</artifactId>
@@ -295,4 +294,67 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+	<profiles>
+		<profile>
+			<id>cargo</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.cargo</groupId>
+						<artifactId>cargo-maven2-plugin</artifactId>
+						<version>1.2.0</version>
+						<executions>
+							<execution>
+								<id>start-container</id>
+								<phase>pre-integration-test</phase>
+							<goals>
+								<goal>deployer-deploy</goal>
+							</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<container>
+								<containerId>tomcat7x</containerId>
+								<type>remote</type>
+							</container>
+							<configuration>
+								<type>runtime</type>
+							</configuration>
+							<deployer>
+								<type>remote</type>
+								<deployables>
+									<deployable>
+										<groupId>${project.groupId}</groupId>
+										<artifactId>${project.artifactId}</artifactId>
+										<type>war</type>
+										<properties>
+											<context>${remote.context}</context>
+										</properties>
+									</deployable>
+								</deployables>
+							</deployer>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>load-test</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<classpathScope>test</classpathScope>
+							<mainClass>gov.vha.isaac.rest.junit.TaxonomyUnitTest</mainClass>
+							<arguments>
+								<argument>http://localhost:8080/isaac-rest/rest/</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

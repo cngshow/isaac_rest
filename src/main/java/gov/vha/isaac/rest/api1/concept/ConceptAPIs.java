@@ -62,7 +62,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.conceptPathComponent)
+@Path(RestPaths.conceptAPIsPathComponent)
 public class ConceptAPIs
 {
 	private static Logger log = LogManager.getLogger();
@@ -96,15 +96,26 @@ public class ConceptAPIs
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id + "}")
 	public RestConceptVersion getConceptVersion(
 			@PathParam(RequestParameters.id) String id, 
-			@QueryParam("includeParents") @DefaultValue("false") String includeParents,
-			@QueryParam("countParents") @DefaultValue("false") String countParents,
-			@QueryParam("includeChildren") @DefaultValue("false") String includeChildren,
-			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
-			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
+			@QueryParam(RequestParameters.includeParents) @DefaultValue("false") String includeParents,
+			@QueryParam(RequestParameters.countParents) @DefaultValue("false") String countParents,
+			@QueryParam(RequestParameters.includeChildren) @DefaultValue("false") String includeChildren,
+			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
+			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.includeParents,
+				RequestParameters.countParents,
+				RequestParameters.includeChildren,
+				RequestParameters.countChildren,
+				RequestParameters.sememeMembership,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
 		@SuppressWarnings("unchecked")
@@ -141,6 +152,12 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
 		RestConceptChronology chronology =
 				new RestConceptChronology(
@@ -215,6 +232,13 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.includeAttributes,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		
 		List<RestSememeVersion> descriptions = SememeAPIs.get(

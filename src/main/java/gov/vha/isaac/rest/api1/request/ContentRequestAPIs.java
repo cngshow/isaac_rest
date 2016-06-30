@@ -37,7 +37,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.requestPathComponent)
+@Path(RestPaths.contentRequestAPIsPathComponent)
 public class ContentRequestAPIs
 {
 	/**

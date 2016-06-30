@@ -83,7 +83,7 @@ public class RestSystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.4.0"};
+	public String[] supportedAPIVersions = new String[] {"1.4.1"};
 	
 	/**
 	 * REST API Implementation Version - aka the version number of the software running here.
@@ -113,19 +113,19 @@ public class RestSystemInfo
 	 * Software Licenses
 	 */
 	@XmlElement
-	List<RestLicenseInfo> appLicenses = new ArrayList<>();
+	public List<RestLicenseInfo> appLicenses = new ArrayList<>();
 	
 	/**
 	 * Database Licenses
 	 */
 	@XmlElement
-	List<RestLicenseInfo> dbLicenses = new ArrayList<>();
+	public List<RestLicenseInfo> dbLicenses = new ArrayList<>();
 	
 	/**
 	 * The source content that was built into the underlying database.
 	 */
 	@XmlElement
-	List<RestDependencyInfo> dbDependencies = new ArrayList<>();
+	public List<RestDependencyInfo> dbDependencies = new ArrayList<>();
 
 	public RestSystemInfo()
 	{

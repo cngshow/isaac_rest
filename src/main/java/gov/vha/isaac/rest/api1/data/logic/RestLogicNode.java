@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.logic.LogicNode;
 import gov.vha.isaac.ochre.model.logic.node.AbstractLogicNode;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -57,6 +58,15 @@ import gov.vha.isaac.rest.session.RequestInfo;
  * 
  */
 @XmlSeeAlso({
+	RestConceptNode.class,
+	RestUntypedConnectorNode.class,
+	RestTypedConnectorNode.class,
+	RestLiteralNodeBoolean.class,
+	RestLiteralNodeInteger.class,
+	RestLiteralNodeFloat.class,
+	RestLiteralNodeString.class,
+	RestLiteralNodeInstant.class})
+@JsonSeeAlso({
 	RestConceptNode.class,
 	RestUntypedConnectorNode.class,
 	RestTypedConnectorNode.class,

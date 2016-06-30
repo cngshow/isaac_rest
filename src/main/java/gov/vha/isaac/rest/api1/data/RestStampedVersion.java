@@ -70,6 +70,10 @@ public class RestStampedVersion
 	@XmlElement
 	int pathSequence;
 
+	RestStampedVersion() {
+		// For JAXB only
+	}
+	
 	public RestStampedVersion(StampedVersion sv)
 	{
 		stampSequence = sv.getStampSequence();

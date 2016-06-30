@@ -55,31 +55,32 @@ public class RestPaths
 	public static final String enumerationRestNodeSemanticTypes = enumerationComponent + "restNodeSemanticType/";
 	public static final String enumerationRestSupportedIdTypes = enumerationComponent + "restSupportedIdTypes/";
 	
-	public static final String conceptPathComponent = apiVersionComponent + "concept/";
-	public static final String conceptChronologyAppPathComponent = appPathComponent + conceptPathComponent + chronologyComponent;
-	public static final String conceptVersionsAppPathComponent = appPathComponent + conceptPathComponent + versionsComponent;
-	public static final String conceptVersionAppPathComponent = appPathComponent + conceptPathComponent +versionComponent;
-	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptPathComponent +descriptionsComponent;
+	public static final String conceptAPIsPathComponent = apiVersionComponent + "concept/";
+	public static final String conceptChronologyAppPathComponent = appPathComponent + conceptAPIsPathComponent + chronologyComponent;
+	public static final String conceptVersionsAppPathComponent = appPathComponent + conceptAPIsPathComponent + versionsComponent;
+	public static final String conceptVersionAppPathComponent = appPathComponent + conceptAPIsPathComponent +versionComponent;
+	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptAPIsPathComponent +descriptionsComponent;
 
-	public static final String sememePathComponent = apiVersionComponent + "sememe/";
-	public static final String sememeChronologyAppPathComponent = appPathComponent + sememePathComponent + chronologyComponent;
-	public static final String sememeVersionsAppPathComponent = appPathComponent + sememePathComponent + versionsComponent;
-	public static final String sememeVersionAppPathComponent = appPathComponent + sememePathComponent +versionComponent;
-	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememePathComponent +byAssemblageComponent;
+	public static final String sememeAPIsPathComponent = apiVersionComponent + "sememe/";
+	public static final String sememeChronologyAppPathComponent = appPathComponent + sememeAPIsPathComponent + chronologyComponent;
+	public static final String sememeVersionsAppPathComponent = appPathComponent + sememeAPIsPathComponent + versionsComponent;
+	public static final String sememeVersionAppPathComponent = appPathComponent + sememeAPIsPathComponent +versionComponent;
+	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememeAPIsPathComponent +byAssemblageComponent;
 
+	public static final String searchComponent = "search/";
+	public static final String searchAPIsPathComponent = apiVersionComponent + searchComponent;
+	public static final String searchAppPathComponent = appPathComponent + searchAPIsPathComponent;
 	
-	public static final String searchPathComponent = apiVersionComponent + "search/";
-	public static final String searchAppPathComponent = appPathComponent + searchPathComponent;
+	public static final String taxonomyAPIsPathComponent = apiVersionComponent + "taxonomy/";
 	
-	public static final String taxonomyPathComponent = apiVersionComponent + "taxonomy/";
+	public static final String idComponent = "id/";
+	public static final String idAPIsPathComponent = apiVersionComponent + idComponent;
+	public static final String idAppPathComponent = appPathComponent + apiVersionComponent + idComponent;
 	
-	public static final String idPathComponent = apiVersionComponent + "id/";
-	public static final String idAppPathComponent = appPathComponent + apiVersionComponent + "id/";
-	
-	public static final String systemPathComponent = apiVersionComponent + "system/";
-	public static final String requestPathComponent = apiVersionComponent + "request/";
+	public static final String systemAPIsPathComponent = apiVersionComponent + "system/";
+	public static final String contentRequestAPIsPathComponent = apiVersionComponent + "request/";
 
-	public static final String coordinatePathComponent = apiVersionComponent + "coordinate/";
+	public static final String coordinateAPIsPathComponent = apiVersionComponent + "coordinate/";
 	public static final String coordinatesComponent = "coordinates/";
 	public static final String coordinatesTokenComponent = "coordinatesToken/";
 	public static final String taxonomyCoordinatePathComponent = "taxonomyCoordinate/";
@@ -87,7 +88,7 @@ public class RestPaths
 	public static final String stampCoordinatePathComponent = "stampCoordinate/";
 	public static final String logicCoordinatePathComponent = "logicCoordinate/";
 
-	public static final String logicGraphPathComponent = apiVersionComponent + "logicGraph/";
-	public static final String logicGraphVersionAppPathComponent = appPathComponent + logicGraphPathComponent + versionComponent;
-	public static final String logicGraphChronologyAppPathComponent = appPathComponent + logicGraphPathComponent + chronologyComponent;
+	public static final String logicGraphAPIsPathComponent = apiVersionComponent + "logicGraph/";
+	public static final String logicGraphVersionAppPathComponent = appPathComponent + logicGraphAPIsPathComponent + versionComponent;
+	public static final String logicGraphChronologyAppPathComponent = appPathComponent + logicGraphAPIsPathComponent + chronologyComponent;
 }

@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.session;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +55,8 @@ public class RequestInfo
 {
 	private static Logger log = LogManager.getLogger();
 
+	private Map<String, List<String>> parameters_ = new HashMap<>();
+	
 	private String coordinatesToken_ = null;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
@@ -115,6 +118,11 @@ public class RequestInfo
 
 	public RequestInfo readAll(Map<String, List<String>> parameters) throws Exception
 	{
+		parameters_.clear();
+		for (Map.Entry<String, List<String>> entry : parameters.entrySet()) {
+			parameters_.put(entry.getKey(), Collections.unmodifiableList(entry.getValue()));
+		}
+
 		readExpandables(parameters);
 
 		String serializedTokenByParams = CoordinatesTokens.get(CoordinatesUtil.getCoordinateParameters(parameters));
@@ -139,16 +147,13 @@ public class RequestInfo
 			// Determine if any relevant coordinate parameters set
 			Map<String,List<String>> coordinateParameters = new HashMap<>();
 			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters,
-					RequestParameters.stated,
-					RequestParameters.STAMP_COORDINATE_PARAM_NAMES,
-					RequestParameters.LANGUAGE_COORDINATE_PARAM_NAMES,
-					RequestParameters.LOGIC_COORDINATE_PARAM_NAMES));
+					RequestParameters.COORDINATE_PARAM_NAMES));
 
-			// If ANY relevant coordinate parameter values set, then calculate new CoordinatesToken string
-			if (coordinateParameters.size() == 0) {
+			// If no coordinate parameter or only coordToken value set, then use
+			if (coordinateParameters.size() == 0 || (coordinateParameters.size() == 1 && coordinateParameters.containsKey(RequestParameters.coordToken))) {
 				log.debug("No individual coordinate parameters to apply to token \"" + requestInfo.get().coordinatesToken_ + "\"");
 
-			} else { // if (coordinateParameters.size() > 0)
+			} else { // If ANY coordinate parameter other than coordToken value set, then calculate new CoordinatesToken string
 				log.debug("Applying {} individual parameters to coordinates token \"{}\": {}", requestInfo.get().coordinatesToken_, coordinateParameters.size(), coordinateParameters.toString());
 
 				// TaxonomyCoordinate components
@@ -206,6 +211,13 @@ public class RequestInfo
 	public boolean returnExpandableLinks()
 	{
 		return returnExpandableLinks_;
+	}
+
+	/**
+	 * @return parameters Map
+	 */
+	public Map<String, List<String>> getParameters() {
+		return Collections.unmodifiableMap(parameters_);
 	}
 
 	/**

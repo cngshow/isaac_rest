@@ -50,7 +50,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
 
-@Path(RestPaths.taxonomyPathComponent)
+@Path(RestPaths.taxonomyAPIsPathComponent)
 public class TaxonomyAPIs
 {
 	private static Logger log = LogManager.getLogger();
@@ -84,15 +84,26 @@ public class TaxonomyAPIs
 	@Path(RestPaths.versionComponent)
 	public RestConceptVersion getConceptVersionTaxonomy(
 			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
-			@QueryParam(RequestParameters.id) @DefaultValue("7c21b6c5-cf11-5af9-893b-743f004c97f5") String id,
-			@QueryParam("parentHeight") @DefaultValue("0") int parentHeight,
-			@QueryParam("countParents") @DefaultValue("false") String countParents,
-			@QueryParam("childDepth") @DefaultValue("1") int childDepth,
-			@QueryParam("countChildren") @DefaultValue("false") String countChildren,
-			@QueryParam("sememeMembership") @DefaultValue("false") String sememeMembership,
+			@QueryParam(RequestParameters.id) @DefaultValue(RequestParameters.ISAAC_ROOT_UUID) String id,
+			@QueryParam(RequestParameters.parentHeight) @DefaultValue("0") int parentHeight,
+			@QueryParam(RequestParameters.countParents) @DefaultValue("false") String countParents,
+			@QueryParam(RequestParameters.childDepth) @DefaultValue("1") int childDepth,
+			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
+			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.parentHeight,
+				RequestParameters.countParents,
+				RequestParameters.childDepth,
+				RequestParameters.countChildren,
+				RequestParameters.sememeMembership,
+				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
 		boolean includeSememeMembership = Boolean.parseBoolean(sememeMembership.trim());

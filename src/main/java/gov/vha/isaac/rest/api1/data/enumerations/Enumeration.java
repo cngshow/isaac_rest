@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 
@@ -39,6 +40,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlSeeAlso ({RestDynamicSememeValidatorType.class, RestDynamicSememeDataType.class, RestObjectChronologyType.class, RestSememeType.class})
+@JsonSeeAlso ({RestDynamicSememeValidatorType.class, RestDynamicSememeDataType.class, RestObjectChronologyType.class, RestSememeType.class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class Enumeration implements Comparable<Enumeration>

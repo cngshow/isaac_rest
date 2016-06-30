@@ -23,8 +23,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
+
 /**
- * {@link RestLicenseInfo}
+ * {@link RestIdentifiedObjectsResult}
  * 
  * This class carries license information
  *
@@ -32,41 +35,33 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestLicenseInfo
+public class RestIdentifiedObjectsResult
 {
 	/**
-	 * Name of the license
+	 * Zero or one concept chronology
 	 */
 	@XmlElement
-	public String name;
+	public RestConceptChronology concept;
 	
 	/**
-	 * URL to the license text
+	 * Zero or one sememe chronology
 	 */
 	@XmlElement
-	public String url;
-	
-	/**
-	 * Comments related to the license
-	 */
-	@XmlElement
-	public String comments;
-	
-	public RestLicenseInfo()
+	public RestSememeChronology sememe;
+
+	public RestIdentifiedObjectsResult()
 	{
 		//For jaxb
 	}
 
 	/**
-	 * @param name of the license
-	 * @param url of the license text
-	 * @param comments related to the license
+	 * @param concept RestConceptChronology
+	 * @param sememe RestSememeChronology
 	 */
-	public RestLicenseInfo(String name, String url, String comments) {
+	public RestIdentifiedObjectsResult(RestConceptChronology concept, RestSememeChronology sememe) {
 		super();
-		this.name = name;
-		this.url = url;
-		this.comments = comments;
+		this.concept = concept;
+		this.sememe = sememe;
 	}
 
 	/* (non-Javadoc)
@@ -74,6 +69,6 @@ public class RestLicenseInfo
 	 */
 	@Override
 	public String toString() {
-		return "RestLicenseInfo [name=" + name + ", url=" + url + ", comments=" + comments + "]";
+		return "RestIdentifiedObjectsResult [concept=" + (concept != null ? concept.description : null) + ", sememe=" + (sememe != null ? sememe.identifiers.uuids : null) + "]";
 	}
 }

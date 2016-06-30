@@ -23,12 +23,15 @@ import java.util.Arrays;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * 
  * {@link Expandables}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class Expandables
 {
 	/**
@@ -37,6 +40,10 @@ public class Expandables
 	 */
 	@XmlElement
 	List<Expandable> items;
+	
+	public Expandables() {
+		// For JAXB only
+	}
 	
 	public Expandables(List<Expandable> items)
 	{
@@ -57,8 +64,10 @@ public class Expandables
 	 */
 	public void add(Expandable expandable)
 	{
+		if (items == null) {
+			this.items = new ArrayList<>();
+		}
 		this.items.add(expandable);
-		
 	}
 	
 	/**
@@ -66,7 +75,7 @@ public class Expandables
 	 */
 	public void remove(String expandable)
 	{
-		for (int i = 0; i < this.items.size(); i++)
+		for (int i = 0; items != null && i < this.items.size(); i++)
 		{
 			if (this.items.get(i).name.equals(expandable))
 			{
@@ -80,6 +89,6 @@ public class Expandables
 	 */
 	public int size()
 	{
-		return this.items.size();
+		return items == null ? 0 : this.items.size();
 	}
 }

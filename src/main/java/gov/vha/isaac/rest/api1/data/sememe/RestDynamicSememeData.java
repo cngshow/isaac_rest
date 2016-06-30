@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeArray;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeBoolean;
@@ -55,6 +56,10 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlSeeAlso ({RestDynamicSememeArray.class, RestDynamicSememeBoolean.class, RestDynamicSememeByteArray.class, RestDynamicSememeDouble.class, RestDynamicSememeFloat.class,
+	RestDynamicSememeInteger.class, RestDynamicSememeLong.class, RestDynamicSememeString.class, RestDynamicSememeTypedData.class, 
+	RestDynamicSememeArray[].class, RestDynamicSememeBoolean[].class, RestDynamicSememeByteArray[].class, RestDynamicSememeDouble[].class, 
+	RestDynamicSememeFloat[].class, RestDynamicSememeLong[].class, RestDynamicSememeString[].class, RestDynamicSememeData[].class, RestDynamicSememeTypedData[].class})
+@JsonSeeAlso ({RestDynamicSememeArray.class, RestDynamicSememeBoolean.class, RestDynamicSememeByteArray.class, RestDynamicSememeDouble.class, RestDynamicSememeFloat.class,
 	RestDynamicSememeInteger.class, RestDynamicSememeLong.class, RestDynamicSememeString.class, RestDynamicSememeTypedData.class, 
 	RestDynamicSememeArray[].class, RestDynamicSememeBoolean[].class, RestDynamicSememeByteArray[].class, RestDynamicSememeDouble[].class, 
 	RestDynamicSememeFloat[].class, RestDynamicSememeLong[].class, RestDynamicSememeString[].class, RestDynamicSememeData[].class, RestDynamicSememeTypedData[].class})

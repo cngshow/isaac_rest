@@ -55,7 +55,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.idPathComponent)
+@Path(RestPaths.idAPIsPathComponent)
 public class IdAPIs
 {
 	private static Logger log = LogManager.getLogger();
@@ -84,10 +84,17 @@ public class IdAPIs
 	@Path(RestPaths.idTranslateComponent + "{" + RequestParameters.id + "}")  
 	public RestId translateId(
 			@PathParam(RequestParameters.id) String id,
-			@QueryParam("inputType") String inputType, 
-			@QueryParam("outputType") @DefaultValue("uuid") String outputType,
+			@QueryParam(RequestParameters.inputType) String inputType, 
+			@QueryParam(RequestParameters.outputType) @DefaultValue("uuid") String outputType,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.inputType,
+				RequestParameters.outputType,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
 		IdType inputTypeFormat = IdType.parse(inputType).orElse(IdType.UUID);
 		Optional<? extends ObjectChronology> object = Optional.empty();
 		switch (inputTypeFormat)
@@ -193,6 +200,10 @@ public class IdAPIs
 	@Path(RestPaths.idTypesComponent)  
 	public RestSupportedIdType[] getSupportedTypes() throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+	
 		return RestSupportedIdType.getAll();
 	}
 }
