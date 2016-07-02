@@ -253,7 +253,7 @@
 					<reuseForks>true</reuseForks>
 					<parallel>false</parallel>
 					<useManifestOnlyJar>false</useManifestOnlyJar>
-					<argLine>-ea -d64</argLine>
+					<argLine>-ea -d64 -Djava.awt.headless=true</argLine>
 					<!--debugForkedProcess>true</debugForkedProcess-->
 				</configuration>
 			</plugin>
