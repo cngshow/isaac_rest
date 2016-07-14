@@ -45,7 +45,7 @@ import javafx.concurrent.Task;
 public class ApplicationConfig extends ResourceConfig implements ContainerLifecycleListener
 {
 	private static final AtomicInteger startup = new AtomicInteger(1);
-	private static Logger log = LogManager.getLogger();
+	private Logger log = LogManager.getLogger();
 	
 	private static ApplicationConfig instance_;
 	
