@@ -45,7 +45,7 @@ import javafx.concurrent.Task;
 public class ApplicationConfig extends ResourceConfig implements ContainerLifecycleListener
 {
 	private static final AtomicInteger startup = new AtomicInteger(1);
-	private static Logger log = LogManager.getLogger();
+	private Logger log = LogManager.getLogger();
 	
 	private static ApplicationConfig instance_;
 	
@@ -418,7 +418,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			if (StringUtils.isBlank(version))
 			{
 				log.warn("Unable to determine specified DB - using developer default options!");
-				baseMavenURL = "http://vadev.mantech.com:8081/nexus/content/groups/everything/";
+				baseMavenURL = "https://vadev.mantech.com:8080/nexus/content/groups/everything/";
 				mavenUsername = "system";
 				mavenPassword = "system";
 				groupId = "gov.vha.isaac.db";

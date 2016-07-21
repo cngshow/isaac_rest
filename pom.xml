@@ -9,7 +9,7 @@
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>1.9</version>
+	<version>1.11</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -253,7 +253,7 @@
 					<reuseForks>true</reuseForks>
 					<parallel>false</parallel>
 					<useManifestOnlyJar>false</useManifestOnlyJar>
-					<argLine>-ea -d64</argLine>
+					<argLine>-ea -d64 -Djava.awt.headless=true</argLine>
 					<!--debugForkedProcess>true</debugForkedProcess-->
 				</configuration>
 			</plugin>
@@ -314,7 +314,7 @@
 						</executions>
 						<configuration>
 							<container>
-								<containerId>tomcat7x</containerId>
+								<containerId>tomcat8x</containerId>
 								<type>remote</type>
 							</container>
 							<configuration>
