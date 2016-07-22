@@ -253,43 +253,55 @@ public class TaxonomyAPIs
 	}
 
 	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth, 
-		boolean includeSememeMembership, ConceptSequenceSet handledConcepts)
+			boolean includeSememeMembership, ConceptSequenceSet handledConcepts)
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
 			log.warn("addParents(" + conceptSequence + ") aborted potential infinite recursion");
 			return;
-		} else {
+		} else if (tree.getParentSequences(conceptSequence).length == 0) {
+			// If no parents, just add self
 			handledConcepts.add(conceptSequence);
-		}
-		for (int parentSequence : tree.getParentSequences(conceptSequence))
-		{
-			@SuppressWarnings("rawtypes")
-			ConceptChronology parentConceptChronlogy;
-			try
+		} else {
+			for (int parentSequence : tree.getParentSequences(conceptSequence))
 			{
-				parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
-			}
-			catch (RestException e)
-			{
-				throw new RuntimeException("Internal Error!", e);
-			}
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			if (cv.isPresent())
-			{
-				//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated(), 
-					includeSememeMembership);
-				rcv.addParent(parentVersion);
-				if (remainingParentDepth > 0)
+				// If this is only parent, then use passed handledConcepts
+				// else create a new perParentHandledConcepts for each parent
+				ConceptSequenceSet perParentHandledConcepts = tree.getParentSequences(conceptSequence).length == 1 ? handledConcepts : new ConceptSequenceSet();
+				perParentHandledConcepts.add(conceptSequence);
+
+				@SuppressWarnings("rawtypes")
+				ConceptChronology parentConceptChronlogy;
+				try
 				{
-					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
-						handledConcepts);
+					parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
 				}
-				else if (countLeafParents)
+				catch (RestException e)
 				{
-					countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree);
+					throw new RuntimeException("Internal Error!", e);
+				}
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+				if (cv.isPresent())
+				{
+					//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
+					RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated(), 
+							includeSememeMembership);
+					rcv.addParent(parentVersion);
+					if (remainingParentDepth > 0)
+					{
+						addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
+								perParentHandledConcepts);
+					}
+					else if (countLeafParents)
+					{
+						countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree);
+					}
+				}
+				
+				// Add perParentHandledConcepts concepts back to handledConcepts if not the same set
+				if (handledConcepts != perParentHandledConcepts) {
+					handledConcepts.addAll(perParentHandledConcepts.stream());
 				}
 			}
 		}
