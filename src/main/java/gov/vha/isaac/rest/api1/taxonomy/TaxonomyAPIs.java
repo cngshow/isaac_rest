@@ -263,12 +263,15 @@ public class TaxonomyAPIs
 			// If no parents, just add self
 			handledConcepts.add(conceptSequence);
 		} else {
+			ConceptSequenceSet passedHandledConcepts = new ConceptSequenceSet();
+			passedHandledConcepts.addAll(handledConcepts.stream());
+			
 			for (int parentSequence : tree.getParentSequences(conceptSequence))
 			{
-				// If this is only parent, then use passed handledConcepts
-				// else create a new perParentHandledConcepts for each parent
-				ConceptSequenceSet perParentHandledConcepts = tree.getParentSequences(conceptSequence).length == 1 ? handledConcepts : new ConceptSequenceSet();
+				// create a new perParentHandledConcepts for each parent
+				ConceptSequenceSet perParentHandledConcepts = new ConceptSequenceSet();
 				perParentHandledConcepts.add(conceptSequence);
+				perParentHandledConcepts.addAll(passedHandledConcepts.stream());
 
 				@SuppressWarnings("rawtypes")
 				ConceptChronology parentConceptChronlogy;
@@ -299,10 +302,8 @@ public class TaxonomyAPIs
 					}
 				}
 				
-				// Add perParentHandledConcepts concepts back to handledConcepts if not the same set
-				if (handledConcepts != perParentHandledConcepts) {
-					handledConcepts.addAll(perParentHandledConcepts.stream());
-				}
+				// Add perParentHandledConcepts concepts back to handledConcepts
+				handledConcepts.addAll(perParentHandledConcepts.stream());
 			}
 		}
 	}
