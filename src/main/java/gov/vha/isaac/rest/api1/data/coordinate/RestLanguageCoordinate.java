@@ -39,21 +39,40 @@ import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLanguageCoordinate {
+	/**
+	 * Sequence number of the language concept associated with the language coordinate.
+	 * The language will be something like
+	 * english, spanish, french, danish, polish, dutch,
+	 * lithuanian, chinese, japanese, or swedish.
+	 */
 	@XmlElement
 	int language;
 	
+	/**
+	 * Ordered list of dialect assemblage sequence numbers. Order determines preference.
+	 * A dialect assemblage will be something like US (US Dialect) or GB (Great Britain Dialect).
+	 */
 	@XmlElement
 	List<Integer> dialectAssemblagePreferences = new ArrayList<>();
 
+	/**
+	 * Ordered list of description type sequence numbers. Order determines preference.
+	 * A description type will be something like FSN (Fully Specified Name), Synonym or Definition.
+	 */
 	@XmlElement
 	List<Integer> descriptionTypePreferences = new ArrayList<>();
 	
-	public RestLanguageCoordinate(LanguageCoordinate lc) {
-		language = lc.getLanguageConceptSequence();
-		for (int seq : lc.getDialectAssemblagePreferenceList()) {
+	/**
+	 * @param ochreLanguageCoordinate OCHRE LanguageCoordinate
+	 * 
+	 * Constructs RestLanguageCoordinate from OCHRE LanguageCoordinate
+	 */
+	public RestLanguageCoordinate(LanguageCoordinate ochreLanguageCoordinate) {
+		language = ochreLanguageCoordinate.getLanguageConceptSequence();
+		for (int seq : ochreLanguageCoordinate.getDialectAssemblagePreferenceList()) {
 			dialectAssemblagePreferences.add(seq);
 		}
-		for (int seq : lc.getDescriptionTypePreferenceList()) {
+		for (int seq : ochreLanguageCoordinate.getDescriptionTypePreferenceList()) {
 			descriptionTypePreferences.add(seq);
 		}
 	}

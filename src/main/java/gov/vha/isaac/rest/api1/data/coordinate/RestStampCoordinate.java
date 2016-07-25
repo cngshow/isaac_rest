@@ -41,27 +41,50 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestStampCoordinate {
+	/**
+	 * Long epoch time component of the RestStampCoordinate.
+	 * Corresponds to the time component of the StampPosition component of the OCHRE StampCoordinate.
+	 */
 	@XmlElement
 	public long time;
 
+	/**
+	 * Sequence number of the path concept.
+	 * Corresponds to the path component of the StampPosition component of the OCHRE StampCoordinate
+	 */
 	@XmlElement
 	public int path;
 	
+	/**
+	 * RestStampPrecedenceType Enumeration specifying precedence. Values are either PATH or TIME.
+	 */
 	@XmlElement
 	public RestStampPrecedenceType precedence;
 	
+	/**
+	 * Set of module concept sequence numbers.
+	 */
 	@XmlElement
 	public Set<Integer> modules = new HashSet<>();
 	
+	/**
+	 * Set of RestStateType Enumeration values determining allowed RestStateType values.
+	 * Values include INACTIVE, ACTIVE, PRIMORDIAL and CANCELLED.
+	 */
 	@XmlElement
 	public Set<RestStateType> allowedStates = new HashSet<>();
 	
-	public RestStampCoordinate(StampCoordinate sc) {
-		time = sc.getStampPosition().getTime();
-		path = sc.getStampPosition().getStampPathSequence();
-		precedence = new RestStampPrecedenceType(sc.getStampPrecedence());
-		sc.getModuleSequences().stream().forEach((seq) -> modules.add(seq));
-		sc.getAllowedStates().stream().forEach((state) -> allowedStates.add(new RestStateType(state)));
+	/**
+	 * @param ochreStampCoordinate OCHRE StampCoordinate
+	 * 
+	 * Constructs a RestStampCoordinate from an OCHRE StampCoordinate
+	 */
+	public RestStampCoordinate(StampCoordinate ochreStampCoordinate) {
+		time = ochreStampCoordinate.getStampPosition().getTime();
+		path = ochreStampCoordinate.getStampPosition().getStampPathSequence();
+		precedence = new RestStampPrecedenceType(ochreStampCoordinate.getStampPrecedence());
+		ochreStampCoordinate.getModuleSequences().stream().forEach((seq) -> modules.add(seq));
+		ochreStampCoordinate.getAllowedStates().stream().forEach((state) -> allowedStates.add(new RestStateType(state)));
 	}
 
 	protected RestStampCoordinate() {
