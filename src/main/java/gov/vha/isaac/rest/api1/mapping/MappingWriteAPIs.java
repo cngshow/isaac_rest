@@ -18,8 +18,20 @@
  */
 package gov.vha.isaac.rest.api1.mapping;
 
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 
 /**
@@ -30,5 +42,79 @@ import gov.vha.isaac.rest.api1.RestPaths;
 @Path(RestPaths.mappingAPIsPathComponent + RestPaths.writePathComponent)
 public class MappingWriteAPIs
 {
-	//TODO implement create and update methods in a patter like the comment ones
+	/**
+	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
+	 * getEditCoordinatesToken().
+	 * @return the sequence identifying the created concept which defines the map set
+	 * @throws RestException
+	 */
+	//TODO fix the comments above around editToken 
+	@POST
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingSetComponent + RestPaths.createPathComponent)
+	public int createNewMapSet(
+		RestMappingSetVersionBaseCreate input,
+		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	{
+		//TODO implement create
+		return 0;
+	}
+	
+	/**
+	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
+	 * provided now, the new version will have that field stored as blank.
+	 * 
+	 * @param state - The state to put the comment into
+	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
+	 * getEditCoordinatesToken().
+	 * @throws RestException
+	 */
+	//TODO fix the comments above around editToken 
+	@PUT
+	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
+	public void updateMapSet(
+		RestMappingSetVersionBase input,
+		@QueryParam("state") State state,
+		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	{
+		//TODO implement edit
+	}
+	
+	/**
+	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
+	 * getEditCoordinatesToken().
+	 * @return the sememe sequence identifying the sememe which stores the created mapping item
+	 * @throws RestException
+	 */
+	//TODO fix the comments above around editToken 
+	@POST
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingItemComponent + RestPaths.createPathComponent)
+	public int createNewMappintItem(
+		RestMappingItemVersionBaseCreate input,
+		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	{
+		//TODO implement create
+		return 0;
+	}
+	
+	/**
+	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
+	 * provided now, the new version will have that field stored as blank.
+	 * 
+	 * @param state - The state to put the comment into
+	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
+	 * getEditCoordinatesToken().
+	 * @throws RestException
+	 */
+	//TODO fix the comments above around editToken 
+	@PUT
+	@Path(RestPaths.mappingItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
+	public void updateMappingItem(
+		RestMappingItemVersionBase input,
+		@QueryParam("state") State state,
+		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	{
+		//TODO implement edit
+	}
 }

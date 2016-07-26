@@ -53,7 +53,6 @@ import javafx.concurrent.Task;
 @Path(RestPaths.commentAPIsPathComponent + RestPaths.writePathComponent)
 public class CommentWriteAPIs
 {
-
 	/**
 	 * @param itemToComment - the identifier (UUID or nid) of the item to be commented on
 	 * @param commentText - the text to store as the comment

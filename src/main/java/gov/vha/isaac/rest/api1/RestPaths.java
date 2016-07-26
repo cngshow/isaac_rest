@@ -51,6 +51,7 @@ public class RestPaths
 	
 	public static final String mappingSetComponent = "mappingSet/";
 	public static final String mappingSetsComponent = "mapppingSets/";
+	public static final String mappingItemComponent = "mappingItem/";
 	public static final String mappingItemsComponent = "mappingItems/";
 	
 	public static final String enumerationComponent = "enumeration/";

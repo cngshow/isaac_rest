@@ -18,7 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
-import java.util.List;
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -38,7 +37,6 @@ import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -50,7 +48,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestMappingItemVersion implements Comparable<RestMappingItemVersion>
+public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate implements Comparable<RestMappingItemVersion>
 {
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -69,41 +67,6 @@ public class RestMappingItemVersion implements Comparable<RestMappingItemVersion
 	 */
 	@XmlElement
 	public RestStampedVersion mappingItemStamp;
-	
-	
-	/**
-	 * The concept sequence that identifies the map set that this entry belongs to
-	 */
-	@XmlElement
-	public int mapSetConcept;
-	
-	/**
-	 * The source concept sequence being mapped by this map item
-	 */
-	@XmlElement
-	public int sourceConcept;
-	
-	/**
-	 * The target concept sequence being mapped by this map item.  This field is optional, and may be blank, if no target mapping
-	 * is available.
-	 */
-	@XmlElement
-	public Integer targetConcept;
-	
-	/**
-	 * The (optional) extended fields which carry additional information about this map item.  For details on these fields, read 
-	 * the assemblage definition of the assemblage concept provided with {@link RestMappingSetVersion#mapItemExtendedFieldsType} for 
-	 * the RestMappingSetVersion of {@link #mapSetConcept}
-	 */
-	@XmlElement
-	public List<RestDynamicSememeData> mapItemExtendedFields;
-	
-
-	/**
-	 * An (optional) concept sequence used to qualify this mapping entry 
-	 */
-	@XmlElement
-	public Integer qualifierConcept;
 	
 	/**
 	 * An (optional) description of the {@link #mapSetConcept} - only populated when requested via the expandable 'referencedDetails'
@@ -133,6 +96,7 @@ public class RestMappingItemVersion implements Comparable<RestMappingItemVersion
 	protected RestMappingItemVersion()
 	{
 		//for Jaxb
+		super();
 	}
 
 	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, Integer extendedFieldType, boolean expandDescriptions)
@@ -209,7 +173,7 @@ public class RestMappingItemVersion implements Comparable<RestMappingItemVersion
 	@Override
 	public int compareTo(RestMappingItemVersion o)
 	{
-		// TODO implement
+		// TODO implement sorting
 		return 0;
 	}
 }

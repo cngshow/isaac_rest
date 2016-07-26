@@ -18,7 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
-import java.util.List;
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -40,7 +39,6 @@ import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.mapping.data.MappingSetDAO;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
 
 /**
@@ -51,7 +49,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestMappingSetVersion implements Comparable<RestMappingSetVersion>
+public class RestMappingSetVersion extends RestMappingSetVersionBaseCreate implements Comparable<RestMappingSetVersion>
 {
 	/**
 	 * The identifier data of the concept that represents this mapping set
@@ -64,57 +62,11 @@ public class RestMappingSetVersion implements Comparable<RestMappingSetVersion>
 	 */
 	@XmlElement
 	public RestStampedVersion mappingSetStamp;
-	
-	/**
-	 * The primary name of this map set.  
-	 */
-	@XmlElement
-	public String name;
-	
-	/**
-	 * The (optional) inverse name of this map set.  Used when a map set is of the pattern:
-	 * ingredient-of <--> has-ingredient 
-	 */
-	@XmlElement
-	public String inverseName;
-	
-	/**
-	 * The description of this map set
-	 */
-	@XmlElement
-	public String description;
-	
-	/**
-	 * The (optional) purpose of this map set - or extended description of this map set.
-	 */
-	@XmlElement
-	public String purpose;
-	
-	
-	/**
-	 * The (optional) extended fields type assemblage concept - this concept can be read to determine the definition details
-	 * of the {@link #mapSetExtendedFields} which are attached to the mapping set definition
-	 */
-	@XmlElement
-	public Integer mapSetExtendedFieldsType;
-	
-	/**
-	 * The (optional) extended fields which carry additional information about this map set definition.  For details on these fields, read 
-	 * the assemblage definition of the assemblage concept provided with {@link #mapSetExtendedFieldsType}
-	 */
-	@XmlElement
-	public List<RestDynamicSememeData> mapSetExtendedFields;
-	
-	/**
-	 * The (optional) extended fields type assemblage concept - this concept can be read to determine the definition details
-	 * of the {@link RestMappingItemVersion#mapItemExtendedFields} which are (optionally) attached to each mapping item.
-	 */
-	@XmlElement
-	public Integer mapItemExtendedFieldsType;
-		
+
 	protected RestMappingSetVersion()
 	{
 		//for Jaxb
+		super();
 	}
 	 
 	/**
