@@ -36,23 +36,40 @@ import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLogicCoordinate {
+	/**
+	 * Sequence number of the STATED assemblage.
+	 */
 	@XmlElement
 	public int statedAssemblage;
 	
+	/**
+	 * Sequence number of the INFERRED assemblage.
+	 */
 	@XmlElement
 	public int inferredAssemblage;
 	
+	/**
+	 * Sequence number of the description profile assemblage.
+	 */
 	@XmlElement
 	public int descriptionLogicProfile;
 	
+	/**
+	 * Sequence number of the classifier assemblage.
+	 */
 	@XmlElement
 	public int classifier;
-	
-	public RestLogicCoordinate(LogicCoordinate lc) {
-		statedAssemblage = lc.getStatedAssemblageSequence();
-		inferredAssemblage = lc.getInferredAssemblageSequence();
-		descriptionLogicProfile = lc.getDescriptionLogicProfileSequence();
-		classifier = lc.getClassifierSequence();
+
+	/**
+	 * @param ochreLogicCoordinate OCHRE LogicCoordinate
+	 * 
+	 * Constructs RestLogicCoordinate from OCHRE LogicCoordinate
+	 */
+	public RestLogicCoordinate(LogicCoordinate ochreLogicCoordinate) {
+		statedAssemblage = ochreLogicCoordinate.getStatedAssemblageSequence();
+		inferredAssemblage = ochreLogicCoordinate.getInferredAssemblageSequence();
+		descriptionLogicProfile = ochreLogicCoordinate.getDescriptionLogicProfileSequence();
+		classifier = ochreLogicCoordinate.getClassifierSequence();
 	}
 
 	protected RestLogicCoordinate() {

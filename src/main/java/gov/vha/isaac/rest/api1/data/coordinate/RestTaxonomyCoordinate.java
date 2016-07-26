@@ -37,23 +37,42 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestTaxonomyCoordinate {
+	/**
+	 * Boolean indicating whether or not RestTaxonomyCoordinate is of STATED PremiseType.
+	 * If TRUE then RestTaxonomyCoordinate is of PremiseType STATED.
+	 * If FALSE then RestTaxonomyCoordinate is of PremiseType INFERRED.
+	 */
 	@XmlElement
 	public boolean stated;
 
+	/**
+	 * RestStampCoordinate component of RestTaxonomyCoordinate
+	 */
 	@XmlElement
 	public RestStampCoordinate stampCoordinate;
-	
+
+	/**
+	 * RestLanguageCoordinate component of RestTaxonomyCoordinate
+	 */
 	@XmlElement
 	public RestLanguageCoordinate languageCoordinate;
-	
+
+	/**
+	 * RestLogicCoordinate component of RestTaxonomyCoordinate
+	 */
 	@XmlElement
 	public RestLogicCoordinate logicCoordinate;
 	
-	public RestTaxonomyCoordinate(TaxonomyCoordinate tc) {
-		stated = tc.getTaxonomyType() == PremiseType.STATED;
-		stampCoordinate = new RestStampCoordinate(tc.getStampCoordinate());
-		languageCoordinate = new RestLanguageCoordinate(tc.getLanguageCoordinate());
-		logicCoordinate = new RestLogicCoordinate(tc.getLogicCoordinate());
+	/**
+	 * @param ochreTaxonomyCoordinate OCHRE TaxonomyCoordinate
+	 * 
+	 * Constructs a RestTaxonomyCoordinate from an OCHRE TaxonomyCoordinate
+	 */
+	public RestTaxonomyCoordinate(TaxonomyCoordinate ochreTaxonomyCoordinate) {
+		stated = ochreTaxonomyCoordinate.getTaxonomyType() == PremiseType.STATED;
+		stampCoordinate = new RestStampCoordinate(ochreTaxonomyCoordinate.getStampCoordinate());
+		languageCoordinate = new RestLanguageCoordinate(ochreTaxonomyCoordinate.getLanguageCoordinate());
+		logicCoordinate = new RestLogicCoordinate(ochreTaxonomyCoordinate.getLogicCoordinate());
 	}
 
 	protected RestTaxonomyCoordinate() {
