@@ -50,7 +50,7 @@ import javafx.concurrent.Task;
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.commentAPIsPathComponent + RestPaths.writePathComponent)
+@Path(RestPaths.writePathComponent + RestPaths.commentAPIsPathComponent)
 public class CommentWriteAPIs
 {
 	/**

@@ -39,7 +39,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.mappingAPIsPathComponent + RestPaths.writePathComponent)
+@Path(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent)
 public class MappingWriteAPIs
 {
 	/**
