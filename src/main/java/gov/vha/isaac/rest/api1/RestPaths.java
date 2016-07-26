@@ -28,6 +28,9 @@ public class RestPaths
 {
 	public static final String appPathComponent = "rest/";
 	public static final String apiVersionComponent = "1/";
+	public static final String writePathComponent = "write/";
+	public static final String createPathComponent = "create/";
+	public static final String updatePathComponent = "update/";
 
 	public static final String chronologyComponent = "chronology/";
 	public static final String versionsComponent = "versions/";	
@@ -45,6 +48,10 @@ public class RestPaths
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
+	
+	public static final String mappingSetComponent = "mappingSet/";
+	public static final String mappingSetsComponent = "mapppingSets/";
+	public static final String mappingItemsComponent = "mappingItems/";
 	
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";
@@ -78,6 +85,8 @@ public class RestPaths
 	public static final String idAppPathComponent = appPathComponent + apiVersionComponent + idComponent;
 	
 	public static final String systemAPIsPathComponent = apiVersionComponent + "system/";
+	public static final String commentAPIsPathComponent = apiVersionComponent + "comment/";
+	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String contentRequestAPIsPathComponent = apiVersionComponent + "request/";
 
 	public static final String coordinateAPIsPathComponent = apiVersionComponent + "coordinate/";

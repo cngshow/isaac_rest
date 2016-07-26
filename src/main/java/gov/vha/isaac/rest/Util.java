@@ -122,6 +122,38 @@ public class Util
 		}
 	}
 	
+	public static int convertToNid(String id) throws RestException
+	{
+		Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+		Optional<Integer> nid = Optional.empty();
+		if (uuidId.isPresent())
+		{
+			if (Get.identifierService().hasUuid(uuidId.get()))
+			{
+				nid = Optional.of(Get.identifierService().getNidForUuids(uuidId.get()));
+			}
+			else
+			{
+				throw new RestException("The UUID '" + id + "' Is not known by the system");
+			}
+		}
+		else
+		{
+			nid = NumericUtils.getInt(id);
+			if (nid.isPresent() && nid.get() > 0)
+			{
+				throw new RestException("The sequence id '" + id + "' cannot be turned into a nid");
+			}
+		}
+		
+		if (!nid.isPresent())
+		{
+			throw new RestException("The value '" + nid + "' does not appear to be a UUID or a nid");
+		}
+		
+		return nid.get();
+	}
+	
 	/**
 	 * Utility method to find the 'best' description for the concept at hand.
 	 * @param conceptId (nid or sequence)

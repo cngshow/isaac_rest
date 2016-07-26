@@ -28,13 +28,13 @@ import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 /**
  * 
- * {@link RestComment}
+ * {@link RestCommentVersion}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestComment
+public class RestCommentVersion
 {
 	/**
 	 * The identifier data for the object
@@ -66,7 +66,7 @@ public class RestComment
 	@XmlElement
 	public String commentContex;
 	
-	public RestComment(DynamicSememe<?> comment)
+	public RestCommentVersion(DynamicSememe<?> comment)
 	{
 		identifiers = new RestIdentifiedObject(comment.getUuidList());
 		commentStamp = new RestStampedVersion(comment);

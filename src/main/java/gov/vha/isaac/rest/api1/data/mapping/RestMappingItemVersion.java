@@ -18,18 +18,28 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import java.util.List;
+import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
-import gov.vha.isaac.ochre.mapping.data.MappingItem;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -58,7 +68,7 @@ public class RestMappingItemVersion implements Comparable<RestMappingItemVersion
 	 * The StampedVersion details for this mapping entry
 	 */
 	@XmlElement
-	RestStampedVersion mappingItemStamp;
+	public RestStampedVersion mappingItemStamp;
 	
 	
 	/**
@@ -79,6 +89,14 @@ public class RestMappingItemVersion implements Comparable<RestMappingItemVersion
 	 */
 	@XmlElement
 	public Integer targetConcept;
+	
+	/**
+	 * The (optional) extended fields which carry additional information about this map item.  For details on these fields, read 
+	 * the assemblage definition of the assemblage concept provided with {@link RestMappingSetVersion#mapItemExtendedFieldsType} for 
+	 * the RestMappingSetVersion of {@link #mapSetConcept}
+	 */
+	@XmlElement
+	public List<RestDynamicSememeData> mapItemExtendedFields;
 	
 
 	/**
@@ -117,27 +135,50 @@ public class RestMappingItemVersion implements Comparable<RestMappingItemVersion
 		//for Jaxb
 	}
 
-//	
-//	- A comma separated list of fields to expand.  Supports 'referencedDetails'.
-//	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
-//	 * if they represent a concept or a description sememe.  
-	 
-	public RestMappingItemVersion(MappingItem mappingItem, boolean expandDescriptions)
+	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, Integer extendedFieldType, boolean expandDescriptions)
 	{
-		identifiers = new RestIdentifiedObject(mappingItem.getUUIDs());
-		mappingItemStamp = new RestStampedVersion(mappingItem.getComponentVersion());
-		mapSetConcept = mappingItem.getMapSetSequence();
-		qualifierConcept = mappingItem.getQualifierConcept() == null ? null : Get.identifierService().getConceptSequenceForUuids(mappingItem.getQualifierConcept());
-		if (Get.identifierService().getChronologyTypeForNid(mappingItem.getSourceConceptNid()) != ObjectChronologyType.CONCEPT)
+		identifiers = new RestIdentifiedObject(sememe.getUuidList());
+		mappingItemStamp = new RestStampedVersion(sememe);
+		mapSetConcept = sememe.getAssemblageSequence();
+		if (Get.identifierService().getChronologyTypeForNid(sememe.getReferencedComponentNid()) != ObjectChronologyType.CONCEPT)
 		{
 			throw new RuntimeException("Source of the map is not a concept");
 		}
 		else
 		{
-			sourceConcept = Get.identifierService().getConceptSequence(mappingItem.getSourceConceptNid());
+			sourceConcept = Get.identifierService().getConceptSequence(sememe.getReferencedComponentNid());
 		}
-		targetConcept = mappingItem.getQualifierConcept() == null ? null : Get.identifierService().getConceptSequenceForUuids(mappingItem.getTargetConcept());
+
+		DynamicSememeData[] data = sememe.getData();
+		targetConcept = ((data != null && data.length > 0 && data[0] != null) ? 
+			Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[0]).getDataUUID())
+			: null);
 		
+		qualifierConcept = ((data != null && data.length > 1 && data[1] != null) ? 
+			Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[1]).getDataUUID()) 
+			: null); 
+		
+		if (extendedFieldType != null)
+		{
+			int extendedFieldSequence = Get.identifierService().getConceptSequence(extendedFieldType);
+			
+			//if there is an extended fields type, see if there is a sememe of this type attached
+			Optional<SememeChronology<? extends SememeVersion<?>>> extended = Get.sememeService()
+				.getSememesForComponentFromAssemblage(sememe.getNid(), extendedFieldSequence).findAny();
+			if (extended.isPresent())
+			{
+				@SuppressWarnings("rawtypes")
+				SememeChronology extendedSC = extended.get();
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<DynamicSememe<?>>> latest = extendedSC.getLatestVersion(DynamicSememe.class, stampCoord);
+				if (latest.isPresent())
+				{
+					//TODO handle contradictions
+					mapItemExtendedFields = RestDynamicSememeVersion.translateData(latest.get().value().getData());
+				}
+			}
+		}
+
 		if (expandDescriptions)
 		{
 			mapSetDescription = Util.readBestDescription(mapSetConcept);

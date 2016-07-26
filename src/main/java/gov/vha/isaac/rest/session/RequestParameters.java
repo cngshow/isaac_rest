@@ -41,6 +41,9 @@ public class RequestParameters {
 
 	// CoordinatesToken
 	public final static String coordToken = "coordToken";
+	
+	// CoordinatesToken
+	public final static String editToken = "editToken";
 
 	// Taxonomy Coordinate
 	public final static String stated = "stated";
