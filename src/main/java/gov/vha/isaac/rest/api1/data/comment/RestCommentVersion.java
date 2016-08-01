@@ -34,7 +34,7 @@ import gov.vha.isaac.rest.api1.data.RestStampedVersion;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestCommentVersion
+public class RestCommentVersion extends RestCommentVersionBaseCreate
 {
 	/**
 	 * The identifier data for the object
@@ -48,38 +48,21 @@ public class RestCommentVersion
 	@XmlElement
 	RestStampedVersion commentStamp;
 	
-	/**
-	 * The identifier of the object that is being commented on.  Could be a concept or a sememe
-	 */
-	@XmlElement
-	public int commentedItem;
+	RestCommentVersion() {
+		// For JAXB
+		super();
+	}
 	
-	/**
-	 * The comment
-	 */
-	@XmlElement
-	public String comment;
-	
-	/**
-	 * An (optional) comment context to store with the comment.  Typically used for key words, etc. 
-	 */
-	@XmlElement
-	public String commentContex;
-	
-	public RestCommentVersion(DynamicSememe<?> comment)
+	public RestCommentVersion(DynamicSememe<?> commentSememe)
 	{
-		identifiers = new RestIdentifiedObject(comment.getUuidList());
-		commentStamp = new RestStampedVersion(comment);
-		commentedItem = comment.getReferencedComponentNid();
-		if (comment.getAssemblageSequence() != DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
+		super(commentSememe.getReferencedComponentNid(),
+				commentSememe.getData()[0].getDataObject().toString(),
+				(commentSememe.getData().length > 1 && commentSememe.getData()[1] != null) ? commentSememe.getData()[1].getDataObject().toString() : null);
+		identifiers = new RestIdentifiedObject(commentSememe.getUuidList());
+		commentStamp = new RestStampedVersion(commentSememe);
+		if (commentSememe.getAssemblageSequence() != DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
 		{
 			throw new RuntimeException("The provided sememe isn't a comment!");
-		}
-			
-		this.comment = comment.getData()[0].getDataObject().toString();
-		if (comment.getData().length > 1 && comment.getData()[1] != null)
-		{
-			this.commentContex = comment.getData()[1].getDataObject().toString();
 		}
 	}
 }

@@ -35,6 +35,8 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * All parameters should be added to ALL_VALID_PARAMETERS, whether grouped or individually
+ * 
  */
 public class RequestParameters {
 	private RequestParameters() {}
@@ -109,6 +111,11 @@ public class RequestParameters {
 	public final static String maxPageSizeDefault = "10";
 	public final static Set<String> PAGINATION_PARAM_NAMES = unmodifiableSet(pageNum, maxPageSize);
 	
+	// Comment
+	public final static String commentContext = "commentContext";
+	public final static String commentText = "commentText";
+	public final static Set<String> COMMENT_PARAM_NAMES = unmodifiableSet(commentContext, commentText);
+	
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
 	public final static String includeAttributes = "includeAttributes";
@@ -136,6 +143,8 @@ public class RequestParameters {
 	public final static String inputType = "inputType";
 	public final static String outputType = "outputType";
 
+	public final static String state = "state";
+
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */
@@ -145,6 +154,7 @@ public class RequestParameters {
 		params.addAll(COORDINATE_PARAM_NAMES);
 		params.addAll(EXPANDABLES_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
+		params.addAll(COMMENT_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
 			id,
 			nid,
@@ -174,7 +184,9 @@ public class RequestParameters {
 			
 			//IdAPIs
 			inputType,
-			outputType
+			outputType,
+			
+			state
 			));
 		ALL_VALID_PARAMETERS = params;
 	}

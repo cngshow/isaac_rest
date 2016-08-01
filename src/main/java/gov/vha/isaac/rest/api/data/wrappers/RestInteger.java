@@ -16,48 +16,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data;
+package gov.vha.isaac.rest.api.data.wrappers;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.IdType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
-
 /**
- * {@link RestId}
  * 
- * This class carries back id information from the /id/translate/ APIs.
+ * {@link RestInteger}
  *
- * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestId
+public class RestInteger
 {
 	/**
-	 * The id value
+	 * The Integer value
 	 */
 	@XmlElement
-	public String value;
+	public Integer value = null;
 	
-	/**
-	 * The id type
-	 */
-	@XmlElement
-	public RestSupportedIdType idType;
+	RestInteger() {
+		// For JAXB
+	}
 	
-	public RestId(IdType type, String value)
+	public RestInteger(int value)
 	{
 		this.value = value;
-		this.idType = new RestSupportedIdType(type);
 	}
-	
-	protected RestId()
-	{
-		//For jaxb
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestInteger [value=" + value + "]";
 	}
-	
 }

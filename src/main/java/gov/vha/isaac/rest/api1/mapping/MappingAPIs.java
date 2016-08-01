@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.api1.mapping;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,7 +37,9 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersions;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersions;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -54,19 +55,19 @@ public class MappingAPIs
 	/**
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the comment version object.  
+	 * @return the mapping set versions object.  
 	 * 
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetsComponent)
-	public List<RestMappingSetVersion> getMappingSets(
+	public RestMappingSetVersions getMappingSets(
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
-				RequestParameters.coordToken);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		ArrayList<RestMappingSetVersion> results = new ArrayList<>();
 		
@@ -81,14 +82,14 @@ public class MappingAPIs
 				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate()));
 			}
 		});
-		return results;
+		return new RestMappingSetVersions(results);
 	}
 	
 	/**
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the comment version object.  
+	 * @return the mapping set version object.  
 	 * 
 	 * @throws RestException 
 	 */
@@ -102,7 +103,7 @@ public class MappingAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.coordToken);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), 
 			IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
@@ -127,14 +128,14 @@ public class MappingAPIs
 	 * will be included for all referenced concepts which align with your current coordinates.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the comment version object.  
+	 * @return the mapping items versions object.  
 	 * 
 	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemsComponent + "{" + RequestParameters.id +"}")
-	public List<RestMappingItemVersion> getMappingItems(
+	public RestMappingItemVersions getMappingItems(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.expand) String expand,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
@@ -144,7 +145,7 @@ public class MappingAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
-				RequestParameters.coordToken);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		
@@ -162,6 +163,6 @@ public class MappingAPIs
 					extendedFieldsType, RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
 			}
 		});
-		return results;
+		return new RestMappingItemVersions(results);
 	}
 }

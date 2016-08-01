@@ -19,14 +19,15 @@
 package gov.vha.isaac.rest.api1.comment;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -36,6 +37,8 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersions;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -61,14 +64,14 @@ public class CommentAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id +"}")
-	public RestCommentVersion getCommentVersion(
+	public RestCommentVersionBaseCreate getCommentVersion(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.coordToken);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);
@@ -95,14 +98,14 @@ public class CommentAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.versionComponent + RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id +"}")
-	public List<RestCommentVersion> getCommentVersionByReferencedItem(
+	public RestCommentVersions getCommentVersionByReferencedItem(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.coordToken);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		ArrayList<RestCommentVersion> results = new ArrayList<>();
 		
@@ -117,6 +120,6 @@ public class CommentAPIs
 					results.add(new RestCommentVersion(sv.get().value()));
 				}
 			});
-		return results;
+		return new RestCommentVersions(results);
 	}
 }

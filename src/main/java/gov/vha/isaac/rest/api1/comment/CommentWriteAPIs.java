@@ -19,26 +19,40 @@
 package gov.vha.isaac.rest.api1.comment;
 
 import java.util.Optional;
+import java.util.UUID;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.StringUtils;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.MutableDynamicSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
-import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -54,39 +68,56 @@ import javafx.concurrent.Task;
 public class CommentWriteAPIs
 {
 	/**
-	 * @param itemToComment - the identifier (UUID or nid) of the item to be commented on
-	 * @param commentText - the text to store as the comment
-	 * @param commentContext - the optional additional text to store with the comment
+	 * @param dataToCreateComment - RestCommentVersionBaseCreate object containing data used to construct a new comment
 	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
 	 * getEditCoordinatesToken().
-	 * @return the sequence identifying the created sememe which stores the comment data
+	 * @return the Sememe sequence identifying the created sememe which stores the comment data
 	 * @throws RestException
 	 */
 	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
-	public int createNewComment(
-		@QueryParam(RequestParameters.id) String itemToComment, 
-		@QueryParam("commentText") String commentText,
-		@QueryParam("commentContext") String commentContext,
-		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	public RestInteger createNewComment(
+			RestCommentVersionBaseCreate dataToCreateComment,
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		Integer commentedItemNid = null;
+		if (dataToCreateComment.commentedItem == 0) {
+			throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.commentedItem), "invalid specified id for commented item");
+		} else {
+			// Concept Sequence// NID
+			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(dataToCreateComment.commentedItem);
+			if (concept.isPresent()) {
+				commentedItemNid = concept.get().getNid();
+			} else {
+				Optional<? extends SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getOptionalSememe(dataToCreateComment.commentedItem);
+				if (sememe.isPresent()) {
+					commentedItemNid = sememe.get().getNid();
+				}
+			}
+			if (commentedItemNid == null) {
+				throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.commentedItem), "no concept or sememe for specified id for commented item");
+			}
+		}
 		
-		int itemNid = Util.convertToNid(itemToComment);
-		
-		if (StringUtils.isBlank(commentText)) 
+		if (StringUtils.isBlank(dataToCreateComment.commentContext)) 
 		{
 			throw new RestException("The parameter 'commentText' is required");
 		}
 		
 		SememeChronology<? extends DynamicSememe<?>> built =  Get.sememeBuilderService().getDynamicSememeBuilder(
-			itemNid,  
-			DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
-			new DynamicSememeData[] {
-				new DynamicSememeStringImpl(commentText),
-				(StringUtils.isBlank(commentContext) ? null : new DynamicSememeStringImpl(commentContext))}
-			).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
+				commentedItemNid,  
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
+				new DynamicSememeData[] {
+						new DynamicSememeStringImpl(dataToCreateComment.comment),
+						(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
+				).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
 
 		@SuppressWarnings("deprecation")
 		Task<Optional<CommitRecord>> task = Get.commitService().commit("Added comment");
@@ -99,16 +130,15 @@ public class CommentWriteAPIs
 		{
 			throw new RuntimeException();
 		}
-		return built.getSememeSequence();
+		return new RestInteger(built.getSememeSequence());
 	}
 	
 	/**
 	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
 	 * provided now, the new version will have that field stored as blank.
 	 * 
+	 * @param dataToUpdateComment - RestCommentVersionBase object containing data for updating a comment
 	 * @param id - The id (nid, sequence or UUID) of the comment to be updated 
-	 * @param commentText - The new comment text value
-	 * @param commentContext - optional - the new comment context
 	 * @param state - The state to put the comment into
 	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
 	 * getEditCoordinatesToken().
@@ -116,37 +146,97 @@ public class CommentWriteAPIs
 	 */
 	//TODO fix the comments above around editToken 
 	@PUT
-	@Path(RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
+	@Path(RestPaths.updatePathComponent)
 	public void updateComment(
-		@QueryParam(RequestParameters.id) String id, 
-		@QueryParam("commentText") String commentText,
-		@QueryParam("commentContext") String commentContext,
-		@QueryParam("state") State state,
-		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+			RestCommentVersionBase dataToUpdateComment,
+			@QueryParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.state) String state,
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.state,
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
 		
+		if (id == null) {
+			throw new RestException(RequestParameters.id, null, "invalid (null) comment id");
+		}
+		
+		State stateToUse = null;
+		try {
+			if (RestStateType.valueOf(state).equals(new RestStateType(State.ACTIVE))) {
+				stateToUse = State.ACTIVE;
+			} else if (RestStateType.valueOf(state).equals(new RestStateType(State.INACTIVE))) {
+				stateToUse = State.INACTIVE;
+			} else {
+				throw new RestException(RequestParameters.state, state, "unsupported comment State. Should be one of \"active\" or \"inactive\"");
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(RequestParameters.state, state, "invalid comment State. Should be one of \"active\" or \"inactive\"");
+		}
+
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);
 		
 		@SuppressWarnings("unchecked")
-		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, state, RequestInfo.get().getEditCoordinate());
+		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse, RequestInfo.get().getEditCoordinate());
 		
 		editVersion.setData(
-			new DynamicSememeData[] {new DynamicSememeStringImpl(commentText),
-			(StringUtils.isBlank(commentContext) ? null : new DynamicSememeStringImpl(commentContext))});
+			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.comment),
+			(StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToUpdateComment.commentContext))});
 
 		Get.commitService().addUncommitted(sc);
 		
-		@SuppressWarnings("deprecation")
+		@SuppressWarnings({ "restriction", "deprecation" })
 		Task<Optional<CommitRecord>> task = Get.commitService().commit("Update comment");
 		
 		try
-		{
+		{		
 			task.get();
+
+			setSememeStatus(sc.getPrimordialUuid(),
+					stateToUse,
+					RequestInfo.get().getStampCoordinate(),
+					RequestInfo.get().getEditCoordinate());
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			throw new RestException("Failed updating comment id=" + id + ", state=" + state + ", new=" + dataToUpdateComment);
 		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	private static void setSememeStatus(UUID refexUUID, State state, StampCoordinate stampCoord, EditCoordinate editCoord) throws RuntimeException
+	{
+		DynamicSememe<?> ds = readCurrentRefex(refexUUID, stampCoord);
+		
+		if (ds.getState() == state)
+		{
+			//LOG.warn("Tried set the status to the value it already has.  Doing nothing");
+		}
+		else
+		{
+			@SuppressWarnings("unchecked")
+			MutableDynamicSememe<?> mds = ((SememeChronology<DynamicSememe<?>>)ds.getChronology()).createMutableVersion(MutableDynamicSememe.class, state,
+					editCoord);
+			mds.setData(ds.getData());
+			
+			Get.commitService().addUncommitted(ds.getChronology());
+			Get.commitService().commit("Changing sememe state");
+		}
+	}
+	
+	private static DynamicSememe<?> readCurrentRefex(UUID refexUUID, StampCoordinate stampCoord) throws RuntimeException
+	{
+		SememeChronology<? extends SememeVersion<?>> sc = Get.sememeService().getSememe(Get.identifierService().getSememeSequenceForUuids(refexUUID));
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sc).getLatestVersion(DynamicSememe.class, 
+				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
+		
+		return latest.get().value();
 	}
 }

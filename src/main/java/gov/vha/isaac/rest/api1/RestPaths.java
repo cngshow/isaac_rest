@@ -49,10 +49,15 @@ public class RestPaths
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
 	
+	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String mappingSetComponent = "mappingSet/";
-	public static final String mappingSetsComponent = "mapppingSets/";
+	public static final String mappingSetsComponent = "mappingSets/";
 	public static final String mappingItemComponent = "mappingItem/";
 	public static final String mappingItemsComponent = "mappingItems/";
+	public static final String mappingSetAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingSetComponent;
+	public static final String mappingSetsAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingSetsComponent;
+	public static final String mappingItemAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingItemComponent;
+	public static final String mappingItemsAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingItemsComponent;
 	
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";
@@ -87,7 +92,6 @@ public class RestPaths
 	
 	public static final String systemAPIsPathComponent = apiVersionComponent + "system/";
 	public static final String commentAPIsPathComponent = apiVersionComponent + "comment/";
-	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String contentRequestAPIsPathComponent = apiVersionComponent + "request/";
 
 	public static final String coordinateAPIsPathComponent = apiVersionComponent + "coordinate/";
@@ -101,4 +105,9 @@ public class RestPaths
 	public static final String logicGraphAPIsPathComponent = apiVersionComponent + "logicGraph/";
 	public static final String logicGraphVersionAppPathComponent = appPathComponent + logicGraphAPIsPathComponent + versionComponent;
 	public static final String logicGraphChronologyAppPathComponent = appPathComponent + logicGraphAPIsPathComponent + chronologyComponent;
+
+	public static final String commentCreatePathComponent = writePathComponent + commentAPIsPathComponent + createPathComponent;
+	public static final String commentUpdatePathComponent = writePathComponent + commentAPIsPathComponent + updatePathComponent;
+	public static final String commentVersionPathComponent = commentAPIsPathComponent + versionComponent;
+	public static final String commentVersionByReferencedComponentPathComponent = commentAPIsPathComponent + versionComponent + byReferencedComponentComponent;
 }

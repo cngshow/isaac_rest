@@ -16,48 +16,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data;
+package gov.vha.isaac.rest.api1.data.comment;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.IdType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
-
 /**
- * {@link RestId}
  * 
- * This class carries back id information from the /id/translate/ APIs.
+ * {@link RestCommentVersions}
  *
- * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestId
+public class RestCommentVersions
 {
 	/**
-	 * The id value
+	 * The list of RestCommentVersion objects
 	 */
 	@XmlElement
-	public String value;
+	public List<RestCommentVersion> commentVersions = new ArrayList<>();
 	
-	/**
-	 * The id type
+	RestCommentVersions() {
+		// For JAXB
+	}
+	
+	public RestCommentVersions(Collection<RestCommentVersion> commentVersions)
+	{
+		this.commentVersions.addAll(commentVersions);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
 	 */
-	@XmlElement
-	public RestSupportedIdType idType;
-	
-	public RestId(IdType type, String value)
-	{
-		this.value = value;
-		this.idType = new RestSupportedIdType(type);
+	@Override
+	public String toString() {
+		return "RestCommentVersions [commentVersions=" + commentVersions + "]";
 	}
-	
-	protected RestId()
-	{
-		//For jaxb
-	}
-	
 }

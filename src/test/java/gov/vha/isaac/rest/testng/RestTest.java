@@ -32,11 +32,13 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.grizzly.http.util.Header;
@@ -69,9 +71,15 @@ import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
+import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
+import gov.vha.isaac.rest.api1.data.RestId;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersions;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
@@ -175,6 +183,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		return response;
 	}
+	private Response checkContentlessFail(Response response)
+	{
+		if (response.getStatus() != Status.NO_CONTENT.getStatusCode())
+		{
+			Assert.fail("Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus()));
+		}
+		return response;
+	}
 	private WebTarget target(String url, Map<String, Object> testParameters)
 	{
 		WebTarget target = target(url);
@@ -200,6 +216,204 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Map<String, Object> map = new HashMap<>();
 		map.put(key,  value);
 		return map.entrySet().iterator().next();
+	}
+
+//	@Test
+//	public void testMappingAPIs()
+//	{
+//		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
+//				MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString();
+//
+//		Response response = target(url)
+//				.queryParam(RequestParameters.inputType, "uuid")
+//				.queryParam(RequestParameters.outputType, "nid")
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String idXml = checkFail(response).readEntity(String.class);
+//		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
+//		int conceptSequence = Integer.parseInt(restId.value);
+//
+//		// Create a random string to confirm target data are relevant
+//		UUID randomUuid = UUID.randomUUID();
+//		
+//		// Create a new comment on SNOROCKET_CLASSIFIER
+//		String newCommentText = "A new comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+//		String newCommentContext = "A new comment context for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+//		RestCommentVersionBaseCreate newCommentData = new RestCommentVersionBaseCreate(
+//				conceptSequence,
+//				newCommentText,
+//				newCommentContext
+//				);
+//
+//		String xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(newCommentData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		
+//		//post(Entity.entity(body, MediaType.TEXT_XML))
+//		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+//		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
+//		RestInteger newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newCommentSememeSequenceWrapperXml);
+//		int newCommentSememeSequence = newCommentSememeSequenceWrapper.value;
+//		// Confirm returned sequence is valid
+//		Assert.assertTrue(newCommentSememeSequence > 0);
+//		
+//		// Retrieve new comment and validate fields
+//		Response getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
+//		RestCommentVersionBase newCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
+//		Assert.assertEquals(newCommentText, newCommentObject.comment);
+//		Assert.assertEquals(newCommentContext, newCommentObject.commentContext);
+//		
+//		// Update comment with new comment text value and empty comment context value
+//		String updatedCommentText = "An updated comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+//		RestCommentVersionBase updatedCommentData = new RestCommentVersionBase(
+//				updatedCommentText,
+//				null
+//				);
+//		xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(updatedCommentData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+//				.queryParam(RequestParameters.id, newCommentSememeSequence)
+//				.queryParam(RequestParameters.state, "ACTIVE")
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+//		checkContentlessFail(updateCommentResponse);
+//		
+//		// Retrieve updated comment and validate fields
+//		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
+//		RestCommentVersionBase updatedCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
+//		Assert.assertEquals(updatedCommentText, updatedCommentObject.comment);
+//		Assert.assertTrue(StringUtils.isBlank(updatedCommentObject.commentContext));
+//
+//		// Get list of RestCommentVersion associated with MetaData.SNOROCKET_CLASSIFIER
+//		Response getCommentVersionByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent + MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String getCommentVersionByReferencedItemResult = checkFail(getCommentVersionByReferencedItemResponse).readEntity(String.class);
+//		RestCommentVersions commentVersionsObject = XMLUtils.unmarshalObject(RestCommentVersions.class, getCommentVersionByReferencedItemResult);
+//		Assert.assertTrue(commentVersionsObject != null && commentVersionsObject.commentVersions.size() > 0);
+//		RestCommentVersionBaseCreate commentVersionRetrievedByReferencedItem = null;
+//		for (RestCommentVersion commentVersion : commentVersionsObject.commentVersions) {
+//			if (commentVersion.comment != null && commentVersion.comment.equals(updatedCommentText)
+//					&& StringUtils.isBlank(commentVersion.commentContext)) {
+//				commentVersionRetrievedByReferencedItem = commentVersion;
+//				break;
+//			}
+//		}
+//		Assert.assertNotNull(commentVersionRetrievedByReferencedItem);
+//	}
+
+	@Test
+	public void testCommentAPIs()
+	{
+		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
+				MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString();
+
+		Response response = target(url)
+				.queryParam(RequestParameters.inputType, "uuid")
+				.queryParam(RequestParameters.outputType, "nid")
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String idXml = checkFail(response).readEntity(String.class);
+		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
+		int conceptSequence = Integer.parseInt(restId.value);
+
+		// Create a random string to confirm target data are relevant
+		UUID randomUuid = UUID.randomUUID();
+		
+		// Create a new comment on SNOROCKET_CLASSIFIER
+		String newCommentText = "A new comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+		String newCommentContext = "A new comment context for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+		RestCommentVersionBaseCreate newCommentData = new RestCommentVersionBaseCreate(
+				conceptSequence,
+				newCommentText,
+				newCommentContext
+				);
+
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newCommentData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		
+		//post(Entity.entity(body, MediaType.TEXT_XML))
+		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
+		RestInteger newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newCommentSememeSequenceWrapperXml);
+		int newCommentSememeSequence = newCommentSememeSequenceWrapper.value;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newCommentSememeSequence > 0);
+		
+		// Retrieve new comment and validate fields
+		Response getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
+		RestCommentVersionBase newCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
+		Assert.assertEquals(newCommentText, newCommentObject.comment);
+		Assert.assertEquals(newCommentContext, newCommentObject.commentContext);
+		
+		// Update comment with new comment text value and empty comment context value
+		String updatedCommentText = "An updated comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+		RestCommentVersionBase updatedCommentData = new RestCommentVersionBase(
+				updatedCommentText,
+				null
+				);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(updatedCommentData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+				.queryParam(RequestParameters.id, newCommentSememeSequence)
+				.queryParam(RequestParameters.state, "ACTIVE")
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		checkContentlessFail(updateCommentResponse);
+		
+		// Retrieve updated comment and validate fields
+		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
+		RestCommentVersionBase updatedCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
+		Assert.assertEquals(updatedCommentText, updatedCommentObject.comment);
+		Assert.assertTrue(StringUtils.isBlank(updatedCommentObject.commentContext));
+
+		// Get list of RestCommentVersion associated with MetaData.SNOROCKET_CLASSIFIER
+		Response getCommentVersionByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent + MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getCommentVersionByReferencedItemResult = checkFail(getCommentVersionByReferencedItemResponse).readEntity(String.class);
+		RestCommentVersions commentVersionsObject = XMLUtils.unmarshalObject(RestCommentVersions.class, getCommentVersionByReferencedItemResult);
+		Assert.assertTrue(commentVersionsObject != null && commentVersionsObject.commentVersions.size() > 0);
+		RestCommentVersionBaseCreate commentVersionRetrievedByReferencedItem = null;
+		for (RestCommentVersion commentVersion : commentVersionsObject.commentVersions) {
+			if (commentVersion.comment != null && commentVersion.comment.equals(updatedCommentText)
+					&& StringUtils.isBlank(commentVersion.commentContext)) {
+				commentVersionRetrievedByReferencedItem = commentVersion;
+				break;
+			}
+		}
+		Assert.assertNotNull(commentVersionRetrievedByReferencedItem);
 	}
 
 	/**
@@ -1382,6 +1596,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return list;
 	}
 
-	public static void main(String[] argv) {
-	}
+//	public static void main(String[] argv) {
+//	}
 }

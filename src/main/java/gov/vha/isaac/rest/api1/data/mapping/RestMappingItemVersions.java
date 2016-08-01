@@ -16,48 +16,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data;
+package gov.vha.isaac.rest.api1.data.mapping;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.IdType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
-
 /**
- * {@link RestId}
  * 
- * This class carries back id information from the /id/translate/ APIs.
+ * {@link RestMappingItemVersions}
  *
- * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestId
+public class RestMappingItemVersions
 {
 	/**
-	 * The id value
+	 * The list of RestMappingItemVersion objects
 	 */
 	@XmlElement
-	public String value;
-	
-	/**
-	 * The id type
-	 */
-	@XmlElement
-	public RestSupportedIdType idType;
-	
-	public RestId(IdType type, String value)
+	public List<RestMappingItemVersion> mappingItemVersions = new ArrayList<>();
+		
+	protected RestMappingItemVersions()
 	{
-		this.value = value;
-		this.idType = new RestSupportedIdType(type);
+		//for Jaxb
 	}
-	
-	protected RestId()
+
+	public RestMappingItemVersions(Collection<RestMappingItemVersion> mappingItemVersions)
 	{
-		//For jaxb
+		this.mappingItemVersions.addAll(mappingItemVersions);
 	}
-	
 }

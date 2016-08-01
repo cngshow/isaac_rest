@@ -23,10 +23,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
@@ -42,6 +44,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 
 /**
@@ -71,7 +75,18 @@ public class XMLUtils {
 		sb.append("}");
 		return sb.toString();
 	}
-	
+
+	public static String marshallObject(Object obj) throws JAXBException {
+		JAXBContext jaxbContext = null;
+		StringWriter xmlWriter = new StringWriter();
+		jaxbContext = JAXBContext.newInstance(obj.getClass());
+		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+		jaxbMarshaller.marshal(obj, xmlWriter);
+
+		return xmlWriter.toString();
+	}
+
 	@SuppressWarnings("unchecked")
 	public static <T> T unmarshalObject(Class<T> classType, String xmlString)
 	{

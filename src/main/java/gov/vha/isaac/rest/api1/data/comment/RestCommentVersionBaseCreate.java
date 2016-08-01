@@ -16,48 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data;
+package gov.vha.isaac.rest.api1.data.comment;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.IdType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
-
 /**
- * {@link RestId}
  * 
- * This class carries back id information from the /id/translate/ APIs.
- *
- * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * {@link RestCommentVersionBaseCreate}
+ * This stub class is used for callers to create {@link RestCommentVersion} objects.  This class, in combination with {@link RestCommentVersionBase} 
+ * contains the fields that can be populated for creation.  
+ * 
+ * The API never returns this class.
+
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestId
-{
+public class RestCommentVersionBaseCreate extends RestCommentVersionBase
+{	
 	/**
-	 * The id value
+	 * The identifier of the object that is being commented on.  Could be a concept or a sememe
 	 */
 	@XmlElement
-	public String value;
-	
-	/**
-	 * The id type
-	 */
-	@XmlElement
-	public RestSupportedIdType idType;
-	
-	public RestId(IdType type, String value)
+	public int commentedItem;
+
+	protected RestCommentVersionBaseCreate()
 	{
-		this.value = value;
-		this.idType = new RestSupportedIdType(type);
+		//for Jaxb
+		super();
 	}
 	
-	protected RestId()
-	{
-		//For jaxb
+	public RestCommentVersionBaseCreate(int commentedItem, String comment, String commentContext) {
+		super(comment, commentContext);
+		
+		this.commentedItem = commentedItem;
 	}
-	
 }
