@@ -37,7 +37,6 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
-import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersions;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -64,7 +63,7 @@ public class CommentAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.versionComponent + "{" + RequestParameters.id +"}")
-	public RestCommentVersionBaseCreate getCommentVersion(
+	public RestCommentVersion getCommentVersion(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{

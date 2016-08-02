@@ -32,19 +32,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
-import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.MutableDynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
-import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
@@ -56,7 +51,6 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
-import javafx.concurrent.Task;
 
 
 /**
@@ -106,6 +100,8 @@ public class CommentWriteAPIs
 			}
 		}
 		
+		Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
+		
 		if (StringUtils.isBlank(dataToCreateComment.commentContext)) 
 		{
 			throw new RestException("The parameter 'commentText' is required");
@@ -118,13 +114,10 @@ public class CommentWriteAPIs
 						new DynamicSememeStringImpl(dataToCreateComment.comment),
 						(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
 				).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
-
-		@SuppressWarnings("deprecation")
-		Task<Optional<CommitRecord>> task = Get.commitService().commit("Added comment");
 		
 		try
 		{
-			task.get();
+			Get.commitService().commit(built, RequestInfo.get().getEditCoordinate(), "Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
 		}
 		catch (Exception e)
 		{
@@ -191,52 +184,13 @@ public class CommentWriteAPIs
 
 		Get.commitService().addUncommitted(sc);
 		
-		@SuppressWarnings({ "restriction", "deprecation" })
-		Task<Optional<CommitRecord>> task = Get.commitService().commit("Update comment");
-		
 		try
 		{		
-			task.get();
-
-			setSememeStatus(sc.getPrimordialUuid(),
-					stateToUse,
-					RequestInfo.get().getStampCoordinate(),
-					RequestInfo.get().getEditCoordinate());
+			Get.commitService().commit(sc, RequestInfo.get().getEditCoordinate(), "Update comment").get();
 		}
 		catch (Exception e)
 		{
 			throw new RestException("Failed updating comment id=" + id + ", state=" + state + ", new=" + dataToUpdateComment);
 		}
-	}
-	
-	@SuppressWarnings("deprecation")
-	private static void setSememeStatus(UUID refexUUID, State state, StampCoordinate stampCoord, EditCoordinate editCoord) throws RuntimeException
-	{
-		DynamicSememe<?> ds = readCurrentRefex(refexUUID, stampCoord);
-		
-		if (ds.getState() == state)
-		{
-			//LOG.warn("Tried set the status to the value it already has.  Doing nothing");
-		}
-		else
-		{
-			@SuppressWarnings("unchecked")
-			MutableDynamicSememe<?> mds = ((SememeChronology<DynamicSememe<?>>)ds.getChronology()).createMutableVersion(MutableDynamicSememe.class, state,
-					editCoord);
-			mds.setData(ds.getData());
-			
-			Get.commitService().addUncommitted(ds.getChronology());
-			Get.commitService().commit("Changing sememe state");
-		}
-	}
-	
-	private static DynamicSememe<?> readCurrentRefex(UUID refexUUID, StampCoordinate stampCoord) throws RuntimeException
-	{
-		SememeChronology<? extends SememeVersion<?>> sc = Get.sememeService().getSememe(Get.identifierService().getSememeSequenceForUuids(refexUUID));
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sc).getLatestVersion(DynamicSememe.class, 
-				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
-		
-		return latest.get().value();
 	}
 }

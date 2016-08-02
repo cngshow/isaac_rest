@@ -20,10 +20,8 @@ package gov.vha.isaac.rest.api1.data.comment;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 
 /**
  * 
@@ -35,8 +33,6 @@ import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
-@XmlSeeAlso({RestCommentVersionBaseCreate.class, RestCommentVersion.class})
-@JsonSeeAlso({RestCommentVersionBaseCreate.class, RestCommentVersion.class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestCommentVersionBase
 {
