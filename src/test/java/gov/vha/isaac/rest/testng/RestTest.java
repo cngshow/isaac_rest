@@ -221,17 +221,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //	@Test
 //	public void testMappingAPIs()
 //	{
-//		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
-//				MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString();
-//
-//		Response response = target(url)
-//				.queryParam(RequestParameters.inputType, "uuid")
-//				.queryParam(RequestParameters.outputType, "nid")
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		String idXml = checkFail(response).readEntity(String.class);
-//		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
-//		int conceptSequence = Integer.parseInt(restId.value);
+//		int conceptNid = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "nid");
 //
 //		// Create a random string to confirm target data are relevant
 //		UUID randomUuid = UUID.randomUUID();
@@ -240,7 +230,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		String newCommentText = "A new comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 //		String newCommentContext = "A new comment context for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 //		RestCommentVersionBaseCreate newCommentData = new RestCommentVersionBaseCreate(
-//				conceptSequence,
+//				conceptNid,
 //				newCommentText,
 //				newCommentContext
 //				);
@@ -320,17 +310,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testCommentAPIs()
 	{
-		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
-				MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString();
-
-		Response response = target(url)
-				.queryParam(RequestParameters.inputType, "uuid")
-				.queryParam(RequestParameters.outputType, "nid")
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String idXml = checkFail(response).readEntity(String.class);
-		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
-		int conceptSequence = Integer.parseInt(restId.value);
+		int conceptNid = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "nid");
 
 		// Create a random string to confirm target data are relevant
 		UUID randomUuid = UUID.randomUUID();
@@ -339,7 +319,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String newCommentText = "A new comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 		String newCommentContext = "A new comment context for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 		RestCommentVersionBaseCreate newCommentData = new RestCommentVersionBaseCreate(
-				conceptSequence,
+				conceptNid,
 				newCommentText,
 				newCommentContext
 				);
@@ -1595,7 +1575,20 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		return list;
 	}
-
+	
+	private int getIntegerIdForUuid(UUID uuid, String outputType) {
+		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
+				uuid.toString();
+		Response response = target(url)
+				.queryParam(RequestParameters.inputType, "uuid")
+				.queryParam(RequestParameters.outputType, outputType)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String idXml = checkFail(response).readEntity(String.class);
+		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
+		return Integer.parseInt(restId.value);
+	}
+	
 //	public static void main(String[] argv) {
 //	}
 }
