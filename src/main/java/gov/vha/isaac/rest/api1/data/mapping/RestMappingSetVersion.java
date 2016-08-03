@@ -176,4 +176,15 @@ public class RestMappingSetVersion extends RestMappingSetVersionBaseCreate imple
 	{
 		return name.compareTo(o.name);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestMappingSetVersion [identifiers=" + identifiers + ", mappingSetStamp=" + mappingSetStamp
+				+ ", mapSetExtendedFieldsType=" + mapSetExtendedFieldsType + ", mapSetExtendedFields="
+				+ mapSetExtendedFields + ", mapItemExtendedFieldsType=" + mapItemExtendedFieldsType + ", name=" + name
+				+ ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
+	}
 }

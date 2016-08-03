@@ -65,4 +65,27 @@ public class RestMappingSetVersionBase
 	{
 		//for Jaxb
 	}
+
+	/**
+	 * @param name
+	 * @param inverseName
+	 * @param description
+	 * @param purpose
+	 */
+	public RestMappingSetVersionBase(String name, String inverseName, String description, String purpose) {
+		super();
+		this.name = name;
+		this.inverseName = inverseName;
+		this.description = description;
+		this.purpose = purpose;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestMappingSetVersionBase [name=" + name + ", inverseName=" + inverseName + ", description="
+				+ description + ", purpose=" + purpose + "]";
+	}
 }

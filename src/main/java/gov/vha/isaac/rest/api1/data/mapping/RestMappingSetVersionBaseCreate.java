@@ -65,4 +65,49 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 		//for Jaxb
 		super();
 	}
+
+	/**
+	 * @param name
+	 * @param inverseName
+	 * @param description
+	 * @param purpose
+	 */
+	public RestMappingSetVersionBaseCreate(
+			String name,
+			String inverseName,
+			String description,
+			String purpose) {
+		super(name, inverseName, description, purpose);
+	}
+
+	/**
+	 * @param mapSetExtendedFieldsType
+	 * @param mapSetExtendedFields
+	 * @param mapItemExtendedFieldsType
+	 */
+	public RestMappingSetVersionBaseCreate(
+			String name,
+			String inverseName,
+			String description,
+			String purpose,
+			Integer mapSetExtendedFieldsType,
+			List<RestDynamicSememeData> mapSetExtendedFields,
+			Integer mapItemExtendedFieldsType) {
+		super(name, inverseName, description, purpose);
+
+		this.mapSetExtendedFieldsType = mapSetExtendedFieldsType;
+		this.mapSetExtendedFields = mapSetExtendedFields;
+		this.mapItemExtendedFieldsType = mapItemExtendedFieldsType;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestMappingSetVersionBaseCreate [mapSetExtendedFieldsType=" + mapSetExtendedFieldsType
+				+ ", mapSetExtendedFields=" + mapSetExtendedFields + ", mapItemExtendedFieldsType="
+				+ mapItemExtendedFieldsType + ", name=" + name + ", inverseName=" + inverseName + ", description="
+				+ description + ", purpose=" + purpose + "]";
+	}
 }

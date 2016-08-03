@@ -54,10 +54,15 @@ public class RestPaths
 	public static final String mappingSetsComponent = "mappingSets/";
 	public static final String mappingItemComponent = "mappingItem/";
 	public static final String mappingItemsComponent = "mappingItems/";
-	public static final String mappingSetAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingSetComponent;
-	public static final String mappingSetsAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingSetsComponent;
-	public static final String mappingItemAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingItemComponent;
-	public static final String mappingItemsAppPathComponent = appPathComponent + mappingAPIsPathComponent + mappingItemsComponent;
+	public static final String mappingSetAppPathComponent = mappingAPIsPathComponent + mappingSetComponent;
+	public static final String mappingSetsAppPathComponent = mappingAPIsPathComponent + mappingSetsComponent;
+	public static final String mappingItemAppPathComponent = mappingAPIsPathComponent + mappingItemComponent;
+	public static final String mappingItemsAppPathComponent = mappingAPIsPathComponent + mappingItemsComponent;
+
+	public static final String mappingSetCreateAppPathComponent = writePathComponent+ mappingAPIsPathComponent + mappingSetComponent + createPathComponent;
+	public static final String mappingSetUpdateAppPathComponent = writePathComponent+ mappingAPIsPathComponent + mappingSetComponent + updatePathComponent;
+	public static final String mappingItemCreateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + createPathComponent;
+	public static final String mappingItemUpdateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + updatePathComponent;
 	
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";

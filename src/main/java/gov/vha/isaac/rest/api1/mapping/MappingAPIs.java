@@ -36,10 +36,12 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersions;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersions;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -105,20 +107,21 @@ public class MappingAPIs
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), 
+		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(ConceptAPIs.findConceptChronology(id).getNid(), 
 			IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
-		
-		if (sememe.isPresent())
-		{
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememe.get()).getLatestVersion(DynamicSememe.class, 
-					RequestInfo.get().getStampCoordinate());
-			if (latest.isPresent())
-			{
-				return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate());
-			}
+
+		if (! sememe.isPresent()) {
+			throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
 		}
-		throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememe.get()).getLatestVersion(DynamicSememe.class, 
+				RequestInfo.get().getStampCoordinate());
+		if (latest.isPresent())
+		{
+			return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate());
+		} else {
+			throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
+		}
 	}
 	
 	
