@@ -52,4 +52,12 @@ public class RestMappingItemVersions
 	{
 		this.mappingItemVersions.addAll(mappingItemVersions);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestMappingItemVersions [mappingItemVersions=" + mappingItemVersions + "]";
+	}
 }

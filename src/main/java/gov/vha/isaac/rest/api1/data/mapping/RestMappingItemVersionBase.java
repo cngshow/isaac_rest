@@ -43,7 +43,13 @@ public class RestMappingItemVersionBase
 	 */
 	@XmlElement
 	public Integer targetConcept;
-	
+
+	/**
+	 * An (optional) concept sequence used to qualify this mapping entry 
+	 */
+	@XmlElement
+	public Integer qualifierConcept;
+
 	/**
 	 * The (optional) extended fields which carry additional information about this map item.  For details on these fields, read 
 	 * the assemblage definition of the assemblage concept provided with {@link RestMappingSetVersion#mapItemExtendedFieldsType} for 
@@ -52,15 +58,23 @@ public class RestMappingItemVersionBase
 	@XmlElement
 	public List<RestDynamicSememeData> mapItemExtendedFields;
 	
-
-	/**
-	 * An (optional) concept sequence used to qualify this mapping entry 
-	 */
-	@XmlElement
-	public Integer qualifierConcept;
-	
 	protected RestMappingItemVersionBase()
 	{
 		//for Jaxb
+	}
+
+	/**
+	 * @param targetConcept
+	 * @param mapItemExtendedFields
+	 * @param qualifierConcept
+	 */
+	public RestMappingItemVersionBase(
+			Integer targetConcept,
+			Integer qualifierConcept,
+			List<RestDynamicSememeData> mapItemExtendedFields) {
+		super();
+		this.targetConcept = targetConcept;
+		this.qualifierConcept = qualifierConcept;
+		this.mapItemExtendedFields = mapItemExtendedFields;
 	}
 }

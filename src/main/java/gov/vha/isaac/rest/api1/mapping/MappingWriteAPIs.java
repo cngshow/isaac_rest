@@ -261,33 +261,35 @@ public class MappingWriteAPIs
 		// TODO implement update of all fields, including extended fields, in updateMappingItem()
 		try {
 
-			switch (stateToUse) {
-			case INACTIVE:
-				try {
-					MappingItemDAO.retireMappingItem(mappingItemSememeChronology.getPrimordialUuid(),
-							RequestInfo.get().getStampCoordinate(),
-							RequestInfo.get().getEditCoordinate());
-				} catch (IOException e) {
-					throw new RestException(RequestParameters.state, e.getLocalizedMessage());
-				}
-				break;
-			case ACTIVE:
-				try {
-					MappingItemDAO.unRetireMappingItem(mappingItemSememeChronology.getPrimordialUuid(),
-							RequestInfo.get().getStampCoordinate(),
-							RequestInfo.get().getEditCoordinate());
-				} catch (IOException e) {
-					throw new RestException(RequestParameters.state, e.getLocalizedMessage());
-				}
-				break;
-
-			case CANCELED:
-			case PRIMORDIAL:
-			default:
-				throw new RestException(RequestParameters.state, state.toString(), "unsupported State");
-			}
+//			switch (stateToUse) {
+//			case INACTIVE:
+//				try {
+//					MappingItemDAO.retireMappingItem(mappingItemSememeChronology.getPrimordialUuid(),
+//							RequestInfo.get().getStampCoordinate(),
+//							RequestInfo.get().getEditCoordinate());
+//				} catch (IOException e) {
+//					throw new RestException(RequestParameters.state, e.getLocalizedMessage());
+//				}
+//				break;
+//			case ACTIVE:
+//				try {
+//					MappingItemDAO.unRetireMappingItem(mappingItemSememeChronology.getPrimordialUuid(),
+//							RequestInfo.get().getStampCoordinate(),
+//							RequestInfo.get().getEditCoordinate());
+//				} catch (IOException e) {
+//					throw new RestException(RequestParameters.state, e.getLocalizedMessage());
+//				}
+//				break;
+//
+//			case CANCELED:
+//			case PRIMORDIAL:
+//			default:
+//				throw new RestException(RequestParameters.state, state.toString(), "unsupported State");
+//			}
 			updateMappingItem(
 					mappingItemSememeChronology,
+					mappingItemUpdateData.targetConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.targetConcept) : null,
+					mappingItemUpdateData.qualifierConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.qualifierConcept) : null,
 					/* ConceptChronology<?> mappingItemEditorConcept */ null,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate(),
@@ -367,7 +369,7 @@ public class MappingWriteAPIs
 		
 		try
 		{
-			Get.commitService().commit(mappingAnnotation, editCoord, "update mapping item").get();
+			Get.commitService().commit("Committing update of mapping set " + mappingAnnotation.getPrimordialUuid()).get();
 		}
 		catch (Exception e)
 		{
@@ -477,9 +479,9 @@ public class MappingWriteAPIs
 		DynamicSememe<?> latest = latestVersion.get().value();
 		
 		if (latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
-				|| (latest.getData()[0] != null && ((DynamicSememeUUID)latest.getData()[0]).getDataUUID().equals(editorConceptChronology.getPrimordialUuid())) 
-				|| latest.getData()[1] == null && mapPurpose != null || mapPurpose == null && latest.getData()[1] != null
-				|| (latest.getData()[1] != null && ((DynamicSememeString)latest.getData()[1]).getDataString().equals(mapPurpose)))
+//				|| (latest.getData()[0] != null && editorConceptChronology != null && latest.getData()[0] instanceof DynamicSememeUUID && ((DynamicSememeUUID)latest.getData()[0]).getDataUUID().equals(editorConceptChronology.getPrimordialUuid())) 
+				|| latest.getData().length > 0 && latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
+				|| (latest.getData().length > 0 && latest.getData()[0] != null && mapPurpose != null && latest.getData()[0] instanceof DynamicSememeString && !((DynamicSememeString)latest.getData()[0]).getDataString().equals(mapPurpose)))
 		{
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingSememe.get()).createMutableVersion(
@@ -488,12 +490,12 @@ public class MappingWriteAPIs
 					editCoord);
 
 			mutable.setData(new DynamicSememeData[] {
-					(editorConceptChronology == null ? null : new DynamicSememeUUIDImpl(editorConceptChronology.getPrimordialUuid())),
+//					(editorConceptChronology == null ? null : new DynamicSememeUUIDImpl(editorConceptChronology.getPrimordialUuid())),
 					(StringUtils.isBlank(mapPurpose) ? null : new DynamicSememeStringImpl(mapPurpose))});
 			Get.commitService().addUncommitted(latest.getChronology());
 		}
 		
-		Get.commitService().commit(mappingSememe.get(), editCoord, "Update mapping");
+		Get.commitService().commit("Committing update of mapping set " + mappingConcept.getPrimordialUuid());
 	}
 
 	/**
@@ -521,7 +523,8 @@ public class MappingWriteAPIs
 				new DynamicSememeData[] {
 						(targetConcept == null ? null : new DynamicSememeUUIDImpl(targetConcept.getPrimordialUuid())),
 						(qualifierID == null ? null : new DynamicSememeUUIDImpl(qualifierID)),
-						(editorStatusID == null ? null : new DynamicSememeUUIDImpl(editorStatusID))});
+						(editorStatusID == null ? null : new DynamicSememeUUIDImpl(editorStatusID))
+						});
 		
 		UUID mappingItemUUID = UuidT5Generator.get(IsaacMappingConstants.get().MAPPING_NAMESPACE.getUUID(), 
 				sourceConcept.getPrimordialUuid().toString() + "|" 
@@ -540,7 +543,7 @@ public class MappingWriteAPIs
 
 		try
 		{
-			Get.commitService().commit(built, editCoord, "Added comment").get();
+			Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() + " for mapping set " + mappingSetID).get();
 		}
 		catch (Exception e)
 		{
@@ -559,6 +562,8 @@ public class MappingWriteAPIs
 	}
 	private static void updateMappingItem(
 			SememeChronology<?> mappingItemSememe,
+			ConceptChronology<?> mappingItemTargetConcept,
+			ConceptChronology<?> mappingItemQualifierConcept,
 			ConceptChronology<?> mappingItemEditorConcept,
 			StampCoordinate stampCoord,
 			EditCoordinate editCoord,
@@ -569,15 +574,23 @@ public class MappingWriteAPIs
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
 		DynamicSememe<?> rdv = latest.get().value();
 		
-		DynamicSememeData[] data = rdv.getData();
-		data[2] = (mappingItemEditorConcept != null ? new DynamicSememeUUIDImpl(mappingItemEditorConcept.getPrimordialUuid()) : null);
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingItemSememe).createMutableVersion(
+				MutableDynamicSememe.class,
+				state,
+				editCoord);
 		
-		Get.sememeBuilderService().getDynamicSememeBuilder(rdv.getReferencedComponentNid(),  
-				rdv.getAssemblageSequence(), data).build(editCoord, ChangeCheckerMode.ACTIVE);
+		DynamicSememeData[] data = rdv.getData();
+		data[0] = (mappingItemTargetConcept != null ? new DynamicSememeUUIDImpl(mappingItemTargetConcept.getPrimordialUuid()) : null);
+		data[1] = (mappingItemQualifierConcept != null ? new DynamicSememeUUIDImpl(mappingItemQualifierConcept.getPrimordialUuid()) : null);
+		data[2] = (mappingItemEditorConcept != null ? new DynamicSememeUUIDImpl(mappingItemEditorConcept.getPrimordialUuid()) : null);
+
+		mutable.setData(data);
+		Get.commitService().addUncommitted(mappingItemSememe);
 
 		try
 		{
-			Get.commitService().commit(rdv.getChronology(), editCoord, "update mapping item").get();
+			Get.commitService().commit("Committing update of mapping item " + mappingItemSememe.getPrimordialUuid()).get();
 
 			setSememeStatus(rdv.getChronology(), state, stampCoord, editCoord);
 		}
@@ -594,9 +607,10 @@ public class MappingWriteAPIs
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
 		DynamicSememe<?> ds = latest.get().value();
 		
-		if (ds.getState() == state)
+		final State priorState = ds.getState();
+		if (priorState == state)
 		{
-			log.warn("Tried set the status to the value it already has.  Doing nothing");
+			log.warn("Tried set the status to the value " + priorState.toString() + " it already has.  Doing nothing");
 		}
 		else
 		{
@@ -606,7 +620,7 @@ public class MappingWriteAPIs
 			mds.setData(ds.getData());
 			
 			Get.commitService().addUncommitted(ds.getChronology());
-			Get.commitService().commit(ds.getChronology(), editCoord, "Changing sememe state to " + state.toString());
+			Get.commitService().commit("Committing update of sememe state from " + priorState.toString() + " to " + state.toString());
 		}
 	}
 }

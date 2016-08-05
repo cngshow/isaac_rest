@@ -18,9 +18,13 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
@@ -52,5 +56,21 @@ public class RestMappingItemVersionBaseCreate extends RestMappingItemVersionBase
 	{
 		//for Jaxb
 		super();
+	}
+
+	/**
+	 * @param targetConcept
+	 * @param qualifierConcept
+	 * @param mapItemExtendedFields
+	 */
+	public RestMappingItemVersionBaseCreate(
+			Integer targetConcept,
+			Integer qualifierConcept,
+			int mapSetConcept,
+			int sourceConcept,
+			List<RestDynamicSememeData> mapItemExtendedFields) {
+		super(targetConcept, qualifierConcept, mapItemExtendedFields);
+		this.mapSetConcept = mapSetConcept;
+		this.sourceConcept = sourceConcept;
 	}
 }

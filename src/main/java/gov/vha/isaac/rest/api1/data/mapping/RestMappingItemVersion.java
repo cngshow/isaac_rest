@@ -176,4 +176,17 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		// TODO implement sorting
 		return 0;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestMappingItemVersion [expandables=" + expandables + ", identifiers=" + identifiers
+				+ ", mappingItemStamp=" + mappingItemStamp + ", mapSetDescription=" + mapSetDescription
+				+ ", sourceDescription=" + sourceDescription + ", targetDescription=" + targetDescription
+				+ ", qualifierDescription=" + qualifierDescription + ", mapSetConcept=" + mapSetConcept
+				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
+				+ qualifierConcept + ", mapItemExtendedFields=" + mapItemExtendedFields + "]";
+	}
 }

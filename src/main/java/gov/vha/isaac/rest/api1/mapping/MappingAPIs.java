@@ -152,7 +152,7 @@ public class MappingAPIs
 		
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		
-		int extendedFieldsType = getMappingSet(id, coordToken).mapItemExtendedFieldsType;
+		Integer extendedFieldsType = getMappingSet(id, coordToken).mapItemExtendedFieldsType;
 		
 		Get.sememeService().getSememesFromAssemblage(Util.convertToConceptSequence(id)).forEach(sememeC -> 
 		{
