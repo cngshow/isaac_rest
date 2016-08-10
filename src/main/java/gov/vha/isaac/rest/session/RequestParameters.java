@@ -145,6 +145,12 @@ public class RequestParameters {
 
 	public final static String state = "state";
 
+	// Workflow
+	public final static String wfUser = "wfUser"; // int
+	public final static String wfState = "wfState"; // String i.e. "Reject Review", "Ready for Review", "Reject Edit"...
+	public final static String wfProcess = "wfProcess";
+	public final static String wfRole = "wfRole"; // String i.e. "Approver", "Reviewer"
+	
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */
