@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 package gov.vha.isaac.rest.api1;
-
 /**
  * 
  * {@link RestPaths}
@@ -43,11 +42,36 @@ public class RestPaths
 	public static final String descriptionsComponent = "descriptions/";
 	public static final String sememesComponent = "sememes/";
 	public static final String prefixComponent = "prefix/";
-	public static final String byAssemblageComponent = "byAssemblage/";
-	public static final String byReferencedComponentComponent = "byReferencedComponent/";
+	public static final String byAssemblageComponent = "byAssemblage/"; // TODO change to forAssemblage
+	public static final String byReferencedComponentComponent = "byReferencedComponent/"; // TODO change to forReferencedComponent
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
+	
+	public static final String workflowAPIsPathComponent = apiVersionComponent + "workflow/";
+	// WorkflowActionsPermissionsAccessor
+	public static final String rolesForDefinitionAndUserComponent = "rolesForDefinitionAndUser/";
+	public static final String permissionsForDefinitionAndUserComponent = "permissionsForDefinitionAndUser/";
+	public static final String actionsForDefinitionAndStateComponent = "actionsForDefinitionAndState/";
+	public static final String actionsForProcessAndUserComponent = "actionsForProcessAndUser/";
+	public static final String historiesLatestActiveByRoleMapForDefinitionAndUserComponent = "historiesLatestActiveByRoleMapForDefinitionAndUser/";
+	// WorkflowHistoryAccessor
+	public static final String historiesActiveByProcessMapComponent = "historiesActiveByProcessMap/";
+	public static final String historiesActiveByDefinitionMapComponent = "historiesActiveByDefinitionMap/";
+	public static final String historiesActiveForConceptComponent = "historiesActiveForConcept/";
+	public static final String historiesByProcessMapComponent = "historiesByProcessMap/";
+	public static final String historiesByDefinitionMapComponent = "historiesByDefinitionMap/";
+	public static final String historiesForConceptComponent = "historiesForConcept/";
+	public static final String historiesForProcessComponent = "historiesForProcess/";
+	public static final String historyLatestForProcessComponent = "historyLatestForProcess/";
+	// WorkflowStatusAccessor
+	public static final String processesForConceptComponent = "processesForConcept/";
+	public static final String processForProcessComponent = "processForProcess/";
+	public static final String processesActiveForDefinitionComponent = "processesActiveForDefinition/";
+	public static final String definitionForDefinitionComponent = "definitionForDefinition/";
+	public static final String isConceptInActiveWorkflowComponent = "isConceptInActiveWorkflow/";
+	public static final String isComponentInActiveWorkflowComponent = "isComponentInActiveWorkflow/";
+	public static final String processActiveForConceptComponent = "processActiveForConcept/";
 	
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String mappingSetComponent = "mappingSet/";

@@ -22,6 +22,7 @@ package gov.vha.isaac.rest.session;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,6 +37,22 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestInfoUtils {
 	private RequestInfoUtils() {}
+
+	public static UUID parseUuidParameter(String parameterName, String str) throws RestException {
+		try {
+			return UUID.fromString(str);
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid UUID " + parameterName + " parameter value: " + str);
+		}
+	}
+	
+	public static int parseIntegerParameter(String parameterName, String str) throws RestException {
+		try {
+			return Integer.parseInt(str);
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid integer " + parameterName + " parameter value: " + str);
+		}
+	}
 
 	public static boolean parseBooleanParameter(String parameterName, String str) throws RestException {
 		if (str == null || (! str.equalsIgnoreCase("false") && ! str.equalsIgnoreCase("true"))) {
