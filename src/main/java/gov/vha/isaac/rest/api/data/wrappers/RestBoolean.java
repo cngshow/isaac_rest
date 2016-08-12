@@ -25,25 +25,25 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * 
- * {@link RestInteger}
+ * {@link RestBoolean}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestInteger
+public class RestBoolean
 {
 	/**
 	 * The Integer value
 	 */
 	@XmlElement
-	public int value;
+	public boolean value;
 	
-	RestInteger() {
+	RestBoolean() {
 		// For JAXB
 	}
 	
-	public RestInteger(int value)
+	public RestBoolean(boolean value)
 	{
 		this.value = value;
 	}
@@ -53,6 +53,6 @@ public class RestInteger
 	 */
 	@Override
 	public String toString() {
-		return "RestInteger [value=" + value + "]";
+		return "RestBoolean [value=" + value + "]";
 	}
 }

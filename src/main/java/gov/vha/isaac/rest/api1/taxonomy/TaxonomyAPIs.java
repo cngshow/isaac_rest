@@ -53,7 +53,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.taxonomyAPIsPathComponent)
 public class TaxonomyAPIs
 {
-	private static Logger log = LogManager.getLogger();
+	private static Logger log = LogManager.getLogger(TaxonomyAPIs.class);
 
 	/**
 	 * Returns a single version of a concept, with parents and children expanded to the specified levels.

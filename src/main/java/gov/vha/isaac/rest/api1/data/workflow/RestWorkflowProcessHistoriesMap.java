@@ -43,7 +43,7 @@ public class RestWorkflowProcessHistoriesMap
 	 * The contained results
 	 */
 	@XmlElement
-	public Map<Object, List<RestWorkflowProcessHistory>> map = null;
+	public Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -58,7 +58,6 @@ public class RestWorkflowProcessHistoriesMap
 	 */
 	public RestWorkflowProcessHistoriesMap(Map<Object, List<RestWorkflowProcessHistory>> map) {
 		if (map != null) {
-			this.map = new HashMap<>();
 			this.map.putAll(map);
 		}
 	}

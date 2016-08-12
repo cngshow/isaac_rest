@@ -42,7 +42,7 @@ public class RestWorkflowUserPermissions
 	 * The contained results
 	 */
 	@XmlElement
-	public Collection<RestWorkflowUserPermission> results = null;
+	public Collection<RestWorkflowUserPermission> results = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -57,7 +57,6 @@ public class RestWorkflowUserPermissions
 	 */
 	public RestWorkflowUserPermissions(Collection<RestWorkflowUserPermission> results) {
 		if (results != null) {
-			this.results = new ArrayList<>();
 			this.results.addAll(results);
 		}
 	}

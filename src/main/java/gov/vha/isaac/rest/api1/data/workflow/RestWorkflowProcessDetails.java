@@ -42,7 +42,7 @@ public class RestWorkflowProcessDetails
 	 * The contained results
 	 */
 	@XmlElement
-	public Collection<RestWorkflowProcessDetail> results = null;
+	public Collection<RestWorkflowProcessDetail> results = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -57,7 +57,6 @@ public class RestWorkflowProcessDetails
 	 */
 	public RestWorkflowProcessDetails(Collection<RestWorkflowProcessDetail> results) {
 		if (results != null) {
-			this.results = new ArrayList<>();
 			this.results.addAll(results);
 		}
 	}

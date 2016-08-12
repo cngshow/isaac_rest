@@ -32,12 +32,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
+import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestStrings;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableActions;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessDetail;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessDetails;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
@@ -56,6 +66,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.workflowAPIsPathComponent)
 public class WorkflowAPIs
 {
+	private static Logger log = LogManager.getLogger(WorkflowAPIs.class);
+
 	// WorkflowActionsPermissionsAccessor
 	/**
 	 * Return the list of roles for the specified workflow definition and user
@@ -187,7 +199,7 @@ public class WorkflowAPIs
 		Map<String, Set<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowActionsPermissionsAccessor().getLatestActivePermissibleByRole(
 				RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId), 
 				RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId));
-		
+
 		for (Map.Entry<String, Set<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
 			ochreMapEntry.getValue().stream().forEach(a -> restList.add(new RestWorkflowProcessHistory(a)));
@@ -195,7 +207,7 @@ public class WorkflowAPIs
 		}
 		return new RestWorkflowProcessHistoriesMap(map);
 	}
-	
+
 	// WorkflowHistoryAccessor
 	/**
 	 * Return the map of active process histories by process id
@@ -213,7 +225,7 @@ public class WorkflowAPIs
 
 		Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
 		Map<UUID, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowHistoryAccessor().getActiveByProcess();
-		
+
 		for (Map.Entry<UUID, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
 			ochreMapEntry.getValue().stream().forEach(a -> restList.add(new RestWorkflowProcessHistory(a)));
@@ -223,9 +235,9 @@ public class WorkflowAPIs
 	}
 
 	/**
-	 * Return the map of active process histories by process id
+	 * Return the map of active process histories by definition id
 	 * 
-	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow histories by process id
+	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow histories by definition id
 	 * @throws RestException
 	 */
 	@GET
@@ -238,7 +250,7 @@ public class WorkflowAPIs
 
 		Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
 		Map<UUID, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowHistoryAccessor().getActiveByDefinition();
-		
+
 		for (Map.Entry<UUID, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
 			ochreMapEntry.getValue().stream().forEach(a -> restList.add(new RestWorkflowProcessHistory(a)));
@@ -246,13 +258,12 @@ public class WorkflowAPIs
 		}
 		return new RestWorkflowProcessHistoriesMap(map);
 	}
-	
+
 	/**
-	 * Return the list of roles for the specified workflow definition and user
+	 * Return the list of active process histories for the specified concept id
 	 * 
-	 * @param wfDefinitionId - UUID id for workflow definition
-	 * @param wfUserId - Integer id for workflow user
-	 * @return RestStrings list of distinct workflow roles
+	 * @param id - sequence, NID or UUID id for concept
+	 * @return RestWorkflowProcessHistories list of distinct active RestWorkflowProcessHistory entries
 	 * @throws RestException
 	 */
 	@GET
@@ -270,5 +281,308 @@ public class WorkflowAPIs
 				RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)).forEach(a -> set.add(new RestWorkflowProcessHistory(a)));
 
 		return new RestWorkflowProcessHistories(set);
+	}
+
+	/**
+	 * Return the map of process histories by process id
+	 * 
+	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow histories by process id
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.historiesByProcessMapComponent)
+	public RestWorkflowProcessHistoriesMap getHistoriesByProcessMap() throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters());
+
+		Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
+		Map<UUID, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowHistoryAccessor().getByProcessMap();
+
+		for (Map.Entry<UUID, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
+			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
+			ochreMapEntry.getValue().stream().forEach(a -> restList.add(new RestWorkflowProcessHistory(a)));
+			map.put(ochreMapEntry.getKey(), restList);
+		}
+		return new RestWorkflowProcessHistoriesMap(map);
+	}
+
+	/**
+	 * Return the map of process histories by definition id
+	 * 
+	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow histories by definition id
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.historiesByDefinitionMapComponent)
+	public RestWorkflowProcessHistoriesMap getHistoriesByDefinitionMap() throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters());
+
+		Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
+		Map<UUID, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowHistoryAccessor().getByDefinitionMap();
+
+		for (Map.Entry<UUID, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
+			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
+			ochreMapEntry.getValue().stream().forEach(a -> restList.add(new RestWorkflowProcessHistory(a)));
+			map.put(ochreMapEntry.getKey(), restList);
+		}
+		return new RestWorkflowProcessHistoriesMap(map);
+	}
+
+	/**
+	 * Return the list of process histories for the specified concept id
+	 * 
+	 * @param id - sequence, NID or UUID id for concept
+	 * @return RestWorkflowProcessHistories list of distinct RestWorkflowProcessHistory entries
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.historiesForConceptComponent)
+	public RestWorkflowProcessHistories getHistoriesForConcept(
+			@QueryParam(RequestParameters.id) String id) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id);
+
+		List<RestWorkflowProcessHistory> set = new ArrayList<>();
+		WorkflowProviderManager.getWorkflowHistoryAccessor().getForConcept(
+				RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)).forEach(a -> set.add(new RestWorkflowProcessHistory(a)));
+
+		return new RestWorkflowProcessHistories(set);
+	}
+
+	/**
+	 * Return the latest process history for the specified process id
+	 * 
+	 * @param wfProcessId - UUID id for process
+	 * @return RestWorkflowProcessHistory latest process history for the specified process id
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.historyLatestForProcessComponent)
+	public RestWorkflowProcessHistory getHistoryLatestForProcess(
+			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.wfProcessId);
+
+		return new RestWorkflowProcessHistory(
+				WorkflowProviderManager.getWorkflowHistoryAccessor().getLatestForProcess(
+						RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId)));
+	}
+
+	// WorkflowStatusAccessor
+	/**
+	 * Return the list of process details for the specified concept id
+	 * 
+	 * @param id - sequence, NID or UUID id for concept
+	 * @return RestWorkflowProcessDetails list of distinct RestWorkflowProcessDetail entries
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.processesForConceptComponent)
+	public RestWorkflowProcessDetails getProcessesForConcept(
+			@QueryParam(RequestParameters.id) String id) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id);
+
+		List<RestWorkflowProcessDetail> set = new ArrayList<>();
+		WorkflowProviderManager.getWorkflowStatusAccessor().getProcessesForConcept(
+				RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)).forEach(a -> set.add(new RestWorkflowProcessDetail(a)));
+
+		return new RestWorkflowProcessDetails(set);
+	}
+
+	/**
+	 * Return the process detail for the specified process id
+	 * 
+	 * @param wfProcessId - UUID id for process
+	 * @return RestWorkflowProcessDetail
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.processesForConceptComponent)
+	public RestWorkflowProcessDetail getProcess(
+			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.wfProcessId);
+
+		return new RestWorkflowProcessDetail(
+				WorkflowProviderManager.getWorkflowStatusAccessor().getProcessDetail(
+						RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId)));
+	}
+
+	/**
+	 * Return the list of active process details for the specified definition
+	 * 
+	 * @param wfDefinitionId - UUID id for process
+	 * @return RestWorkflowProcessDetails list of distinct RestWorkflowProcessDetail entries
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.processesActiveForDefinitionComponent)
+	public RestWorkflowProcessDetails getProcessesActiveForDefinition(
+			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.wfDefinitionId);
+
+		List<RestWorkflowProcessDetail> set = new ArrayList<>();
+		WorkflowProviderManager.getWorkflowStatusAccessor().getActiveProcessesForDefinition(
+				RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId)).forEach(a -> set.add(new RestWorkflowProcessDetail(a)));
+
+		return new RestWorkflowProcessDetails(set);
+	}
+
+
+	/**
+	 * Return the definition detail for the specified definition id
+	 * 
+	 * @param wfDefinitionId - UUID id for definition
+	 * @return RestWorkflowDefinitionDetail
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.definitionForDefinitionComponent)
+	public RestWorkflowDefinitionDetail getDefinitionForDefinition(
+			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.wfDefinitionId);
+
+		return new RestWorkflowDefinitionDetail(
+				WorkflowProviderManager.getWorkflowStatusAccessor().getDefinition(
+						RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId)));
+	}
+
+	/**
+	 * Return RestBoolean indicating whether active process exists for the specified concept id
+	 * 
+	 * @param id - sequence, NID or UUID id for concept
+	 * @return RestBoolean
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.isConceptInActiveWorkflowComponent)
+	public RestBoolean isConceptInActiveWorkflow(
+			@QueryParam(RequestParameters.id) String id) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id);
+
+		return new RestBoolean(
+				WorkflowProviderManager.getWorkflowStatusAccessor().isConceptInActiveWorkflow(
+						RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)));
+	}
+
+	/**
+	 * Return RestBoolean indicating whether active process exists for the specified concept id XOR sememe sequence
+	 * 
+	 * @param objType - "CONCEPT" or "SEMEME" (case insensitive)
+	 * @param id - sequence, NID or UUID id for CONCEPT XOR sequence for SEMEME
+	 * @return RestBoolean
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.isComponentInActiveWorkflowComponent)
+	public RestBoolean isComponentInActiveWorkflow(
+			@QueryParam(RequestParameters.objType) String objType,
+			@QueryParam(RequestParameters.id) String id) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.objType,
+				RequestParameters.id);
+
+		OchreExternalizableObjectType typeToUse = null;
+
+		try {
+			RestObjectChronologyType restType = RestObjectChronologyType.valueOf(objType);
+			if (restType.equals(new RestObjectChronologyType(ObjectChronologyType.CONCEPT))) {
+				typeToUse = OchreExternalizableObjectType.CONCEPT;
+			} else if (restType.equals(new RestObjectChronologyType(ObjectChronologyType.SEMEME))) {
+				typeToUse = OchreExternalizableObjectType.SEMEME;
+			} else {
+				throw new RestException(RequestParameters.objType, objType, "unsupported objType=" + objType);
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(RequestParameters.objType, objType, "failed parsing objType=" + objType);
+		}
+
+		Integer sequence = null;
+		try {
+			switch (typeToUse) {
+			case CONCEPT:
+				sequence = RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id);
+				break;
+			case SEMEME:
+				sequence = RequestInfoUtils.parseIntegerParameter(RequestParameters.id, id);
+				break;
+			case STAMP_ALIAS:
+			case STAMP_COMMENT:
+			default:
+				throw new RestException(RequestParameters.id, id, "invalid " + (typeToUse == OchreExternalizableObjectType.CONCEPT ? "concept id" : "sememe sequence") + "=" + id);
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(RequestParameters.id, id, "failed parsing " + (typeToUse == OchreExternalizableObjectType.CONCEPT ? "concept id" : "sememe sequence") + "=" + id);
+		}
+
+		try {
+			return new RestBoolean(
+					WorkflowProviderManager.getWorkflowStatusAccessor().isComponentInActiveWorkflow(
+							typeToUse,
+							sequence));
+		} catch (Exception e) {
+			String msg = "failed determining if " + typeToUse + " with seq=" + sequence + " is in active workflow";
+			log.error(msg + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			throw new RestException(msg);
+		}
+	}
+
+	/**
+	 * Return the active process detail, if any, for the specified concept id
+	 * 
+	 * @param id - sequence, NID or UUID id for concept
+	 * @return RestWorkflowProcessDetail
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.processActiveForConceptComponent)
+	public RestWorkflowProcessDetail getActiveProcessForConcept(
+			@QueryParam(RequestParameters.id) String wfProcessId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id);
+
+		return new RestWorkflowProcessDetail(
+				WorkflowProviderManager.getWorkflowStatusAccessor().getActiveProcessForConcept(
+						RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, wfProcessId)));
 	}
 }

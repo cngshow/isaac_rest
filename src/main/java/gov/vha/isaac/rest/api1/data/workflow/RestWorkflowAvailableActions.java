@@ -42,7 +42,7 @@ public class RestWorkflowAvailableActions
 	 * The contained results
 	 */
 	@XmlElement
-	public Collection<RestWorkflowAvailableAction> results = null;
+	public Collection<RestWorkflowAvailableAction> results = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -57,7 +57,6 @@ public class RestWorkflowAvailableActions
 	 */
 	public RestWorkflowAvailableActions(Collection<RestWorkflowAvailableAction> results) {
 		if (results != null) {
-			this.results = new ArrayList<>();
 			this.results.addAll(results);
 		}
 	}

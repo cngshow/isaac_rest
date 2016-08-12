@@ -40,7 +40,7 @@ public class RestStrings
 	 * The Integer value
 	 */
 	@XmlElement
-	public Collection<String> value = null;
+	public Collection<String> value = new ArrayList<String>();
 	
 	RestStrings() {
 		// For JAXB
@@ -49,14 +49,12 @@ public class RestStrings
 	public RestStrings(Collection<String> value)
 	{
 		if (value != null) {
-			this.value = new ArrayList<String>();
 			this.value.addAll(value);
 		}
 	}
 	public RestStrings(String...values)
 	{
 		if (values != null) {
-			this.value = new ArrayList<String>();
 			for (String value : values) {
 				this.value.add(value);
 			}
