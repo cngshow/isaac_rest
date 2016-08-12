@@ -22,10 +22,14 @@ package gov.vha.isaac.rest.session;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
@@ -51,6 +55,33 @@ public class RequestInfoUtils {
 			return Integer.parseInt(str);
 		} catch (Exception e) {
 			throw new RestException(parameterName, str, "invalid integer " + parameterName + " parameter value: " + str);
+		}
+	}
+
+	public static int getConceptSequenceFromParameter(String parameterName, String str) throws RestException {
+		try {
+			UUID uuid = null;
+			try {
+				uuid = UUID.fromString(str);
+				
+				Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(uuid);
+				
+				if (concept.isPresent()) {
+					return concept.get().getConceptSequence();
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			int id = Integer.parseInt(str);
+			if (! Get.conceptService().hasConcept(id)) {
+				throw new RestException(parameterName, str, "no concept exists corresponding to integer concept sequence " + parameterName + " parameter value: " + str);
+			} else {
+				return Get.identifierService().getConceptSequence(id);
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid integer concept sequence " + parameterName + " parameter value: " + str);
 		}
 	}
 

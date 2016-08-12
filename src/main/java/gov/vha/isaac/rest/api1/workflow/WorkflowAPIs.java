@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.UUID;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,6 +38,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableActions;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowUserPermission;
@@ -53,6 +56,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.workflowAPIsPathComponent)
 public class WorkflowAPIs
 {
+	// WorkflowActionsPermissionsAccessor
 	/**
 	 * Return the list of roles for the specified workflow definition and user
 	 * 
@@ -170,7 +174,7 @@ public class WorkflowAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.historiesLatestActiveByRoleMapForDefinitionAndUserComponent)
-	public RestWorkflowProcessHistoriesMap getHistoriesLatestActiveByRoleMapForDefinitionAndUserComponent(
+	public RestWorkflowProcessHistoriesMap getHistoriesLatestActiveByRoleMapForDefinitionAndUser(
 			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
 			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException
 	{
@@ -190,5 +194,81 @@ public class WorkflowAPIs
 			map.put(ochreMapEntry.getKey(), restList);
 		}
 		return new RestWorkflowProcessHistoriesMap(map);
+	}
+	
+	// WorkflowHistoryAccessor
+	/**
+	 * Return the map of active process histories by process id
+	 * 
+	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow histories by process id
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.historiesActiveByProcessMapComponent)
+	public RestWorkflowProcessHistoriesMap getHistoriesActiveByProcessMap() throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters());
+
+		Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
+		Map<UUID, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowHistoryAccessor().getActiveByProcess();
+		
+		for (Map.Entry<UUID, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
+			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
+			ochreMapEntry.getValue().stream().forEach(a -> restList.add(new RestWorkflowProcessHistory(a)));
+			map.put(ochreMapEntry.getKey(), restList);
+		}
+		return new RestWorkflowProcessHistoriesMap(map);
+	}
+
+	/**
+	 * Return the map of active process histories by process id
+	 * 
+	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow histories by process id
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.historiesActiveByDefinitionMapComponent)
+	public RestWorkflowProcessHistoriesMap getHistoriesActiveByDefinitionMap() throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters());
+
+		Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
+		Map<UUID, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowHistoryAccessor().getActiveByDefinition();
+		
+		for (Map.Entry<UUID, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
+			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
+			ochreMapEntry.getValue().stream().forEach(a -> restList.add(new RestWorkflowProcessHistory(a)));
+			map.put(ochreMapEntry.getKey(), restList);
+		}
+		return new RestWorkflowProcessHistoriesMap(map);
+	}
+	
+	/**
+	 * Return the list of roles for the specified workflow definition and user
+	 * 
+	 * @param wfDefinitionId - UUID id for workflow definition
+	 * @param wfUserId - Integer id for workflow user
+	 * @return RestStrings list of distinct workflow roles
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.historiesActiveForConceptComponent)
+	public RestWorkflowProcessHistories getHistoriesActiveForConcept(
+			@QueryParam(RequestParameters.id) String id) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id);
+
+		List<RestWorkflowProcessHistory> set = new ArrayList<>();
+		WorkflowProviderManager.getWorkflowHistoryAccessor().getActiveForConcept(
+				RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)).forEach(a -> set.add(new RestWorkflowProcessHistory(a)));
+
+		return new RestWorkflowProcessHistories(set);
 	}
 }
