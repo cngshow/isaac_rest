@@ -413,7 +413,7 @@ public class WorkflowAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.processesForConceptComponent)
+	@Path(RestPaths.processForProcessComponent)
 	public RestWorkflowProcessDetail getProcess(
 			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException
 	{
