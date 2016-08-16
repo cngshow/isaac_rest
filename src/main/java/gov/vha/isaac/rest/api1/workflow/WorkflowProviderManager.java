@@ -23,6 +23,7 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowActionsPermissionsAcce
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowHistoryAccessor;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowStatusAccessor;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 
 /**
  * 
@@ -43,4 +44,6 @@ public class WorkflowProviderManager {
 	
 	// TODO implement getWorkflowProcessInitializerConcluder()
 	public static WorkflowProcessInitializerConcluder getWorkflowProcessInitializerConcluder() { return null; }
+	// TODO implement getWorkflowUpdater()
+	public static WorkflowUpdater getWorkflowUpdater() { return null; }
 }

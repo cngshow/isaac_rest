@@ -50,10 +50,10 @@ public class RestWorkflowUserPermission
 	public UUID definitionId;
 	
 	/**
-	 * The workflow user
+	 * The id of the workflow user
 	 */
 	@XmlElement
-	public int user;
+	public int userId;
 	
 	/**
 	 * The workflow role
@@ -77,7 +77,7 @@ public class RestWorkflowUserPermission
 	{
 		this.id = permission.getId();
 		this.definitionId = permission.getDefinitionId();
-		this.user = permission.getUser();
+		this.userId = permission.getUser();
 		this.role = permission.getRole();
 	}
 }

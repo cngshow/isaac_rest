@@ -19,8 +19,6 @@
 
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -28,67 +26,61 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessDetailSubjectMatterType;
-
 /**
  * 
- * {@link RestWorkflowProcessBaseCreate}
+ * {@link RestWorkflowProcessAdvancementData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessBaseCreate {
+public class RestWorkflowProcessAdvancementData {
 
 	/**
-	 * The workflow definition id
+	 * The process id of the process to advance
 	 */
 	@XmlElement
-	public UUID definitionId;
+	public UUID processId;
 
-	/** The stamp sequences. */
+	/**
+	 * The user performing the advancement
+	 */
 	@XmlElement
-	public List<Integer> stampSequences;
+	public int userId;
 	
-	/** The concept Sequences. */
+	/**
+	 * The advancement action requested
+	 */
 	@XmlElement
-	public Set<Integer> conceptSequences;
-
-	/** The creator. */
-	@XmlElement
-	public int creatorId;
-
-	/** The subject matter. */
-	@XmlElement
-	public RestWorkflowProcessDetailSubjectMatterType subjectMatter;
+	public String actionRequested;
+	
 
 	/**
-	 * COnstructor for JAXB
+	 * The comment associated with the advancement
 	 */
-	protected RestWorkflowProcessBaseCreate() {
+	@XmlElement
+	public String comment;
+
+	/**
+	 * Constructor for JAXB
+	 */
+	protected RestWorkflowProcessAdvancementData() {
 		super();
 	}
 
 	/**
-	 * @param definitionId
-	 * @param stampSequences
-	 * @param conceptSequences
-	 * @param creatorId
-	 * @param subjectMatter
+	 * @param processId - workflow process UUID
+	 * @param userId - workflow user id
+	 * @param actionRequested - action requested
+	 * @param comment - comment associated with the workflow advancement
 	 */
-	public RestWorkflowProcessBaseCreate(
-			UUID definitionId,
-			List<Integer> stampSequences,
-			Set<Integer> conceptSequences,
-			int creatorId,
-			RestWorkflowProcessDetailSubjectMatterType subjectMatter) {
+	public RestWorkflowProcessAdvancementData(UUID processId, int userId, String actionRequested, String comment) {
 		super();
-		this.definitionId = definitionId;
-		this.stampSequences = stampSequences;
-		this.conceptSequences = conceptSequences;
-		this.creatorId = creatorId;
-		this.subjectMatter = subjectMatter;
+		this.processId = processId;
+		this.userId = userId;
+		this.actionRequested = actionRequested;
+		this.comment = comment;
 	}
 
 	/* (non-Javadoc)
@@ -96,8 +88,7 @@ public class RestWorkflowProcessBaseCreate {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessCreate [definitionId=" + definitionId + ", stampSequences=" + stampSequences
-				+ ", conceptSequences=" + conceptSequences + ", creatorId=" + creatorId + ", subjectMatter=" + subjectMatter
+		return "RestWorkflowProcessAdvancementData [processId=" + processId + ", userId=" + userId + ", action=" + actionRequested + ", comment=" + comment
 				+ "]";
 	}
 }

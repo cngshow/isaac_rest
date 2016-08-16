@@ -49,9 +49,9 @@ public class RestWorkflowProcessHistory
 	public UUID processId;
 
 	/**
-	 * The workflowUser
+	 * The workflow user
 	 */
-	public int workflowUser;
+	public int userId;
 
 	/**
 	 * The time advanced
@@ -93,7 +93,7 @@ public class RestWorkflowProcessHistory
 	public RestWorkflowProcessHistory(ProcessHistory processHistory) {
 		this.id = processHistory.getId();
 		this.processId = processHistory.getProcessId();
-		this.workflowUser = processHistory.getWorkflowUser();
+		this.userId = processHistory.getWorkflowUser();
 		this.timeAdvanced = processHistory.getTimeAdvanced();
 		this.state = processHistory.getState();
 		this.action = processHistory.getAction();
@@ -106,7 +106,7 @@ public class RestWorkflowProcessHistory
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessHistory [id=" + id + ", processId=" + processId + ", workflowUser=" + workflowUser
+		return "RestWorkflowProcessHistory [id=" + id + ", processId=" + processId + ", userId=" + userId
 				+ ", timeAdvanced=" + timeAdvanced + ", state=" + state + ", action=" + action + ", outcome=" + outcome
 				+ ", comment=" + comment + "]";
 	}

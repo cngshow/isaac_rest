@@ -19,8 +19,6 @@
 
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -28,67 +26,52 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessDetailSubjectMatterType;
-
 /**
  * 
- * {@link RestWorkflowProcessBaseCreate}
+ * {@link RestWorkflowRoleChangeData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessBaseCreate {
+public class RestWorkflowRoleChangeData {
 
 	/**
-	 * The workflow definition id
+	 * The UUID id of the workflow definition to/from which to add/remove a role for a specified user
 	 */
 	@XmlElement
 	public UUID definitionId;
 
-	/** The stamp sequences. */
+	/**
+	 * The id of the user to/from which to add/remove a role
+	 */
 	@XmlElement
-	public List<Integer> stampSequences;
-	
-	/** The concept Sequences. */
-	@XmlElement
-	public Set<Integer> conceptSequences;
-
-	/** The creator. */
-	@XmlElement
-	public int creatorId;
-
-	/** The subject matter. */
-	@XmlElement
-	public RestWorkflowProcessDetailSubjectMatterType subjectMatter;
+	public int userId;
 
 	/**
-	 * COnstructor for JAXB
+	 * The role to add/remove to/from the specified user
 	 */
-	protected RestWorkflowProcessBaseCreate() {
+	@XmlElement
+	public String role;
+
+	/**
+	 * Constructor for JAXB
+	 */
+	protected RestWorkflowRoleChangeData() {
 		super();
 	}
 
 	/**
-	 * @param definitionId
-	 * @param stampSequences
-	 * @param conceptSequences
-	 * @param creatorId
-	 * @param subjectMatter
+	 * @param definitionId - UUID id of the workflow definition to/from which to add/remove a role for a specified user
+	 * @param userId - user to/from which to add/remove a role
+	 * @param role - role to add/remove to/from the specified user
 	 */
-	public RestWorkflowProcessBaseCreate(
-			UUID definitionId,
-			List<Integer> stampSequences,
-			Set<Integer> conceptSequences,
-			int creatorId,
-			RestWorkflowProcessDetailSubjectMatterType subjectMatter) {
+	public RestWorkflowRoleChangeData(UUID definitionId, int userId, String role) {
 		super();
 		this.definitionId = definitionId;
-		this.stampSequences = stampSequences;
-		this.conceptSequences = conceptSequences;
-		this.creatorId = creatorId;
-		this.subjectMatter = subjectMatter;
+		this.userId = userId;
+		this.role = role;
 	}
 
 	/* (non-Javadoc)
@@ -96,8 +79,7 @@ public class RestWorkflowProcessBaseCreate {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessCreate [definitionId=" + definitionId + ", stampSequences=" + stampSequences
-				+ ", conceptSequences=" + conceptSequences + ", creatorId=" + creatorId + ", subjectMatter=" + subjectMatter
+		return "RestWorkflowRoleData [definitionId=" + definitionId + ", userId=" + userId + ", role=" + role
 				+ "]";
 	}
 }

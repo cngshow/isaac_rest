@@ -77,6 +77,13 @@ public class RestPaths
 	public static final String launchWorkflowProcessComponent = "launchWorkflowProcess/";
 	public static final String cancelWorkflowProcessComponent = "cancelWorkflowProcess/";
 	public static final String concludeWorkflowProcessComponent = "concludeWorkflowProcess/";
+	// WorkflowUpdater
+	public static final String addStampToExistingWorkflowProcessComponent = "addStampToExistingWorkflowProcess/";
+	public static final String addConceptsToExistingWorkflowProcessComponent = "addStampsToExistingWorkflowProcess/";
+	public static final String advanceWorkflowProcessComponent = "advanceWorkflowProcess/";
+	public static final String addWorkflowUserRoleComponent = "addWorkflowUserRole/";
+	public static final String removeWorkflowUserRoleComponent = "removeWorkflowUserRole/";
+
 	
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String mappingSetComponent = "mappingSet/";
