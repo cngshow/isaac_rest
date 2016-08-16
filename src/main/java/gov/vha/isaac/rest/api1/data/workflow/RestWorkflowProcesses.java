@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
- * {@link RestWorkflowProcessDetails}
+ * {@link RestWorkflowProcesses}
  * 
  * This class carries back result sets
  *
@@ -36,18 +36,18 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessDetails
+public class RestWorkflowProcesses
 {
 	/**
 	 * The contained results
 	 */
 	@XmlElement
-	public Collection<RestWorkflowProcessDetail> results = new ArrayList<>();
+	public Collection<RestWorkflowProcess> results = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowProcessDetails()
+	protected RestWorkflowProcesses()
 	{
 		//For jaxb
 	}
@@ -55,7 +55,7 @@ public class RestWorkflowProcessDetails
 	/**
 	 * @param results
 	 */
-	public RestWorkflowProcessDetails(Collection<RestWorkflowProcessDetail> results) {
+	public RestWorkflowProcesses(Collection<RestWorkflowProcess> results) {
 		if (results != null) {
 			this.results.addAll(results);
 		}

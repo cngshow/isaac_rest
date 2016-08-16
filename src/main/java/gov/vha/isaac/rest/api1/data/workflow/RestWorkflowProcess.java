@@ -18,8 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -33,13 +31,13 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
 /**
  * 
- * {@link RestWorkflowProcessDetail}
+ * {@link RestWorkflowProcess}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessDetail
+public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 {
 	/**
 	 * The identifier data
@@ -47,28 +45,11 @@ public class RestWorkflowProcessDetail
 	@XmlElement
 	public UUID id;
 
-	/**
-	 * The process id
-	 */
-	public UUID definitionId;
-
-	/** The stamp sequences. */
-	public List<Integer> stampSequences;
-
-	/** The concept Sequences. */
-	public Set<Integer> conceptSequences;
-
-	/** The creator. */
-	public int creator;
-
 	/** The time created. */
 	public long timeCreated;
 
 	/** The time created. */
 	public long timeConcluded = -1L;
-
-	/** The subject matter. */
-	public RestWorkflowProcessDetailSubjectMatterType subjectMatter;
 
 	/** The defining status. */
 	public RestWorkflowProcessStatusType processStatus;
@@ -77,24 +58,24 @@ public class RestWorkflowProcessDetail
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowProcessDetail()
+	protected RestWorkflowProcess()
 	{
 		//for Jaxb
 		super();
 	}
 
 	/**
-	 * @param processDetail- ISAAC workflow ProcessDetail
+	 * @param process- ISAAC workflow Process
 	 */
-	public RestWorkflowProcessDetail(ProcessDetail processDetail) {
-		this.id = processDetail.getId();
-		this.definitionId = processDetail.getDefinitionId();
-		this.stampSequences = processDetail.getStampSequences();
-		this.conceptSequences = processDetail.getConceptSequences();
-		this.creator = processDetail.getCreator();
-		this.timeCreated = processDetail.getTimeCreated();
-		this.timeConcluded = processDetail.getTimeConcluded();
-		this.subjectMatter = new RestWorkflowProcessDetailSubjectMatterType(processDetail.getSubjectMatter());
-		this.processStatus = new RestWorkflowProcessStatusType(processDetail.getProcessStatus());
+	public RestWorkflowProcess(ProcessDetail process) {
+		super(process.getDefinitionId(),
+				process.getStampSequences(),
+				process.getConceptSequences(),
+				process.getCreator(),
+				new RestWorkflowProcessDetailSubjectMatterType(process.getSubjectMatter()));
+		this.id = process.getId();
+		this.timeCreated = process.getTimeCreated();
+		this.timeConcluded = process.getTimeConcluded();
+		this.processStatus = new RestWorkflowProcessStatusType(process.getProcessStatus());
 	}
 }

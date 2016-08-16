@@ -46,8 +46,9 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableActions;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessDetail;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessDetails;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcesses;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
@@ -478,7 +479,7 @@ public class WorkflowAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.processesForConceptComponent)
-	public RestWorkflowProcessDetails getProcessesForConcept(
+	public RestWorkflowProcesses getProcessesForConcept(
 			@QueryParam(RequestParameters.id) String id) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -486,11 +487,11 @@ public class WorkflowAPIs
 				RequestParameters.id);
 
 		try {
-		List<RestWorkflowProcessDetail> set = new ArrayList<>();
+		List<RestWorkflowProcess> set = new ArrayList<>();
 		WorkflowProviderManager.getWorkflowStatusAccessor().getProcessesForConcept(
-				RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)).forEach(a -> set.add(new RestWorkflowProcessDetail(a)));
+				RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)).forEach(a -> set.add(new RestWorkflowProcess(a)));
 
-		return new RestWorkflowProcessDetails(set);
+		return new RestWorkflowProcesses(set);
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
@@ -510,7 +511,7 @@ public class WorkflowAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.processForProcessComponent)
-	public RestWorkflowProcessDetail getProcess(
+	public RestWorkflowProcessBaseCreate getProcess(
 			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -518,7 +519,7 @@ public class WorkflowAPIs
 				RequestParameters.wfProcessId);
 
 		try {
-		return new RestWorkflowProcessDetail(
+		return new RestWorkflowProcess(
 				WorkflowProviderManager.getWorkflowStatusAccessor().getProcessDetail(
 						RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId)));
 		} catch (RestException e) {
@@ -540,7 +541,7 @@ public class WorkflowAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.processesActiveForDefinitionComponent)
-	public RestWorkflowProcessDetails getProcessesActiveForDefinition(
+	public RestWorkflowProcesses getProcessesActiveForDefinition(
 			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -548,11 +549,11 @@ public class WorkflowAPIs
 				RequestParameters.wfDefinitionId);
 
 		try {
-		List<RestWorkflowProcessDetail> set = new ArrayList<>();
+		List<RestWorkflowProcess> set = new ArrayList<>();
 		WorkflowProviderManager.getWorkflowStatusAccessor().getActiveProcessesForDefinition(
-				RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId)).forEach(a -> set.add(new RestWorkflowProcessDetail(a)));
+				RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId)).forEach(a -> set.add(new RestWorkflowProcess(a)));
 
-		return new RestWorkflowProcessDetails(set);
+		return new RestWorkflowProcesses(set);
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
@@ -701,7 +702,7 @@ public class WorkflowAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.processActiveForConceptComponent)
-	public RestWorkflowProcessDetail getActiveProcessForConcept(
+	public RestWorkflowProcessBaseCreate getActiveProcessForConcept(
 			@QueryParam(RequestParameters.id) String id) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -709,7 +710,7 @@ public class WorkflowAPIs
 				RequestParameters.id);
 
 		try {
-		return new RestWorkflowProcessDetail(
+		return new RestWorkflowProcess(
 				WorkflowProviderManager.getWorkflowStatusAccessor().getActiveProcessForConcept(
 						RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id)));
 		} catch (RestException e) {

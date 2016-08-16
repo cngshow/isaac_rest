@@ -72,6 +72,11 @@ public class RestPaths
 	public static final String isConceptInActiveWorkflowComponent = "isConceptInActiveWorkflow/";
 	public static final String isComponentInActiveWorkflowComponent = "isComponentInActiveWorkflow/";
 	public static final String processActiveForConceptComponent = "processActiveForConcept/";
+	// WorkflowProcessInitializerConcluder
+	public static final String createWorkflowProcessComponent = "createWorkflowProcess/";
+	public static final String launchWorkflowProcessComponent = "launchWorkflowProcess/";
+	public static final String cancelWorkflowProcessComponent = "cancelWorkflowProcess/";
+	public static final String concludeWorkflowProcessComponent = "concludeWorkflowProcess/";
 	
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String mappingSetComponent = "mappingSet/";
