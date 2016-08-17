@@ -37,10 +37,69 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
  * @see RestDynamicSememeVersion
  * @see RestObjectChronologyType
  * @see RestSememeType
+ * @see RestConcreteDomainOperatorsType
+ * @see RestDynamicSememeDataType
+ * @see RestDynamicSememeValidatorType
+ * @see RestExternalizableObjectType
+ * @see RestNodeSemanticType
+ * @see RestObjectChronologyType
+ * @see RestStampPrecedenceType
+ * @see RestStateType
+ * @see RestSupportedIdType
+ * @see RestTaxonomyType
+ * @see RestWorkflowDataElementType
+ * @see RestWorkflowDomainType
+ * @see RestWorkflowProcessDetailSubjectMatterType
+ * @see RestWorkflowProcessStatusType
+ * @see RestWorkflowSubjectMatterType
+ * @see RestWorkflowTerminologyType
+ * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@XmlSeeAlso ({RestDynamicSememeValidatorType.class, RestDynamicSememeDataType.class, RestObjectChronologyType.class, RestSememeType.class})
-@JsonSeeAlso ({RestDynamicSememeValidatorType.class, RestDynamicSememeDataType.class, RestObjectChronologyType.class, RestSememeType.class})
+@XmlSeeAlso ({
+	RestDynamicSememeValidatorType.class,
+	RestDynamicSememeDataType.class,
+	RestObjectChronologyType.class,
+	RestSememeType.class,
+	RestConcreteDomainOperatorsType.class,
+	RestDynamicSememeDataType.class,
+	RestDynamicSememeValidatorType.class,
+	RestExternalizableObjectType.class,
+	RestNodeSemanticType.class,
+	RestObjectChronologyType.class,
+	RestStampPrecedenceType.class,
+	RestStateType.class,
+	RestSupportedIdType.class,
+	RestTaxonomyType.class,
+	RestWorkflowDataElementType.class,
+	RestWorkflowDomainType.class,
+	RestWorkflowProcessDetailSubjectMatterType.class,
+	RestWorkflowProcessStatusType.class,
+	RestWorkflowSubjectMatterType.class,
+	RestWorkflowTerminologyType.class
+	})
+@JsonSeeAlso ({
+	RestDynamicSememeValidatorType.class,
+	RestDynamicSememeDataType.class,
+	RestObjectChronologyType.class,
+	RestSememeType.class,
+	RestConcreteDomainOperatorsType.class,
+	RestDynamicSememeDataType.class,
+	RestDynamicSememeValidatorType.class,
+	RestExternalizableObjectType.class,
+	RestNodeSemanticType.class,
+	RestObjectChronologyType.class,
+	RestStampPrecedenceType.class,
+	RestStateType.class,
+	RestSupportedIdType.class,
+	RestTaxonomyType.class,
+	RestWorkflowDataElementType.class,
+	RestWorkflowDomainType.class,
+	RestWorkflowProcessDetailSubjectMatterType.class,
+	RestWorkflowProcessStatusType.class,
+	RestWorkflowSubjectMatterType.class,
+	RestWorkflowTerminologyType.class
+	})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class Enumeration implements Comparable<Enumeration>
