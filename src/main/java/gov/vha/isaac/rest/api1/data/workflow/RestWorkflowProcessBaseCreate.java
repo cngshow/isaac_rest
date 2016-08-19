@@ -64,7 +64,7 @@ public class RestWorkflowProcessBaseCreate {
 	public RestWorkflowProcessDetailSubjectMatterType subjectMatter;
 
 	/**
-	 * COnstructor for JAXB
+	 * Constructor for JAXB
 	 */
 	protected RestWorkflowProcessBaseCreate() {
 		super();

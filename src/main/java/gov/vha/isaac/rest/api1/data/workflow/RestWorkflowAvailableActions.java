@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -42,7 +43,7 @@ public class RestWorkflowAvailableActions
 	 * The contained results
 	 */
 	@XmlElement
-	public Collection<RestWorkflowAvailableAction> results = new ArrayList<>();
+	public List<RestWorkflowAvailableAction> results = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
