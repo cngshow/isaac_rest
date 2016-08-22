@@ -141,7 +141,7 @@ public class MappingWriteAPIs
 	 */
 	//TODO fix the comments above around editToken 
 	@PUT
-	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
+	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent)
 	public void updateMapSet(
 		RestMappingSetVersionBase mappingSetUpdateData,
 		@QueryParam(RequestParameters.id) String id,
