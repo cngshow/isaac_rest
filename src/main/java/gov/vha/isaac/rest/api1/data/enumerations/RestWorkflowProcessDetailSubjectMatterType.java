@@ -19,11 +19,9 @@
 package gov.vha.isaac.rest.api1.data.enumerations;
 
 import java.util.Optional;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
-import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail.SubjectMatter;
-import gov.vha.isaac.ochre.api.metacontent.workflow.StorableWorkflowContents.WorkflowDomain;
+import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
+import gov.vha.isaac.ochre.api.metacontent.workflow.StorableWorkflowContents.SubjectMatter;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 
 /**
@@ -47,8 +45,8 @@ public class RestWorkflowProcessDetailSubjectMatterType extends Enumeration
 	
 	public static RestWorkflowProcessDetailSubjectMatterType[] getAll()
 	{
-		RestWorkflowProcessDetailSubjectMatterType[] result = new RestWorkflowProcessDetailSubjectMatterType[WorkflowDomain.values().length];
-		for (int i = 0; i < WorkflowDomain.values().length; i++)
+		RestWorkflowProcessDetailSubjectMatterType[] result = new RestWorkflowProcessDetailSubjectMatterType[SubjectMatter.values().length];
+		for (int i = 0; i < SubjectMatter.values().length; i++)
 		{
 			result[i] = new RestWorkflowProcessDetailSubjectMatterType(SubjectMatter.values()[i]);
 		}
