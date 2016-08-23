@@ -286,7 +286,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetSequence)
+		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent)
 				.queryParam(RequestParameters.id, testMappingSetSequence)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
