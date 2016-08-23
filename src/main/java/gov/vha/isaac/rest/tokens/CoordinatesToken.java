@@ -451,60 +451,60 @@ public class CoordinatesToken
 				+ getLogicClassifier() + ", getSerialized()=" + getSerialized() + "]";
 	}
 
-	public static void main(String[] args) throws Exception
-	{
-		/*
-		 * 	long stampTime,
-			int stampPath,
-			byte stampPrecedence,
-			int[] stampModules,
-			byte[] stampStates,
-			int langCoord,
-			int[] langDialects,
-			int[] langDescTypePrefs,
-			byte taxonomyType,
-			int logicStatedAssemblage,
-			int logicInferredAssemblage,
-			int logicDescLogicProfile,
-			int logicClassifier)
-		 */
-		CoordinatesToken t = new CoordinatesToken(
-				Long.MAX_VALUE, // stampTime
-				4, // stampPath
-				(byte)5, // stampPrecedence
-				new int[] {4,5,6}, // stampModules
-				new byte[] {2}, // stampStates
-				456, // langCoord
-				new int[] {123}, // langDialects
-				new int[] {3,4,5,2,1}, // langDescTypePrefs
-				(byte)5, // taxonomyType
-				1, // logicStatedAssemblage
-				2, // logicInferredAssemblage
-				3, // logicDescLogicProfile
-				4); // logicClassifier
-
-
-		String token = t.getSerialized();
-		System.out.println(token);
-		new CoordinatesToken(token);
-
-		CoordinatesToken r = new CoordinatesToken(
-				Long.MAX_VALUE, // stampTime
-				4, // stampPath
-				(byte)5, // stampPrecedence
-				new int[] {4,5,6}, // stampModules
-				new byte[] {2}, // stampStates
-				456, // langCoord
-				new int[] {123}, // langDialects
-				new int[] {3,4,5,2,1}, // langDescTypePrefs
-				(byte)5, // taxonomyType
-				1, // logicStatedAssemblage
-				2, // logicInferredAssemblage
-				3, // logicDescLogicProfile
-				4); // logicClassifier
-
-		String token1 = r.getSerialized();
-		System.out.println(token1);
-		new CoordinatesToken(token1);
-	}
+//	public static void main(String[] args) throws Exception
+//	{
+//		/*
+//		 * 	long stampTime,
+//			int stampPath,
+//			byte stampPrecedence,
+//			int[] stampModules,
+//			byte[] stampStates,
+//			int langCoord,
+//			int[] langDialects,
+//			int[] langDescTypePrefs,
+//			byte taxonomyType,
+//			int logicStatedAssemblage,
+//			int logicInferredAssemblage,
+//			int logicDescLogicProfile,
+//			int logicClassifier)
+//		 */
+//		CoordinatesToken t = new CoordinatesToken(
+//				Long.MAX_VALUE, // stampTime
+//				4, // stampPath
+//				(byte)5, // stampPrecedence
+//				new int[] {4,5,6}, // stampModules
+//				new byte[] {2}, // stampStates
+//				456, // langCoord
+//				new int[] {123}, // langDialects
+//				new int[] {3,4,5,2,1}, // langDescTypePrefs
+//				(byte)5, // taxonomyType
+//				1, // logicStatedAssemblage
+//				2, // logicInferredAssemblage
+//				3, // logicDescLogicProfile
+//				4); // logicClassifier
+//
+//
+//		String token = t.getSerialized();
+//		System.out.println(token);
+//		new CoordinatesToken(token);
+//
+//		CoordinatesToken r = new CoordinatesToken(
+//				Long.MAX_VALUE, // stampTime
+//				4, // stampPath
+//				(byte)5, // stampPrecedence
+//				new int[] {4,5,6}, // stampModules
+//				new byte[] {2}, // stampStates
+//				456, // langCoord
+//				new int[] {123}, // langDialects
+//				new int[] {3,4,5,2,1}, // langDescTypePrefs
+//				(byte)5, // taxonomyType
+//				1, // logicStatedAssemblage
+//				2, // logicInferredAssemblage
+//				3, // logicDescLogicProfile
+//				4); // logicClassifier
+//
+//		String token1 = r.getSerialized();
+//		System.out.println(token1);
+//		new CoordinatesToken(token1);
+//	}
 }
