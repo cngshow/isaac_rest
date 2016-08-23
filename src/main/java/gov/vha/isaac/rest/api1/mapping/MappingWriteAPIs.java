@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -141,10 +142,10 @@ public class MappingWriteAPIs
 	 */
 	//TODO fix the comments above around editToken 
 	@PUT
-	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent)
+	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
 	public void updateMapSet(
 		RestMappingSetVersionBase mappingSetUpdateData,
-		@QueryParam(RequestParameters.id) String id,
+		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -234,7 +235,7 @@ public class MappingWriteAPIs
 	@Path(RestPaths.mappingItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public void updateMappingItem(
 		RestMappingItemVersionBase mappingItemUpdateData,
-		@QueryParam(RequestParameters.id) String id,
+		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
