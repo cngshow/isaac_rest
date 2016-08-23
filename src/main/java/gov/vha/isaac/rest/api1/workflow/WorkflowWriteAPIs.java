@@ -23,11 +23,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail.SubjectMatter;
+import gov.vha.isaac.ochre.api.metacontent.workflow.StorableWorkflowContents.SubjectMatter;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
