@@ -49,4 +49,9 @@ public class RestDynamicSememeDataType extends Enumeration
 		}
 		return result;
 	}
+	
+	public DynamicSememeDataType translate()
+	{
+		return DynamicSememeDataType.values()[this.enumId];
+	}
 }

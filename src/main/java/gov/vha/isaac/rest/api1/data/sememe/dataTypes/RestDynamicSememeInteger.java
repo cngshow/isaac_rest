@@ -40,4 +40,9 @@ public class RestDynamicSememeInteger extends RestDynamicSememeData
 	{
 		//for jaxb
 	}
+
+	public int getInteger()
+	{
+		return (int)data;
+	}
 }

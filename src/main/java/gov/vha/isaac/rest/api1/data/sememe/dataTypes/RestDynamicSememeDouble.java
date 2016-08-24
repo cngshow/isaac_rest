@@ -40,4 +40,9 @@ public class RestDynamicSememeDouble extends RestDynamicSememeData
 	{
 		//for jaxb
 	}
+
+	public double getDouble()
+	{
+		return (double)data;
+	}
 }

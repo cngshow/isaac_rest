@@ -52,7 +52,7 @@ public class RestMappingItemVersionBaseCreate extends RestMappingItemVersionBase
 	@XmlElement
 	public int sourceConcept;
 	
-	protected RestMappingItemVersionBaseCreate()
+	public RestMappingItemVersionBaseCreate()
 	{
 		//for Jaxb
 		super();

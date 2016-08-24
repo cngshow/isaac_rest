@@ -57,4 +57,9 @@ public class RestDynamicSememeSequence extends RestDynamicSememeTypedData
 	{
 		//for jaxb
 	}
+
+	public int getSequence()
+	{
+		return (int)data;
+	}
 }

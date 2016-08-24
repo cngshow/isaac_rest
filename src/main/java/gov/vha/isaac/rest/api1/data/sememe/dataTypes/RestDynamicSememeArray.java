@@ -40,4 +40,9 @@ public class RestDynamicSememeArray extends RestDynamicSememeData
 	{
 		//for jaxb
 	}
+
+	public  RestDynamicSememeData[] getDataArray()
+	{
+		return (RestDynamicSememeData[])data;
+	}
 }

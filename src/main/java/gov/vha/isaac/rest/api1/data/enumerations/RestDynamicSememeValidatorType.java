@@ -51,4 +51,23 @@ public class RestDynamicSememeValidatorType extends Enumeration
 		}
 		return result;
 	}
+	
+	public DynamicSememeValidatorType translate()
+	{
+		return DynamicSememeValidatorType.values()[this.enumId];
+	}
+	
+	public static DynamicSememeValidatorType[] translate(RestDynamicSememeValidatorType[] values)
+	{
+		if (values == null)
+		{
+			return null;
+		}
+		DynamicSememeValidatorType[] result = new DynamicSememeValidatorType[values.length];
+		for (int i = 0; i < values.length; i++)
+		{
+			result[i] = values[i].translate();
+		}
+		return result;
+	}
 }
