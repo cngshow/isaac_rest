@@ -83,7 +83,7 @@ public class RestSystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	public String[] supportedAPIVersions = new String[] {"1.4.2"};
+	public String[] supportedAPIVersions = new String[] {"1.4.3"};
 	
 	/**
 	 * REST API Implementation Version - aka the version number of the software running here.
