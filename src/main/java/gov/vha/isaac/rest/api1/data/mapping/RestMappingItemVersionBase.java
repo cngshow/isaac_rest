@@ -27,7 +27,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 /**
  * 
  * {@link RestMappingItemVersionBase}
- * This stub class is used for callers to edit {@link RestMappingItemVersion} objects.  It only contains the fields they may be edited after creation..
+ * This stub class is used for callers to edit {@link RestMappingItemVersion} objects.  It only contains the fields that may be edited after creation.
  * 
  * The API never returns this class.
 

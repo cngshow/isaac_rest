@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /**
  * 
  * {@link RestMappingSetVersionBase}
- * This stub class is used for callers to edit {@link RestMappingSetVersion} objects.  It only contains the fields they may be edited after creation..
+ * This stub class is used for callers to edit {@link RestMappingSetVersion} objects.  It only contains the fields that may be edited after creation.
  * 
  * The API never returns this class.
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
