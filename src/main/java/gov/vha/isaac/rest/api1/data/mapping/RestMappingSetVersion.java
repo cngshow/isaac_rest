@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -29,17 +31,21 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.mapping.data.MappingSetDAO;
+import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
@@ -49,7 +55,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestMappingSetVersion extends RestMappingSetVersionBaseCreate implements Comparable<RestMappingSetVersion>
+public class RestMappingSetVersion extends RestMappingSetVersionBase implements Comparable<RestMappingSetVersion>
 {
 	/**
 	 * The identifier data of the concept that represents this mapping set
@@ -62,6 +68,18 @@ public class RestMappingSetVersion extends RestMappingSetVersionBaseCreate imple
 	 */
 	@XmlElement
 	public RestStampedVersion mappingSetStamp;
+	
+	/**
+	 * The (optional) extended fields which carry additional information about this map set definition. 
+	 */
+	@XmlElement
+	public List<RestMappingSetExtensionValue> mapSetExtendedFields;
+	
+	/**
+	 * The fields that are declared for each map item instance that is created using this map set definition.  
+	 */
+	@XmlElement
+	public List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition;
 
 	protected RestMappingSetVersion()
 	{
@@ -91,32 +109,58 @@ public class RestMappingSetVersion extends RestMappingSetVersionBaseCreate imple
 				purpose = ((DynamicSememeString) sememe.getData()[0]).getDataString();
 			}
 			
-			if (sememe.getData().length > 1 && sememe.getData()[1] != null)
+			//read the extended field definition information
+			mapItemFieldsDefinition = new ArrayList<>();
+			DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.get().getNid());
+			for (DynamicSememeColumnInfo dsci : dsud.getColumnInfo())
 			{
-				mapSetExtendedFieldsType = Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) sememe.getData()[1]).getDataUUID());
-				
-				//if there is an extended fields type, see if there is a sememe of this type attached
-				Optional<SememeChronology<? extends SememeVersion<?>>> extended = Get.sememeService()
-					.getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), mapSetExtendedFieldsType).findAny();
-				if (extended.isPresent())
-				{
-					@SuppressWarnings("rawtypes")
-					SememeChronology extendedSC = extended.get();
-					@SuppressWarnings("unchecked")
-					Optional<LatestVersion<DynamicSememe<?>>> latest = extendedSC.getLatestVersion(DynamicSememe.class, stampCoord);
-					if (latest.isPresent())
-					{
-						//TODO handle contradictions
-						mapSetExtendedFields = RestDynamicSememeVersion.translateData(latest.get().value().getData());
-					}
-				}
-			}
-			
-			if (sememe.getData().length > 2 && sememe.getData()[2] != null)
-			{
-				mapItemExtendedFieldsType = Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) sememe.getData()[2]).getDataUUID());
+				mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsci));
 			}
 
+			//Read the extended fields off of the map set concept.
+			//Strings
+			mapSetExtendedFields = new ArrayList<>();
+			
+			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
+					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(stringExtensionSememe ->
+				{
+					Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)stringExtensionSememe).getLatestVersion(DynamicSememe.class, stampCoord);
+					//TODO handle contradictions
+					if (latest.isPresent())
+					{
+						DynamicSememe<?> ds = latest.get().value();
+						int nameNid = ((DynamicSememeNid)ds.getData(0)).getDataNid();
+						DynamicSememeData value = null;
+						if (ds.getData().length > 1)
+						{
+							value = ds.getData(1);
+						}
+						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(1, value)));
+					}
+				}
+			);
+			
+			//Nids
+			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
+					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getConceptSequence()).forEach(nidExtensionSememe ->
+				{
+					Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)nidExtensionSememe).getLatestVersion(DynamicSememe.class, stampCoord);
+					//TODO handle contradictions
+					if (latest.isPresent())
+					{
+						DynamicSememe<?> ds = latest.get().value();
+						int nameNid = ((DynamicSememeNid)ds.getData(0)).getDataNid();
+						DynamicSememeData value = null;
+						if (ds.getData().length > 1)
+						{
+							value = ds.getData(1);
+						}
+						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(1, value)));
+					}
+				}
+			);
+
+			//Read the the description values
 			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
 					MetaData.DESCRIPTION_ASSEMBLAGE.getConceptSequence()).forEach(descriptionC ->
 				{
@@ -183,8 +227,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBaseCreate imple
 	@Override
 	public String toString() {
 		return "RestMappingSetVersion [identifiers=" + identifiers + ", mappingSetStamp=" + mappingSetStamp
-				+ ", mapSetExtendedFieldsType=" + mapSetExtendedFieldsType + ", mapSetExtendedFields="
-				+ mapSetExtendedFields + ", mapItemExtendedFieldsType=" + mapItemExtendedFieldsType + ", name=" + name
-				+ ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
+				+ ", mapSetExtendedFields=" + mapSetExtendedFields + ", mapItemFieldsDefinition=" + mapItemFieldsDefinition 
+				+ ", name=" + name + ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
 	}
 }

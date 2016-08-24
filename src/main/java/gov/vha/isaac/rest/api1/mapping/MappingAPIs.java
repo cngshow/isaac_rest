@@ -151,8 +151,6 @@ public class MappingAPIs
 		
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		
-		Integer extendedFieldsType = getMappingSet(id, coordToken).mapItemExtendedFieldsType;
-		
 		Get.sememeService().getSememesFromAssemblage(Util.convertToConceptSequence(id)).forEach(sememeC -> 
 		{
 			@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -162,9 +160,11 @@ public class MappingAPIs
 			{
 				//TODO figure out how to handle contradictions!
 				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
-					extendedFieldsType, RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
 			}
 		});
 		return new RestMappingItemVersions(results);
 	}
+	
+	//TODO will need to add APIs for editing and/or removing extended field information from the map set definition.  Not currently possible
 }

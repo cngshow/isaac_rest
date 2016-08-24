@@ -22,7 +22,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
 
 /**
  * 
@@ -38,27 +38,16 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 {
 	/**
-	 * The (optional) extended fields type assemblage concept - this concept can be read to determine the definition details
-	 * of the {@link #mapSetExtendedFields} which are attached to the mapping set definition.  This returns a sequence, but 
-	 * for creation, can accept a nid or a sequence.
+	 * The (optional) extended fields which carry additional information about this map set definition. 
 	 */
 	@XmlElement
-	public Integer mapSetExtendedFieldsType;
+	public List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields;
 	
 	/**
-	 * The (optional) extended fields which carry additional information about this map set definition.  For details on these fields, read 
-	 * the assemblage definition of the assemblage concept provided with {@link #mapSetExtendedFieldsType}
+	 * The (optional) extended fields that are declared for each map item instance that is created using this map set definition.  
 	 */
 	@XmlElement
-	public List<RestDynamicSememeData> mapSetExtendedFields;
-	
-	/**
-	 * The (optional) extended fields type assemblage concept - this concept can be read to determine the definition details
-	 * of the {@link RestMappingItemVersion#mapItemExtendedFields} which are (optionally) attached to each mapping item.   This returns a 
-	 * sequence, but for creation, can accept a nid or a sequence.
-	 */
-	@XmlElement
-	public Integer mapItemExtendedFieldsType;
+	public List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition;
 		
 	protected RestMappingSetVersionBaseCreate()
 	{
@@ -76,7 +65,8 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 			String name,
 			String inverseName,
 			String description,
-			String purpose) {
+			String purpose) 
+	{
 		super(name, inverseName, description, purpose);
 	}
 
@@ -90,14 +80,13 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 			String inverseName,
 			String description,
 			String purpose,
-			Integer mapSetExtendedFieldsType,
-			List<RestDynamicSememeData> mapSetExtendedFields,
-			Integer mapItemExtendedFieldsType) {
+			List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields,
+			List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition) 
+	{
 		super(name, inverseName, description, purpose);
 
-		this.mapSetExtendedFieldsType = mapSetExtendedFieldsType;
 		this.mapSetExtendedFields = mapSetExtendedFields;
-		this.mapItemExtendedFieldsType = mapItemExtendedFieldsType;
+		this.mapItemExtendedFieldsDefinition = mapItemExtendedFieldsDefinition;
 	}
 
 	/* (non-Javadoc)
@@ -105,9 +94,8 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetVersionBaseCreate [mapSetExtendedFieldsType=" + mapSetExtendedFieldsType
-				+ ", mapSetExtendedFields=" + mapSetExtendedFields + ", mapItemExtendedFieldsType="
-				+ mapItemExtendedFieldsType + ", name=" + name + ", inverseName=" + inverseName + ", description="
-				+ description + ", purpose=" + purpose + "]";
+		return "RestMappingSetVersionBaseCreate [mapSetExtendedFields=" + mapSetExtendedFields
+				+ ", mapItemExtendedFieldsDefinition="+ mapItemExtendedFieldsDefinition 
+				+ ", name=" + name + ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
 	}
 }
