@@ -156,24 +156,21 @@ public class UserToken
 	
 	private byte[] getSecret()
 	{
-		if (secret_ == null)
+		synchronized (UserToken.class)
 		{
-			synchronized (UserToken.class)
+			if (secret_ == null)
 			{
-				if (secret_ == null)
-				{
-					byte[] temp = new byte[20];
-					
-					//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
-					new Random().nextBytes(temp);
-					//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
-					secret_ = temp;
-				}
+				byte[] temp = new byte[20];
+
+				//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
+				new Random().nextBytes(temp);
+				//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
+				secret_ = temp;
 			}
 		}
 		return secret_;
 	}
-	
+
 	
 	
 	public int getUserIdentity()

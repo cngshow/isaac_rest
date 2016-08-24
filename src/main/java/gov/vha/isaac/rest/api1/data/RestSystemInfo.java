@@ -178,7 +178,14 @@ public class RestSystemInfo
 					if (f.isFile() && f.getName().toLowerCase().equals("pom.properties"))
 					{
 						Properties p = new Properties();
-						p.load(new FileReader(f));
+						FileReader fileReader = null;
+						try {
+							p.load(fileReader = new FileReader(f));
+						} finally {
+							if (fileReader != null) {
+								fileReader.close();
+							}
+						}
 
 						isaacDbDependency =
 								new RestDependencyInfo(
@@ -302,7 +309,11 @@ public class RestSystemInfo
 			}
 			else
 			{
-				readFromPomFile(builder.parse(is));
+				try {
+					readFromPomFile(builder.parse(is));
+				} finally {
+					is.close();
+				}
 				readIsaacAppMetadata.set(true);
 			}
 		}
