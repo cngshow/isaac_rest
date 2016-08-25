@@ -44,7 +44,7 @@ public class UserToken
 	
 	private static final Logger log = LoggerFactory.getLogger(UserToken.class);
 	
-	private static transient byte[] secret_;
+	private static volatile transient byte[] secret_;
 	private static transient AtomicInteger increment = new AtomicInteger();  //Used for CSRF protection
 	private transient boolean validForSubmit = false;
 	
@@ -156,21 +156,24 @@ public class UserToken
 	
 	private byte[] getSecret()
 	{
-		synchronized (UserToken.class)
+		if (secret_ == null)
 		{
-			if (secret_ == null)
+			synchronized (UserToken.class)
 			{
-				byte[] temp = new byte[20];
-
-				//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
-				new Random().nextBytes(temp);
-				//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
-				secret_ = temp;
+				if (secret_ == null)
+				{
+					byte[] temp = new byte[20];
+					
+					//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
+					new Random().nextBytes(temp);
+					//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
+					secret_ = temp;
+				}
 			}
 		}
 		return secret_;
 	}
-
+	
 	
 	
 	public int getUserIdentity()
