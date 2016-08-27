@@ -109,7 +109,7 @@
 		</dependency>
 		<dependency>
 			<groupId>gov.vha.isaac.ochre.modules</groupId>
-			<artifactId>metadata</artifactId>
+			<artifactId>ochre-metadata</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
 		<dependency>
@@ -244,10 +244,17 @@
 							<artifactItems>
 								<artifact>
 									<groupId>gov.vha.isaac.ochre.modules</groupId>
-									<artifactId>metadata</artifactId>
+									<artifactId>ochre-metadata</artifactId>
 									<version>${isaac.version}</version>
 									<classifier>all</classifier>
 									<type>ibdf.zip</type>
+								</artifact>
+								<artifact>
+									<groupId>gov.vha.isaac.ochre.modules</groupId>
+									<artifactId>ochre-metadata</artifactId>
+									<version>${isaac.version}</version>
+									<classifier>all</classifier>
+									<type>json.zip</type>
 								</artifact>
 							</artifactItems>
 							<outputDirectory>${project.build.directory}/data</outputDirectory>
