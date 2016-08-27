@@ -39,19 +39,21 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 	public Response toResponse(Exception ex)
 	{
 		boolean notReady = false;
-		if (ex.getMessage().startsWith("The system is not yet ready"))
+		if (ex instanceof ClientErrorException)
+		{
+			LoggerFactory.getLogger("web").info("ClientError:" + ex.toString());
+		}
+		else if (ex.getMessage() != null && ex.getMessage().startsWith("The system is not yet ready"))
 		{
 			notReady = true;
 			LoggerFactory.getLogger("web").warn(ex.getMessage());
 		}
-		else if (ex  instanceof ClientErrorException)
-		{
-			LoggerFactory.getLogger("web").info("ClientError:" + ex.toString());
-		}
+		
 		else
 		{
 			LoggerFactory.getLogger("web").error("Unexpected", ex);
 		}
+		
 		String response;
 		if (ex  instanceof ClientErrorException)
 		{
