@@ -29,9 +29,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.plexus.util.StringUtils;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -45,6 +45,7 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshot;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.MutableDescriptionSememe;
@@ -154,6 +155,15 @@ public class MappingWriteAPIs
 		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		if (StringUtils.isBlank(mappingSetUpdateData.name))
+		{
+			throw new RestException("The parameter 'name' is required");
+		}
+		if (StringUtils.isBlank(mappingSetUpdateData.description))
+		{
+			throw new RestException("The parameter 'description' is required");
+		}
+		
 		// TODO test updateMapSet()
 		// TODO This update method doesn't currently allow updating of extended field values.  Need to figure out how to put that into the API
 		State stateToUse = null;
@@ -297,6 +307,15 @@ public class MappingWriteAPIs
 	{
 		//We need to create a new concept - which itself is defining a dynamic sememe - so set that up here.
 		
+		if (StringUtils.isBlank(mappingName))
+		{
+			throw new RestException("The parameter 'name' is required");
+		}
+		if (StringUtils.isBlank(description))
+		{
+			throw new RestException("The parameter 'description' is required");
+		}
+		
 		DynamicSememeColumnInfo[] columns = new DynamicSememeColumnInfo[2 + (extendedFields == null ? 0 : extendedFields.size())];
 		columns[0] = new DynamicSememeColumnInfo(0, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getUUID(), 
 				DynamicSememeDataType.UUID, null, false, true);
@@ -334,8 +353,7 @@ public class MappingWriteAPIs
 		if (!StringUtils.isBlank(inverseName))
 		{
 			ObjectChronology<?> builtDesc = LookupService.get().getService(DescriptionBuilderService.class).getDescriptionBuilder(inverseName, rdud.getDynamicSememeUsageDescriptorSequence(), 
-					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).build(
-							editCoord, ChangeCheckerMode.ACTIVE);
+					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).setAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT).build(editCoord, ChangeCheckerMode.ACTIVE);
 			
 			Get.sememeBuilderService().getDynamicSememeBuilder(builtDesc.getNid(),DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).build(
 					editCoord, ChangeCheckerMode.ACTIVE);
@@ -411,9 +429,7 @@ public class MappingWriteAPIs
 			EditCoordinate editCoord,
 			State state) throws RuntimeException 
 	{		
-		Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 
-				MetaData.DESCRIPTION_ASSEMBLAGE.getConceptSequence())
-			.forEach(descriptionC ->
+		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
 			{
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
@@ -428,12 +444,13 @@ public class MappingWriteAPIs
 							if (!ds.getText().equals(mapName))
 							{
 								@SuppressWarnings({ "unchecked", "rawtypes" })
-								MutableDescriptionSememe<? extends MutableDescriptionSememe<?>> mutable = ((SememeChronology<DescriptionSememe>)ds)
+								MutableDescriptionSememe<? extends MutableDescriptionSememe<?>> mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
 										.createMutableVersion(MutableDescriptionSememe.class, state, editCoord);
+								mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
+								mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
+								mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 								mutable.setText(mapName);
-								@SuppressWarnings("unchecked")
-								SememeChronology<DescriptionSememe<? extends DescriptionSememe<?>>> sc = (SememeChronology<DescriptionSememe<? extends DescriptionSememe<?>>>)ds;
-								Get.commitService().addUncommitted(sc);
+								Get.commitService().addUncommitted(ds.getChronology());
 							}
 						}
 						else
@@ -442,19 +459,20 @@ public class MappingWriteAPIs
 							if (Get.sememeService().getSememesForComponentFromAssemblage(ds.getNid(), 
 									DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).anyMatch(sememeC -> 
 									{
-										return sememeC.isLatestVersionActive(stampCoord);
+										return true;  //return if active or inactive
 									}))
 							{
 								if (!ds.getText().equals(mapInverseName))
 								{
 									@SuppressWarnings({ "unchecked", "rawtypes" })
-									MutableDescriptionSememe<? extends MutableDescriptionSememe<?>> mutable = ((SememeChronology<DescriptionSememe>)ds)
-											.createMutableVersion(MutableDescriptionSememe.class, state, editCoord);
-									mutable.setText(mapInverseName);
+									MutableDescriptionSememe<? extends MutableDescriptionSememe<?>> mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
+											.createMutableVersion(MutableDescriptionSememe.class, (StringUtils.isBlank(mapInverseName) ? State.INACTIVE : state), editCoord);
+									mutable.setText(StringUtils.isBlank(mapInverseName) ? ds.getText() : mapInverseName);
+									mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
+									mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
+									mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 									
-									@SuppressWarnings("unchecked")
-									SememeChronology<DescriptionSememe<? extends DescriptionSememe<?>>> sc = (SememeChronology<DescriptionSememe<? extends DescriptionSememe<?>>>)ds;
-									Get.commitService().addUncommitted(sc);
+									Get.commitService().addUncommitted(ds.getChronology());
 								}
 							}
 						}
@@ -468,6 +486,9 @@ public class MappingWriteAPIs
 								@SuppressWarnings({ "unchecked", "rawtypes" })
 								MutableDescriptionSememe mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
 										.createMutableVersion(MutableDescriptionSememe.class, state, editCoord);
+								mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
+								mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
+								mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 								mutable.setText(mapDescription);
 								Get.commitService().addUncommitted(ds.getChronology());
 							}
@@ -493,7 +514,8 @@ public class MappingWriteAPIs
 		
 		if (latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
 				|| latest.getData().length > 0 && latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
-				|| (latest.getData().length > 0 && latest.getData()[0] != null && mapPurpose != null && latest.getData()[0] instanceof DynamicSememeString && !((DynamicSememeString)latest.getData()[0]).getDataString().equals(mapPurpose)))
+				|| (latest.getData().length > 0 && latest.getData()[0] != null && mapPurpose != null 
+					&& latest.getData()[0] instanceof DynamicSememeString && !((DynamicSememeString)latest.getData()[0]).getDataString().equals(mapPurpose)))
 		{
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingSememe.get()).createMutableVersion(
