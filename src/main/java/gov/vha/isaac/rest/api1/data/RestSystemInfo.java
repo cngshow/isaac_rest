@@ -273,7 +273,7 @@ public class RestSystemInfo
 
 		if (!readDbMetadataFromProperties.get())
 		{
-			log_.warn("Failed to read the metadata about the database from the database package.");
+			log_.error("Failed to read the metadata about the database from the database package.");
 		}
 		else
 		{
