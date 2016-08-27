@@ -29,6 +29,7 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
@@ -161,8 +162,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			);
 
 			//Read the the description values
-			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
-					MetaData.DESCRIPTION_ASSEMBLAGE.getConceptSequence()).forEach(descriptionC ->
+			Get.sememeService().getSememesForComponent(mappingConcept.get().getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
 				{
 					if (name != null && description != null && inverseName != null)
 					{
@@ -188,7 +188,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 									if (Get.sememeService().getSememesForComponentFromAssemblage(ds.getNid(), 
 											DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).anyMatch(sememeC -> 
 											{
-												return sememeC.isLatestVersionActive(stampCoord);
+												return ds.getChronology().isLatestVersionActive(stampCoord);
 											}))
 									{
 										inverseName = ds.getText(); 
