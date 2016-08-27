@@ -163,8 +163,7 @@ public class MappingWriteAPIs
 		{
 			throw new RestException("The parameter 'description' is required");
 		}
-		
-		// TODO test updateMapSet()
+
 		// TODO This update method doesn't currently allow updating of extended field values.  Need to figure out how to put that into the API
 		State stateToUse = null;
 		try {
@@ -209,8 +208,6 @@ public class MappingWriteAPIs
 		RestMappingItemVersionBaseCreate mappingItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		// TODO test createNewMappingItem()
-		
 		Optional<ConceptSnapshot> sourceConcept = Frills.getConceptSnapshot(mappingItemCreationData.sourceConcept, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
 		Optional<ConceptSnapshot> targetConcept = Frills.getConceptSnapshot(mappingItemCreationData.targetConcept, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
 		
@@ -269,7 +266,6 @@ public class MappingWriteAPIs
 
 		SememeChronology<?> mappingItemSememeChronology = SememeAPIs.findSememeChronology(id);
 
-		// TODO test updateMappingItem()
 		try {
 			updateMappingItem(
 					mappingItemSememeChronology,
