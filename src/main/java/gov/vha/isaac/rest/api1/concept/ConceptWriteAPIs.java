@@ -81,7 +81,7 @@ public class ConceptWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
-	public RestInteger createNewConcept(
+	public RestInteger createConcept(
 			RestConceptCreateData creationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
