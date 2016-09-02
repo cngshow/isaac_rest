@@ -80,8 +80,12 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersions;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
+import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
+import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
@@ -90,6 +94,8 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersions;
+import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
+import gov.vha.isaac.rest.api1.data.search.RestSearchResults;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersions;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
@@ -224,6 +230,104 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Map<String, Object> map = new HashMap<>();
 		map.put(key,  value);
 		return map.entrySet().iterator().next();
+	}
+	
+	@Test
+	public void testConceptAPIs()
+	{
+		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+
+		System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent + parent1Sequence);
+		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + parent1Sequence)
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		RestConceptVersion conceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(conceptVersionObject.getConChronology().getConceptSequence(), parent1Sequence);
+		
+		final UUID randomUuid = UUID.randomUUID();
+
+		final String fsn = "fsn for test concept " + randomUuid.toString();
+		final String pt = "preferred term for test concept " + randomUuid.toString();
+		
+		final List<Integer> parentIds = new ArrayList<>();
+		parentIds.add(parent1Sequence);
+		parentIds.add(parent2Sequence);
+		
+		RestConceptCreateData newConceptData = new RestConceptCreateData(
+				fsn,
+				pt,
+				parentIds);
+
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newConceptData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		
+		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
+		RestInteger newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptSequenceWrapper.value;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newConceptSequence > 0);
+		
+		// Retrieve new concept and validate fields (FSN in description)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, true)
+				.queryParam(RequestParameters.descriptionTypePrefs, "fsn,definition,synonym")
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		RestConceptVersion newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), fsn);
+		Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
+		Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
+		Assert.assertTrue(
+				(newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent1Sequence
+				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent2Sequence)
+				|| (newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent2Sequence
+						&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
+		
+		// Retrieve new concept and validate fields (Preferred Term in description)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, true)
+				.queryParam(RequestParameters.descriptionTypePrefs, "synonym,definition,fsn")
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), pt);
+		Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
+		Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
+		Assert.assertTrue(
+				(newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent1Sequence
+				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent2Sequence)
+				|| (newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent2Sequence
+				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
+		
+		// retire concept
+		Response deactivateConceptResponse = target(RestPaths.conceptDeactivateAppPathComponent + newConceptSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		checkContentlessFail(deactivateConceptResponse);
+		
+		// Retrieve retired concept and validate
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, false)
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		RestConceptVersion deactivatedConceptObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(deactivatedConceptObject.getConVersion().getState(), new RestStateType(State.INACTIVE));
 	}
 
 	@Test
@@ -371,7 +475,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersions retrievedMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersions.class, retrievedMappingItemsResult);
 		RestMappingItemVersion mappingItemMatchingNewItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems.mappingItemVersions) {
-			if (Get.identifierService().getSememeSequenceForUuids(currentMappingItem.identifiers.uuids) == newMappingItemSequence
+			if (Get.identifierService().getSememeSequenceForUuids(currentMappingItem.getIdentifiers().getUuids()) == newMappingItemSequence
 					&& currentMappingItem.mapSetConcept == testMappingSetSequence
 					&& currentMappingItem.targetConcept == targetConceptSeq
 					&& currentMappingItem.sourceConcept == sourceConceptSeq
@@ -410,7 +514,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		retrievedMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersions.class, retrievedMappingItemsResult);
 		RestMappingItemVersion mappingItemMatchingUpdatedItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems.mappingItemVersions) {
-			if (Get.identifierService().getSememeSequenceForUuids(currentMappingItem.identifiers.uuids) == newMappingItemSequence
+			if (Get.identifierService().getSememeSequenceForUuids(currentMappingItem.getIdentifiers().getUuids()) == newMappingItemSequence
 					&& currentMappingItem.mapSetConcept == testMappingSetSequence
 					&& currentMappingItem.targetConcept == updatedMappingItemData.targetConcept
 					&& currentMappingItem.sourceConcept == newMappingSetItemData.sourceConcept
@@ -1003,13 +1107,30 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept + "," + ExpandUtil.versionsLatestOnlyExpandable)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
-		Assert.assertTrue(result.contains("<state>ACTIVE</state>"));
 
+		RestSearchResults resultsObject = XMLUtils.unmarshalObject(RestSearchResults.class, result);
+		boolean foundActiveResult = false;
+		for (RestSearchResult resultObject : resultsObject.getResults()) {
+			if (resultObject.isActive()) {
+				foundActiveResult = true;
+				break;
+			}
+		}
+		Assert.assertTrue(foundActiveResult);
+		
 		result = checkFail(target(descriptionSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic sememe Asse*")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
-		Assert.assertFalse(result.contains("<state>ACTIVE</state>"));
+		resultsObject = XMLUtils.unmarshalObject(RestSearchResults.class, result);
+		foundActiveResult = false;
+		for (RestSearchResult resultObject : resultsObject.getResults()) {
+			if (resultObject.isActive()) {
+				foundActiveResult = true;
+				break;
+			}
+		}
+		Assert.assertTrue(foundActiveResult);
 	}
 
 	@Test
@@ -1460,7 +1581,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 			.readEntity(String.class);
 			RestSememeVersions sememeVersions = XMLUtils.unmarshalObject(RestSememeVersions.class, result);
-			UUID sememeUuid = sememeVersions.results.get(0).sememeChronology.identifiers.uuids.get(0);
+			UUID sememeUuid = sememeVersions.results.get(0).sememeChronology.getIdentifiers().getUuids().get(0);
 
 			// Test objectChronologyType of specified sememe UUID
 			result = checkFail(
@@ -1493,7 +1614,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			systemInfo = XMLUtils.unmarshalObject(RestSystemInfo.class, result);
-			Assert.assertTrue(systemInfo.supportedAPIVersions.length > 0 && ! StringUtils.isBlank(systemInfo.supportedAPIVersions[0]));
+			Assert.assertTrue(systemInfo.getSupportedAPIVersions().length > 0 && ! StringUtils.isBlank(systemInfo.getSupportedAPIVersions()[0]));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.apiImplementationVersion));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacVersion));
 //			Assert.assertTrue(! StringUtils.isBlank(systemInfo.scmUrl));
@@ -1528,8 +1649,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.readEntity(String.class);
 			identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
 			// Test RestSememeChronology
-			Assert.assertTrue(identifiedObjectsResult.sememe.identifiers.uuids.contains(sememeUuid));
-			Assert.assertNull(identifiedObjectsResult.concept);
+			Assert.assertTrue(identifiedObjectsResult.getSememe().getIdentifiers().getUuids().contains(sememeUuid));
+			Assert.assertNull(identifiedObjectsResult.getConcept());
 			
 			// Test identifiedObjectsComponent request of specified concept UUID
 			result = checkFail(
@@ -1539,8 +1660,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.readEntity(String.class);
 			identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
 			// Test RestSememeChronology
-			Assert.assertTrue(identifiedObjectsResult.concept.identifiers.uuids.contains(MetaData.ISAAC_ROOT.getPrimordialUuid()));
-			Assert.assertNull(identifiedObjectsResult.sememe);
+			Assert.assertTrue(identifiedObjectsResult.getConcept().getIdentifiers().getUuids().contains(MetaData.ISAAC_ROOT.getPrimordialUuid()));
+			Assert.assertNull(identifiedObjectsResult.getSememe());
 
 			// Iterate and test first 10000 sequence numbers until a value found which corresponds to both concept and sememe
 			boolean foundSequenceCorrespondingToBothConceptAndSememe = false;
@@ -1554,8 +1675,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							.readEntity(String.class);
 					identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
 					// Test RestSememeChronology AND RestConceptChronology
-					Assert.assertTrue(identifiedObjectsResult.concept.conceptSequence == sequence);
-					Assert.assertTrue(identifiedObjectsResult.sememe.sememeSequence == sequence);
+					Assert.assertTrue(identifiedObjectsResult.getConcept().getConceptSequence() == sequence);
+					Assert.assertTrue(identifiedObjectsResult.getSememe().getSememeSequence() == sequence);
 
 					break;
 				}

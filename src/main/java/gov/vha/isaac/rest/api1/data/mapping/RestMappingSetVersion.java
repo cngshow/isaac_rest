@@ -19,10 +19,14 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
@@ -55,6 +59,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingSetVersion extends RestMappingSetVersionBase implements Comparable<RestMappingSetVersion>
 {
@@ -62,25 +67,25 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * The identifier data of the concept that represents this mapping set
 	 */
 	@XmlElement
-	public RestIdentifiedObject identifiers;
+	RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this map set definition
 	 */
 	@XmlElement
-	public RestStampedVersion mappingSetStamp;
+	RestStampedVersion mappingSetStamp;
 	
 	/**
 	 * The (optional) extended fields which carry additional information about this map set definition. 
 	 */
 	@XmlElement
-	public List<RestMappingSetExtensionValue> mapSetExtendedFields;
+	List<RestMappingSetExtensionValue> mapSetExtendedFields = new ArrayList<>();
 	
 	/**
 	 * The fields that are declared for each map item instance that is created using this map set definition.  
 	 */
 	@XmlElement
-	public List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition;
+	List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = new ArrayList<>();
 
 	protected RestMappingSetVersion()
 	{
@@ -111,7 +116,6 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			}
 			
 			//read the extended field definition information
-			mapItemFieldsDefinition = new ArrayList<>();
 			DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.get().getNid());
 			for (DynamicSememeColumnInfo dsci : dsud.getColumnInfo())
 			{
@@ -119,13 +123,14 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			}
 
 			//Read the extended fields off of the map set concept.
-			//Strings
-			mapSetExtendedFields = new ArrayList<>();
-			
+			//Strings			
 			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
 					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(stringExtensionSememe ->
 				{
-					Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)stringExtensionSememe).getLatestVersion(DynamicSememe.class, stampCoord);
+					@SuppressWarnings("rawtypes")
+					SememeChronology rawSememeChronology = (SememeChronology)stringExtensionSememe;
+					@SuppressWarnings("unchecked")
+					Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, stampCoord);
 					//TODO handle contradictions
 					if (latest.isPresent())
 					{
@@ -145,7 +150,10 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
 					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getConceptSequence()).forEach(nidExtensionSememe ->
 				{
-					Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)nidExtensionSememe).getLatestVersion(DynamicSememe.class, stampCoord);
+					@SuppressWarnings("rawtypes")
+					SememeChronology rawSememeChronology = (SememeChronology)nidExtensionSememe;
+					@SuppressWarnings("unchecked")
+					Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, stampCoord);
 					//TODO handle contradictions
 					if (latest.isPresent())
 					{
@@ -219,6 +227,26 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	public int compareTo(RestMappingSetVersion o)
 	{
 		return name.compareTo(o.name);
+	}
+
+	@XmlTransient
+	public RestIdentifiedObject getIdentifiers() {
+		return identifiers;
+	}
+
+	@XmlTransient
+	public RestStampedVersion getMappingSetStamp() {
+		return mappingSetStamp;
+	}
+
+	@XmlTransient
+	public List<RestMappingSetExtensionValue> getMapSetExtendedFields() {
+		return Collections.unmodifiableList(mapSetExtendedFields);
+	}
+
+	@XmlTransient
+	public List<RestDynamicSememeColumnInfo> getMapItemFieldsDefinition() {
+		return Collections.unmodifiableList(mapItemFieldsDefinition);
 	}
 
 	/* (non-Javadoc)

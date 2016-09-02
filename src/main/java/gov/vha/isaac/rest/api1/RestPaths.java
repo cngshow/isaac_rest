@@ -32,6 +32,8 @@ public class RestPaths
 	public static final String updatePathComponent = "update/";
 
 	public static final String chronologyComponent = "chronology/";
+	public static final String activateComponent = "activate/";
+	public static final String deactivateComponent = "deactivate/";
 	public static final String versionsComponent = "versions/";	
 	public static final String versionComponent = "version/";
 	public static final String objectChronologyTypeComponent = "objectChronologyType/";
@@ -110,11 +112,15 @@ public class RestPaths
 	public static final String enumerationRestSupportedIdTypes = enumerationComponent + "restSupportedIdTypes/";
 	
 	public static final String conceptAPIsPathComponent = apiVersionComponent + "concept/";
-	public static final String conceptChronologyAppPathComponent = appPathComponent + conceptAPIsPathComponent + chronologyComponent;
+	public static final String conceptChronologyAppPathComponent = conceptAPIsPathComponent + chronologyComponent;
 	public static final String conceptVersionsAppPathComponent = appPathComponent + conceptAPIsPathComponent + versionsComponent;
-	public static final String conceptVersionAppPathComponent = appPathComponent + conceptAPIsPathComponent +versionComponent;
+	public static final String conceptVersionAppPathComponent = conceptAPIsPathComponent +versionComponent;
 	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptAPIsPathComponent +descriptionsComponent;
+	public static final String conceptCreateAppPathComponent = writePathComponent + conceptAPIsPathComponent + createPathComponent;
+	public static final String conceptActivateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + activateComponent;
+	public static final String conceptDeactivateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + deactivateComponent;
 
+	
 	public static final String sememeAPIsPathComponent = apiVersionComponent + "sememe/";
 	public static final String sememeChronologyAppPathComponent = appPathComponent + sememeAPIsPathComponent + chronologyComponent;
 	public static final String sememeVersionsAppPathComponent = appPathComponent + sememeAPIsPathComponent + versionsComponent;

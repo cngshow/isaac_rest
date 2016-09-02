@@ -262,10 +262,10 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						
 						try
 						{
-							if (StringUtils.isNotBlank(warFileVersion_) && !warFileVersion_.equals(systemInfo_.apiImplementationVersion))
+							if (StringUtils.isNotBlank(warFileVersion_) && !warFileVersion_.equals(systemInfo_.getApiImplementationVersion()))
 							{
 								log.warn("The WAR file version found in the prisme.properties file does not match the version from the pom.xml in the war file!  Found "
-										+ systemInfo_.apiImplementationVersion + " and " + warFileVersion_);
+										+ systemInfo_.getApiImplementationVersion() + " and " + warFileVersion_);
 							}
 						}
 						catch (Exception e)

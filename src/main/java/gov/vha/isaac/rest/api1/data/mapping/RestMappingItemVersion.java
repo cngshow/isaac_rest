@@ -21,6 +21,9 @@ package gov.vha.isaac.rest.api1.data.mapping;
 import java.util.ArrayList;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -44,6 +47,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate implements Comparable<RestMappingItemVersion>
 {
@@ -57,37 +61,37 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	 * The identifier data for the object
 	 */
 	@XmlElement
-	public RestIdentifiedObject identifiers;
+	RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this mapping entry
 	 */
 	@XmlElement
-	public RestStampedVersion mappingItemStamp;
+	RestStampedVersion mappingItemStamp;
 	
 	/**
 	 * An (optional) description of the {@link #mapSetConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
-	public String mapSetDescription;
+	String mapSetDescription;
 	
 	/**
 	 * An (optional) description of the {@link #sourceConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
-	public String sourceDescription;
+	String sourceDescription;
 	
 	/**
 	 * An (optional) description of the {@link #targetConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
-	public String targetDescription;
+	String targetDescription;
 	
 	/**
 	 * An (optional) description of the {@link #qualifierConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
-	public String qualifierDescription;
+	String qualifierDescription;
 	
 		
 	protected RestMappingItemVersion()
@@ -174,5 +178,51 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 				+ ", qualifierDescription=" + qualifierDescription + ", mapSetConcept=" + mapSetConcept
 				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
 				+ qualifierConcept + ", mapItemExtendedFields=" + mapItemExtendedFields + "]";
+	}
+
+	/**
+	 * @return the identifiers
+	 */
+	@XmlTransient
+	public RestIdentifiedObject getIdentifiers() {
+		return identifiers;
+	}
+
+	/**
+	 * @return the mappingItemStamp
+	 */
+	@XmlTransient
+	public RestStampedVersion getMappingItemStamp() {
+		return mappingItemStamp;
+	}
+
+	/**
+	 * @return the mapSetDescription
+	 */
+	public String getMapSetDescription() {
+		return mapSetDescription;
+	}
+
+	/**
+	 * @return the sourceDescription
+	 */
+	public String getSourceDescription() {
+		return sourceDescription;
+	}
+
+	/**
+	 * @return the targetDescription
+	 */
+	@XmlTransient
+	public String getTargetDescription() {
+		return targetDescription;
+	}
+
+	/**
+	 * @return the qualifierDescription
+	 */
+	@XmlTransient
+	public String getQualifierDescription() {
+		return qualifierDescription;
 	}
 }

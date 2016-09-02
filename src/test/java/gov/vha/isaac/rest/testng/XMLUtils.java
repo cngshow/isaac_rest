@@ -45,7 +45,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 
 /**

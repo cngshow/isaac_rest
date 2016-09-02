@@ -18,11 +18,15 @@
  */
 package gov.vha.isaac.rest.api1.data.search;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.rest.api.data.Pagination;
@@ -37,6 +41,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSearchResults
 {
@@ -51,7 +56,7 @@ public class RestSearchResults
 	 * The contained results
 	 */
 	@XmlElement
-	List<RestSearchResult> results = null;
+	List<RestSearchResult> results = new ArrayList<>();
 
 	protected RestSearchResults()
 	{
@@ -67,7 +72,15 @@ public class RestSearchResults
 	 * @throws RestException 
 	 */
 	public RestSearchResults(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, List<RestSearchResult> results) throws RestException {
-		this.results = results;
+		this.results.addAll(results);
 		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
+	}
+
+	/**
+	 * @return the results
+	 */
+	@XmlTransient
+	public List<RestSearchResult> getResults() {
+		return Collections.unmodifiableList(results);
 	}
 }

@@ -29,6 +29,8 @@ import java.util.stream.Stream;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -56,6 +58,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptVersion implements Comparable<RestConceptVersion>
 {
@@ -88,13 +91,13 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * The parent concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
-	List<RestConceptVersion> parents;
+	List<RestConceptVersion> parents = new ArrayList<>();
 	
 	/**
 	 * The child concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
-	List<RestConceptVersion> children;
+	List<RestConceptVersion> children = new ArrayList<>();
 	
 	/**
 	 * The number of child concept(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
@@ -117,7 +120,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * See more details on {@link TaxonomyAPIs#getConceptVersionTaxonomy(String, String, int, String, int, String, String, String)}
 	 */
 	@XmlElement
-	Set<Integer> sememeMembership;
+	Set<Integer> sememeMembership = new HashSet<>();
 	
 	protected RestConceptVersion()
 	{
@@ -150,9 +153,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		}
 		
 		if (includeSememeMembership)
-		{
-			sememeMembership = new HashSet<>();
-			
+		{			
 			Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
 			{
 				@Override
@@ -239,26 +240,18 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				expandables = null;
 			}
 			conChronology = null;
-			parents = null;
-			children = null;
+			parents.clear();
+			children.clear();
 		}
 	}
 	
 	public void addChild(RestConceptVersion child)
 	{
-		if (this.children == null)
-		{
-			this.children = new ArrayList<>();
-		}
 		this.children.add(child);
 	}
 	
 	public void addParent(RestConceptVersion parent)
 	{
-		if (this.parents == null)
-		{
-			this.parents = new ArrayList<>();
-		}
 		this.parents.add(parent);
 	}
 
@@ -274,7 +267,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	
 	public void sortParentsAndChildren()
 	{
-		if (parents != null)
+		if (parents.size() > 0)
 		{
 			Collections.sort(parents);
 			for (RestConceptVersion rcv : parents)
@@ -282,7 +275,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				rcv.sortParentsAndChildren();
 			}
 		}
-		if (children != null)
+		if (children.size() > 0)
 		{
 			Collections.sort(children);
 			for (RestConceptVersion rcv : children)
@@ -305,6 +298,30 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		return 0;  //not really anything worth sorting on, if no chronology.
 	}
 	
+	/**
+	 * @return conVersion
+	 */
+	@XmlTransient
+	public RestStampedVersion getConVersion() {
+		return conVersion;
+	}
+
+	/**
+	 * @return parents
+	 */
+	@XmlTransient
+	public List<RestConceptVersion> getParents() {
+		return Collections.unmodifiableList(parents);
+	}
+
+	/**
+	 * @return conChronology
+	 */
+	@XmlTransient
+	public RestConceptChronology getConChronology() {
+		return conChronology;
+	}
+
 	/**
 	 * This is an internal method, not part of the over the wire information.
 	 * @return number of actual children, if present, otherwise, the value of the child count variable

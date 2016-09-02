@@ -129,7 +129,7 @@ public class MappingWriteAPIs
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate());
 			
-			return new RestInteger(Get.identifierService().getConceptSequenceForUuids(newMappingSet.identifiers.uuids));
+			return new RestInteger(Get.identifierService().getConceptSequenceForUuids(newMappingSet.getIdentifiers().getUuids()));
 		} catch (IOException e) {
 			throw new RestException("Failed creating mapping set name=" + mappingSetCreationData.name + ", inverse=" + mappingSetCreationData.inverseName + ", purpose=" + mappingSetCreationData.purpose + ", desc=" + mappingSetCreationData.description);
 		}
@@ -224,7 +224,7 @@ public class MappingWriteAPIs
 						RequestInfo.get().getStampCoordinate(),
 						RequestInfo.get().getEditCoordinate());
 		
-		int newMappingItemSequence = Get.identifierService().getSememeSequenceForUuids(newMappingItem.identifiers.uuids);
+		int newMappingItemSequence = Get.identifierService().getSememeSequenceForUuids(newMappingItem.getIdentifiers().getUuids());
 
 		return new RestInteger(newMappingItemSequence);
 	}
@@ -373,7 +373,7 @@ public class MappingWriteAPIs
 			{
 				if (field.extensionValue instanceof RestDynamicSememeString)
 				{
-					@SuppressWarnings("rawtypes")
+					@SuppressWarnings({ "rawtypes", "unused" })
 					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
 							new DynamicSememeData[] {
@@ -383,7 +383,7 @@ public class MappingWriteAPIs
 				}
 				else if (field.extensionValue instanceof RestDynamicSememeNid || field.extensionValue instanceof RestDynamicSememeUUID)
 				{
-					@SuppressWarnings("rawtypes")
+					@SuppressWarnings({ "rawtypes", "unused" })
 					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
 							new DynamicSememeData[] {
@@ -609,7 +609,7 @@ public class MappingWriteAPIs
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)mappingItemSememe).getLatestVersion(DynamicSememe.class, 
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
-		DynamicSememe<?> rdv = latest.get().value();
+		/* DynamicSememe<?> rdv = */ latest.get().value();
 		
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingItemSememe).createMutableVersion(

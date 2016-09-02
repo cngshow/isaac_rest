@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 

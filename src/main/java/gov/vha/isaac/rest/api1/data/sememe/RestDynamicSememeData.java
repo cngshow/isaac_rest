@@ -23,6 +23,8 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -66,6 +68,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @XmlSeeAlso ({RestDynamicSememeArray.class, RestDynamicSememeBoolean.class, RestDynamicSememeByteArray.class, RestDynamicSememeDouble.class, RestDynamicSememeFloat.class,
 	RestDynamicSememeInteger.class, RestDynamicSememeLong.class, RestDynamicSememeString.class, RestDynamicSememeTypedData.class, 
 	RestDynamicSememeArray[].class, RestDynamicSememeBoolean[].class, RestDynamicSememeByteArray[].class, RestDynamicSememeDouble[].class, 
@@ -83,13 +86,13 @@ public abstract class RestDynamicSememeData
 	 * is of type RestDynamicSememeArray
 	 */
 	@XmlElement
-	public Integer columnNumber;
+	Integer columnNumber;
 	
 	/**
 	 * The data for a column within a RestDynamicSememeVersion instance
 	 */
 	@XmlElement
-	public Object data;
+	protected Object data;
 	
 	protected RestDynamicSememeData(Integer columnNumber, Object data)
 	{
@@ -170,7 +173,7 @@ public abstract class RestDynamicSememeData
 			{
 				nested.add(translate(nestedDataItem));
 			}
-			return new DynamicSememeArrayImpl(nested.toArray(new DynamicSememeData[nested.size()]));
+			return new DynamicSememeArrayImpl<>(nested.toArray(new DynamicSememeData[nested.size()]));
 		}
 		else if (data instanceof RestDynamicSememeBoolean)
 		{
