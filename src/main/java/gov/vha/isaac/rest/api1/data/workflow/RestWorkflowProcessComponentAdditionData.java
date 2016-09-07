@@ -26,72 +26,51 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowStartType;
-
 /**
  * 
- * {@link RestWorkflowProcessBaseCreate}
+ * {@link RestWorkflowProcessComponentAdditionData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessBaseCreate {
-	/**
-	 * The workflow definition id
-	 */
-	@XmlElement
-	public UUID definitionId;
-
-	/** The creator. */
-	@XmlElement
-	public int creatorId;
+public class RestWorkflowProcessComponentAdditionData {
 
 	/**
-	 * The process name
+	 * The process id of the process to which to add concepts
 	 */
 	@XmlElement
-	public String name;
+	public UUID processId;
 
 	/**
-	 * The process description
+	 * The nid of component to add
 	 */
 	@XmlElement
-	public String description;
-
-	/**
-	 * process startType
-	 */
-	@XmlElement
-	public RestWorkflowStartType startType;
+	public int componentNid = 0;
 	
+	/**
+	 * The stamp sequence of component to add
+	 */
+	@XmlElement
+	public int stampSequence = 0;
+
 	/**
 	 * Constructor for JAXB
 	 */
-	protected RestWorkflowProcessBaseCreate() {
+	protected RestWorkflowProcessComponentAdditionData() {
 		super();
 	}
 
 	/**
-	 * @param definitionId
-	 * @param stampSequences
-	 * @param conceptSequences
-	 * @param creatorId
-	 * @param subjectMatter
+	 * @param processId - UUID id of process to which to add concepts
+	 * @param conceptNids - integer nids of components to add to the specified workflow process
 	 */
-	public RestWorkflowProcessBaseCreate(
-			UUID definitionId,
-			int creatorId,
-			String name,
-			String description,
-			RestWorkflowStartType startType) {
+	public RestWorkflowProcessComponentAdditionData(UUID processId, int componentNid, int stampSeq) {
 		super();
-		this.definitionId = definitionId;
-		this.creatorId = creatorId;
-		this.name = name;
-		this.description = description;
-		this.startType = startType;
+		this.processId = processId;
+		this.componentNid = componentNid;
+		this.stampSequence = stampSeq;
 	}
 
 	/* (non-Javadoc)
@@ -99,12 +78,10 @@ public class RestWorkflowProcessBaseCreate {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessCreate ["
-				+ "definitionId=" + definitionId
-				+ ", creatorId=" + creatorId
-				+ ", name=" + name
-				+ ", description=" + description
-				+ ", startType=" + startType
+		return "RestWorkflowProcessConceptsAdditionData ["
+				+ "processId=" + processId
+				+ ", componentNid=" + componentNid
+				+ ", stampSequence=" + stampSequence
 				+ "]";
 	}
 }

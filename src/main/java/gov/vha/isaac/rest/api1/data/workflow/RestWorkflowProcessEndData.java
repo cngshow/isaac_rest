@@ -19,10 +19,6 @@
 
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -30,52 +26,77 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
+import gov.vha.isaac.ochre.workflow.provider.AbstractWorkflowUtilities.EndWorkflowType;
+import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowEndType;
+
 /**
  * 
- * {@link RestWorkflowProcessConceptsAdditionData}
+ * {@link RestWorkflowProcessEndData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessConceptsAdditionData {
+public class RestWorkflowProcessEndData {
 
 	/**
-	 * The process id of the process to which to add concepts
+	 * The process id of the process to cancel
 	 */
 	@XmlElement
 	public UUID processId;
 
 	/**
-	 * The sequences of concepts to add
+	 * The available action to process
 	 */
 	@XmlElement
-	public List<Integer> conceptSequences = new ArrayList<>();
+	public RestWorkflowAvailableAction actionToProcess;
+	
+	/**
+	 * The user performing the cancellation
+	 */
+	@XmlElement
+	public int userId;
+
+	/**
+	 * The comment associated with the cancellation
+	 */
+	@XmlElement
+	public String comment;
+
+	/**
+	 * The EndWorkflowType
+	 */
+	@XmlElement
+	public RestWorkflowEndType endType;
 
 	/**
 	 * Constructor for JAXB
 	 */
-	protected RestWorkflowProcessConceptsAdditionData() {
+	protected RestWorkflowProcessEndData() {
 		super();
 	}
 
 	/**
-	 * @param processId - UUID id of process to which to add concepts
-	 * @param conceptSequences - integer sequences of concepts to add to the specified workflow process
+	 * @param processId
+	 * @param actionToProcess
+	 * @param userId
+	 * @param comment
+	 * @param endType
 	 */
-	public RestWorkflowProcessConceptsAdditionData(UUID processId, Collection<Integer> conceptSequences) {
+	public RestWorkflowProcessEndData(
+			UUID processId,
+			AvailableAction actionToProcess,
+			int userId,
+			String comment,
+			EndWorkflowType endType) {
 		super();
 		this.processId = processId;
-		this.conceptSequences.addAll(conceptSequences);
-	}
-
-	/**
-	 * @param processId - UUID id of process to which to add concepts
-	 * @param conceptSequences - integer sequences of concepts to add to the specified workflow process
-	 */
-	public RestWorkflowProcessConceptsAdditionData(UUID processId, Integer...conceptSequences) {
-		this(processId, Arrays.asList(conceptSequences));
+		this.userId = userId;
+		this.comment = comment;
+		this.actionToProcess = new RestWorkflowAvailableAction(actionToProcess);
+		this.endType = new RestWorkflowEndType(endType);
 	}
 
 	/* (non-Javadoc)
@@ -83,7 +104,11 @@ public class RestWorkflowProcessConceptsAdditionData {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessConceptsAdditionData [processId=" + processId + ", conceptSequences=" + conceptSequences
+		return "RestWorkflowProcessCancellationData ["
+				+ "processId=" + processId
+				+ ", userId=" + userId
+				+ ", comment=" + comment
+				+ ", endType=" + endType
 				+ "]";
 	}
 }

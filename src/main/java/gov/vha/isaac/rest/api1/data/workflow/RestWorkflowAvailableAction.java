@@ -47,17 +47,17 @@ public class RestWorkflowAvailableAction
 	 */
 	public UUID definitionId;
 	/**
-	 * The current state
+	 * The initial state
 	 */
-	public String currentState;
+	public String initialState;
 	/**
 	 * The action
 	 */
 	public String action;
 	/**
-	 * The outcome
+	 * The outcome state
 	 */
-	public String outcome;
+	public String outcomeState;
 	/**
 	 * The role
 	 * */
@@ -79,9 +79,9 @@ public class RestWorkflowAvailableAction
 	public RestWorkflowAvailableAction(AvailableAction action) {
 		this.id = action.getId();
 		this.definitionId = action.getDefinitionId();
-		this.currentState = action.getCurrentState();
+		this.initialState = action.getInitialState();
 		this.action = action.getAction();
-		this.outcome = action.getOutcome();
+		this.outcomeState = action.getOutcomeState();
 		this.role = action.getRole();
 	}
 
@@ -90,7 +90,7 @@ public class RestWorkflowAvailableAction
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowAvailableAction [id=" + id + ", definitionId=" + definitionId + ", currentState="
-				+ currentState + ", action=" + action + ", outcome=" + outcome + ", role=" + role + "]";
+		return "RestWorkflowAvailableAction [id=" + id + ", definitionId=" + definitionId + ", initialState="
+				+ initialState + ", action=" + action + ", outcomeState=" + outcomeState + ", role=" + role + "]";
 	} 
 }

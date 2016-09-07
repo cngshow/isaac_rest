@@ -61,7 +61,7 @@ public class RestWorkflowProcessHistory
 	/**
 	 * The state
 	 */
-	public String state;
+	public String initialState;
 
 	/**
 	 * The action
@@ -71,7 +71,7 @@ public class RestWorkflowProcessHistory
 	/**
 	 * The outcome
 	 */
-	public String outcome;
+	public String outcomeState;
 
 	/**
 	 * The comment
@@ -95,9 +95,9 @@ public class RestWorkflowProcessHistory
 		this.processId = processHistory.getProcessId();
 		this.userId = processHistory.getWorkflowUser();
 		this.timeAdvanced = processHistory.getTimeAdvanced();
-		this.state = processHistory.getState();
+		this.initialState = processHistory.getInitialState();
 		this.action = processHistory.getAction();
-		this.outcome = processHistory.getOutcome();
+		this.outcomeState = processHistory.getOutcomeState();
 		this.comment = processHistory.getComment();
 	}
 
@@ -107,7 +107,7 @@ public class RestWorkflowProcessHistory
 	@Override
 	public String toString() {
 		return "RestWorkflowProcessHistory [id=" + id + ", processId=" + processId + ", userId=" + userId
-				+ ", timeAdvanced=" + timeAdvanced + ", state=" + state + ", action=" + action + ", outcome=" + outcome
+				+ ", timeAdvanced=" + timeAdvanced + ", initialState=" + initialState + ", action=" + action + ", outcomeState=" + outcomeState
 				+ ", comment=" + comment + "]";
 	}
 }

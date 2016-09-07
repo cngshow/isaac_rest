@@ -51,40 +51,31 @@ public class RestPaths
 	public static final String termRequestComponent = "termRequest/";
 	
 	public static final String workflowAPIsPathComponent = apiVersionComponent + "workflow/";
-	// WorkflowActionsPermissionsAccessor
-	public static final String rolesForDefinitionAndUserComponent = "rolesForDefinitionAndUser/";
+	// WorkflowAccessor
 	public static final String permissionsForDefinitionAndUserComponent = "permissionsForDefinitionAndUser/";
-	public static final String actionsForDefinitionAndStateComponent = "actionsForDefinitionAndState/";
 	public static final String actionsForProcessAndUserComponent = "actionsForProcessAndUser/";
-	public static final String historiesLatestActiveByRoleMapForDefinitionAndUserComponent = "historiesLatestActiveByRoleMapForDefinitionAndUser/";
-	// WorkflowHistoryAccessor
-	public static final String historiesActiveByProcessMapComponent = "historiesActiveByProcessMap/";
-	public static final String historiesActiveByDefinitionMapComponent = "historiesActiveByDefinitionMap/";
-	public static final String historiesActiveForConceptComponent = "historiesActiveForConcept/";
-	public static final String historiesByProcessMapComponent = "historiesByProcessMap/";
-	public static final String historiesByDefinitionMapComponent = "historiesByDefinitionMap/";
-	public static final String historiesForConceptComponent = "historiesForConcept/";
+
 	public static final String historiesForProcessComponent = "historiesForProcess/";
-	public static final String historyLatestForProcessComponent = "historyLatestForProcess/";
-	// WorkflowStatusAccessor
-	public static final String processesForConceptComponent = "processesForConcept/";
-	public static final String processForProcessComponent = "processForProcess/";
-	public static final String processesActiveForDefinitionComponent = "processesActiveForDefinition/";
-	public static final String definitionForDefinitionComponent = "definitionForDefinition/";
-	public static final String isConceptInActiveWorkflowComponent = "isConceptInActiveWorkflow/";
+	public static final String processComponent = "process/";
+	public static final String definitionComponent = "definition/";
+	public static final String advanceableProcessInformationComponent = "advanceableProcessInformation/";
+//	public static final String isConceptInActiveWorkflowComponent = "isConceptInActiveWorkflow/";
 	public static final String isComponentInActiveWorkflowComponent = "isComponentInActiveWorkflow/";
-	public static final String processActiveForConceptComponent = "processActiveForConcept/";
 	// WorkflowProcessInitializerConcluder
 	public static final String createWorkflowProcessComponent = "createWorkflowProcess/";
+	public static final String endWorkflowProcessComponent = "finishWorkflowProcess/";
 	public static final String launchWorkflowProcessComponent = "launchWorkflowProcess/";
-	public static final String cancelWorkflowProcessComponent = "cancelWorkflowProcess/";
-	public static final String concludeWorkflowProcessComponent = "concludeWorkflowProcess/";
+//	public static final String cancelWorkflowProcessComponent = "cancelWorkflowProcess/";
+//	public static final String concludeWorkflowProcessComponent = "concludeWorkflowProcess/";
 	// WorkflowUpdater
-	public static final String addStampToExistingWorkflowProcessComponent = "addStampToExistingWorkflowProcess/";
-	public static final String addConceptsToExistingWorkflowProcessComponent = "addStampsToExistingWorkflowProcess/";
 	public static final String advanceWorkflowProcessComponent = "advanceWorkflowProcess/";
 	public static final String addWorkflowUserRoleComponent = "addWorkflowUserRole/";
-	public static final String removeWorkflowUserRoleComponent = "removeWorkflowUserRole/";
+	public static final String removeComponentFromWorkflowComponent = "removeComponentFromWorkflow/";
+	public static final String addComponentToWorkflowComponent = "addComponentToWorkflow";
+	
+//	public static final String addStampToExistingWorkflowProcessComponent = "addStampToExistingWorkflowProcess/";
+//	public static final String addConceptsToExistingWorkflowProcessComponent = "addStampsToExistingWorkflowProcess/";
+//	public static final String removeWorkflowUserRoleComponent = "removeWorkflowUserRole/";
 
 	
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";

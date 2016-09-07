@@ -19,10 +19,8 @@
 
 package gov.vha.isaac.rest.api1.workflow;
 
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowActionsPermissionsAccessor;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowHistoryAccessor;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowStatusAccessor;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 
 /**
@@ -36,11 +34,7 @@ public class WorkflowProviderManager {
 	private WorkflowProviderManager() {}
 
 	// TODO implement getWorkflowActionsPermissionsAccessor()
-	public static WorkflowActionsPermissionsAccessor getWorkflowActionsPermissionsAccessor() { return null; }
-	// TODO implement getWorkflowHistoryAccessor()
-	public static WorkflowHistoryAccessor getWorkflowHistoryAccessor() { return null; }
-	// TODO implement getWorkflowStatusAccessor()
-	public static WorkflowStatusAccessor getWorkflowStatusAccessor() { return null; }
+	public static WorkflowAccessor getWorkflowAccessor() { return null; }
 	
 	// TODO implement getWorkflowProcessInitializerConcluder()
 	public static WorkflowProcessInitializerConcluder getWorkflowProcessInitializerConcluder() { return null; }

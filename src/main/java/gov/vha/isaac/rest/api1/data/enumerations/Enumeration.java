@@ -53,6 +53,8 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
  * @see RestWorkflowProcessStatusType
  * @see RestWorkflowSubjectMatterType
  * @see RestWorkflowTerminologyType
+ * @see RestWorkflowStartType
+ * @see RestWorkflowEndType
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
@@ -73,9 +75,9 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 	RestTaxonomyType.class,
 //	RestWorkflowDataElementType.class,
 //	RestWorkflowDomainType.class,
-	RestWorkflowProcessDetailSubjectMatterType.class,
 	RestWorkflowProcessStatusType.class,
-	RestWorkflowSubjectMatterType.class,
+	RestWorkflowStartType.class,
+	RestWorkflowEndType.class,
 //	RestWorkflowTerminologyType.class
 	})
 @JsonSeeAlso ({
@@ -95,9 +97,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 	RestTaxonomyType.class,
 //	RestWorkflowDataElementType.class,
 //	RestWorkflowDomainType.class,
-	RestWorkflowProcessDetailSubjectMatterType.class,
 	RestWorkflowProcessStatusType.class,
-	RestWorkflowSubjectMatterType.class,
 //	RestWorkflowTerminologyType.class
 	})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)

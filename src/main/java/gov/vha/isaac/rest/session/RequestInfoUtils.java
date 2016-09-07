@@ -58,6 +58,42 @@ public class RequestInfoUtils {
 		}
 	}
 
+	public static int getNidFromUuidOrNidParameter(String parameterName, String str) throws RestException {
+		try {
+			UUID uuid = null;
+			try {
+				uuid = UUID.fromString(str);
+
+				if (Get.identifierService().hasUuid(uuid)) {
+					Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(uuid);
+					if (concept.isPresent()) {
+						return concept.get().getNid();
+					} else {
+						int sememeSeq = Get.identifierService().getSememeSequenceForUuids(uuid);
+						if (Get.sememeService().hasSememe(sememeSeq)) {
+							return Get.identifierService().getSememeNid(sememeSeq);
+						}
+					}
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			int id = Integer.parseInt(str);
+			if (id >= 0) {
+				throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+			}
+			if (! Get.conceptService().hasConcept(id) && ! Get.sememeService().hasSememe(id)) {
+				throw new RestException(parameterName, str, "no concept or sememe exists corresponding to NID " + parameterName + " parameter value: " + str);
+			} else {
+				return id;
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+		}
+	}
+	
 	public static int getConceptSequenceFromParameter(String parameterName, String str) throws RestException {
 		try {
 			UUID uuid = null;
