@@ -63,6 +63,7 @@ import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeArrayImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
@@ -314,8 +315,11 @@ public class MappingWriteAPIs
 		
 		DynamicSememeColumnInfo[] columns = new DynamicSememeColumnInfo[2 + (extendedFields == null ? 0 : extendedFields.size())];
 		columns[0] = new DynamicSememeColumnInfo(0, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getUUID(), 
-				DynamicSememeDataType.UUID, null, false, true);
-		columns[1] = new DynamicSememeColumnInfo(1, IsaacMappingConstants.get().MAPPING_QUALIFIERS.getUUID(), DynamicSememeDataType.UUID, null, false, 
+				DynamicSememeDataType.UUID, null, false, 
+				DynamicSememeValidatorType.COMPONENT_TYPE, 
+				new DynamicSememeArrayImpl<>(new DynamicSememeString[] {new DynamicSememeStringImpl(ObjectChronologyType.CONCEPT.name())}), 
+				true);
+		columns[1] = new DynamicSememeColumnInfo(1, IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_QUALIFIER.getUUID(), DynamicSememeDataType.UUID, null, false, 
 				DynamicSememeValidatorType.IS_KIND_OF, new DynamicSememeUUIDImpl(IsaacMappingConstants.get().MAPPING_QUALIFIERS.getUUID()), true);
 		if (extendedFields != null)
 		{
@@ -385,7 +389,7 @@ public class MappingWriteAPIs
 				{
 					@SuppressWarnings({ "rawtypes", "unused" })
 					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
-							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
+							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getSequence(), 
 							new DynamicSememeData[] {
 									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(field.extensionNameConcept)),
 									new DynamicSememeNidImpl(
