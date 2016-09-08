@@ -77,7 +77,7 @@ public class RestWorkflowUserPermission
 	{
 		this.id = permission.getId();
 		this.definitionId = permission.getDefinitionId();
-		this.userId = permission.getUser();
+		this.userId = permission.getUserNid();
 		this.role = permission.getRole();
 	}
 }

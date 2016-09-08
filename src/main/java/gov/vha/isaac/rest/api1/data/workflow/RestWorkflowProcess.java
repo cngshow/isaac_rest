@@ -72,10 +72,10 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	RestWorkflowProcessStatusType processStatus;
 
 	/**
-	 * The component sequences and stamps
+	 * The component nid and stamp sequences
 	 */
 	@XmlElement
-	Map<Integer, List<Integer>> componentToStampMap = new HashMap<>();
+	Map<Integer, List<Integer>> componentNidToStampsMap = new HashMap<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -91,7 +91,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 */
 	public RestWorkflowProcess(ProcessDetail process) {
 		super(process.getDefinitionId(),
-				process.getCreator(),
+				process.getCreatorNid(),
 				process.getName(),
 				process.getDescription());
 		this.id = process.getId();

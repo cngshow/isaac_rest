@@ -72,7 +72,7 @@ public class WorkflowWriteAPIs
 		try {
 			return new RestUUID(provider.createWorkflowProcess(
 					workflowProcessCreationData.definitionId,
-					workflowProcessCreationData.creatorId,
+					workflowProcessCreationData.creatorNid,
 					workflowProcessCreationData.name,
 					workflowProcessCreationData.description));
 		} catch (Exception e) {

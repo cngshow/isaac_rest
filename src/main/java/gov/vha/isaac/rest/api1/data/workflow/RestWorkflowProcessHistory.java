@@ -93,7 +93,7 @@ public class RestWorkflowProcessHistory
 	public RestWorkflowProcessHistory(ProcessHistory processHistory) {
 		this.id = processHistory.getId();
 		this.processId = processHistory.getProcessId();
-		this.userId = processHistory.getWorkflowUser();
+		this.userId = processHistory.getUserNid();
 		this.timeAdvanced = processHistory.getTimeAdvanced();
 		this.initialState = processHistory.getInitialState();
 		this.action = processHistory.getAction();
