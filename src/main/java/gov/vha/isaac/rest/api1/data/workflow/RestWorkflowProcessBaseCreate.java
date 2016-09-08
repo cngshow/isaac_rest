@@ -19,16 +19,14 @@
 
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessDetailSubjectMatterType;
 
 /**
  * 
@@ -38,31 +36,31 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessDetailSubjec
  *
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcessBaseCreate {
-
 	/**
 	 * The workflow definition id
 	 */
 	@XmlElement
-	public UUID definitionId;
-
-	/** The stamp sequences. */
-	@XmlElement
-	public List<Integer> stampSequences;
-	
-	/** The concept Sequences. */
-	@XmlElement
-	public Set<Integer> conceptSequences;
+	UUID definitionId;
 
 	/** The creator. */
 	@XmlElement
-	public int creatorId;
+	int creatorNid;
 
-	/** The subject matter. */
+	/**
+	 * The process name
+	 */
 	@XmlElement
-	public RestWorkflowProcessDetailSubjectMatterType subjectMatter;
+	String name;
 
+	/**
+	 * The process description
+	 */
+	@XmlElement
+	String description;
+	
 	/**
 	 * Constructor for JAXB
 	 */
@@ -73,22 +71,52 @@ public class RestWorkflowProcessBaseCreate {
 	/**
 	 * @param definitionId
 	 * @param stampSequences
-	 * @param conceptSequences
-	 * @param creatorId
+	 * @param conceptNids
+	 * @param creatorNid
 	 * @param subjectMatter
 	 */
 	public RestWorkflowProcessBaseCreate(
 			UUID definitionId,
-			List<Integer> stampSequences,
-			Set<Integer> conceptSequences,
-			int creatorId,
-			RestWorkflowProcessDetailSubjectMatterType subjectMatter) {
+			int creatorNid,
+			String name,
+			String description) {
 		super();
 		this.definitionId = definitionId;
-		this.stampSequences = stampSequences;
-		this.conceptSequences = conceptSequences;
-		this.creatorId = creatorId;
-		this.subjectMatter = subjectMatter;
+		this.creatorNid = creatorNid;
+		this.name = name;
+		this.description = description;
+	}
+
+	/**
+	 * @return the definitionId
+	 */
+	@XmlTransient
+	public UUID getDefinitionId() {
+		return definitionId;
+	}
+
+	/**
+	 * @return the creatorNid
+	 */
+	@XmlTransient
+	public int getCreatorNid() {
+		return creatorNid;
+	}
+
+	/**
+	 * @return the name
+	 */
+	@XmlTransient
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @return the description
+	 */
+	@XmlTransient
+	public String getDescription() {
+		return description;
 	}
 
 	/* (non-Javadoc)
@@ -96,8 +124,11 @@ public class RestWorkflowProcessBaseCreate {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessCreate [definitionId=" + definitionId + ", stampSequences=" + stampSequences
-				+ ", conceptSequences=" + conceptSequences + ", creatorId=" + creatorId + ", subjectMatter=" + subjectMatter
+		return "RestWorkflowProcessCreate ["
+				+ "definitionId=" + definitionId
+				+ ", creatorNid=" + creatorNid
+				+ ", name=" + name
+				+ ", description=" + description
 				+ "]";
 	}
 }

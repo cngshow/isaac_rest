@@ -22,26 +22,21 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import gov.vha.isaac.ochre.api.metacontent.workflow.StorableWorkflowContents.SubjectMatter;
+
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessDetailSubjectMatterType;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessCancellationData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessConceptsAdditionData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessConclusionData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessStampAdditionData;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentAdditionData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowRoleChangeData;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
-
 
 /**
  * {@link WorkflowWriteAPIs}
@@ -51,9 +46,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent)
 public class WorkflowWriteAPIs
 {
-	private static Logger log = LogManager.getLogger(WorkflowWriteAPIs.class);
-
-	// WorkflowProcessInitializerConcluder
+	//private static Logger log = LogManager.getLogger(WorkflowWriteAPIs.class);
 
 	/**
 	 * 
@@ -72,153 +65,79 @@ public class WorkflowWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters());
 		
-		// TODO test createWorkflowProcess()
 		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
 		try {
-			SubjectMatter subjectMatter = null;
-			for (SubjectMatter current : SubjectMatter.values()) {
-				if (new RestWorkflowProcessDetailSubjectMatterType(current).equals(workflowProcessCreationData.subjectMatter)) {
-					subjectMatter = current;
-					break;
-				}
-			}
 			return new RestUUID(provider.createWorkflowProcess(
-					workflowProcessCreationData.definitionId,
-					workflowProcessCreationData.conceptSequences,
-					workflowProcessCreationData.stampSequences,
-					workflowProcessCreationData.creatorId,
-					subjectMatter));
+					workflowProcessCreationData.getDefinitionId(),
+					workflowProcessCreationData.getCreatorNid(),
+					workflowProcessCreationData.getName(),
+					workflowProcessCreationData.getDescription()));
 		} catch (Exception e) {
 			throw new RestException("Failed creating new workflow process from " + (workflowProcessCreationData != null ? workflowProcessCreationData : null));
 		}
 	}
 
-	/**
-	 * 
-	 * Launch a workflow process
-	 * 
-	 * @param processId RestUUID process id of workflow process to launch
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.launchWorkflowProcessComponent)
-	public void launchWorkflowProcess(
-			RestUUID processId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test launchWorkflowProcess()
-		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
-		try {
-			provider.launchWorkflowProcess(processId.value);
-		} catch (Exception e) {
-			throw new RestException("Failed launching workflow process " + (processId != null ? processId : null));
-		}
-	}
-
-	/**
-	 * 
-	 * Cancel a workflow process
-	 * 
-	 * @param cancellationData RestWorkflowProcessCancellationData wokflow cancellation data
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.cancelWorkflowProcessComponent)
-	public void cancelWorkflowProcess(
-			RestWorkflowProcessCancellationData cancellationData) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test cancelWorkflowProcess()
-		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
-		try {
-			provider.cancelWorkflowProcess(cancellationData.processId, cancellationData.userId, cancellationData.comment);
-		} catch (Exception e) {
-			throw new RestException("Failed cancelling workflow process with " + (cancellationData != null ? cancellationData : null));
-		}
-	}
-
-	/**
-	 * 
-	 * Conclude a workflow process
-	 * 
-	 * @param conclusionData RestWorkflowProcessConclusionData workflow conclusion data
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.concludeWorkflowProcessComponent)
-	public void concludeWorkflowProcess(
-			RestWorkflowProcessConclusionData conclusionData) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test concludeWorkflowProcess()
-		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
-		try {
-			provider.concludeWorkflowProcess(conclusionData.processId, conclusionData.userId);
-		} catch (Exception e) {
-			throw new RestException("Failed concluding workflow process with " + (conclusionData != null ? conclusionData : null));
-		}
-	}
+//	/**
+//	 * 
+//	 * Launch a workflow process
+//	 * 
+//	 * @param processId RestUUID process id of workflow process to launch
+//	 * @throws RestException
+//	 */
+//	@PUT
+//	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.launchWorkflowProcessComponent)
+//	public void launchWorkflowProcess(
+//			RestUUID processId) throws RestException
+//	{
+//		RequestParameters.validateParameterNamesAgainstSupportedNames(
+//				RequestInfo.get().getParameters());
+//		
+//		// TODO test launchWorkflowProcess()
+//		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
+//		try {
+//			provider.launchWorkflowProcess(processId.value);
+//		} catch (Exception e) {
+//			throw new RestException("Failed launching workflow process " + (processId != null ? processId : null));
+//		}
+//	}
+//
+//	/**
+//	 * 
+//	 * End a workflow process
+//	 * 
+//	 * @param endData RestWorkflowProcessEndData workflow end data
+//	 * @throws RestException
+//	 */
+//	@PUT
+//	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.endWorkflowProcessComponent)
+//	public void endWorkflowProcess(
+//			RestWorkflowProcessEndData endData) throws RestException
+//	{
+//		RequestParameters.validateParameterNamesAgainstSupportedNames(
+//				RequestInfo.get().getParameters());
+//		
+//		// TODO test endWorkflowProcess()
+//		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
+//		try {
+//			provider.endWorkflowProcess(
+//					endData.processId,
+//					new AvailableAction(
+//							endData.actionToProcess.definitionId,
+//							endData.actionToProcess.initialState,
+//							endData.actionToProcess.action,
+//							endData.actionToProcess.outcomeState,
+//							endData.actionToProcess.role),
+//					endData.userId,
+//					endData.comment,
+//					EndWorkflowType.valueOf(endData.endType.toString()));
+//		} catch (Exception e) {
+//			throw new RestException("Failed ending workflow process with " + (endData != null ? endData : null));
+//		}
+//	}
 	
 	// WorkflowUpdater
-
-	/**
-	 * 
-	 * Add a stamp to an existing workflow process
-	 * 
-	 * @param stampAdditionData RestWorkflowProcessStampAdditionData workflow stamp addition data
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.addStampToExistingWorkflowProcessComponent)
-	public void addStampToExistingWorkflowProcess(
-			RestWorkflowProcessStampAdditionData stampAdditionData) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test addStampToExistingWorkflowProcess()
-		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
-		try {
-			provider.addStampToExistingProcess(stampAdditionData.processId, stampAdditionData.stampSequence);
-		} catch (Exception e) {
-			throw new RestException("Failed adding stamp to workflow process with " + (stampAdditionData != null ? stampAdditionData : null));
-		}
-	}
-
-	/**
-	 * 
-	 * Add concepts to an existing workflow process
-	 * 
-	 * @param conceptsAdditionData RestWorkflowProcessConceptsAdditionData workflow concepts addition data
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.addConceptsToExistingWorkflowProcessComponent)
-	public void addConceptsToExistingWorkflowProcess(
-			RestWorkflowProcessConceptsAdditionData conceptsAdditionData) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test addConceptsToExistingWorkflowProcess()
-		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
-		try {
-			provider.addConceptsToExistingProcess(conceptsAdditionData.processId, conceptsAdditionData.conceptSequences);
-		} catch (Exception e) {
-			throw new RestException("Failed adding concepts to workflow process with " + (conceptsAdditionData != null ? conceptsAdditionData : null));
-		}
-	}
 
 	/**
 	 * 
@@ -239,7 +158,7 @@ public class WorkflowWriteAPIs
 		// TODO test advanceWorkflowProcess()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
-			return new RestUUID(provider.advanceWorkflow(processAdvancementData.processId, processAdvancementData.userId, processAdvancementData.actionRequested, processAdvancementData.comment));
+			return new RestUUID(provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment()));
 		} catch (Exception e) {
 			throw new RestException("Failed advancing workflow process with " + (processAdvancementData != null ? processAdvancementData : null));
 		}
@@ -264,34 +183,64 @@ public class WorkflowWriteAPIs
 		// TODO test addWorkflowUserRole()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
-			return new RestUUID(provider.addNewUserRole(roleData.definitionId, roleData.userId, roleData.role));
+			return new RestUUID(provider.addNewUserRole(roleData.getDefinitionId(), roleData.getUserId(), roleData.getRole()));
 		} catch (Exception e) {
 			throw new RestException("Failed adding role to user with " + (roleData != null ? roleData : null));
 		}
 	}
-
+	
 	/**
 	 * 
-	 * Remove role from user
+	 * Remove component from workflow for process and component NID
 	 * 
 	 * @param roleData RestWorkflowRoleChangeData workflow definition user role change data
 	 * @throws RestException
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeWorkflowUserRoleComponent)
-	public void removeWorkflowUserRole(
-			RestWorkflowRoleChangeData roleData) throws RestException
+	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponentFromWorkflowComponent)
+	public void removeComponentFromWorkflow(
+			@QueryParam(RequestParameters.wfProcessId) String wfProcessId,
+			@QueryParam(RequestParameters.nid) String nid) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.wfProcessId,
+				RequestParameters.nid);
+		
+		// TODO test removeComponentFromWorkflow()
+		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
+		try {
+			provider.removeComponentFromWorkflow(
+					RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
+					RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, nid));
+		} catch (Exception e) {
+			throw new RestException("Failed removing component " + nid + " from process " + wfProcessId + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		}
+	}
+	
+	/**
+	 * 
+	 * Add components to an existing workflow process
+	 * 
+	 * @param componentAdditionData RestWorkflowProcessComponentsAdditionData workflow components addition data
+	 * @throws RestException
+	 */
+	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.addComponentToWorkflowComponent)
+	public void addComponentToWorkflow(
+			RestWorkflowProcessComponentAdditionData componentAdditionData) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters());
 		
-		// TODO test removeWorkflowUserRole()
+		// TODO test addComponentToWorkflow()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
-			provider.removeUserRole(roleData.definitionId, roleData.userId, roleData.role);
+			provider.addComponentToWorkflow(componentAdditionData.getProcessId(), componentAdditionData.getComponentNid(), componentAdditionData.getStampSequence());
 		} catch (Exception e) {
-			throw new RestException("Failed removing role from user with " + (roleData != null ? roleData : null));
+			throw new RestException("Failed adding component to workflow process with " + (componentAdditionData != null ? componentAdditionData : null));
 		}
 	}
 }

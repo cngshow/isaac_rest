@@ -273,7 +273,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
 		RestInteger newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptSequenceWrapper.value;
+		int newConceptSequence = newConceptSequenceWrapper.getValue();
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
 		
@@ -359,7 +359,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
 		RestInteger newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newMappingSetSequenceWrapperXml);
-		int testMappingSetSequence = newMappingSetSequenceWrapper.value;
+		int testMappingSetSequence = newMappingSetSequenceWrapper.getValue();
 		// Confirm returned sequence is valid
 		Assert.assertTrue(testMappingSetSequence > 0);
 		
@@ -450,7 +450,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
 		RestInteger newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newMappingItemSequenceWrapperXml);
-		int newMappingItemSequence = newMappingItemSequenceWrapper.value;
+		int newMappingItemSequence = newMappingItemSequenceWrapper.getValue();
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newMappingItemSequence > 0);
 
@@ -555,7 +555,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
 		RestInteger newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newCommentSememeSequenceWrapperXml);
-		int newCommentSememeSequence = newCommentSememeSequenceWrapper.value;
+		int newCommentSememeSequence = newCommentSememeSequenceWrapper.getValue();
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newCommentSememeSequence > 0);
 		

@@ -20,10 +20,13 @@ package gov.vha.isaac.rest.api.data.wrappers;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -33,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestStrings
 {
@@ -40,7 +44,7 @@ public class RestStrings
 	 * The Integer value
 	 */
 	@XmlElement
-	public Collection<String> value = new ArrayList<String>();
+	Collection<String> value = new ArrayList<String>();
 	
 	RestStrings() {
 		// For JAXB
@@ -59,6 +63,14 @@ public class RestStrings
 				this.value.add(value);
 			}
 		}
+	}
+
+	/**
+	 * @return the value
+	 */
+	@XmlTransient
+	public Collection<String> getValue() {
+		return Collections.unmodifiableCollection(value);
 	}
 
 	/* (non-Javadoc)

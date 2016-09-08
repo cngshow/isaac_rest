@@ -16,70 +16,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+
 /**
+ * {@link RestWorkflowAvailableActionsMap}
  * 
- * {@link RestWorkflowProcessCancellationData}
+ * This class carries back result map
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- *
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessCancellationData {
-
+public class RestWorkflowAvailableActionsMap
+{
 	/**
-	 * The process id of the process to cancel
+	 * The contained results
 	 */
 	@XmlElement
-	public UUID processId;
+	Map<Object, List<RestWorkflowAvailableAction>> map = new HashMap<>();
 
 	/**
-	 * The user performing the cancellation
+	 * Constructor for JAXB only
 	 */
-	@XmlElement
-	public int userId;
-
-	/**
-	 * The comment associated with the cancellation
-	 */
-	@XmlElement
-	public String comment;
-
-	/**
-	 * Constructor for JAXB
-	 */
-	protected RestWorkflowProcessCancellationData() {
-		super();
+	protected RestWorkflowAvailableActionsMap()
+	{
+		//For jaxb
 	}
 
 	/**
-	 * @param processId
-	 * @param userId
-	 * @param comment
+	 * @param map
 	 */
-	public RestWorkflowProcessCancellationData(UUID processId, int userId, String comment) {
-		super();
-		this.processId = processId;
-		this.userId = userId;
-		this.comment = comment;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "RestWorkflowProcessCancellationData [processId=" + processId + ", userId=" + userId + ", comment=" + comment
-				+ "]";
+	public RestWorkflowAvailableActionsMap(Map<Object, List<RestWorkflowAvailableAction>> map) {
+		if (map != null) {
+			this.map.putAll(map);
+		}
 	}
 }

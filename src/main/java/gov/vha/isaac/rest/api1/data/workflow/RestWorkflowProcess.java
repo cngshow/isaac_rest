@@ -18,15 +18,18 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessDetailSubjectMatterType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
 /**
@@ -36,6 +39,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 {
@@ -43,18 +47,38 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 * The identifier data
 	 */
 	@XmlElement
-	public UUID id;
+	UUID id;
 
-	/** The time created. */
-	public long timeCreated;
+	/**
+	 * The time created
+	 */
+	@XmlElement
+	long timeCreated;
 
-	/** The time created. */
-	public long timeConcluded = -1L;
+	/**
+	 * The time launched
+	 */
+	@XmlElement
+	long timeLaunched = -1L;
 
-	/** The defining status. */
-	public RestWorkflowProcessStatusType processStatus;
+	/**
+	 * The time cancelled or concluded
+	 */
+	@XmlElement
+	long timeCancelledOrConcluded = -1L;
 
-	
+	/**
+	 * The defining status
+	 */
+	@XmlElement
+	RestWorkflowProcessStatusType processStatus;
+
+	/**
+	 * The component nid and stamp sequences
+	 */
+	@XmlElement
+	Map<Integer, List<Integer>> componentNidToStampsMap = new HashMap<>();
+
 	/**
 	 * Constructor for JAXB only
 	 */
@@ -69,13 +93,13 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 */
 	public RestWorkflowProcess(ProcessDetail process) {
 		super(process.getDefinitionId(),
-				process.getStampSequences(),
-				process.getConceptSequences(),
-				process.getCreator(),
-				new RestWorkflowProcessDetailSubjectMatterType(process.getSubjectMatter()));
+				process.getCreatorNid(),
+				process.getName(),
+				process.getDescription());
 		this.id = process.getId();
 		this.timeCreated = process.getTimeCreated();
-		this.timeConcluded = process.getTimeConcluded();
-		this.processStatus = new RestWorkflowProcessStatusType(process.getProcessStatus());
+		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
+		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
+		this.componentNidToStampsMap.putAll(process.getComponentNidToStampsMap());
 	}
 }

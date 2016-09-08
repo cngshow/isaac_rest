@@ -23,6 +23,7 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
@@ -34,6 +35,7 @@ import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcessHistory
 {
@@ -41,42 +43,42 @@ public class RestWorkflowProcessHistory
 	 * The identifier data
 	 */
 	@XmlElement
-	public UUID id;
+	UUID id;
 
 	/**
 	 * The process id
 	 */
-	public UUID processId;
+	UUID processId;
 
 	/**
 	 * The workflow user
 	 */
-	public int userId;
+	int userId;
 
 	/**
 	 * The time advanced
 	 */
-	public long timeAdvanced;
+	long timeAdvanced;
 
 	/**
 	 * The state
 	 */
-	public String state;
+	String initialState;
 
 	/**
 	 * The action
 	 */
-	public String action;
+	String action;
 
 	/**
 	 * The outcome
 	 */
-	public String outcome;
+	String outcomeState;
 
 	/**
 	 * The comment
 	 */
-	public String comment;
+	String comment;
 
 	/**
 	 * Constructor for JAXB only
@@ -93,11 +95,11 @@ public class RestWorkflowProcessHistory
 	public RestWorkflowProcessHistory(ProcessHistory processHistory) {
 		this.id = processHistory.getId();
 		this.processId = processHistory.getProcessId();
-		this.userId = processHistory.getWorkflowUser();
+		this.userId = processHistory.getUserNid();
 		this.timeAdvanced = processHistory.getTimeAdvanced();
-		this.state = processHistory.getState();
+		this.initialState = processHistory.getInitialState();
 		this.action = processHistory.getAction();
-		this.outcome = processHistory.getOutcome();
+		this.outcomeState = processHistory.getOutcomeState();
 		this.comment = processHistory.getComment();
 	}
 
@@ -107,7 +109,7 @@ public class RestWorkflowProcessHistory
 	@Override
 	public String toString() {
 		return "RestWorkflowProcessHistory [id=" + id + ", processId=" + processId + ", userId=" + userId
-				+ ", timeAdvanced=" + timeAdvanced + ", state=" + state + ", action=" + action + ", outcome=" + outcome
+				+ ", timeAdvanced=" + timeAdvanced + ", initialState=" + initialState + ", action=" + action + ", outcomeState=" + outcomeState
 				+ ", comment=" + comment + "]";
 	}
 }

@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -32,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestUUID
 {
@@ -39,7 +42,7 @@ public class RestUUID
 	 * The Integer value
 	 */
 	@XmlElement
-	public UUID value;
+	UUID value;
 	
 	RestUUID() {
 		// For JAXB
@@ -48,6 +51,14 @@ public class RestUUID
 	public RestUUID(UUID value)
 	{
 		this.value = value;
+	}
+
+	/**
+	 * @return the value
+	 */
+	@XmlTransient
+	public UUID getValue() {
+		return value;
 	}
 
 	/* (non-Javadoc)

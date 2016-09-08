@@ -24,6 +24,7 @@ import java.util.Collection;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
@@ -35,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcessHistories
 {
@@ -42,7 +44,7 @@ public class RestWorkflowProcessHistories
 	 * The contained results
 	 */
 	@XmlElement
-	public Collection<RestWorkflowProcessHistory> results = new ArrayList<>();
+	Collection<RestWorkflowProcessHistory> results = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only

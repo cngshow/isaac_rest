@@ -19,63 +19,85 @@
 
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * 
- * {@link RestWorkflowProcessConceptsAdditionData}
+ * {@link RestWorkflowProcessComponentAdditionData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessConceptsAdditionData {
+public class RestWorkflowProcessComponentAdditionData {
 
 	/**
 	 * The process id of the process to which to add concepts
 	 */
 	@XmlElement
-	public UUID processId;
+	UUID processId;
 
 	/**
-	 * The sequences of concepts to add
+	 * The nid of component to add
 	 */
 	@XmlElement
-	public List<Integer> conceptSequences = new ArrayList<>();
+	int componentNid = 0;
+	
+	/**
+	 * The stamp sequence of component to add
+	 */
+	@XmlElement
+	int stampSequence = -1;
 
 	/**
 	 * Constructor for JAXB
 	 */
-	protected RestWorkflowProcessConceptsAdditionData() {
+	protected RestWorkflowProcessComponentAdditionData() {
 		super();
 	}
 
 	/**
 	 * @param processId - UUID id of process to which to add concepts
-	 * @param conceptSequences - integer sequences of concepts to add to the specified workflow process
+	 * @param conceptNids - integer nids of components to add to the specified workflow process
 	 */
-	public RestWorkflowProcessConceptsAdditionData(UUID processId, Collection<Integer> conceptSequences) {
+	public RestWorkflowProcessComponentAdditionData(UUID processId, int componentNid, int stampSeq) {
 		super();
 		this.processId = processId;
-		this.conceptSequences.addAll(conceptSequences);
+		this.componentNid = componentNid;
+		this.stampSequence = stampSeq;
 	}
 
 	/**
-	 * @param processId - UUID id of process to which to add concepts
-	 * @param conceptSequences - integer sequences of concepts to add to the specified workflow process
+	 * @return the processId
 	 */
-	public RestWorkflowProcessConceptsAdditionData(UUID processId, Integer...conceptSequences) {
-		this(processId, Arrays.asList(conceptSequences));
+	@XmlTransient
+	public UUID getProcessId() {
+		return processId;
+	}
+
+	/**
+	 * @return the componentNid
+	 */
+	@XmlTransient
+	public int getComponentNid() {
+		return componentNid;
+	}
+
+	/**
+	 * @return the stampSequence
+	 */
+	@XmlTransient
+	public int getStampSequence() {
+		return stampSequence;
 	}
 
 	/* (non-Javadoc)
@@ -83,7 +105,10 @@ public class RestWorkflowProcessConceptsAdditionData {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessConceptsAdditionData [processId=" + processId + ", conceptSequences=" + conceptSequences
+		return "RestWorkflowProcessConceptsAdditionData ["
+				+ "processId=" + processId
+				+ ", componentNid=" + componentNid
+				+ ", stampSequence=" + stampSequence
 				+ "]";
 	}
 }
