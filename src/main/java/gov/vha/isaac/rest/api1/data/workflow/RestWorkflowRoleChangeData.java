@@ -23,7 +23,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -34,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowRoleChangeData {
 
@@ -41,19 +44,19 @@ public class RestWorkflowRoleChangeData {
 	 * The UUID id of the workflow definition to/from which to add/remove a role for a specified user
 	 */
 	@XmlElement
-	public UUID definitionId;
+	UUID definitionId;
 
 	/**
 	 * The id of the user to/from which to add/remove a role
 	 */
 	@XmlElement
-	public int userId;
+	int userId;
 
 	/**
 	 * The role to add/remove to/from the specified user
 	 */
 	@XmlElement
-	public String role;
+	String role;
 
 	/**
 	 * Constructor for JAXB
@@ -72,6 +75,30 @@ public class RestWorkflowRoleChangeData {
 		this.definitionId = definitionId;
 		this.userId = userId;
 		this.role = role;
+	}
+
+	/**
+	 * @return the definitionId
+	 */
+	@XmlTransient
+	public UUID getDefinitionId() {
+		return definitionId;
+	}
+
+	/**
+	 * @return the userId
+	 */
+	@XmlTransient
+	public int getUserId() {
+		return userId;
+	}
+
+	/**
+	 * @return the role
+	 */
+	@XmlTransient
+	public String getRole() {
+		return role;
 	}
 
 	/* (non-Javadoc)

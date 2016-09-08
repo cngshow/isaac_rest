@@ -25,8 +25,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
-import gov.vha.isaac.ochre.workflow.provider.AbstractWorkflowUtilities.EndWorkflowType;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
@@ -70,10 +68,10 @@ public class WorkflowWriteAPIs
 		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
 		try {
 			return new RestUUID(provider.createWorkflowProcess(
-					workflowProcessCreationData.definitionId,
-					workflowProcessCreationData.creatorNid,
-					workflowProcessCreationData.name,
-					workflowProcessCreationData.description));
+					workflowProcessCreationData.getDefinitionId(),
+					workflowProcessCreationData.getCreatorNid(),
+					workflowProcessCreationData.getName(),
+					workflowProcessCreationData.getDescription()));
 		} catch (Exception e) {
 			throw new RestException("Failed creating new workflow process from " + (workflowProcessCreationData != null ? workflowProcessCreationData : null));
 		}
@@ -160,7 +158,7 @@ public class WorkflowWriteAPIs
 		// TODO test advanceWorkflowProcess()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
-			return new RestUUID(provider.advanceWorkflow(processAdvancementData.processId, processAdvancementData.userId, processAdvancementData.actionRequested, processAdvancementData.comment));
+			return new RestUUID(provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment()));
 		} catch (Exception e) {
 			throw new RestException("Failed advancing workflow process with " + (processAdvancementData != null ? processAdvancementData : null));
 		}
@@ -185,7 +183,7 @@ public class WorkflowWriteAPIs
 		// TODO test addWorkflowUserRole()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
-			return new RestUUID(provider.addNewUserRole(roleData.definitionId, roleData.userId, roleData.role));
+			return new RestUUID(provider.addNewUserRole(roleData.getDefinitionId(), roleData.getUserId(), roleData.getRole()));
 		} catch (Exception e) {
 			throw new RestException("Failed adding role to user with " + (roleData != null ? roleData : null));
 		}
@@ -240,7 +238,7 @@ public class WorkflowWriteAPIs
 		// TODO test addComponentToWorkflow()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
-			provider.addComponentToWorkflow(componentAdditionData.processId, componentAdditionData.componentNid, componentAdditionData.stampSequence);
+			provider.addComponentToWorkflow(componentAdditionData.getProcessId(), componentAdditionData.getComponentNid(), componentAdditionData.getStampSequence());
 		} catch (Exception e) {
 			throw new RestException("Failed adding component to workflow process with " + (componentAdditionData != null ? componentAdditionData : null));
 		}

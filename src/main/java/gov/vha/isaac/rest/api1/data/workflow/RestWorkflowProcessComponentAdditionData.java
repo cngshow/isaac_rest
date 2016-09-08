@@ -23,7 +23,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -34,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcessComponentAdditionData {
 
@@ -41,19 +44,19 @@ public class RestWorkflowProcessComponentAdditionData {
 	 * The process id of the process to which to add concepts
 	 */
 	@XmlElement
-	public UUID processId;
+	UUID processId;
 
 	/**
 	 * The nid of component to add
 	 */
 	@XmlElement
-	public int componentNid = 0;
+	int componentNid = 0;
 	
 	/**
 	 * The stamp sequence of component to add
 	 */
 	@XmlElement
-	public int stampSequence = 0;
+	int stampSequence = -1;
 
 	/**
 	 * Constructor for JAXB
@@ -71,6 +74,30 @@ public class RestWorkflowProcessComponentAdditionData {
 		this.processId = processId;
 		this.componentNid = componentNid;
 		this.stampSequence = stampSeq;
+	}
+
+	/**
+	 * @return the processId
+	 */
+	@XmlTransient
+	public UUID getProcessId() {
+		return processId;
+	}
+
+	/**
+	 * @return the componentNid
+	 */
+	@XmlTransient
+	public int getComponentNid() {
+		return componentNid;
+	}
+
+	/**
+	 * @return the stampSequence
+	 */
+	@XmlTransient
+	public int getStampSequence() {
+		return stampSequence;
 	}
 
 	/* (non-Javadoc)

@@ -23,7 +23,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -34,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcessAdvancementData {
 
@@ -41,26 +44,26 @@ public class RestWorkflowProcessAdvancementData {
 	 * The process id of the process to advance
 	 */
 	@XmlElement
-	public UUID processId;
+	UUID processId;
 
 	/**
 	 * The user performing the advancement
 	 */
 	@XmlElement
-	public int userId;
+	int userId;
 	
 	/**
 	 * The advancement action requested
 	 */
 	@XmlElement
-	public String actionRequested;
+	String actionRequested;
 	
 
 	/**
 	 * The comment associated with the advancement
 	 */
 	@XmlElement
-	public String comment;
+	String comment;
 
 	/**
 	 * Constructor for JAXB
@@ -81,6 +84,38 @@ public class RestWorkflowProcessAdvancementData {
 		this.userId = userId;
 		this.actionRequested = actionRequested;
 		this.comment = comment;
+	}
+
+	/**
+	 * @return the processId
+	 */
+	@XmlTransient
+	public UUID getProcessId() {
+		return processId;
+	}
+
+	/**
+	 * @return the userId
+	 */
+	@XmlTransient
+	public int getUserId() {
+		return userId;
+	}
+
+	/**
+	 * @return the actionRequested
+	 */
+	@XmlTransient
+	public String getActionRequested() {
+		return actionRequested;
+	}
+
+	/**
+	 * @return the comment
+	 */
+	@XmlTransient
+	public String getComment() {
+		return comment;
 	}
 
 	/* (non-Javadoc)

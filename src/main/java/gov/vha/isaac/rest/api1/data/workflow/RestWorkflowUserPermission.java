@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.metacontent.workflow.contents.UserPermission;
@@ -34,6 +36,7 @@ import gov.vha.isaac.metacontent.workflow.contents.UserPermission;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowUserPermission
 {
@@ -41,25 +44,25 @@ public class RestWorkflowUserPermission
 	 * The identifier data
 	 */
 	@XmlElement
-	public UUID id;
+	UUID id;
 
 	/**
 	 * The workflow definition id
 	 */
 	@XmlElement
-	public UUID definitionId;
+	UUID definitionId;
 	
 	/**
 	 * The id of the workflow user
 	 */
 	@XmlElement
-	public int userId;
+	int userId;
 	
 	/**
 	 * The workflow role
 	 */
 	@XmlElement
-	public String role;
+	String role;
 
 	/**
 	 * Constructor for JAXB only
@@ -79,5 +82,46 @@ public class RestWorkflowUserPermission
 		this.definitionId = permission.getDefinitionId();
 		this.userId = permission.getUserNid();
 		this.role = permission.getRole();
+	}
+
+	/**
+	 * @return the id
+	 */
+	@XmlTransient
+	public UUID getId() {
+		return id;
+	}
+
+	/**
+	 * @return the definitionId
+	 */
+	@XmlTransient
+	public UUID getDefinitionId() {
+		return definitionId;
+	}
+
+	/**
+	 * @return the userId
+	 */
+	@XmlTransient
+	public int getUserId() {
+		return userId;
+	}
+
+	/**
+	 * @return the role
+	 */
+	@XmlTransient
+	public String getRole() {
+		return role;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowUserPermission [getId()=" + getId() + ", getDefinitionId()=" + getDefinitionId()
+				+ ", getUserId()=" + getUserId() + ", getRole()=" + getRole() + "]";
 	}
 }

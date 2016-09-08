@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
@@ -34,6 +36,7 @@ import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowAvailableAction
 {
@@ -41,27 +44,27 @@ public class RestWorkflowAvailableAction
 	 * The identifier data
 	 */
 	@XmlElement
-	public UUID id;
+	UUID id;
 	/**
 	 * The definition id
 	 */
-	public UUID definitionId;
+	UUID definitionId;
 	/**
 	 * The initial state
 	 */
-	public String initialState;
+	String initialState;
 	/**
 	 * The action
 	 */
-	public String action;
+	String action;
 	/**
 	 * The outcome state
 	 */
-	public String outcomeState;
+	String outcomeState;
 	/**
 	 * The role
 	 * */
-	public String role;
+	String role;
 
 	/**
 	 * Constructor for JAXB only
@@ -85,6 +88,59 @@ public class RestWorkflowAvailableAction
 		this.role = action.getRole();
 	}
 
+	/**
+	 * @return the id
+	 */
+	@XmlTransient
+	public UUID getId() {
+		return id;
+	}
+
+
+	/**
+	 * @return the definitionId
+	 */
+	@XmlTransient
+	public UUID getDefinitionId() {
+		return definitionId;
+	}
+
+
+	/**
+	 * @return the initialState
+	 */
+	@XmlTransient
+	public String getInitialState() {
+		return initialState;
+	}
+
+
+	/**
+	 * @return the action
+	 */
+	@XmlTransient
+	public String getAction() {
+		return action;
+	}
+
+
+	/**
+	 * @return the outcomeState
+	 */
+	@XmlTransient
+	public String getOutcomeState() {
+		return outcomeState;
+	}
+
+
+	/**
+	 * @return the role
+	 */
+	@XmlTransient
+	public String getRole() {
+		return role;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -92,5 +148,5 @@ public class RestWorkflowAvailableAction
 	public String toString() {
 		return "RestWorkflowAvailableAction [id=" + id + ", definitionId=" + definitionId + ", initialState="
 				+ initialState + ", action=" + action + ", outcomeState=" + outcomeState + ", role=" + role + "]";
-	} 
+	}
 }

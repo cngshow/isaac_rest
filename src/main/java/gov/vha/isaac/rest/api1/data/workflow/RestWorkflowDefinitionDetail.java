@@ -24,6 +24,7 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.metacontent.workflow.contents.DefinitionDetail;
@@ -35,6 +36,7 @@ import gov.vha.isaac.metacontent.workflow.contents.DefinitionDetail;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowDefinitionDetail
 {
@@ -42,22 +44,22 @@ public class RestWorkflowDefinitionDetail
 	 * The identifier data
 	 */
 	@XmlElement
-	public UUID id;
+	UUID id;
 
 	/** The bpmn2 id. */
-	public String bpmn2Id;
+	String bpmn2Id;
 
 	/** The name. */
-	public String name;
+	String name;
 
 	/** The namespace. */
-	public String namespace;
+	String namespace;
 
 	/** The version. */
-	public String version;
+	String version;
 
 	/** The roles. */
-	public Set<String> roles;
+	Set<String> roles;
 
 	/**
 	 * Constructor for JAXB only

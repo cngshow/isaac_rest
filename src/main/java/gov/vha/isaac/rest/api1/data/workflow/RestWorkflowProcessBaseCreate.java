@@ -23,7 +23,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -34,29 +36,30 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcessBaseCreate {
 	/**
 	 * The workflow definition id
 	 */
 	@XmlElement
-	public UUID definitionId;
+	UUID definitionId;
 
 	/** The creator. */
 	@XmlElement
-	public int creatorNid;
+	int creatorNid;
 
 	/**
 	 * The process name
 	 */
 	@XmlElement
-	public String name;
+	String name;
 
 	/**
 	 * The process description
 	 */
 	@XmlElement
-	public String description;
+	String description;
 	
 	/**
 	 * Constructor for JAXB
@@ -82,6 +85,38 @@ public class RestWorkflowProcessBaseCreate {
 		this.creatorNid = creatorNid;
 		this.name = name;
 		this.description = description;
+	}
+
+	/**
+	 * @return the definitionId
+	 */
+	@XmlTransient
+	public UUID getDefinitionId() {
+		return definitionId;
+	}
+
+	/**
+	 * @return the creatorNid
+	 */
+	@XmlTransient
+	public int getCreatorNid() {
+		return creatorNid;
+	}
+
+	/**
+	 * @return the name
+	 */
+	@XmlTransient
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @return the description
+	 */
+	@XmlTransient
+	public String getDescription() {
+		return description;
 	}
 
 	/* (non-Javadoc)
