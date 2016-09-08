@@ -26,7 +26,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
-import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.provider.AbstractWorkflowUtilities.EndWorkflowType;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
@@ -75,8 +74,7 @@ public class WorkflowWriteAPIs
 					workflowProcessCreationData.definitionId,
 					workflowProcessCreationData.creatorId,
 					workflowProcessCreationData.name,
-					workflowProcessCreationData.description,
-					ProcessDetail.StartWorkflowType.valueOf(workflowProcessCreationData.startType.toString())));
+					workflowProcessCreationData.description));
 		} catch (Exception e) {
 			throw new RestException("Failed creating new workflow process from " + (workflowProcessCreationData != null ? workflowProcessCreationData : null));
 		}

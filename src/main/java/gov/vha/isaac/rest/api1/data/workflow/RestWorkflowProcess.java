@@ -30,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowStartType;
 
 /**
  * 
@@ -94,8 +93,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		super(process.getDefinitionId(),
 				process.getCreator(),
 				process.getName(),
-				process.getDescription(),
-				new RestWorkflowStartType(process.getStartType()));
+				process.getDescription());
 		this.id = process.getId();
 		this.timeCreated = process.getTimeCreated();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();

@@ -26,8 +26,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowStartType;
-
 /**
  * 
  * {@link RestWorkflowProcessBaseCreate}
@@ -59,12 +57,6 @@ public class RestWorkflowProcessBaseCreate {
 	 */
 	@XmlElement
 	public String description;
-
-	/**
-	 * process startType
-	 */
-	@XmlElement
-	public RestWorkflowStartType startType;
 	
 	/**
 	 * Constructor for JAXB
@@ -84,14 +76,12 @@ public class RestWorkflowProcessBaseCreate {
 			UUID definitionId,
 			int creatorId,
 			String name,
-			String description,
-			RestWorkflowStartType startType) {
+			String description) {
 		super();
 		this.definitionId = definitionId;
 		this.creatorId = creatorId;
 		this.name = name;
 		this.description = description;
-		this.startType = startType;
 	}
 
 	/* (non-Javadoc)
@@ -104,7 +94,6 @@ public class RestWorkflowProcessBaseCreate {
 				+ ", creatorId=" + creatorId
 				+ ", name=" + name
 				+ ", description=" + description
-				+ ", startType=" + startType
 				+ "]";
 	}
 }

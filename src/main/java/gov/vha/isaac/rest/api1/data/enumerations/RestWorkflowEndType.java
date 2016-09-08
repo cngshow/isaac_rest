@@ -20,6 +20,8 @@
 package gov.vha.isaac.rest.api1.data.enumerations;
 
 import javax.xml.bind.annotation.XmlRootElement;
+
+import gov.vha.isaac.ochre.workflow.provider.AbstractWorkflowUtilities;
 import gov.vha.isaac.ochre.workflow.provider.AbstractWorkflowUtilities.EndWorkflowType;
 
 /**
