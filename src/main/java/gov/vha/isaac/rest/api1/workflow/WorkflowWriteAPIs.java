@@ -35,7 +35,6 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentAdditionData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessEndData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowRoleChangeData;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
@@ -80,65 +79,65 @@ public class WorkflowWriteAPIs
 		}
 	}
 
-	/**
-	 * 
-	 * Launch a workflow process
-	 * 
-	 * @param processId RestUUID process id of workflow process to launch
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.launchWorkflowProcessComponent)
-	public void launchWorkflowProcess(
-			RestUUID processId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test launchWorkflowProcess()
-		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
-		try {
-			provider.launchWorkflowProcess(processId.value);
-		} catch (Exception e) {
-			throw new RestException("Failed launching workflow process " + (processId != null ? processId : null));
-		}
-	}
-
-	/**
-	 * 
-	 * End a workflow process
-	 * 
-	 * @param endData RestWorkflowProcessEndData workflow end data
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.endWorkflowProcessComponent)
-	public void endWorkflowProcess(
-			RestWorkflowProcessEndData endData) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test endWorkflowProcess()
-		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
-		try {
-			provider.endWorkflowProcess(
-					endData.processId,
-					new AvailableAction(
-							endData.actionToProcess.definitionId,
-							endData.actionToProcess.initialState,
-							endData.actionToProcess.action,
-							endData.actionToProcess.outcomeState,
-							endData.actionToProcess.role),
-					endData.userId,
-					endData.comment,
-					EndWorkflowType.valueOf(endData.endType.toString()));
-		} catch (Exception e) {
-			throw new RestException("Failed ending workflow process with " + (endData != null ? endData : null));
-		}
-	}
+//	/**
+//	 * 
+//	 * Launch a workflow process
+//	 * 
+//	 * @param processId RestUUID process id of workflow process to launch
+//	 * @throws RestException
+//	 */
+//	@PUT
+//	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.launchWorkflowProcessComponent)
+//	public void launchWorkflowProcess(
+//			RestUUID processId) throws RestException
+//	{
+//		RequestParameters.validateParameterNamesAgainstSupportedNames(
+//				RequestInfo.get().getParameters());
+//		
+//		// TODO test launchWorkflowProcess()
+//		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
+//		try {
+//			provider.launchWorkflowProcess(processId.value);
+//		} catch (Exception e) {
+//			throw new RestException("Failed launching workflow process " + (processId != null ? processId : null));
+//		}
+//	}
+//
+//	/**
+//	 * 
+//	 * End a workflow process
+//	 * 
+//	 * @param endData RestWorkflowProcessEndData workflow end data
+//	 * @throws RestException
+//	 */
+//	@PUT
+//	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.endWorkflowProcessComponent)
+//	public void endWorkflowProcess(
+//			RestWorkflowProcessEndData endData) throws RestException
+//	{
+//		RequestParameters.validateParameterNamesAgainstSupportedNames(
+//				RequestInfo.get().getParameters());
+//		
+//		// TODO test endWorkflowProcess()
+//		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
+//		try {
+//			provider.endWorkflowProcess(
+//					endData.processId,
+//					new AvailableAction(
+//							endData.actionToProcess.definitionId,
+//							endData.actionToProcess.initialState,
+//							endData.actionToProcess.action,
+//							endData.actionToProcess.outcomeState,
+//							endData.actionToProcess.role),
+//					endData.userId,
+//					endData.comment,
+//					EndWorkflowType.valueOf(endData.endType.toString()));
+//		} catch (Exception e) {
+//			throw new RestException("Failed ending workflow process with " + (endData != null ? endData : null));
+//		}
+//	}
 	
 	// WorkflowUpdater
 

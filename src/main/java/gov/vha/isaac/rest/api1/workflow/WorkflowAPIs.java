@@ -42,7 +42,6 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableActions;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
@@ -102,7 +101,7 @@ public class WorkflowAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.processComponent)
-	public RestWorkflowProcessBaseCreate getProcess(
+	public RestWorkflowProcess getProcess(
 			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(

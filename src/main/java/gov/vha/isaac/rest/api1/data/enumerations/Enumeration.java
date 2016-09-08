@@ -53,7 +53,6 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
  * @see RestWorkflowProcessStatusType
  * @see RestWorkflowSubjectMatterType
  * @see RestWorkflowTerminologyType
- * @see RestWorkflowEndType
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
@@ -75,7 +74,6 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 //	RestWorkflowDataElementType.class,
 //	RestWorkflowDomainType.class,
 	RestWorkflowProcessStatusType.class,
-	RestWorkflowEndType.class,
 //	RestWorkflowTerminologyType.class
 	})
 @JsonSeeAlso ({

@@ -63,8 +63,8 @@ public class RestPaths
 	public static final String isComponentInActiveWorkflowComponent = "isComponentInActiveWorkflow/";
 	// WorkflowProcessInitializerConcluder
 	public static final String createWorkflowProcessComponent = "createWorkflowProcess/";
-	public static final String endWorkflowProcessComponent = "finishWorkflowProcess/";
-	public static final String launchWorkflowProcessComponent = "launchWorkflowProcess/";
+//	public static final String endWorkflowProcessComponent = "finishWorkflowProcess/";
+//	public static final String launchWorkflowProcessComponent = "launchWorkflowProcess/";
 //	public static final String cancelWorkflowProcessComponent = "cancelWorkflowProcess/";
 //	public static final String concludeWorkflowProcessComponent = "concludeWorkflowProcess/";
 	// WorkflowUpdater
