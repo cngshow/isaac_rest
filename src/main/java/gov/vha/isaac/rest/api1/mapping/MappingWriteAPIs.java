@@ -288,7 +288,6 @@ public class MappingWriteAPIs
 	 * @param inverseName - (optional) inverse name of the mapping set (if it makes sense for the mapping)
 	 * @param purpose - (optional) - user specified purpose of the mapping set
 	 * @param description - the intended use of the mapping set
-	 * @param editorStatus - (optional) user specified status concept of the mapping set
 	 * @return
 	 * @throws IOException
 	 */
