@@ -30,6 +30,8 @@ import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
@@ -118,6 +120,32 @@ public class RequestInfoUtils {
 			throw e;
 		} catch (Exception e) {
 			throw new RestException(parameterName, str, "invalid integer concept sequence " + parameterName + " parameter value: " + str);
+		}
+	}
+
+	public static int getSememeSequenceFromParameter(String parameterName, String str) throws RestException {
+		try {
+			UUID uuid = null;
+			try {
+				uuid = UUID.fromString(str);
+				
+				int sememeSequence = Get.identifierService().getSememeSequenceForUuids(uuid);
+				if (Get.sememeService().hasSememe(sememeSequence)) {
+					return sememeSequence;
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			int id = Integer.parseInt(str);
+			if (! Get.sememeService().hasSememe(id)) {
+				throw new RestException(parameterName, str, "no sememe exists corresponding to id " + parameterName + " parameter value: " + str);
+			} else {
+				return Get.identifierService().getSememeSequence(id);
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid sememe id " + parameterName + " parameter value: " + str);
 		}
 	}
 
