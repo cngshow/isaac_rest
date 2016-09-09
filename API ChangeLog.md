@@ -1,12 +1,15 @@
 ISAAC-Rest Changelog 
 
-Any time a code change is made that impacts the API returned to callers, increment the value in API ChangeLog.md.
+Any time a code change is made that impacts the API returned to callers, increment the value in API ChangeLog.md, and in RestSystemInfo
 
 During development, we can increment this, so long as our client code (komet) is aware of the changes.
 
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/)
 If reverse compatibility is required to be maintained, then the rest/1 code must remain.
 
+2016/09/01 - 1.4.4 - Added ConceptWriteAPIs and replaced exposed OCHRE State enum with REST RestStateType. Also lowered visibility of DTO fields
+2016/08/24 - 1.4.3 - Lots of workflow API stubs have been added, refactoring Rest APIs for mapping to fix design problems.
+2016/07/25 - 1.4.2 - Adding Mapping / Comment APIs
 2016/06/01 - 1.4.1 - Changed return value of SystemAPIs.getIdentifiedObjects() to return RestIdentifiedObjectsResult rather than List<Object>.
 2016/05/16 - 1.4.0 - Renamed SystemInfo to RestSystemInfo for consistency.
 2016/05/16 - 1.3.3 - Added a boolean field 'isConceptDefined' to RestConceptVersion.  Removed isaacGuiVersion, assemblyVersion

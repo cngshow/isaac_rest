@@ -53,7 +53,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.taxonomyAPIsPathComponent)
 public class TaxonomyAPIs
 {
-	private static Logger log = LogManager.getLogger();
+	private static Logger log = LogManager.getLogger(TaxonomyAPIs.class);
 
 	/**
 	 * Returns a single version of a concept, with parents and children expanded to the specified levels.
@@ -253,44 +253,57 @@ public class TaxonomyAPIs
 	}
 
 	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth, 
-		boolean includeSememeMembership, ConceptSequenceSet handledConcepts)
+			boolean includeSememeMembership, ConceptSequenceSet handledConcepts)
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
 			log.warn("addParents(" + conceptSequence + ") aborted potential infinite recursion");
 			return;
-		} else {
+		} else if (tree.getParentSequences(conceptSequence).length == 0) {
+			// If no parents, just add self
 			handledConcepts.add(conceptSequence);
-		}
-		for (int parentSequence : tree.getParentSequences(conceptSequence))
-		{
-			@SuppressWarnings("rawtypes")
-			ConceptChronology parentConceptChronlogy;
-			try
+		} else {
+			ConceptSequenceSet passedHandledConcepts = new ConceptSequenceSet();
+			passedHandledConcepts.addAll(handledConcepts.stream());
+			
+			for (int parentSequence : tree.getParentSequences(conceptSequence))
 			{
-				parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
-			}
-			catch (RestException e)
-			{
-				throw new RuntimeException("Internal Error!", e);
-			}
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			if (cv.isPresent())
-			{
-				//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
-				RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated(), 
-					includeSememeMembership);
-				rcv.addParent(parentVersion);
-				if (remainingParentDepth > 0)
+				// create a new perParentHandledConcepts for each parent
+				ConceptSequenceSet perParentHandledConcepts = new ConceptSequenceSet();
+				perParentHandledConcepts.add(conceptSequence);
+				perParentHandledConcepts.addAll(passedHandledConcepts.stream());
+
+				@SuppressWarnings("rawtypes")
+				ConceptChronology parentConceptChronlogy;
+				try
 				{
-					addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
-						handledConcepts);
+					parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
 				}
-				else if (countLeafParents)
+				catch (RestException e)
 				{
-					countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree);
+					throw new RuntimeException("Internal Error!", e);
 				}
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+				if (cv.isPresent())
+				{
+					//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
+					RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated(), 
+							includeSememeMembership);
+					rcv.addParent(parentVersion);
+					if (remainingParentDepth > 0)
+					{
+						addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
+								perParentHandledConcepts);
+					}
+					else if (countLeafParents)
+					{
+						countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree);
+					}
+				}
+				
+				// Add perParentHandledConcepts concepts back to handledConcepts
+				handledConcepts.addAll(perParentHandledConcepts.stream());
 			}
 		}
 	}

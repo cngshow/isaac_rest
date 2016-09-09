@@ -44,7 +44,7 @@ public class UserToken
 	
 	private static final Logger log = LoggerFactory.getLogger(UserToken.class);
 	
-	private static transient byte[] secret_;
+	private static volatile transient byte[] secret_;
 	private static transient AtomicInteger increment = new AtomicInteger();  //Used for CSRF protection
 	private transient boolean validForSubmit = false;
 	

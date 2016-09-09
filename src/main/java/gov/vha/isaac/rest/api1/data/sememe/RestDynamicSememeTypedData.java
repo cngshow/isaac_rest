@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
-import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
@@ -95,7 +95,7 @@ public abstract class RestDynamicSememeTypedData extends RestDynamicSememeData
 			{
 				throw new RuntimeException("Unexpected");
 			}
-			conceptDescription = RestConceptChronology.readBestDescription(nid);
+			conceptDescription = Util.readBestDescription(nid);
 		}
 	}
 	

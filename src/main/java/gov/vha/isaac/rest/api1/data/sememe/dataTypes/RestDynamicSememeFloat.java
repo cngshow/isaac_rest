@@ -40,4 +40,9 @@ public class RestDynamicSememeFloat extends RestDynamicSememeData
 	{
 		//for jaxb
 	}
+
+	public float getFloat()
+	{
+		return (float)data;
+	}
 }

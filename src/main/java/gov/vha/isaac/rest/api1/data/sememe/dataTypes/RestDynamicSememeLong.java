@@ -40,4 +40,9 @@ public class RestDynamicSememeLong extends RestDynamicSememeData
 	{
 		//for jaxb
 	}
+
+	public long getLong()
+	{
+		return (long)data;
+	}
 }

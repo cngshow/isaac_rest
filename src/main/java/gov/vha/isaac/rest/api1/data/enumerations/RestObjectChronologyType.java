@@ -18,8 +18,12 @@
  */
 package gov.vha.isaac.rest.api1.data.enumerations;
 
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlRootElement;
+
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
 
 /**
  * 
@@ -50,5 +54,20 @@ public class RestObjectChronologyType extends Enumeration
 			result[i] = new RestObjectChronologyType(ObjectChronologyType.values()[i]);
 		}
 		return result;
+	}
+	
+	public static RestObjectChronologyType valueOf(String str) {
+		for (ObjectChronologyType spValue : ObjectChronologyType.values()) {
+			if (spValue.name().equalsIgnoreCase(str.trim())
+					|| spValue.toString().equalsIgnoreCase(str.trim())) {
+				return new RestObjectChronologyType(spValue);
+			} else {
+				Optional<Integer> intOptional = NumericUtils.getInt(str.trim());
+				if (intOptional.isPresent() && intOptional.get() == spValue.ordinal()) {
+					return new RestObjectChronologyType(spValue);
+				}
+			}
+		}
+		throw new IllegalArgumentException("invalid RestObjectChronologyType value \"" + str + "\"");
 	}
 }

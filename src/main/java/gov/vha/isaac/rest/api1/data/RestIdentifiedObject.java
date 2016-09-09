@@ -18,10 +18,13 @@
  */
 package gov.vha.isaac.rest.api1.data;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -30,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestIdentifiedObject
 {
@@ -37,7 +41,7 @@ public class RestIdentifiedObject
 	 * The globally unique, fixed, stable set of identifiers for the object
 	 */
 	@XmlElement
-	public List<UUID> uuids;
+	List<UUID> uuids;
 	
 	RestIdentifiedObject() {
 		// For JAXB only
@@ -46,5 +50,10 @@ public class RestIdentifiedObject
 	public RestIdentifiedObject(List<UUID> uuids)
 	{
 		this.uuids = uuids;
+	}
+	
+	@XmlTransient
+	public List<UUID> getUuids() {
+		return Collections.unmodifiableList(uuids);
 	}
 }

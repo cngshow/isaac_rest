@@ -36,6 +36,11 @@ public class RestDynamicSememeString extends RestDynamicSememeData
 		super(columnNumber, string);
 	}
 	
+	public String getString()
+	{
+		return (String)data;
+	}
+	
 	protected RestDynamicSememeString()
 	{
 		//for jaxb

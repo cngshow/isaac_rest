@@ -40,4 +40,9 @@ public class RestDynamicSememeBoolean extends RestDynamicSememeData
 	{
 		//for jaxb
 	}
+
+	public boolean getBoolean()
+	{
+		return (boolean)data;
+	}
 }

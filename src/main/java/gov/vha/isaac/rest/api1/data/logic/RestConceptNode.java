@@ -60,7 +60,7 @@ public class RestConceptNode extends RestLogicNode {
 	int conceptSequence;
 	
 	/**
-	 * Optionally-expandable RestConceptVersion corresponding to 
+	 * Optionally-expandable RestConceptVersion corresponding to RestConceptNode concept
 	 */
 	@XmlElement
 	RestConceptVersion conceptVersion;

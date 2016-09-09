@@ -21,9 +21,12 @@ package gov.vha.isaac.rest.api1.data.search;
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.Get;
@@ -50,6 +53,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSearchResult
 {
@@ -211,5 +215,53 @@ public class RestSearchResult
 			}
 		}
 		return -1;
+	}
+
+	/**
+	 * @return the matchNid
+	 */
+	@XmlTransient
+	public Integer getMatchNid() {
+		return matchNid;
+	}
+
+	/**
+	 * @return the matchText
+	 */
+	@XmlTransient
+	public String getMatchText() {
+		return matchText;
+	}
+
+	/**
+	 * @return the score
+	 */
+	@XmlTransient
+	public float getScore() {
+		return score;
+	}
+
+	/**
+	 * @return the active
+	 */
+	@XmlTransient
+	public boolean isActive() {
+		return active;
+	}
+
+	/**
+	 * @return the identifiers
+	 */
+	@XmlTransient
+	public RestIdentifiedObject getIdentifiers() {
+		return identifiers;
+	}
+
+	/**
+	 * @return the referencedConcept
+	 */
+	@XmlTransient
+	public RestConceptChronology getReferencedConcept() {
+		return referencedConcept;
 	}
 }

@@ -35,12 +35,17 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
+ * All parameters should be added to ALL_VALID_PARAMETERS, whether grouped or individually
+ * 
  */
 public class RequestParameters {
 	private RequestParameters() {}
 
 	// CoordinatesToken
 	public final static String coordToken = "coordToken";
+	
+	// CoordinatesToken
+	public final static String editToken = "editToken";
 
 	// Taxonomy Coordinate
 	public final static String stated = "stated";
@@ -94,6 +99,8 @@ public class RequestParameters {
 	public final static String id = "id";
 	public final static String nid = "nid";
 	
+	public final static String objType = "objType";
+	
 	// Expandables
 	public final static String expand = "expand";
 	public final static String expandables = "expandables";
@@ -105,6 +112,11 @@ public class RequestParameters {
 	public final static String maxPageSize = "maxPageSize";
 	public final static String maxPageSizeDefault = "10";
 	public final static Set<String> PAGINATION_PARAM_NAMES = unmodifiableSet(pageNum, maxPageSize);
+	
+	// Comment
+	public final static String commentContext = "commentContext";
+	public final static String commentText = "commentText";
+	public final static Set<String> COMMENT_PARAM_NAMES = unmodifiableSet(commentContext, commentText);
 	
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
@@ -133,6 +145,16 @@ public class RequestParameters {
 	public final static String inputType = "inputType";
 	public final static String outputType = "outputType";
 
+	public final static String state = "state";
+
+	// Workflow
+	public final static String wfUserId = "wfUser"; // int
+	public final static String wfState = "wfState"; // String i.e. "Reject Review", "Ready for Review", "Reject Edit"...
+	public final static String wfProcessId = "wfProcess";
+	public final static String wfRole = "wfRole"; // String i.e. "Approver", "Reviewer"
+	public final static String wfDefinitionId = "wfDefinition"; // UUID string
+	
+	
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */
@@ -142,6 +164,7 @@ public class RequestParameters {
 		params.addAll(COORDINATE_PARAM_NAMES);
 		params.addAll(EXPANDABLES_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
+		params.addAll(COMMENT_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
 			id,
 			nid,
@@ -171,7 +194,9 @@ public class RequestParameters {
 			
 			//IdAPIs
 			inputType,
-			outputType
+			outputType,
+			
+			state
 			));
 		ALL_VALID_PARAMETERS = params;
 	}

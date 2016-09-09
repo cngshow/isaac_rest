@@ -22,9 +22,16 @@ package gov.vha.isaac.rest.session;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
@@ -36,6 +43,111 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestInfoUtils {
 	private RequestInfoUtils() {}
+
+	public static UUID parseUuidParameter(String parameterName, String str) throws RestException {
+		try {
+			return UUID.fromString(str);
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid UUID " + parameterName + " parameter value: " + str);
+		}
+	}
+	
+	public static int parseIntegerParameter(String parameterName, String str) throws RestException {
+		try {
+			return Integer.parseInt(str);
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid integer " + parameterName + " parameter value: " + str);
+		}
+	}
+
+	public static int getNidFromUuidOrNidParameter(String parameterName, String str) throws RestException {
+		try {
+			UUID uuid = null;
+			try {
+				uuid = UUID.fromString(str);
+
+				if (Get.identifierService().hasUuid(uuid)) {
+					Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(uuid);
+					if (concept.isPresent()) {
+						return concept.get().getNid();
+					} else {
+						int sememeSeq = Get.identifierService().getSememeSequenceForUuids(uuid);
+						if (Get.sememeService().hasSememe(sememeSeq)) {
+							return Get.identifierService().getSememeNid(sememeSeq);
+						}
+					}
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			int id = Integer.parseInt(str);
+			if (id >= 0) {
+				throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+			}
+			if (! Get.conceptService().hasConcept(id) && ! Get.sememeService().hasSememe(id)) {
+				throw new RestException(parameterName, str, "no concept or sememe exists corresponding to NID " + parameterName + " parameter value: " + str);
+			} else {
+				return id;
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+		}
+	}
+	
+	public static int getConceptSequenceFromParameter(String parameterName, String str) throws RestException {
+		try {
+			UUID uuid = null;
+			try {
+				uuid = UUID.fromString(str);
+				
+				Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(uuid);
+				
+				if (concept.isPresent()) {
+					return concept.get().getConceptSequence();
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			int id = Integer.parseInt(str);
+			if (! Get.conceptService().hasConcept(id)) {
+				throw new RestException(parameterName, str, "no concept exists corresponding to integer concept sequence " + parameterName + " parameter value: " + str);
+			} else {
+				return Get.identifierService().getConceptSequence(id);
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid integer concept sequence " + parameterName + " parameter value: " + str);
+		}
+	}
+
+	public static int getSememeSequenceFromParameter(String parameterName, String str) throws RestException {
+		try {
+			UUID uuid = null;
+			try {
+				uuid = UUID.fromString(str);
+				
+				int sememeSequence = Get.identifierService().getSememeSequenceForUuids(uuid);
+				if (Get.sememeService().hasSememe(sememeSequence)) {
+					return sememeSequence;
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			int id = Integer.parseInt(str);
+			if (! Get.sememeService().hasSememe(id)) {
+				throw new RestException(parameterName, str, "no sememe exists corresponding to id " + parameterName + " parameter value: " + str);
+			} else {
+				return Get.identifierService().getSememeSequence(id);
+			}
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RestException(parameterName, str, "invalid sememe id " + parameterName + " parameter value: " + str);
+		}
+	}
 
 	public static boolean parseBooleanParameter(String parameterName, String str) throws RestException {
 		if (str == null || (! str.equalsIgnoreCase("false") && ! str.equalsIgnoreCase("true"))) {

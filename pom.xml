@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>3.07</version>
+		<version>3.11</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>1.11</version>
+	<version>1.12</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -24,7 +24,7 @@
 	</scm>
 
 	<properties>
-		<isaac.version>3.07</isaac.version>
+		<isaac.version>3.11</isaac.version>
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
@@ -40,6 +40,11 @@
 		<dependency>
 			<groupId>gov.vha.isaac.ochre.modules</groupId>
 			<artifactId>ochre-model</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>ochre-mapping</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
 		<dependency>
@@ -104,7 +109,12 @@
 		</dependency>
 		<dependency>
 			<groupId>gov.vha.isaac.ochre.modules</groupId>
-			<artifactId>metadata</artifactId>
+			<artifactId>ochre-metadata</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>workflow-provider</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
 		<!-- Need to override the scope on these 3 logging packages -->
@@ -234,10 +244,17 @@
 							<artifactItems>
 								<artifact>
 									<groupId>gov.vha.isaac.ochre.modules</groupId>
-									<artifactId>metadata</artifactId>
+									<artifactId>ochre-metadata</artifactId>
 									<version>${isaac.version}</version>
 									<classifier>all</classifier>
 									<type>ibdf.zip</type>
+								</artifact>
+								<artifact>
+									<groupId>gov.vha.isaac.ochre.modules</groupId>
+									<artifactId>ochre-metadata</artifactId>
+									<version>${isaac.version}</version>
+									<classifier>all</classifier>
+									<type>json.zip</type>
 								</artifact>
 							</artifactItems>
 							<outputDirectory>${project.build.directory}/data</outputDirectory>
@@ -302,7 +319,7 @@
 					<plugin>
 						<groupId>org.codehaus.cargo</groupId>
 						<artifactId>cargo-maven2-plugin</artifactId>
-						<version>1.2.0</version>
+						<version>1.4.13</version>
 						<executions>
 							<execution>
 								<id>start-container</id>
@@ -358,3 +375,5 @@
 		</profile>
 	</profiles>
 </project>
+
+

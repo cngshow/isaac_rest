@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -34,12 +35,12 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
-import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -51,6 +52,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeChronology
 {
@@ -65,26 +67,26 @@ public class RestSememeChronology
 	 * The sememe sequence identifier of this sememe instance
 	 */
 	@XmlElement
-	public int sememeSequence;
+	int sememeSequence;
 	
 	/**
 	 * The concept sequence identifier of the concept that represents the type of this sememe
 	 */
 	@XmlElement
-	public int assemblageSequence;
+	int assemblageSequence;
 	
 	/**
 	 * The NID identifier of the object that is referenced by this sememe instance.  This could represent a concept or a sememe.
 	 */
 	@XmlElement
-	public int referencedComponentNid;
+	int referencedComponentNid;
 	
 	/**
 	 * The type of the object that is referenced by the referencedComponentNid value.  This would tell you if the nid represents a concept or a sememe.
 	 * Only populated when the expand parameter 'referencedDetails' is passed.
 	 */
 	@XmlElement
-	public RestObjectChronologyType referencedComponentNidObjectType;
+	RestObjectChronologyType referencedComponentNidObjectType;
 	
 	/**
 	 * If the referencedComponentNid represents a concept, then this carries the "best" description for that concept.  This is selected based on the 
@@ -93,13 +95,13 @@ public class RestSememeChronology
 	 * Only populated when the expand parameter 'referencedDetails' is passed.
 	 */
 	@XmlElement
-	public String referencedComponentNidDescription;
+	String referencedComponentNidDescription;
 	
 	/**
 	 * The permanent identifier object(s) attached to this sememe instance
 	 */
 	@XmlElement
-	public RestIdentifiedObject identifiers;
+	RestIdentifiedObject identifiers;
 	
 	/**
 	 * The list of sememe versions.  Depending on the expand parameter, may be empty, the latest only, or all versions.
@@ -125,7 +127,7 @@ public class RestSememeChronology
 			referencedComponentNidObjectType = new RestObjectChronologyType(cronType);
 			if (cronType == ObjectChronologyType.CONCEPT)
 			{
-				referencedComponentNidDescription = RestConceptChronology.readBestDescription(referencedComponentNid);
+				referencedComponentNidDescription = Util.readBestDescription(referencedComponentNid);
 			}
 			else if (cronType == ObjectChronologyType.SEMEME)
 			{
@@ -189,5 +191,35 @@ public class RestSememeChronology
 				expandables = null;
 			}
 		}
+	}
+	
+	@XmlTransient
+	public RestIdentifiedObject getIdentifiers() {
+		return identifiers;
+	}
+
+	@XmlTransient
+	public int getSememeSequence() {
+		return sememeSequence;
+	}
+	
+	@XmlTransient
+	public int getAssemblageSequence() {
+		return assemblageSequence;
+	}
+	
+	@XmlTransient
+	public int getReferencedComponentNid() {
+		return referencedComponentNid;
+	}
+	
+	@XmlTransient
+	public RestObjectChronologyType getReferencedComponentNidObjectType() {
+		return referencedComponentNidObjectType;
+	}
+	
+	@XmlTransient
+	public String getReferencedComponentNidDescription() {
+		return referencedComponentNidDescription;
 	}
 }

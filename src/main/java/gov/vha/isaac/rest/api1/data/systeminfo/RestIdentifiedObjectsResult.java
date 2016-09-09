@@ -20,7 +20,9 @@ package gov.vha.isaac.rest.api1.data.systeminfo;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
@@ -34,6 +36,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestIdentifiedObjectsResult
 {
@@ -41,13 +44,13 @@ public class RestIdentifiedObjectsResult
 	 * Zero or one concept chronology
 	 */
 	@XmlElement
-	public RestConceptChronology concept;
+	RestConceptChronology concept;
 	
 	/**
 	 * Zero or one sememe chronology
 	 */
 	@XmlElement
-	public RestSememeChronology sememe;
+	RestSememeChronology sememe;
 
 	public RestIdentifiedObjectsResult()
 	{
@@ -69,6 +72,22 @@ public class RestIdentifiedObjectsResult
 	 */
 	@Override
 	public String toString() {
-		return "RestIdentifiedObjectsResult [concept=" + (concept != null ? concept.description : null) + ", sememe=" + (sememe != null ? sememe.identifiers.uuids : null) + "]";
+		return "RestIdentifiedObjectsResult [concept=" + (concept != null ? concept.getDescription() : null) + ", sememe=" + (sememe != null ? sememe.getIdentifiers().getUuids() : null) + "]";
+	}
+
+	/**
+	 * @return the concept
+	 */
+	@XmlTransient
+	public RestConceptChronology getConcept() {
+		return concept;
+	}
+
+	/**
+	 * @return the sememe
+	 */
+	@XmlTransient
+	public RestSememeChronology getSememe() {
+		return sememe;
 	}
 }

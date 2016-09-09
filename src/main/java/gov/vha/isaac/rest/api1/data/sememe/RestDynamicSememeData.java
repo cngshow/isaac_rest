@@ -23,6 +23,8 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -37,6 +39,17 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeSequence;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeArrayImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeBooleanImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeByteArrayImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeDoubleImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeFloatImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeSequenceImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
@@ -55,6 +68,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @XmlSeeAlso ({RestDynamicSememeArray.class, RestDynamicSememeBoolean.class, RestDynamicSememeByteArray.class, RestDynamicSememeDouble.class, RestDynamicSememeFloat.class,
 	RestDynamicSememeInteger.class, RestDynamicSememeLong.class, RestDynamicSememeString.class, RestDynamicSememeTypedData.class, 
 	RestDynamicSememeArray[].class, RestDynamicSememeBoolean[].class, RestDynamicSememeByteArray[].class, RestDynamicSememeDouble[].class, 
@@ -78,7 +92,7 @@ public abstract class RestDynamicSememeData
 	 * The data for a column within a RestDynamicSememeVersion instance
 	 */
 	@XmlElement
-	Object data;
+	protected Object data;
 	
 	protected RestDynamicSememeData(Integer columnNumber, Object data)
 	{
@@ -129,6 +143,82 @@ public abstract class RestDynamicSememeData
 			case POLYMORPHIC: case UNKNOWN:
 			default :
 				throw new RuntimeException("Programmer error");
+		}
+	}
+	
+	public static DynamicSememeData[] translate(RestDynamicSememeData[] values)
+	{
+		if (values == null)
+		{
+			return null;
+		}
+		DynamicSememeData[] result = new DynamicSememeData[values.length];
+		for (int i = 0; i < values.length; i++)
+		{
+			result[i] = RestDynamicSememeData.translate(values[i]);
+		}
+		return result;
+	}
+	
+	public static DynamicSememeData translate(RestDynamicSememeData data)
+	{
+		if (data == null)
+		{
+			return null;
+		}
+		else if (data instanceof RestDynamicSememeArray)
+		{
+			List<DynamicSememeData> nested = new ArrayList<>();
+			for (RestDynamicSememeData nestedDataItem : ((RestDynamicSememeArray)data).getDataArray())
+			{
+				nested.add(translate(nestedDataItem));
+			}
+			return new DynamicSememeArrayImpl<>(nested.toArray(new DynamicSememeData[nested.size()]));
+		}
+		else if (data instanceof RestDynamicSememeBoolean)
+		{
+			return new DynamicSememeBooleanImpl(((RestDynamicSememeBoolean)data).getBoolean());
+		}
+		else if (data instanceof RestDynamicSememeByteArray)
+		{
+			return new DynamicSememeByteArrayImpl(((RestDynamicSememeByteArray)data).getByteArray());
+		}
+		else if (data instanceof RestDynamicSememeDouble)
+		{
+			return new DynamicSememeDoubleImpl(((RestDynamicSememeDouble)data).getDouble());
+		}
+		
+		else if (data instanceof RestDynamicSememeFloat)
+		{
+			return new DynamicSememeFloatImpl(((RestDynamicSememeFloat)data).getFloat());
+		}
+		else if (data instanceof RestDynamicSememeInteger)
+		{
+			return new DynamicSememeIntegerImpl(((RestDynamicSememeInteger)data).getInteger());
+		}
+		else if (data instanceof RestDynamicSememeLong)
+		{
+			return new DynamicSememeLongImpl(((RestDynamicSememeLong)data).getLong());
+		}
+		else if (data instanceof RestDynamicSememeNid)
+		{
+			return new DynamicSememeNidImpl(((RestDynamicSememeNid)data).getNid());
+		}
+		else if (data instanceof RestDynamicSememeSequence)
+		{
+			return new DynamicSememeSequenceImpl(((RestDynamicSememeSequence)data).getSequence());
+		}
+		else if (data instanceof RestDynamicSememeString)
+		{
+			return new DynamicSememeStringImpl(((RestDynamicSememeString)data).getString());
+		}
+		else if (data instanceof RestDynamicSememeUUID)
+		{
+			return new DynamicSememeUUIDImpl(((RestDynamicSememeUUID)data).getUUID());
+		}
+		else
+		{
+			throw new RuntimeException("Programmer error");
 		}
 	}
 }

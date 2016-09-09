@@ -18,3 +18,8 @@ to upgrade it.
 
 - To run in Eclipse, set a system property called -DisaacDatabaseLocation pointing to the location of the .data file. For example, on my system the path is -DisaacDatabaseLocation=c:\temp\database\vhat-2016.01.07-1.0-SNAPSHOT-all.data. In Eclipse, put this in the VM Argument tab under the Run Configurations menu.
 
+- To run HP Fortify scan (assuming Fortify application and license installed)
+	$ mvn -Dmaven.test.skip=true -Dfortify.sca.buildId=isaac-rest -Dfortify.sca.toplevel.artifactId=isaac-parent com.hpe.security.fortify.maven.plugin:sca-maven-plugin:clean
+	$ mvn -Dmaven.test.skip=true -Dfortify.sca.buildId=isaac-rest -Dfortify.sca.toplevel.artifactId=isaac-parent com.hpe.security.fortify.maven.plugin:sca-maven-plugin:translate
+	$ mvn -Dmaven.test.skip=true -Dfortify.sca.buildId=isaac-rest -Dfortify.sca.toplevel.artifactId=isaac-parent com.hpe.security.fortify.maven.plugin:sca-maven-plugin:scan
+

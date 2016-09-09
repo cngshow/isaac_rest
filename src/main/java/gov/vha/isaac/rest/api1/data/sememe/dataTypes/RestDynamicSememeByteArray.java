@@ -40,4 +40,9 @@ public class RestDynamicSememeByteArray extends RestDynamicSememeData
 	{
 		//for jaxb
 	}
+
+	public byte[] getByteArray()
+	{
+		return (byte[])data;
+	}
 }

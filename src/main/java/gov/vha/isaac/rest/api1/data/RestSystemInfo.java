@@ -28,12 +28,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -48,6 +50,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -65,6 +69,7 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
  * 
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSystemInfo
 {
@@ -83,49 +88,49 @@ public class RestSystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	public String[] supportedAPIVersions = new String[] {"1.4.1"};
+	String[] supportedAPIVersions = new String[] {"1.4.4"};
 	
 	/**
 	 * REST API Implementation Version - aka the version number of the software running here.
 	 */
 	@XmlElement
-	public String apiImplementationVersion;
+	String apiImplementationVersion;
 	
 	/**
 	 * The version number of the database being used by this instance.
 	 */
 	@XmlElement
-	public RestDependencyInfo isaacDbDependency;
+	RestDependencyInfo isaacDbDependency;
 
 	/**
 	 * Source Code Management URL that contains the source code for the software running here.
 	 */
 	@XmlElement
-	public String scmUrl;
+	String scmUrl;
 	
 	/**
 	 * The version of ISAAC that the rest service is running on top of.
 	 */
 	@XmlElement
-	public String isaacVersion;
+	String isaacVersion;
 	
 	/**
 	 * Software Licenses
 	 */
 	@XmlElement
-	public List<RestLicenseInfo> appLicenses = new ArrayList<>();
+	List<RestLicenseInfo> appLicenses = new ArrayList<>();
 	
 	/**
 	 * Database Licenses
 	 */
 	@XmlElement
-	public List<RestLicenseInfo> dbLicenses = new ArrayList<>();
+	List<RestLicenseInfo> dbLicenses = new ArrayList<>();
 	
 	/**
 	 * The source content that was built into the underlying database.
 	 */
 	@XmlElement
-	public List<RestDependencyInfo> dbDependencies = new ArrayList<>();
+	List<RestDependencyInfo> dbDependencies = new ArrayList<>();
 
 	public RestSystemInfo()
 	{
@@ -178,7 +183,14 @@ public class RestSystemInfo
 					if (f.isFile() && f.getName().toLowerCase().equals("pom.properties"))
 					{
 						Properties p = new Properties();
-						p.load(new FileReader(f));
+						FileReader fileReader = null;
+						try {
+							p.load(fileReader = new FileReader(f));
+						} finally {
+							if (fileReader != null) {
+								fileReader.close();
+							}
+						}
 
 						isaacDbDependency =
 								new RestDependencyInfo(
@@ -266,7 +278,7 @@ public class RestSystemInfo
 
 		if (!readDbMetadataFromProperties.get())
 		{
-			log_.warn("Failed to read the metadata about the database from the database package.");
+			log_.error("Failed to read the metadata about the database from the database package.");
 		}
 		else
 		{
@@ -302,7 +314,11 @@ public class RestSystemInfo
 			}
 			else
 			{
-				readFromPomFile(builder.parse(is));
+				try {
+					readFromPomFile(builder.parse(is));
+				} finally {
+					is.close();
+				}
 				readIsaacAppMetadata.set(true);
 			}
 		}
@@ -352,5 +368,69 @@ public class RestSystemInfo
 			
 			log_.debug("Extracted license \"{}\" from ISAAC pom.xml: {}", name, appLicenseInfo.toString());
 		}
+	}
+
+	/**
+	 * @return the supportedAPIVersions
+	 */
+	@XmlTransient
+	public String[] getSupportedAPIVersions() {
+		return Arrays.copyOf(supportedAPIVersions, supportedAPIVersions.length);
+	}
+
+	/**
+	 * @return the apiImplementationVersion
+	 */
+	@XmlTransient
+	public String getApiImplementationVersion() {
+		return apiImplementationVersion;
+	}
+
+	/**
+	 * @return the isaacDbDependency
+	 */
+	@XmlTransient
+	public RestDependencyInfo getIsaacDbDependency() {
+		return isaacDbDependency;
+	}
+
+	/**
+	 * @return the scmUrl
+	 */
+	@XmlTransient
+	public String getScmUrl() {
+		return scmUrl;
+	}
+
+	/**
+	 * @return the isaacVersion
+	 */
+	@XmlTransient
+	public String getIsaacVersion() {
+		return isaacVersion;
+	}
+
+	/**
+	 * @return the appLicenses
+	 */
+	@XmlTransient
+	public List<RestLicenseInfo> getAppLicenses() {
+		return Collections.unmodifiableList(appLicenses);
+	}
+
+	/**
+	 * @return the dbLicenses
+	 */
+	@XmlTransient
+	public List<RestLicenseInfo> getDbLicenses() {
+		return Collections.unmodifiableList(dbLicenses);
+	}
+
+	/**
+	 * @return the dbDependencies
+	 */
+	@XmlTransient
+	public List<RestDependencyInfo> getDbDependencies() {
+		return Collections.unmodifiableList(dbDependencies);
 	}
 }

@@ -41,13 +41,13 @@ public class RestId
 	 * The id value
 	 */
 	@XmlElement
-	String value;
+	public String value;
 	
 	/**
 	 * The id type
 	 */
 	@XmlElement
-	RestSupportedIdType idType;
+	public RestSupportedIdType idType;
 	
 	public RestId(IdType type, String value)
 	{

@@ -88,7 +88,7 @@ public class RestDynamicSememeVersion extends RestSememeVersion
 		//no data
 	}
 
-	private static List<RestDynamicSememeData> translateData(DynamicSememeData[] data)
+	public static List<RestDynamicSememeData> translateData(DynamicSememeData[] data)
 	{
 		if (data != null)
 		{

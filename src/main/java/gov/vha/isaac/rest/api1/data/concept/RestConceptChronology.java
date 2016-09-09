@@ -19,20 +19,21 @@
 package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.util.AlphanumComparator;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -47,6 +48,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptChronology implements Comparable<RestConceptChronology>
 {
@@ -54,14 +56,14 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 * The concept sequence identifier of this concept
 	 */
 	@XmlElement
-	public int conceptSequence;
+	int conceptSequence;
 	
 	/**
 	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
 	 * stamp and language coordinates - or - if none present - the server default.
 	 */
 	@XmlElement
-	public String description;
+	String description;
 	
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -73,13 +75,13 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 * The identifier data for the object
 	 */
 	@XmlElement
-	public RestIdentifiedObject identifiers;
+	RestIdentifiedObject identifiers;
 	
 	/**
 	 * The list of concept versions.  Depending on the expand parameter, may be empty, the latest only, or all versions.
 	 */
 	@XmlElement
-	public List<RestConceptVersion> versions;
+	List<RestConceptVersion> versions = new ArrayList<>();
 
 	protected RestConceptChronology()
 	{
@@ -92,12 +94,11 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 		conceptSequence = cc.getConceptSequence();
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
 		
-		description = readBestDescription(cc.getNid());
+		description = Util.readBestDescription(cc.getNid());
 		
 		if (includeAllVersions || includeLatestVersion)
 		{
 			expandables = null;
-			versions = new ArrayList<RestConceptVersion>();
 			if (includeAllVersions)
 			{
 				for (ConceptVersion cv : cc.getVersionList())
@@ -118,7 +119,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 		}
 		else
 		{
-			versions = null;
+			versions.clear();
 			if (RequestInfo.get().returnExpandableLinks())
 			{
 				expandables = new Expandables(
@@ -136,61 +137,42 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	}
 
 	/**
-	 * Utility method to find the 'best' description for the concept at hand.
-	 * @param conceptNid
-	 * @return
-	 */
-	public static String readBestDescription(int conceptNid)
-	{
-		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
-		
-		if (RequestInfo.get().useFsn())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
-				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (!descriptionOptional.isPresent())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
-				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (descriptionOptional.isPresent())
-		{
-			if (descriptionOptional.get().contradictions().isPresent())
-			{
-				//Prefer active descriptions over inactive, if there was a contradiction (which means they tied the sort - have the same time)
-				//common for a replacement description to have the same time as the retired one.
-				if (descriptionOptional.get().value().getState() == State.ACTIVE)
-				{
-					return descriptionOptional.get().value().getText();
-				}
-				else
-				{
-					for (DescriptionSememe<?> ds : descriptionOptional.get().contradictions().get())
-					{
-						if (ds.getState() == State.ACTIVE)
-						{
-							return ds.getText();
-						}
-					}
-				}
-			}
-			return descriptionOptional.get().value().getText();
-		}
-		else
-		{
-			return null;
-		}
-	}
-
-	/**
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
 	@Override
 	public int compareTo(RestConceptChronology o)
 	{
 		return AlphanumComparator.compare(description,  o.description,  true);
+	}
+
+	/**
+	 * @return conceptSequence
+	 */
+	@XmlTransient
+	public int getConceptSequence() {
+		return conceptSequence;
+	}
+	
+	/**
+	 * @return description
+	 */
+	@XmlTransient
+	public String getDescription() {
+		return description;
+	}
+
+	/**
+	 * @return identifiers
+	 */
+	@XmlTransient
+	public RestIdentifiedObject getIdentifiers() {
+		return identifiers;
+	}
+
+	/**
+	 * @return the versions
+	 */
+	public List<RestConceptVersion> getVersions() {
+		return Collections.unmodifiableList(versions);
 	}
 }

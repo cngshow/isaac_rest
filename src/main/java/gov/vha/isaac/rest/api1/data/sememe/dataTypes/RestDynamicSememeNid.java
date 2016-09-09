@@ -41,4 +41,9 @@ public class RestDynamicSememeNid extends RestDynamicSememeTypedData
 	{
 		//for jaxb
 	}
+
+	public int getNid()
+	{
+		return (int)data;
+	}
 }

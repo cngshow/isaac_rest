@@ -31,12 +31,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
+import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
+import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
@@ -226,6 +228,15 @@ public class RequestInfo
 	public StampCoordinate getStampCoordinate()
 	{
 		return getCoordinatesToken().getTaxonomyCoordinate().getStampCoordinate();
+	}
+	
+	/**
+	 * @return
+	 */
+	public EditCoordinate getEditCoordinate()
+	{
+		//TODO implement this properly - find the right author/module/path
+		return EditCoordinates.getDefaultUserSolorOverlay();
 	}
 
 	/**

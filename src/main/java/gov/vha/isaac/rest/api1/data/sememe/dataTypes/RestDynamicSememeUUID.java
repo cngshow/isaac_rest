@@ -48,4 +48,9 @@ public class RestDynamicSememeUUID extends RestDynamicSememeTypedData
 	{
 		//for jaxb
 	}
+
+	public UUID getUUID()
+	{
+		return (UUID)data;
+	}
 }

@@ -19,11 +19,13 @@
 package gov.vha.isaac.rest.api1.data;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
+import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 
 /**
  * 
@@ -31,6 +33,7 @@ import gov.vha.isaac.ochre.api.identity.StampedVersion;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestStampedVersion
 {
@@ -44,7 +47,7 @@ public class RestStampedVersion
 	 * The State of this version (active, inactive, primordial or cancelled)
 	 */
 	@XmlElement
-	State state;
+	RestStateType state;
 	
 	/**
 	 * The time stamp of this version (in standard java form)
@@ -70,6 +73,11 @@ public class RestStampedVersion
 	@XmlElement
 	int pathSequence;
 
+	@XmlTransient
+	public RestStateType getState() {
+		return state;
+	}
+
 	RestStampedVersion() {
 		// For JAXB only
 	}
@@ -77,7 +85,7 @@ public class RestStampedVersion
 	public RestStampedVersion(StampedVersion sv)
 	{
 		stampSequence = sv.getStampSequence();
-		state = sv.getState();
+		state = new RestStateType(sv.getState());
 		time = sv.getTime();
 		authorSequence = sv.getAuthorSequence();
 		pathSequence = sv.getPathSequence();
