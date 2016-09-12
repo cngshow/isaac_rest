@@ -96,6 +96,10 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersions;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResults;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreateData;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersions;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersions;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
@@ -123,9 +127,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	private final static String prefixSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.prefixComponent;
 	private final static String byRefSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 
-	private final static String sememeSearchrequestPath = RestPaths.searchAPIsPathComponent + RestPaths.sememesComponent;
-
+	private final static String conceptDescriptionsObjectRequestPath = RestPaths.conceptAPIsPathComponent +  RestPaths.descriptionsObjectComponent;
 	private final static String conceptDescriptionsRequestPath = RestPaths.conceptAPIsPathComponent +  RestPaths.descriptionsComponent;
+	
 	private final static String conceptVersionRequestPath = RestPaths.conceptAPIsPathComponent +  RestPaths.versionComponent;
 
 	private static final String coordinatesTokenRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.coordinatesTokenComponent;
@@ -232,14 +236,157 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return map.entrySet().iterator().next();
 	}
 	
+	// PLACE TEST METHODS BELOW HERE
+	@Test
+	public void testSememeAPIs()
+	{
+		// Create a random string to confirm target data are relevant
+		final UUID randomUuid = UUID.randomUUID();
+
+		// Construct new description data object
+		final int referencedConceptNid = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "nid");
+		final int initialCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
+		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+		/*
+		 * int caseSignificanceConceptSequence,
+			int languageConceptSequence,
+			String text,
+			int descriptionTypeConceptSequence,
+//			Integer extendedDescriptionTypeConceptSequence,
+			Collection<Integer> preferredInDialectAssemblagesIds,
+			Collection<Integer> acceptableInDialectAssemblagesIds,
+			int referencedComponentNid
+		 */
+		RestSememeDescriptionCreateData initialDescriptionData =
+				new RestSememeDescriptionCreateData(
+						initialCaseSignificanceConceptSequence,
+						initialLanguageConceptSequence,
+						initialDescriptionText,
+						initialDescriptionTypeConceptSequence,
+						null,
+						null,
+						referencedConceptNid);
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(initialDescriptionData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		// POST new description data object
+		Response createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String descriptionSememeSequenceWrapperXml = createDescriptionResponse.readEntity(String.class);
+		final RestInteger descriptionSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, descriptionSememeSequenceWrapperXml);
+		final int descriptionSememeSequence = descriptionSememeSequenceWrapper.getValue();
+		// Confirm returned sequence is valid
+		Assert.assertTrue(descriptionSememeSequence > 0);
+		
+		// Retrieve all descriptions referring to referenced concept
+		Response getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
+		RestSememeDescriptionVersions conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
+		// Iterate description list to find new description
+		RestSememeDescriptionVersion matchingVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
+			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+				matchingVersion = version;
+				break;
+			}
+		}
+		// Validate description fields
+		Assert.assertNotNull(matchingVersion);
+		Assert.assertEquals(matchingVersion.getCaseSignificanceConceptSequence(), initialCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.getText(), initialDescriptionText);
+		Assert.assertEquals(matchingVersion.getDescriptionTypeConceptSequence(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), initialLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
+		
+		// Construct description update data object
+		final int newCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
+		final int newLanguageConceptSequence = getIntegerIdForUuid(MetaData.FRENCH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+		//final int newDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+		final String newDescriptionText = "A new description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+
+		RestSememeDescriptionUpdateData newDescriptionData =
+				new RestSememeDescriptionUpdateData(
+						newCaseSignificanceConceptSequence,
+						newLanguageConceptSequence,
+						newDescriptionText,
+						initialDescriptionTypeConceptSequence,
+						true);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newDescriptionData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		checkContentlessFail(updateDescriptionResponse);
+
+		// Retrieve all descriptions referring to referenced concept
+		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
+		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
+		// Iterate description list to find new description
+		matchingVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
+			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+				matchingVersion = version;
+				break;
+			}
+		}
+		// Validate description fields
+		Assert.assertNotNull(matchingVersion);
+		Assert.assertEquals(matchingVersion.getCaseSignificanceConceptSequence(), newCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.getText(), newDescriptionText);
+		Assert.assertEquals(matchingVersion.getDescriptionTypeConceptSequence(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), newLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
+
+//		// deactivate description
+//		Response deactivateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+//		checkContentlessFail(deactivateDescriptionResponse);
+//		// Retrieve all descriptions referring to referenced concept
+//		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
+//				.queryParam(RequestParameters.allowedStates, "INACTIVE, CANCELED")
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
+//		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+//		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
+//		// Iterate description list to find new description
+//		matchingVersion = null;
+//		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
+//			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+//				matchingVersion = version;
+//				break;
+//			}
+//		}
+//		Assert.assertNotNull(matchingVersion);
+//		Assert.assertEquals(matchingVersion.getSememeVersion().getState(), new RestStateType(State.INACTIVE));
+	}
+	
 	@Test
 	public void testConceptAPIs()
 	{
 		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 
-		System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent + parent1Sequence);
-		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + parent1Sequence)
+		//System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence);
+		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence)
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
@@ -278,7 +425,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(newConceptSequence > 0);
 		
 		// Retrieve new concept and validate fields (FSN in description)
-		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + newConceptSequence)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
 				.queryParam(RequestParameters.includeParents, true)
 				.queryParam(RequestParameters.descriptionTypePrefs, "fsn,definition,synonym")
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
@@ -296,7 +443,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
 		
 		// Retrieve new concept and validate fields (Preferred Term in description)
-		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + newConceptSequence)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
 				.queryParam(RequestParameters.includeParents, true)
 				.queryParam(RequestParameters.descriptionTypePrefs, "synonym,definition,fsn")
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
@@ -320,7 +467,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		checkContentlessFail(deactivateConceptResponse);
 		
 		// Retrieve retired concept and validate
-		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent + newConceptSequence)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
 				.queryParam(RequestParameters.includeParents, false)
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable)
 				.request()
@@ -964,7 +1111,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		//Test expand uuid on/off for each search type
 
-		String result = checkFail(target(sememeSearchrequestPath)
+		String result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"1")
 				.queryParam(RequestParameters.expand, "uuid")
@@ -972,7 +1119,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		Assert.assertTrue(pXml.matcher(result).matches());
 
-		result = checkFail(target(sememeSearchrequestPath)
+		result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"1")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
@@ -1136,7 +1283,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testSearchRecursiveRefComponentLookup()
 	{
-		String result = checkFail(target(sememeSearchrequestPath)
+		String result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.query, MetaData.PREFERRED.getNid() + "")
 				.queryParam(RequestParameters.treatAsString, "true")
 				.queryParam(RequestParameters.maxPageSize, 500)
@@ -1145,7 +1292,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		Assert.assertTrue(result.contains(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid().toString()));
 
-		result = checkFail(target(sememeSearchrequestPath)
+		result = checkFail(target(sememeSearchRequestPath)
 				.queryParam(RequestParameters.query, MetaData.PREFERRED.getNid() + "")
 				.queryParam(RequestParameters.treatAsString, "true")
 				.queryParam(RequestParameters.maxPageSize, 500)
@@ -1581,7 +1728,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 			.readEntity(String.class);
 			RestSememeVersions sememeVersions = XMLUtils.unmarshalObject(RestSememeVersions.class, result);
-			UUID sememeUuid = sememeVersions.results.get(0).sememeChronology.getIdentifiers().getUuids().get(0);
+			UUID sememeUuid = sememeVersions.results.get(0).getSememeChronology().getIdentifiers().getUuids().get(0);
 
 			// Test objectChronologyType of specified sememe UUID
 			result = checkFail(

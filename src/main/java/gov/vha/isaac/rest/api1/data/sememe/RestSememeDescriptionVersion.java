@@ -19,10 +19,13 @@
 package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.MetaData;
@@ -37,6 +40,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeDescriptionVersion extends RestSememeVersion
 {
@@ -71,7 +75,7 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	 * The dialects attached to this sememe.  Not populated by default, include expand=nestedSememes to expand this.
 	 */
 	@XmlElement
-	List<RestDynamicSememeVersion> dialects;
+	List<RestDynamicSememeVersion> dialects = new ArrayList<>();
 
 	protected RestSememeDescriptionVersion()
 	{
@@ -81,10 +85,6 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean expandReferenced) throws RestException
 	{
 		super();
-		if (expandNested)
-		{
-			dialects = new ArrayList<>();
-		}
 		setup(dsv, includeChronology, expandNested, expandReferenced, (restSememeVersion ->
 		{
 			//If the assemblage is a dialect, put it in our list.
@@ -99,5 +99,45 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		languageConceptSequence = dsv.getLanguageConceptSequence();
 		text = dsv.getText();
 		descriptionTypeConceptSequence = dsv.getDescriptionTypeConceptSequence();
+	}
+
+	/**
+	 * @return the caseSignificanceConceptSequence
+	 */
+	@XmlTransient
+	public int getCaseSignificanceConceptSequence() {
+		return caseSignificanceConceptSequence;
+	}
+
+	/**
+	 * @return the languageConceptSequence
+	 */
+	@XmlTransient
+	public int getLanguageConceptSequence() {
+		return languageConceptSequence;
+	}
+
+	/**
+	 * @return the text
+	 */
+	@XmlTransient
+	public String getText() {
+		return text;
+	}
+
+	/**
+	 * @return the descriptionTypeConceptSequence
+	 */
+	@XmlTransient
+	public int getDescriptionTypeConceptSequence() {
+		return descriptionTypeConceptSequence;
+	}
+
+	/**
+	 * @return the dialects
+	 */
+	@XmlTransient
+	public List<RestDynamicSememeVersion> getDialects() {
+		return Collections.unmodifiableList(dialects);
 	}
 }
