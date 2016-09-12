@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.sememe;
 
+import java.util.Optional;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -30,6 +32,7 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
+import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -40,20 +43,19 @@ import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.model.sememe.version.ComponentNidSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeComponentCreateData;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeComponentUpdateData;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreateData;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
-import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
-import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
+import javafx.concurrent.Task;
 
 /**
  * {@link SememeWriteAPIs}
@@ -63,6 +65,17 @@ import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 @Path(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent)
 public class SememeWriteAPIs
 {
+	static WorkflowUpdater updater = null;
+	
+	static {
+		try {
+			updater = new WorkflowUpdater();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	};
+
 	/**
 	 * Create a new description sememe associated with a specified concept
 	 * 
@@ -119,7 +132,9 @@ public class SememeWriteAPIs
 //						build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
 //			}
 
-			Get.commitService().commit("creating new description sememe: NID=" + newDescription.getNid() + ", text=" + creationData.getText()).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" + newDescription.getNid() + ", text=" + creationData.getText()).get();
+
+			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord);
 
 			return new RestInteger(newDescription.getSememeSequence());
 		} catch (Exception e) {
@@ -161,7 +176,9 @@ public class SememeWriteAPIs
 			mutableVersion.setDescriptionTypeConceptSequence(updateData.getDescriptionTypeConceptSequence());
 			
 			Get.commitService().addUncommitted(sememeChronology);
-			Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence + ", NID=" + sememeChronology.getNid() + " with " + updateData);
+			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence + ", NID=" + sememeChronology.getNid() + " with " + updateData);
+
+			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
 		} catch (Exception e) {
 			throw new RestException("Failed updating description " + id + " with " + updateData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
@@ -241,7 +258,9 @@ public class SememeWriteAPIs
 			SememeVersion mutableVersion = ((SememeChronology)sememe).createMutableVersion(sememeClass, state, ec);
 
 			Get.commitService().addUncommitted(sememe);
-			Get.commitService().commit("updating sememe " + id + " state to " + state + ": SEQ=" + sememeSequence + ", NID=" + sememe.getNid());
+			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating sememe " + id + " state to " + state + ": SEQ=" + sememeSequence + ", NID=" + sememe.getNid());
+
+			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
 		} catch (Exception e) {	
 			throw new RestException("Failed updating sememe " + id + " state to " + state + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}

@@ -41,6 +41,7 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
+import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptBuilder;
 import gov.vha.isaac.ochre.api.component.concept.ConceptBuilderService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -52,6 +53,7 @@ import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -59,6 +61,7 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
+import javafx.concurrent.Task;
 
 
 /**
@@ -69,6 +72,17 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent)
 public class ConceptWriteAPIs
 {
+	static WorkflowUpdater updater = null;
+	
+	static {
+		try {
+			updater = new WorkflowUpdater();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	};
+	
 	//private static Logger log = LogManager.getLogger(ConceptWriteAPIs.class);
 	
 	/**
@@ -154,8 +168,11 @@ public class ConceptWriteAPIs
 			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>());
 			Get.commitService().addUncommitted(newCon);
 			
-			Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
 					+ ", PT=" + preferredTerm).get();
+			
+			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord);
+			
 			return newCon.getConceptSequence();
 		}
 		catch (Exception e)
@@ -210,7 +227,9 @@ public class ConceptWriteAPIs
 			
 			Get.commitService().addUncommitted(concept.get());
 			
-			Get.commitService().commit("committing concept with state=" + state + ": SEQ=" + concept.get().getConceptSequence() + ", UUID=" + concept.get().getPrimordialUuid() + ", DESC=" + concept.get().getConceptDescriptionText());
+			 Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("committing concept with state=" + state + ": SEQ=" + concept.get().getConceptSequence() + ", UUID=" + concept.get().getPrimordialUuid() + ", DESC=" + concept.get().getConceptDescriptionText());
+			
+			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
 		} catch (Exception e) {
 			throw new RestException("Failed setting to state " + state + " concept " + id + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
