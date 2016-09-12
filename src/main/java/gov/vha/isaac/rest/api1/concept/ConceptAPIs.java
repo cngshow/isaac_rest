@@ -51,6 +51,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersions;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -253,7 +254,7 @@ public class ConceptAPIs
 			//This cast is expected to be safe, if not, the data model is messed up
 			if (!(d instanceof RestSememeDescriptionVersion))
 			{
-				log.warn("SememeAPIs.get(...) didn't filter properly!  Is the DB broken again?");
+				log.warn("SememeAPIs.get(...) didn't filter properly (encountered " + d.getClass().getName() + ")!  Is the DB broken again?");
 			}
 			else
 			{
@@ -261,6 +262,18 @@ public class ConceptAPIs
 			}
 		}
 		return result;
+	}
+	// For testing only.  Returns RestSememeDescriptionVersions serializable by JAXB
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.descriptionsObjectComponent + "{" + RequestParameters.id + "}")
+	public RestSememeDescriptionVersions getDescriptionVersions(
+			@PathParam(RequestParameters.id) String id, 
+			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+	{
+		return new RestSememeDescriptionVersions(getDescriptions(id, includeAttributes, expand, coordToken));
 	}
 	
 	private Set<Integer> getAllDescriptionTypes()

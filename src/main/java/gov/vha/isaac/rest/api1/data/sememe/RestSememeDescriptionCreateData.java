@@ -120,8 +120,12 @@ public class RestSememeDescriptionCreateData
 		this.text = text;
 		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
 //		this.extendedDescriptionTypeConceptSequence = extendedDescriptionTypeConceptSequence;
-		this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
-		this.acceptableInDialectAssemblagesIds.addAll(acceptableInDialectAssemblagesIds);
+		if (preferredInDialectAssemblagesIds != null) {
+			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
+		}
+		if (acceptableInDialectAssemblagesIds != null) {
+			this.acceptableInDialectAssemblagesIds.addAll(acceptableInDialectAssemblagesIds);
+		}
 		this.referencedComponentNid = referencedComponentNid;
 	}
 

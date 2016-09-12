@@ -42,6 +42,7 @@ public class RestPaths
 	public static final String idTranslateComponent = "translate/";
 	public static final String idTypesComponent = "types/";
 	public static final String descriptionsComponent = "descriptions/";
+	public static final String descriptionsObjectComponent = "descriptionsObject/"; // Testing
 	public static final String descriptionComponent = "description/";
 	public static final String componentComponent = "component/";
 	public static final String sememesComponent = "sememes/";
@@ -107,7 +108,7 @@ public class RestPaths
 	public static final String conceptAPIsPathComponent = apiVersionComponent + "concept/";
 	public static final String conceptChronologyAppPathComponent = conceptAPIsPathComponent + chronologyComponent;
 	public static final String conceptVersionsAppPathComponent = appPathComponent + conceptAPIsPathComponent + versionsComponent;
-	public static final String conceptVersionAppPathComponent = conceptAPIsPathComponent +versionComponent;
+	public static final String conceptVersionAppPathComponent = appPathComponent + conceptAPIsPathComponent +versionComponent;
 	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptAPIsPathComponent +descriptionsComponent;
 	public static final String conceptCreateAppPathComponent = writePathComponent + conceptAPIsPathComponent + createPathComponent;
 	public static final String conceptActivateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + activateComponent;
@@ -120,6 +121,11 @@ public class RestPaths
 	public static final String sememeVersionAppPathComponent = appPathComponent + sememeAPIsPathComponent +versionComponent;
 	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememeAPIsPathComponent +byAssemblageComponent;
 
+	public static final String descriptionCreatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + createPathComponent;
+	public static final String descriptionUpdatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + updatePathComponent;
+	public static final String descriptionDeactivatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + deactivateComponent;
+	public static final String descriptionActivatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + activateComponent;
+	
 	public static final String searchComponent = "search/";
 	public static final String searchAPIsPathComponent = apiVersionComponent + searchComponent;
 	public static final String searchAppPathComponent = appPathComponent + searchAPIsPathComponent;
