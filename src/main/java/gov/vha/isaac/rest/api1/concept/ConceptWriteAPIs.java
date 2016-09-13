@@ -72,6 +72,7 @@ import javafx.concurrent.Task;
 @Path(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent)
 public class ConceptWriteAPIs
 {
+	//TODO get rid of static!
 	static WorkflowUpdater updater = null;
 	
 	static {

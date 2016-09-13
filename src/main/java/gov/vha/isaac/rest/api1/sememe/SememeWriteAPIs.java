@@ -67,6 +67,7 @@ public class SememeWriteAPIs
 {
 	static WorkflowUpdater updater = null;
 	
+	//TODO Get rid of static!
 	static {
 		try {
 			updater = new WorkflowUpdater();
