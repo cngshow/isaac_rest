@@ -140,4 +140,22 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	public List<RestDynamicSememeVersion> getDialects() {
 		return Collections.unmodifiableList(dialects);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeDescriptionVersion ["
+				+ "caseSignificanceConceptSequence=" + caseSignificanceConceptSequence
+				+ ", languageConceptSequence=" + languageConceptSequence
+				+ ", text=" + text
+				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
+				+ ", dialects=" + dialects
+				+ ", expandables=" + expandables
+				+ ", sememeChronology=" + sememeChronology
+				+ ", sememeVersion=" + sememeVersion
+				+ ", nestedSememes=" + nestedSememes
+				+ "]";
+	}
 }

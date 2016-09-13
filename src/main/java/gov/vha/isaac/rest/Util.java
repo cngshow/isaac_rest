@@ -24,9 +24,11 @@ import java.util.stream.Collectors;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.MutableStampedVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -34,6 +36,12 @@ import gov.vha.isaac.rest.session.RequestInfo;
 
 public class Util
 {
+	public static void setStampedVersionFields(EditCoordinate ec, MutableStampedVersion mutableVersion) {
+		//mutableVersion.setTime(System.currentTimeMillis()); // Will be set by commit
+		mutableVersion.setAuthorSequence(ec.getAuthorSequence());
+		mutableVersion.setModuleSequence(ec.getModuleSequence());
+		mutableVersion.setPathSequence(ec.getPathSequence());
+	}
 	public static int convertToConceptSequence(String conceptId) throws RestException
 	{
 		Optional<UUID> uuidId = UUIDUtil.getUUID(conceptId);

@@ -231,4 +231,13 @@ public abstract class RestSememeVersion
 	public List<RestDynamicSememeVersion> getNestedSememes() {
 		return Collections.unmodifiableList(nestedSememes);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeVersion [expandables=" + expandables + ", sememeChronology=" + sememeChronology
+				+ ", sememeVersion=" + sememeVersion + ", nestedSememes=" + nestedSememes + "]";
+	}
 }
