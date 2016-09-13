@@ -165,17 +165,9 @@ public class Util
 		
 		int conceptNid = Get.identifierService().getConceptNid(conceptId);
 		
-		if (RequestInfo.get().useFsn())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
-				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (!descriptionOptional.isPresent())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
-				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
+		descriptionOptional = RequestInfo.get().getLanguageCoordinate().getDescription(
+				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()),
+				RequestInfo.get().getStampCoordinate());
 		
 		if (descriptionOptional.isPresent())
 		{
