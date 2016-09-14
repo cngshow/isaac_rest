@@ -118,6 +118,11 @@ public class MappingWriteAPIs
 		RestMappingSetVersionBaseCreate mappingSetCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		RestMappingSetVersion newMappingSet = null;
 		try {
 			newMappingSet = createMappingSet(
@@ -156,6 +161,13 @@ public class MappingWriteAPIs
 		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.state,
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		if (StringUtils.isBlank(mappingSetUpdateData.name))
 		{
 			throw new RestException("The parameter 'name' is required");
@@ -209,6 +221,11 @@ public class MappingWriteAPIs
 		RestMappingItemVersionBaseCreate mappingItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		Optional<ConceptSnapshot> sourceConcept = Frills.getConceptSnapshot(mappingItemCreationData.sourceConcept, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
 		Optional<ConceptSnapshot> targetConcept = Frills.getConceptSnapshot(mappingItemCreationData.targetConcept, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
 		
@@ -250,6 +267,13 @@ public class MappingWriteAPIs
 		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.state,
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		State stateToUse = null;
 		try {
 			if (RestStateType.valueOf(state).equals(new RestStateType(State.ACTIVE))) {
@@ -583,6 +607,7 @@ public class MappingWriteAPIs
 
 		try
 		{
+			Get.commitService().addUncommitted(built);
 			Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() + " for mapping set " + mappingSetID).get();
 		}
 		catch (Exception e)
@@ -614,6 +639,11 @@ public class MappingWriteAPIs
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
 		/* DynamicSememe<?> rdv = */ latest.get().value();
 		
+		if (latest.get().contradictions().isPresent() && latest.get().contradictions().get().size() > 0) {
+			// TODO properly handle contradictions
+			log.warn("Updating mapping item " + mappingItemSememe.getSememeSequence() + " with " + latest.get().contradictions().get().size() + " contradictions");
+		}
+
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingItemSememe).createMutableVersion(
 				MutableDynamicSememe.class,

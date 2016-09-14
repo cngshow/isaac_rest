@@ -98,6 +98,10 @@ public class SememeWriteAPIs
 			RestSememeDescriptionCreateData creationData,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.editToken);
+
 		// TODO test createDescription(), including validation of creationData.getDescriptionTypeConceptSequence()
 		try {
 			SememeBuilderService<? extends SememeChronology<? extends SememeVersion<?>>> sememeBuilderService
@@ -117,20 +121,24 @@ public class SememeWriteAPIs
 					ChangeCheckerMode.ACTIVE); // TODO should be ACTIVE?
 			Get.commitService().addUncommitted(newDescription);
 
-			creationData.getPreferredInDialectAssemblagesIds().forEach((id) -> {
-				Get.commitService().addUncommitted(sememeBuilderService.getComponentSememeBuilder(
-						TermAux.PREFERRED.getNid(), newDescription.getNid(),
-						id).
-						build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
-			});
+			if (creationData.getPreferredInDialectAssemblagesIds() != null) {
+				creationData.getPreferredInDialectAssemblagesIds().forEach((id) -> {
+					Get.commitService().addUncommitted(sememeBuilderService.getComponentSememeBuilder(
+							TermAux.PREFERRED.getNid(), newDescription.getNid(),
+							id).
+							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
+				});
+			}
 
-			creationData.getAcceptableInDialectAssemblagesIds().forEach((id) -> {
-				Get.commitService().addUncommitted(sememeBuilderService.getComponentSememeBuilder(
-						TermAux.ACCEPTABLE.getNid(), 
-						newDescription.getNid(),
-						id).
-						build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
-			});
+			if (creationData.getAcceptableInDialectAssemblagesIds() != null) {
+				creationData.getAcceptableInDialectAssemblagesIds().forEach((id) -> {
+					Get.commitService().addUncommitted(sememeBuilderService.getComponentSememeBuilder(
+							TermAux.ACCEPTABLE.getNid(), 
+							newDescription.getNid(),
+							id).
+							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
+				});
+			}
 
 			// TODO add extended-description-type component sememe when dan creates metadata constant
 //			if (creationData.getExtendedDescriptionTypeConceptSequence() != null && creationData.getExtendedDescriptionTypeConceptSequence() > 0) {
@@ -168,6 +176,11 @@ public class SememeWriteAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.editToken);
+
 		// TODO test updateDescription(), including validation of updateData.getDescriptionTypeConceptSequence()
 		int sememeSequence = RequestInfoUtils.getSememeSequenceFromParameter(RequestParameters.id, id);
 
@@ -213,7 +226,13 @@ public class SememeWriteAPIs
 			RestBoolean isActive,
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
-	{	
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
 		resetSememeState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), isActive.isValue() ? State.ACTIVE : State.INACTIVE, id);
 	}
 
@@ -244,6 +263,7 @@ public class SememeWriteAPIs
 		if (! rawLatestVersion.isPresent()) {
 			throw new RestException("Failed getting latest version of " + sememe.getSememeType() + " " + sememe.getSememeSequence());
 		} else if (rawLatestVersion.get().contradictions().isPresent()) {
+			// TODO properly handle contradictions
 			log.warn("Resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " with " + rawLatestVersion.get().contradictions().get().size() + " version contradictions from " + latestVersion.getState() + " to " + state);
 		}
 		
