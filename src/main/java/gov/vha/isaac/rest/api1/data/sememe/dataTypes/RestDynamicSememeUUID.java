@@ -19,7 +19,7 @@
 package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 
 import java.util.UUID;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.Get;
@@ -32,6 +32,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestDynamicSememeUUID extends RestDynamicSememeTypedData
 {
