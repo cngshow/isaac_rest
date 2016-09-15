@@ -416,7 +416,7 @@ public class MappingWriteAPIs
 		@SuppressWarnings("unchecked")
 		Optional<LatestVersion<DynamicSememe<?>>> sememe = mappingAnnotation.getLatestVersion(DynamicSememe.class, stampCoord);
 		
-		return new RestMappingSetVersion(sememe.get().value(), stampCoord);
+		return new RestMappingSetVersion(sememe.get().value(), stampCoord, false);
 	}
 	private static void updateMappingSet(
 			ConceptChronology<?> mappingConcept,
@@ -598,7 +598,7 @@ public class MappingWriteAPIs
 		return new RestMappingItemVersion(
 				latest.get().value(),
 				stampCoord,
-				RequestInfo.get().shouldExpand(ExpandUtil.descriptionsExpandable));
+				false, false);
 	}
 	
 	private static void updateMappingItem(

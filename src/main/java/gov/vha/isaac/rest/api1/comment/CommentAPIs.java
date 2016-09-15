@@ -18,21 +18,16 @@
  */
 package gov.vha.isaac.rest.api1.comment;
 
-import java.util.ArrayList;
 import java.util.Optional;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -106,19 +101,6 @@ public class CommentAPIs
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		ArrayList<RestCommentVersion> results = new ArrayList<>();
-		
-		Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
-			.forEach(sememeChronology -> 
-			{
-				@SuppressWarnings({ "rawtypes", "unchecked" })
-				Optional<LatestVersion<DynamicSememe<?>>> sv = ((SememeChronology)sememeChronology).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-				if (sv.isPresent())
-				{
-					//TODO handle contradictions
-					results.add(new RestCommentVersion(sv.get().value()));
-				}
-			});
-		return new RestCommentVersions(results);
+		return new RestCommentVersions(Util.readComments(id));
 	}
 }

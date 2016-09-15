@@ -56,7 +56,11 @@ public class MappingAPIs
 	/**
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the mapping set versions object.  
+	 * @param expand - A comma separated list of fields to expand.  Supports 'comments'.  When comments is passed, the latest comment(s) attached to each 
+	 * mapSet are included.
+	 * @return the latest version of each unique mapping set definition found in the system on the specified coordinates. 
+	 * 
+	 * TODO add parameters to this method to allow the return of all versions (current + historical)
 	 * 
 	 * @throws RestException 
 	 */
@@ -68,6 +72,7 @@ public class MappingAPIs
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		ArrayList<RestMappingSetVersion> results = new ArrayList<>();
@@ -80,7 +85,7 @@ public class MappingAPIs
 			if (latest.isPresent())
 			{
 				//TODO handle contradictions properly
-				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate()));
+				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments)));
 			}
 		});
 		return new RestMappingSetVersions(results);
@@ -90,7 +95,11 @@ public class MappingAPIs
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the mapping set version object.  
+	 * @param expand - A comma separated list of fields to expand.  Supports 'comments'.  When comments is passed, the latest comment(s) attached to each 
+	 * mapSet are included.
+	 * @return the latest version of the specified mapping set.
+	 * 
+	 * TODO add parameters to this method to allow the return of all versions (current + historical)
 	 * 
 	 * @throws RestException 
 	 */
@@ -99,17 +108,20 @@ public class MappingAPIs
 	@Path(RestPaths.mappingSetComponent + "{" + RequestParameters.id +"}")
 	public RestMappingSetVersion getMappingSet(
 		@PathParam(RequestParameters.id) String id,
-		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(ConceptAPIs.findConceptChronology(id).getNid(), 
 			IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
 
-		if (! sememe.isPresent()) {
+		if (! sememe.isPresent()) 
+		{
 			throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
 		}
 		@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -117,8 +129,10 @@ public class MappingAPIs
 				RequestInfo.get().getStampCoordinate());
 		if (latest.isPresent())
 		{
-			return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate());
-		} else {
+			return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments));
+		} 
+		else 
+		{
 			throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
 		}
 	}
@@ -126,8 +140,9 @@ public class MappingAPIs
 	
 	/**
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
-	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.  When referencedDetails is passed, descriptions
-	 * will be included for all referenced concepts which align with your current coordinates.
+	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
+	 * will be included for all referenced concepts which align with your current coordinates.  When comments is passed, all comments attached to each mapItem are 
+	 * included.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @return the mapping items versions object.  
@@ -160,7 +175,8 @@ public class MappingAPIs
 			{
 				//TODO figure out how to handle contradictions!
 				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
-					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+					RequestInfo.get().shouldExpand(ExpandUtil.comments)));
 			}
 		});
 		return new RestMappingItemVersions(results);
