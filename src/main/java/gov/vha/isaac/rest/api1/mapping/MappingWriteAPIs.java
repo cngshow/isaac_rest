@@ -590,6 +590,7 @@ public class MappingWriteAPIs
 			throw new RestException("Failed committing new mapping item sememe");
 		}
 		
+		//TODO this needs cleanup, can't assume a read coordinate unless we document... this might not even be a proper module / path.
 		@SuppressWarnings({ "unchecked" })
 		Optional<LatestVersion<DynamicSememe<?>>> latest = built.getLatestVersion(DynamicSememe.class, 
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
