@@ -111,17 +111,15 @@ public class SememeWriteAPIs
 							creationData.getReferencedComponentNid());
 
 			@SuppressWarnings("unchecked")
-			SememeChronology<DescriptionSememe<?>> newDescription = (SememeChronology<DescriptionSememe<?>>)
-			descriptionSememeBuilder.build(
-					RequestInfo.get().getEditCoordinate(),
-					ChangeCheckerMode.ACTIVE); // TODO should be ACTIVE?
+			SememeChronology<? extends DescriptionSememe<?>> newDescription = descriptionSememeBuilder.build(RequestInfo.get().getEditCoordinate(),
+					ChangeCheckerMode.ACTIVE).get(); // TODO should be ACTIVE?
 
 			if (creationData.getPreferredInDialectAssemblagesIds() != null) {
 				creationData.getPreferredInDialectAssemblagesIds().forEach((id) -> {
 					sememeBuilderService.getComponentSememeBuilder(
 							TermAux.PREFERRED.getNid(), newDescription.getNid(),
 							id).
-							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
+							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 				});
 			}
 
@@ -131,7 +129,7 @@ public class SememeWriteAPIs
 							TermAux.ACCEPTABLE.getNid(), 
 							newDescription.getNid(),
 							id).
-							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
+							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 				});
 			}
 
