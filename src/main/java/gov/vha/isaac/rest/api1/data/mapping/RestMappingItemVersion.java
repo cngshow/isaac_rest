@@ -61,6 +61,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	Expandables expandables;
 	
 	/**
+	 * The sememe sequence of the sememe that represents this mapping item
+	 */
+	@XmlElement
+	public int sememeSequence;
+	
+	/**
 	 * The identifier data for the object
 	 */
 	@XmlElement
@@ -106,6 +112,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 
 	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean expandDescriptions, boolean expandComments)
 	{
+		sememeSequence = sememe.getSememeSequence();
 		identifiers = new RestIdentifiedObject(sememe.getUuidList());
 		mappingItemStamp = new RestStampedVersion(sememe);
 		mapSetConcept = sememe.getAssemblageSequence();
