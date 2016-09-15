@@ -113,7 +113,7 @@ public class CommentWriteAPIs
 				new DynamicSememeData[] {
 						new DynamicSememeStringImpl(dataToCreateComment.comment),
 						(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
-				).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
+				).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 		
 		try
 		{
