@@ -177,7 +177,7 @@ public class ConceptWriteAPIs
 			definitionBuilder.setPreferredInDialectAssemblage(MetaData.US_ENGLISH_DIALECT);
 			builder.addDescription(definitionBuilder);
 			
-			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>());
+			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>()).getNoThrow();
 			
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
 					+ ", PT=" + preferredTerm).get();
