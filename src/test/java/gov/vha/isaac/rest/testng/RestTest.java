@@ -75,6 +75,7 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
+import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
@@ -270,6 +271,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
 		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
 		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+
+//		final int referencedConceptNid = getIntegerIdForUuid(MetaData.AMT_MODULE.getPrimordialUuid(), "nid");
+//		final int initialCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
+//		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.FRENCH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+//		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+//		final String initialDescriptionText = "An initial description text for AMT_MODULE (" + randomUuid + ")";
 		/*
 		 * int caseSignificanceConceptSequence,
 			int languageConceptSequence,
@@ -375,29 +382,40 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), newLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
 
-//		// deactivate description
-//		Response deactivateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-//		checkContentlessFail(deactivateDescriptionResponse);
-//		// Retrieve all descriptions referring to referenced concept
-//		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
-//				.queryParam(RequestParameters.allowedStates, "INACTIVE, CANCELED")
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
-//		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
-//		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
-//		// Iterate description list to find new description
-//		matchingVersion = null;
-//		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
-//			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
-//				matchingVersion = version;
-//				break;
-//			}
-//		}
-//		Assert.assertNotNull(matchingVersion);
-//		Assert.assertEquals(matchingVersion.getSememeVersion().getState(), new RestStateType(State.INACTIVE));
+		RestBoolean inactiveState = new RestBoolean(false);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(inactiveState);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response deactivateDescriptionResponse = target(RestPaths.sememeUpdateStatePathComponent.replaceFirst(RestPaths.appPathComponent, "") + descriptionSememeSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		checkContentlessFail(deactivateDescriptionResponse);
+		// Retrieve all descriptions referring to referenced concept
+		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
+				.queryParam(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
+		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
+		// Iterate description list to find new description
+		matchingVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
+			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+				matchingVersion = version;
+				break;
+			}
+		}
+		Assert.assertNotNull(matchingVersion);
+		Assert.assertEquals(matchingVersion.getCaseSignificanceConceptSequence(), newCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.getText(), newDescriptionText);
+		Assert.assertEquals(matchingVersion.getDescriptionTypeConceptSequence(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), newLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
+		Assert.assertEquals(matchingVersion.getSememeVersion().getState(), new RestStateType(State.INACTIVE));
 	}
 	
 	@Test

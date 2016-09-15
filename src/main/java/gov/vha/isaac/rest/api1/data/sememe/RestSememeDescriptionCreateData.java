@@ -192,4 +192,20 @@ public class RestSememeDescriptionCreateData
 	public int getReferencedComponentNid() {
 		return referencedComponentNid;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeDescriptionCreateData ["
+				+ "caseSignificanceConceptSequence=" + caseSignificanceConceptSequence
+				+ ", languageConceptSequence=" + languageConceptSequence
+				+ ", text=" + text
+				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
+				+ ", preferredInDialectAssemblagesIds=" + preferredInDialectAssemblagesIds
+				+ ", acceptableInDialectAssemblagesIds=" + acceptableInDialectAssemblagesIds
+				+ ", referencedComponentNid=" + referencedComponentNid
+				+ "]";
+	}
 }
