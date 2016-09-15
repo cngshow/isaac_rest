@@ -41,12 +41,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 
 public class Util
 {
-	public static void setStampedVersionFields(EditCoordinate ec, MutableStampedVersion mutableVersion) {
-		//mutableVersion.setTime(System.currentTimeMillis()); // Will be set by commit
-		mutableVersion.setAuthorSequence(ec.getAuthorSequence());
-		mutableVersion.setModuleSequence(ec.getModuleSequence());
-		mutableVersion.setPathSequence(ec.getPathSequence());
-	}
 	public static int convertToConceptSequence(String conceptId) throws RestException
 	{
 		Optional<UUID> uuidId = UUIDUtil.getUUID(conceptId);

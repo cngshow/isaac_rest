@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.api1.sememe;
 
 import java.util.Optional;
-
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -27,10 +26,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
@@ -52,7 +49,6 @@ import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
-import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -149,7 +145,8 @@ public class SememeWriteAPIs
 //						build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
 //			}
 
-			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" + newDescription.getNid() + ", text=" + creationData.getText()).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" 
+					+ newDescription.getNid() + ", text=" + creationData.getText()).get();
 
 			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord);
 
@@ -197,10 +194,9 @@ public class SememeWriteAPIs
 			mutableVersion.setText(updateData.getText());
 			mutableVersion.setDescriptionTypeConceptSequence(updateData.getDescriptionTypeConceptSequence());
 
-			Util.setStampedVersionFields(RequestInfo.get().getEditCoordinate(), mutableVersion);
-
 			Get.commitService().addUncommitted(sememeChronology);
-			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence + ", NID=" + sememeChronology.getNid() + " with " + updateData);
+			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 
+					+ ", NID=" + sememeChronology.getNid() + " with " + updateData);
 
 			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
 		} catch (Exception e) {
@@ -248,7 +244,8 @@ public class SememeWriteAPIs
 	}
 
 	@SuppressWarnings("rawtypes")
-	private static <T extends SememeVersionImpl> SememeVersionUpdatePair<T> resetSememeState(EditCoordinate ec, StampCoordinate sc, State state, SememeChronology<? extends SememeVersion<?>> sememe, Class<T> clazz, SememeVersionUpdatePair<T> versionsHolder) throws RestException {
+	private static <T extends SememeVersionImpl> SememeVersionUpdatePair<T> resetSememeState(EditCoordinate ec, StampCoordinate sc, 
+			State state, SememeChronology<? extends SememeVersion<?>> sememe, Class<T> clazz) throws RestException {
 		@SuppressWarnings("unchecked")
 		Optional<LatestVersion<SememeVersionImpl>> rawLatestVersion = ((SememeChronology)sememe).getLatestVersion(clazz, sc);
 
@@ -264,16 +261,15 @@ public class SememeWriteAPIs
 			throw new RestException("Failed getting latest version of " + sememe.getSememeType() + " " + sememe.getSememeSequence());
 		} else if (rawLatestVersion.get().contradictions().isPresent()) {
 			// TODO properly handle contradictions
-			log.warn("Resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " with " + rawLatestVersion.get().contradictions().get().size() + " version contradictions from " + latestVersion.getState() + " to " + state);
+			log.warn("Resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " with " + rawLatestVersion.get().contradictions().get().size() 
+					+ " version contradictions from " + latestVersion.getState() + " to " + state);
 		}
 		
 		if (latestVersion.getState() == state) {
 			log.warn("Not resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " from " + latestVersion.getState() + " to " + state);
 			return null;
 		}
-
-		Util.setStampedVersionFields(ec, mutableVersion);
-		
+		SememeVersionUpdatePair<T> versionsHolder = new SememeVersionUpdatePair<T>();
 		versionsHolder.set(mutableVersion, latestVersion);
 
 		return versionsHolder;
@@ -288,7 +284,7 @@ public class SememeWriteAPIs
 			SememeVersionUpdatePair<?> rawSememeUpdatePair = null;
 			switch (sememe.getSememeType()) {
 			case DESCRIPTION: {
-				SememeVersionUpdatePair<DescriptionSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, DescriptionSememeImpl.class, new SememeVersionUpdatePair<DescriptionSememeImpl>());
+				SememeVersionUpdatePair<DescriptionSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, DescriptionSememeImpl.class);
 
 				if (sememeUpdatePair != null) {
 					sememeUpdatePair.mutable.setCaseSignificanceConceptSequence(sememeUpdatePair.latest.getCaseSignificanceConceptSequence());
@@ -303,7 +299,7 @@ public class SememeWriteAPIs
 				break;
 			}
 			case STRING: {
-				SememeVersionUpdatePair<StringSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, StringSememeImpl.class, new SememeVersionUpdatePair<StringSememeImpl>());
+				SememeVersionUpdatePair<StringSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, StringSememeImpl.class);
 
 				if (sememeUpdatePair != null) {
 					sememeUpdatePair.mutable.setString(sememeUpdatePair.latest.getString());
@@ -315,7 +311,7 @@ public class SememeWriteAPIs
 				break;
 			}
 			case DYNAMIC: {
-				SememeVersionUpdatePair<DynamicSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, DynamicSememeImpl.class, new SememeVersionUpdatePair<DynamicSememeImpl>());
+				SememeVersionUpdatePair<DynamicSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, DynamicSememeImpl.class);
 
 				if (sememeUpdatePair != null) {
 					sememeUpdatePair.mutable.setData(sememeUpdatePair.latest.getData());
@@ -327,7 +323,7 @@ public class SememeWriteAPIs
 				break;
 			}
 			case COMPONENT_NID: {
-				SememeVersionUpdatePair<ComponentNidSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, ComponentNidSememeImpl.class, new SememeVersionUpdatePair<ComponentNidSememeImpl>());
+				SememeVersionUpdatePair<ComponentNidSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, ComponentNidSememeImpl.class);
 
 				if (sememeUpdatePair != null) {
 					sememeUpdatePair.mutable.setComponentNid(sememeUpdatePair.latest.getComponentNid());
@@ -339,7 +335,7 @@ public class SememeWriteAPIs
 				break;
 			}
 			case LOGIC_GRAPH: {
-				SememeVersionUpdatePair<LogicGraphSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, LogicGraphSememeImpl.class, new SememeVersionUpdatePair<LogicGraphSememeImpl>());
+				SememeVersionUpdatePair<LogicGraphSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, LogicGraphSememeImpl.class);
 
 				if (sememeUpdatePair != null) {
 					sememeUpdatePair.mutable.setGraphData(sememeUpdatePair.latest.getGraphData());
@@ -351,7 +347,7 @@ public class SememeWriteAPIs
 				break;
 			}
 			case LONG: {
-				SememeVersionUpdatePair<LongSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, LongSememeImpl.class, new SememeVersionUpdatePair<LongSememeImpl>());
+				SememeVersionUpdatePair<LongSememeImpl> sememeUpdatePair = resetSememeState(ec, sc, state, sememe, LongSememeImpl.class);
 
 				if (sememeUpdatePair != null) {
 					sememeUpdatePair.mutable.setLongValue(sememeUpdatePair.latest.getLongValue());
@@ -370,7 +366,8 @@ public class SememeWriteAPIs
 			}
 
 			Get.commitService().addUncommitted(sememe);
-			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating sememe " + id + " from " + rawSememeUpdatePair.latest.getState() + " to " + rawSememeUpdatePair.mutable.getState() + ": SEQ=" + sememeSequence + ", NID=" + sememe.getNid());
+			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating sememe " + id + " from " + rawSememeUpdatePair.latest.getState() 
+				+ " to " + rawSememeUpdatePair.mutable.getState() + ": SEQ=" + sememeSequence + ", NID=" + sememe.getNid());
 
 			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
 		} catch (RestException e) {	
