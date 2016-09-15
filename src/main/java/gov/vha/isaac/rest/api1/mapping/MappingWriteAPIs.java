@@ -214,13 +214,22 @@ public class MappingWriteAPIs
 		
 		Optional<UUID> mappingSetID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.mapSetConcept);
 		Optional<UUID> qualifierID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
+		
+		if (!sourceConcept.isPresent())
+		{
+			throw new RestException("sourceConcept", mappingItemCreationData.sourceConcept + "", "Unable to locate the source concept");
+		}
+		if (!mappingSetID.isPresent())
+		{
+			throw new RestException("mapSetConcept", mappingItemCreationData.mapSetConcept + "", "Unable to locate the map set");
+		}
 
 		RestMappingItemVersion newMappingItem =
 				createMappingItem(
 						sourceConcept.get(),
 						mappingSetID.get(),
-						targetConcept.get(),
-						qualifierID.get(),
+						targetConcept.orElse(null),
+						qualifierID.orElse(null),
 						mappingItemCreationData.mapItemExtendedFields,
 						RequestInfo.get().getStampCoordinate(),
 						RequestInfo.get().getEditCoordinate());
