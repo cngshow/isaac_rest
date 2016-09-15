@@ -115,34 +115,33 @@ public class SememeWriteAPIs
 			descriptionSememeBuilder.build(
 					RequestInfo.get().getEditCoordinate(),
 					ChangeCheckerMode.ACTIVE); // TODO should be ACTIVE?
-			Get.commitService().addUncommitted(newDescription);
 
 			if (creationData.getPreferredInDialectAssemblagesIds() != null) {
 				creationData.getPreferredInDialectAssemblagesIds().forEach((id) -> {
-					Get.commitService().addUncommitted(sememeBuilderService.getComponentSememeBuilder(
+					sememeBuilderService.getComponentSememeBuilder(
 							TermAux.PREFERRED.getNid(), newDescription.getNid(),
 							id).
-							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
+							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
 				});
 			}
 
 			if (creationData.getAcceptableInDialectAssemblagesIds() != null) {
 				creationData.getAcceptableInDialectAssemblagesIds().forEach((id) -> {
-					Get.commitService().addUncommitted(sememeBuilderService.getComponentSememeBuilder(
+					sememeBuilderService.getComponentSememeBuilder(
 							TermAux.ACCEPTABLE.getNid(), 
 							newDescription.getNid(),
 							id).
-							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
+							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
 				});
 			}
 
 			// TODO add extended-description-type component sememe when dan creates metadata constant
 //			if (creationData.getExtendedDescriptionTypeConceptSequence() != null && creationData.getExtendedDescriptionTypeConceptSequence() > 0) {
-//				Get.commitService().addUncommitted(sememeBuilderService.getComponentSememeBuilder(
+//				sememeBuilderService.getComponentSememeBuilder(
 //						creationData.getExtendedDescriptionTypeConceptSequence(), 
 //						newDescription.getNid(),
 //						DESCRIPTION_SOURCE_TYPE_REFERENCE_SETS).
-//						build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE));
+//						build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
 //			}
 
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" 

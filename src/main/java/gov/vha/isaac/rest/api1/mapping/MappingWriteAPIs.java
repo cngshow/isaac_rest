@@ -616,7 +616,6 @@ public class MappingWriteAPIs
 
 		try
 		{
-			Get.commitService().addUncommitted(built);
 			Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() + " for mapping set " + mappingSetID).get();
 		}
 		catch (Exception e)

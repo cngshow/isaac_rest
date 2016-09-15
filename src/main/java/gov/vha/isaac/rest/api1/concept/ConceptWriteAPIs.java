@@ -178,7 +178,6 @@ public class ConceptWriteAPIs
 			builder.addDescription(definitionBuilder);
 			
 			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>());
-			Get.commitService().addUncommitted(newCon);
 			
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
 					+ ", PT=" + preferredTerm).get();

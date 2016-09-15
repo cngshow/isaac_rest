@@ -117,8 +117,6 @@ public class CommentWriteAPIs
 		
 		try
 		{
-			//Get.commitService().commit(built, RequestInfo.get().getEditCoordinate(), "Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
-			Get.commitService().addUncommitted(built);
 			Get.commitService().commit("Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
 		}
 		catch (Exception e)
