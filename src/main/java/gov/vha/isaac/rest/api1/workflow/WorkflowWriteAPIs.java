@@ -32,8 +32,6 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentAdditionData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowRoleChangeData;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -149,7 +147,7 @@ public class WorkflowWriteAPIs
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceWorkflowProcessComponent)
-	public RestUUID advanceWorkflowProcess(
+	public void advanceWorkflowProcess(
 			RestWorkflowProcessAdvancementData processAdvancementData) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -158,7 +156,7 @@ public class WorkflowWriteAPIs
 		// TODO test advanceWorkflowProcess()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
-			return new RestUUID(provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment()));
+			provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment());
 		} catch (Exception e) {
 			throw new RestException("Failed advancing workflow process with " + (processAdvancementData != null ? processAdvancementData : null));
 		}
@@ -171,6 +169,8 @@ public class WorkflowWriteAPIs
 	 * @param roleData RestWorkflowRoleChangeData workflow definition user role change data
 	 * @throws RestException
 	 */
+	// TODO: Decide if this feature is necessary
+	/*
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.addWorkflowUserRoleComponent)
@@ -188,7 +188,7 @@ public class WorkflowWriteAPIs
 			throw new RestException("Failed adding role to user with " + (roleData != null ? roleData : null));
 		}
 	}
-	
+*/	
 	/**
 	 * 
 	 * Remove component from workflow for process and component NID
@@ -216,31 +216,6 @@ public class WorkflowWriteAPIs
 					RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, nid));
 		} catch (Exception e) {
 			throw new RestException("Failed removing component " + nid + " from process " + wfProcessId + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-		}
-	}
-	
-	/**
-	 * 
-	 * Add components to an existing workflow process
-	 * 
-	 * @param componentAdditionData RestWorkflowProcessComponentsAdditionData workflow components addition data
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.addComponentToWorkflowComponent)
-	public void addComponentToWorkflow(
-			RestWorkflowProcessComponentAdditionData componentAdditionData) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
-		
-		// TODO test addComponentToWorkflow()
-		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
-		try {
-			provider.addComponentToWorkflow(componentAdditionData.getProcessId(), componentAdditionData.getComponentNid(), componentAdditionData.getStampSequence());
-		} catch (Exception e) {
-			throw new RestException("Failed adding component to workflow process with " + (componentAdditionData != null ? componentAdditionData : null));
 		}
 	}
 }

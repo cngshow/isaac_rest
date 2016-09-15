@@ -36,6 +36,7 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
 import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
+import gov.vha.isaac.rest.api.data.wrappers.RestStrings;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
@@ -45,7 +46,6 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowUserPermission;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowUserPermissions;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
@@ -196,7 +196,7 @@ public class WorkflowAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.permissionsForDefinitionAndUserComponent)
-	public RestWorkflowUserPermissions getPermissionsForDefinitionAndUser(
+	public RestStrings getPermissionsForDefinitionAndUser(
 			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
 			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException
 	{
@@ -206,11 +206,11 @@ public class WorkflowAPIs
 				RequestParameters.wfUserId);
 
 		try {
-			List<RestWorkflowUserPermission> permissions = new ArrayList<>();
-			WorkflowProviderManager.getWorkflowAccessor().getUserPermissions(
+			List<String> roles = new ArrayList<>();
+			WorkflowProviderManager.getWorkflowAccessor().getUserRoles(
 					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId), 
-					RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId)).stream().forEachOrdered(a -> permissions.add(new RestWorkflowUserPermission(a)));
-			return new RestWorkflowUserPermissions(permissions);
+					RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId)).stream().forEachOrdered(a -> roles.add(a));
+			return new RestStrings(roles);
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
