@@ -21,16 +21,15 @@ package gov.vha.isaac.rest.api1.data.mapping;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
  * {@link RestMappingSetExtensionValue}
  * 
- * This stub class is used for callers as part of creating {@link RestMappingSetVersion} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
- * contains the fields that may be set during the initial create. 
- * after creation.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
@@ -40,10 +39,17 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 {
 	/**
 	 * The selected description of the extensionNameConcept that describes the purpose of this extended field on a map set definition.  
-	 * This is provided as a convenience on read.  On create, this field should not be populated, and is ignored.
+	 * This is provided as a convenience on read.  
 	 */
 	@XmlElement
 	public String extensionNameConceptDescription;
+	
+	/**
+	 * The UUID(s) of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
+	 * will be used as the label of the extension.
+	 */
+	@XmlElement
+	RestIdentifiedObject extensionNameConceptIdentifiers;
 	
 	public RestMappingSetExtensionValue()
 	{
@@ -53,7 +59,8 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	
 	public RestMappingSetExtensionValue(int extensionNameConcept, RestDynamicSememeData extensionValue)
 	{
-		this.extensionNameConcept = extensionNameConcept;
+		this.extensionNameConcept = Get.identifierService().getConceptSequence(extensionNameConcept);
+		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(Get.identifierService().getUuidsForNid(Get.identifierService().getConceptNid(extensionNameConcept)));
 		this.extensionValue = extensionValue;
 		this.extensionNameConceptDescription = Util.readBestDescription(extensionNameConcept);
 	}
