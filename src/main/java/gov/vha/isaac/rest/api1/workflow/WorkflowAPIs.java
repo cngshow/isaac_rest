@@ -186,17 +186,17 @@ public class WorkflowAPIs
 	}
 
 	/**
-	 * Return the list of user permissions for the specified workflow definition and user
+	 * Return the list of user roles for the specified workflow definition and user
 	 * 
 	 * @param wfDefinitionId - UUID id for workflow definition
 	 * @param wfUserId - Integer id for workflow user
-	 * @return RestWorkflowUserPermissions list of distinct workflow user permissions
+	 * @return RestStirngs list of user workflow roles
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.permissionsForDefinitionAndUserComponent)
-	public RestStrings getPermissionsForDefinitionAndUser(
+	public RestStrings getUserRoles(
 			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
 			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException
 	{
@@ -214,7 +214,7 @@ public class WorkflowAPIs
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
-			String msg = "Failed retrieving list of permissions for the specified workflow definition " + wfDefinitionId + " and user " + wfUserId;
+			String msg = "Failed retrieving list of workflow roles for the specified workflow definition " + wfDefinitionId + " and user " + wfUserId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
