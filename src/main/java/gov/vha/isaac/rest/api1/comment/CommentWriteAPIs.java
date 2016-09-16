@@ -106,22 +106,22 @@ public class CommentWriteAPIs
 		{
 			throw new RestException("The parameter 'commentText' is required");
 		}
-		
+
 		SememeChronology<? extends DynamicSememe<?>> built =  Get.sememeBuilderService().getDynamicSememeBuilder(
 				commentedItemNid,  
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
 				new DynamicSememeData[] {
 						new DynamicSememeStringImpl(dataToCreateComment.comment),
 						(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
-				).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
+				).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 		
 		try
 		{
-			Get.commitService().commit(built, RequestInfo.get().getEditCoordinate(), "Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
+			Get.commitService().commit("Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			throw new RuntimeException(e);
 		}
 		return new RestInteger(built.getSememeSequence());
 	}
@@ -181,12 +181,12 @@ public class CommentWriteAPIs
 		editVersion.setData(
 			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.comment),
 			(StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToUpdateComment.commentContext))});
-
+		
 		Get.commitService().addUncommitted(sc);
 		
 		try
 		{		
-			Get.commitService().commit(sc, RequestInfo.get().getEditCoordinate(), "Update comment").get();
+			Get.commitService().commit("Update comment").get();
 		}
 		catch (Exception e)
 		{

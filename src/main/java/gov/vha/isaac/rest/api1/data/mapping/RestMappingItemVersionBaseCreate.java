@@ -19,11 +19,11 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.List;
-
+import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
@@ -71,6 +71,17 @@ public class RestMappingItemVersionBaseCreate extends RestMappingItemVersionBase
 			List<RestDynamicSememeData> mapItemExtendedFields) {
 		super(targetConcept, qualifierConcept, mapItemExtendedFields);
 		this.mapSetConcept = mapSetConcept;
+		this.sourceConcept = sourceConcept;
+	}
+	
+	public RestMappingItemVersionBaseCreate(
+			Integer targetConcept,
+			Integer qualifierConcept,
+			UUID mapSetConcept,
+			int sourceConcept,
+			List<RestDynamicSememeData> mapItemExtendedFields) {
+		super(targetConcept, qualifierConcept, mapItemExtendedFields);
+		this.mapSetConcept = Get.identifierService().getConceptSequenceForUuids(mapSetConcept);
 		this.sourceConcept = sourceConcept;
 	}
 }

@@ -276,14 +276,6 @@ public class RequestInfo
 			return getTaxonomyCoordinate().getTaxonomyType() == PremiseType.INFERRED ? getTaxonomyCoordinate() : getTaxonomyCoordinate().makeAnalog(PremiseType.INFERRED);
 		}
 	}
-
-	/**
-	 * @return
-	 */
-	public boolean useFsn()
-	{
-		return getLanguageCoordinate().isFSNPreferred();
-	}
 	
 	/**
 	 * @return

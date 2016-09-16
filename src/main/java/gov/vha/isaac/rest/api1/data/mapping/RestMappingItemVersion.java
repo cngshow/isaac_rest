@@ -19,10 +19,11 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
+import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
@@ -35,8 +36,10 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -58,6 +61,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	Expandables expandables;
 	
 	/**
+	 * The sememe sequence of the sememe that represents this mapping item
+	 */
+	@XmlElement
+	public int sememeSequence;
+	
+	/**
 	 * The identifier data for the object
 	 */
 	@XmlElement
@@ -69,11 +78,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	@XmlElement
 	RestStampedVersion mappingItemStamp;
 	
-	/**
-	 * An (optional) description of the {@link #mapSetConcept} - only populated when requested via the expandable 'referencedDetails'
-	 */
-	@XmlElement
-	String mapSetDescription;
 	
 	/**
 	 * An (optional) description of the {@link #sourceConcept} - only populated when requested via the expandable 'referencedDetails'
@@ -93,6 +97,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	@XmlElement
 	String qualifierDescription;
 	
+	/**
+	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
+	 */
+	@XmlElement
+	List<RestCommentVersion> comments;
+	
 		
 	protected RestMappingItemVersion()
 	{
@@ -100,8 +110,9 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		super();
 	}
 
-	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean expandDescriptions)
+	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean expandDescriptions, boolean expandComments)
 	{
+		sememeSequence = sememe.getSememeSequence();
 		identifiers = new RestIdentifiedObject(sememe.getUuidList());
 		mappingItemStamp = new RestStampedVersion(sememe);
 		mapSetConcept = sememe.getAssemblageSequence();
@@ -133,9 +144,9 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 			}
 		}
 
+		expandables = new Expandables();
 		if (expandDescriptions)
 		{
-			mapSetDescription = Util.readBestDescription(mapSetConcept);
 			if (qualifierConcept != null)
 			{
 				qualifierDescription = Util.readBestDescription(qualifierConcept);
@@ -148,12 +159,35 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		}
 		else
 		{
-			expandables = new Expandables();
 			if (RequestInfo.get().returnExpandableLinks())
 			{
 				//TODO fix this expandable link
 				expandables.add(new Expandable(ExpandUtil.referencedDetails, ""));
 			}
+		}
+		if (expandComments)
+		{
+			try
+			{
+				comments = Util.readComments(sememe.getNid() + "");
+			}
+			catch (RestException e)
+			{
+				LogManager.getLogger().error("Unexpected", e);
+				throw new RuntimeException(e);
+			}
+		}
+		else
+		{
+			if (RequestInfo.get().returnExpandableLinks())
+			{
+				//TODO fix this expandable link
+				expandables.add(new Expandable(ExpandUtil.comments, ""));
+			}
+		}
+		if (expandables.size() == 0)
+		{
+			expandables = null;
 		}
 	}
 
@@ -173,7 +207,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	@Override
 	public String toString() {
 		return "RestMappingItemVersion [expandables=" + expandables + ", identifiers=" + identifiers
-				+ ", mappingItemStamp=" + mappingItemStamp + ", mapSetDescription=" + mapSetDescription
+				+ ", mappingItemStamp=" + mappingItemStamp
 				+ ", sourceDescription=" + sourceDescription + ", targetDescription=" + targetDescription
 				+ ", qualifierDescription=" + qualifierDescription + ", mapSetConcept=" + mapSetConcept
 				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
@@ -194,13 +228,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	@XmlTransient
 	public RestStampedVersion getMappingItemStamp() {
 		return mappingItemStamp;
-	}
-
-	/**
-	 * @return the mapSetDescription
-	 */
-	public String getMapSetDescription() {
-		return mapSetDescription;
 	}
 
 	/**

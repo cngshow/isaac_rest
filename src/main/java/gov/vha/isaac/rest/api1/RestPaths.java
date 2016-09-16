@@ -32,6 +32,7 @@ public class RestPaths
 	public static final String updatePathComponent = "update/";
 
 	public static final String chronologyComponent = "chronology/";
+	public static final String updateStateComponent = "updateState/";
 	public static final String activateComponent = "activate/";
 	public static final String deactivateComponent = "deactivate/";
 	public static final String versionsComponent = "versions/";	
@@ -120,6 +121,7 @@ public class RestPaths
 	public static final String sememeVersionsAppPathComponent = appPathComponent + sememeAPIsPathComponent + versionsComponent;
 	public static final String sememeVersionAppPathComponent = appPathComponent + sememeAPIsPathComponent +versionComponent;
 	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememeAPIsPathComponent +byAssemblageComponent;
+	public static final String sememeUpdateStatePathComponent = writePathComponent + sememeAPIsPathComponent + updatePathComponent + updateStateComponent;
 
 	public static final String descriptionCreatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + createPathComponent;
 	public static final String descriptionUpdatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + updatePathComponent;

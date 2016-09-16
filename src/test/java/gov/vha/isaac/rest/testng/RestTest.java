@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,7 +30,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
-
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -39,7 +37,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBException;
-
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
@@ -48,10 +45,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.metacontent.MVStoreMetaContentProvider;
 import gov.vha.isaac.ochre.api.Get;
@@ -75,7 +70,9 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
+import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
+import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
 import gov.vha.isaac.rest.api1.data.RestId;
@@ -270,6 +267,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
 		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
 		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+
+//		final int referencedConceptNid = getIntegerIdForUuid(MetaData.AMT_MODULE.getPrimordialUuid(), "nid");
+//		final int initialCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
+//		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.FRENCH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+//		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+//		final String initialDescriptionText = "An initial description text for AMT_MODULE (" + randomUuid + ")";
 		/*
 		 * int caseSignificanceConceptSequence,
 			int languageConceptSequence,
@@ -299,11 +302,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Response createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		checkFail(createDescriptionResponse);
 		String descriptionSememeSequenceWrapperXml = createDescriptionResponse.readEntity(String.class);
 		final RestInteger descriptionSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, descriptionSememeSequenceWrapperXml);
 		final int descriptionSememeSequence = descriptionSememeSequenceWrapper.getValue();
 		// Confirm returned sequence is valid
-		Assert.assertTrue(descriptionSememeSequence > 0);
+		Assert.assertTrue(descriptionSememeSequence != 0);
 		
 		// Retrieve all descriptions referring to referenced concept
 		Response getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
@@ -375,29 +379,40 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), newLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
 
-//		// deactivate description
-//		Response deactivateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-//		checkContentlessFail(deactivateDescriptionResponse);
-//		// Retrieve all descriptions referring to referenced concept
-//		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
-//				.queryParam(RequestParameters.allowedStates, "INACTIVE, CANCELED")
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
-//		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
-//		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
-//		// Iterate description list to find new description
-//		matchingVersion = null;
-//		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
-//			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
-//				matchingVersion = version;
-//				break;
-//			}
-//		}
-//		Assert.assertNotNull(matchingVersion);
-//		Assert.assertEquals(matchingVersion.getSememeVersion().getState(), new RestStateType(State.INACTIVE));
+		RestBoolean inactiveState = new RestBoolean(false);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(inactiveState);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response deactivateDescriptionResponse = target(RestPaths.sememeUpdateStatePathComponent.replaceFirst(RestPaths.appPathComponent, "") + descriptionSememeSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		checkContentlessFail(deactivateDescriptionResponse);
+		// Retrieve all descriptions referring to referenced concept
+		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
+				.queryParam(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
+		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
+		// Iterate description list to find new description
+		matchingVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
+			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+				matchingVersion = version;
+				break;
+			}
+		}
+		Assert.assertNotNull(matchingVersion);
+		Assert.assertEquals(matchingVersion.getCaseSignificanceConceptSequence(), newCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.getText(), newDescriptionText);
+		Assert.assertEquals(matchingVersion.getDescriptionTypeConceptSequence(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), newLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
+		Assert.assertEquals(matchingVersion.getSememeVersion().getState(), new RestStateType(State.INACTIVE));
 	}
 	
 	@Test
@@ -526,13 +541,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
-		RestInteger newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newMappingSetSequenceWrapperXml);
-		int testMappingSetSequence = newMappingSetSequenceWrapper.getValue();
+		RestUUID newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestUUID.class, newMappingSetSequenceWrapperXml);
+		UUID testMappingSetUUID = newMappingSetSequenceWrapper.getValue();
 		// Confirm returned sequence is valid
-		Assert.assertTrue(testMappingSetSequence > 0);
+		Assert.assertTrue(testMappingSetUUID != null);
 		
 		// Retrieve new mapping set and validate fields
-		Response getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetSequence)
+		Response getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetUUID)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingSetVersionResult = checkFail(getNewMappingSetVersionResponse).readEntity(String.class);
@@ -558,14 +573,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetSequence)
+		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(updateMappingSetResponse);
 		
 		// Retrieve updated mapping set and validate fields
-		getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetSequence)
+		getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetUUID)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingSetVersionResult = checkFail(getNewMappingSetVersionResponse).readEntity(String.class);
@@ -604,7 +619,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersionBaseCreate newMappingSetItemData = new RestMappingItemVersionBaseCreate(
 				targetConceptSeq,
 				qualifierConceptSeq,
-				testMappingSetSequence,
+				testMappingSetUUID,
 				sourceConceptSeq,
 				null);
 		xml = null;
@@ -617,10 +632,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
-		RestInteger newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newMappingItemSequenceWrapperXml);
-		int newMappingItemSequence = newMappingItemSequenceWrapper.getValue();
+		RestUUID newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestUUID.class, newMappingItemSequenceWrapperXml);
+		UUID newMappingItemUUID = newMappingItemSequenceWrapper.getValue();
 		// Confirm returned sequence is valid
-		Assert.assertTrue(newMappingItemSequence > 0);
+		Assert.assertTrue(newMappingItemUUID != null);
 
 		// test createNewMappingItem()
 		// Retrieve mapping item and validate fields
@@ -636,15 +651,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertTrue(newMappingItemSequence == retrievedMappingItemVersion.mapSetConcept);
 		
 		// test getMappingItems() 
-		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetSequence)
+		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
 		RestMappingItemVersions retrievedMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersions.class, retrievedMappingItemsResult);
 		RestMappingItemVersion mappingItemMatchingNewItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems.mappingItemVersions) {
-			if (Get.identifierService().getSememeSequenceForUuids(currentMappingItem.getIdentifiers().getUuids()) == newMappingItemSequence
-					&& currentMappingItem.mapSetConcept == testMappingSetSequence
+			if (currentMappingItem.getIdentifiers().getUuids().get(0).equals(newMappingItemUUID)
+					&& currentMappingItem.mapSetConcept == retrievedMappingSetVersion.conceptSequence
 					&& currentMappingItem.targetConcept == targetConceptSeq
 					&& currentMappingItem.sourceConcept == sourceConceptSeq
 					&& currentMappingItem.qualifierConcept == qualifierConceptSeq) {
@@ -668,22 +683,21 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemSequence)
-				.queryParam(RequestParameters.id, newMappingItemSequence)
+		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(updateMappingtemResponse);
 
-		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetSequence)
+		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
 		retrievedMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersions.class, retrievedMappingItemsResult);
 		RestMappingItemVersion mappingItemMatchingUpdatedItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems.mappingItemVersions) {
-			if (Get.identifierService().getSememeSequenceForUuids(currentMappingItem.getIdentifiers().getUuids()) == newMappingItemSequence
-					&& currentMappingItem.mapSetConcept == testMappingSetSequence
+			if (currentMappingItem.getIdentifiers().getUuids().get(0).equals(newMappingItemUUID)
+					&& currentMappingItem.mapSetConcept == retrievedMappingSetVersion.conceptSequence
 					&& currentMappingItem.targetConcept == updatedMappingItemData.targetConcept
 					&& currentMappingItem.sourceConcept == newMappingSetItemData.sourceConcept
 					&& currentMappingItem.qualifierConcept == updatedMappingItemData.qualifierConcept) {

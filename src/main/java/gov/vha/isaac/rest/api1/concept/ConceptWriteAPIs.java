@@ -35,11 +35,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptBuilder;
@@ -49,11 +52,14 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilder;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
+import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
+import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -72,6 +78,9 @@ import javafx.concurrent.Task;
 @Path(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent)
 public class ConceptWriteAPIs
 {
+	private static Logger log = LogManager.getLogger(ConceptWriteAPIs.class);
+	
+	//TODO get rid of static!
 	static WorkflowUpdater updater = null;
 	
 	static {
@@ -99,6 +108,9 @@ public class ConceptWriteAPIs
 			RestConceptCreateData creationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.editToken);
 
 		if (StringUtils.isBlank(creationData.fsn)) {
 			throw new RestException("RestConceptCreateData.fsn", creationData.fsn, "FSN required");
@@ -165,8 +177,7 @@ public class ConceptWriteAPIs
 			definitionBuilder.setPreferredInDialectAssemblage(MetaData.US_ENGLISH_DIALECT);
 			builder.addDescription(definitionBuilder);
 			
-			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>());
-			Get.commitService().addUncommitted(newCon);
+			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>()).getNoThrow();
 			
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
 					+ ", PT=" + preferredTerm).get();
@@ -192,8 +203,14 @@ public class ConceptWriteAPIs
 	public void activateConcept(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
-	{	
-		resetConceptState(id, State.ACTIVE);
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, State.ACTIVE);
 	}
 
 	/**
@@ -207,11 +224,42 @@ public class ConceptWriteAPIs
 	public void deactivateConcept(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
-	{	
-		resetConceptState(id, State.INACTIVE);
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, State.INACTIVE);
+	}
+	
+
+	/**
+	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
+	 * getEditCoordinatesToken().
+	 * @throws RestException
+	 */
+	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.updatePathComponent + RestPaths.updateStateComponent + "{" + RequestParameters.id + "}")
+	public void updateConceptState(
+			RestBoolean isActive,
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.editToken,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, isActive.isValue() ? State.ACTIVE : State.INACTIVE);
 	}
 
 	private static void resetConceptState(
+			EditCoordinate ec,
+			StampCoordinate sc,
 			String id,
 			State state) throws RestException {
 		int conceptId = RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id);
@@ -222,12 +270,25 @@ public class ConceptWriteAPIs
 			throw new RestException(RequestParameters.id, id, "no concept exists corresponding to concept id " + conceptId + " parameter value " + id);
 		}
 		try {
-			// TODO put in check for current Status to avoid resaving concept with same status
-			concept.get().createMutableVersion(state, RequestInfo.get().getEditCoordinate());
+			Optional<LatestVersion<ConceptVersionImpl>> rawLatestVersion = ((ConceptChronology)concept.get()).getLatestVersion(ConceptVersionImpl.class, sc);
+
+			if (! rawLatestVersion.isPresent()) {
+				throw new RestException("Failed getting latest version of " + concept.get().getOchreObjectType()  + " concept " + concept.get().getConceptSequence());
+			} else if (rawLatestVersion.get().contradictions().isPresent()) {
+				// TODO properly handle contradictions
+				log.warn("Resetting state of " + concept.get().getOchreObjectType() + " " + concept.get().getConceptSequence() + " with " + rawLatestVersion.get().contradictions().get().size() + " version contradictions from " + rawLatestVersion.get().value().getState() + " to " + state);
+			}
 			
+			if (rawLatestVersion.get().value().getState() == state) {
+				log.warn("Not resetting state of " + concept.get().getOchreObjectType() + " " + concept.get().getConceptSequence() + " from " + rawLatestVersion.get().value().getState() + " to " + state);
+				return;
+			}
+
+			concept.get().createMutableVersion(state, ec);
+
 			Get.commitService().addUncommitted(concept.get());
 			
-			 Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("committing concept with state=" + state + ": SEQ=" + concept.get().getConceptSequence() + ", UUID=" + concept.get().getPrimordialUuid() + ", DESC=" + concept.get().getConceptDescriptionText());
+			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("committing concept with state=" + state + ": SEQ=" + concept.get().getConceptSequence() + ", UUID=" + concept.get().getPrimordialUuid() + ", DESC=" + concept.get().getConceptDescriptionText());
 			
 			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
 		} catch (Exception e) {
