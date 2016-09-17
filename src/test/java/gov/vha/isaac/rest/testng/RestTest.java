@@ -420,6 +420,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	{
 		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+		
+		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 
 		//System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence);
 		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence)
@@ -440,9 +442,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		parentIds.add(parent2Sequence);
 		
 		RestConceptCreateData newConceptData = new RestConceptCreateData(
+				parentIds,
 				fsn,
 				pt,
-				parentIds);
+				requiredDescriptionsLanguageSequence);
 
 		String xml = null;
 		try {

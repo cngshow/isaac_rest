@@ -46,7 +46,6 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowUserPermissions;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
