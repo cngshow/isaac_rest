@@ -24,7 +24,6 @@ import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.NecessarySe
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.POST;
@@ -53,6 +52,7 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilder;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
@@ -60,8 +60,9 @@ import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
-import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
+import gov.vha.isaac.rest.DescriptionUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -156,6 +157,15 @@ public class ConceptWriteAPIs
 			index++;
 		}
 
+		if (creationData.getRequiredDescriptionsExtendedTypeConceptId() != null) {
+			if (! Get.conceptService().hasConcept(creationData.getRequiredDescriptionsExtendedTypeConceptId())) {
+				throw new RestException("RestConceptCreateData.requiredDescriptionsExtendedTypeConceptId", creationData.getRequiredDescriptionsExtendedTypeConceptId() + "", "Integer id does not correspond to an existing concept");
+			}
+			if (! Get.identifierService().getUuidPrimordialFromConceptSequence(creationData.getRequiredDescriptionsExtendedTypeConceptId()).isPresent()) {
+				throw new RestException("RestConceptCreateData.requiredDescriptionsExtendedTypeConceptId", creationData.getRequiredDescriptionsExtendedTypeConceptId() + "", "Integer id does not correspond to an existing concept UUID");
+			}
+		}
+
 		try {
 			int seq = createNewConcept(
 					RequestInfo.get().getEditCoordinate(),
@@ -165,7 +175,8 @@ public class ConceptWriteAPIs
 					creationData.getPreferredTerm(),
 					creationData.getRequiredDescriptionsLanguageConceptId(),
 					creationData.getRequiredDescriptionsPreferredInDialectAssemblagesConceptIds(),
-					creationData.getRequiredDescriptionsAcceptableInDialectAssemblagesConceptIds());
+					creationData.getRequiredDescriptionsAcceptableInDialectAssemblagesConceptIds(),
+					creationData.getRequiredDescriptionsExtendedTypeConceptId());
 			
 			return new RestInteger(seq);
 		} catch (Exception e) {
@@ -181,7 +192,8 @@ public class ConceptWriteAPIs
 			String preferredTerm,
 			int requiredDescriptionsLanguageConceptId,
 			Collection<Integer> requiredDescriptionsPreferredInDialectAssemblagesConceptIds,
-			Collection<Integer> requiredDescriptionsAcceptableInDialectAssemblagesConceptIds) throws RestException
+			Collection<Integer> requiredDescriptionsAcceptableInDialectAssemblagesConceptIds,
+			Integer requiredDescriptionsExtendedTypeConceptId) throws RestException
 	{
 		try
 		{
@@ -204,21 +216,38 @@ public class ConceptWriteAPIs
 
 			ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(fsn, null, parentDef);
 
-			DescriptionBuilder<?, ?> definitionBuilder = descriptionBuilderService.getDescriptionBuilder(preferredTerm, builder,
-							MetaData.SYNONYM,
-							requiredDescriptionsLanguageConceptSpec);
-			definitionBuilder.setPreferredInDialectAssemblage(MetaData.US_ENGLISH_DIALECT);
-			for (int id : requiredDescriptionsPreferredInDialectAssemblagesConceptIds) {
-				definitionBuilder.setPreferredInDialectAssemblage(Get.conceptSpecification(id));
+			DescriptionBuilder<?, ?> definitionBuilder = descriptionBuilderService.getDescriptionBuilder(
+					preferredTerm,
+					builder,
+					MetaData.SYNONYM,
+					requiredDescriptionsLanguageConceptSpec);
+			if (requiredDescriptionsPreferredInDialectAssemblagesConceptIds != null && requiredDescriptionsPreferredInDialectAssemblagesConceptIds.size() > 0) {
+				for (int id : requiredDescriptionsPreferredInDialectAssemblagesConceptIds) {
+					definitionBuilder.setPreferredInDialectAssemblage(Get.conceptSpecification(id));
+				}
+			} else {
+				definitionBuilder.setPreferredInDialectAssemblage(MetaData.US_ENGLISH_DIALECT);
 			}
 			for (int id : requiredDescriptionsAcceptableInDialectAssemblagesConceptIds) {
 				definitionBuilder.setAcceptableInDialectAssemblage(Get.conceptSpecification(id));
 			}
 			
+			// TODO confirm that requiredDescriptionsExtendedType is being added to new concept required descriptions
+			//SememeChronology<DynamicSememe<?>> requiredDescriptionsExtendedTypeSememe = null;
+			if (requiredDescriptionsExtendedTypeConceptId != null) {
+				//requiredDescriptionsExtendedTypeSememe = 
+						DescriptionUtil.addAnnotation(
+						editCoordinate,
+						definitionBuilder.getNid(),
+						new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(requiredDescriptionsExtendedTypeConceptId).get()),
+						DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid());
+			}
+
 			builder.addDescription(definitionBuilder);
 			
 			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>()).getNoThrow();
-			
+
+			Get.commitService().addUncommitted(newCon).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
 					+ ", PT=" + preferredTerm).get();
 			
@@ -310,6 +339,7 @@ public class ConceptWriteAPIs
 			throw new RestException(RequestParameters.id, id, "no concept exists corresponding to concept id " + conceptId + " parameter value " + id);
 		}
 		try {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Optional<LatestVersion<ConceptVersionImpl>> rawLatestVersion = ((ConceptChronology)concept.get()).getLatestVersion(ConceptVersionImpl.class, sc);
 
 			if (! rawLatestVersion.isPresent()) {
@@ -326,7 +356,7 @@ public class ConceptWriteAPIs
 
 			concept.get().createMutableVersion(state, ec);
 
-			Get.commitService().addUncommitted(concept.get());
+			Get.commitService().addUncommitted(concept.get()).get();
 			
 			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("committing concept with state=" + state + ": SEQ=" + concept.get().getConceptSequence() + ", UUID=" + concept.get().getPrimordialUuid() + ", DESC=" + concept.get().getConceptDescriptionText());
 			
