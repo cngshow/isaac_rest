@@ -35,22 +35,17 @@ import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
 import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
-import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
-import gov.vha.isaac.rest.api.data.wrappers.RestStrings;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableActions;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowUserPermissions;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
-
 
 /**
  * {@link WorkflowAPIs}
@@ -58,60 +53,28 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.workflowAPIsPathComponent)
-public class WorkflowAPIs
-{
+public class WorkflowAPIs {
 	private static Logger log = LogManager.getLogger(WorkflowAPIs.class);
-	/**
-	 * Return the definition for the specified definition id
-	 * 
-	 * @param wfDefinitionId - UUID id for definition
-	 * @return RestWorkflowDefinitionDetail
-	 * @throws RestException
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.definitionComponent)
-	public RestWorkflowDefinitionDetail getDefinition(
-			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.wfDefinitionId);
 
-		try {
-		return new RestWorkflowDefinitionDetail(
-				WorkflowProviderManager.getWorkflowAccessor().getDefinitionDetails(
-						RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId)));
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			String msg = "Failed retrieving the definition detail for the specified definition id " + wfDefinitionId;
-			log.error(msg, e);
-			throw new RestException(msg + ". " + e.getLocalizedMessage());
-		}
-	}
-	
 	/**
 	 * Return the process for the specified process id
 	 * 
-	 * @param wfProcessId - UUID id for process
+	 * @param wfProcessId
+	 *            - UUID id for process
 	 * @return RestWorkflowProcessDetail
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.processComponent)
-	public RestWorkflowProcess getProcess(
-			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
+	public RestWorkflowProcess getProcess(@QueryParam(RequestParameters.wfProcessId) String wfProcessId)
+			throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.wfProcessId);
 
 		try {
-			return new RestWorkflowProcess(
-				WorkflowProviderManager.getWorkflowAccessor().getProcessDetails(
-						RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId)));
+			return new RestWorkflowProcess(WorkflowProviderManager.getWorkflowAccessor().getProcessDetails(
+					RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId)));
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
@@ -122,29 +85,29 @@ public class WorkflowAPIs
 	}
 
 	/**
-	 * Return a sorted set of distinct workflow histories for the specified process id
+	 * Return a sorted set of distinct workflow histories for the specified
+	 * process id
 	 * 
-	 * @return RestWorkflowProcessHistories sorted set of distinct workflow histories for a specified process
+	 * @return RestWorkflowProcessHistories sorted set of distinct workflow
+	 *         histories for a specified process
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.historiesForProcessComponent)
 	public RestWorkflowProcessHistories getHistoriesForProcess(
-			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
+			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.wfProcessId);
 
 		try {
-			SortedSet<ProcessHistory> ochreSet = WorkflowProviderManager.getWorkflowAccessor().getProcessHistory(
-				RequestInfoUtils.parseUuidParameter(wfProcessId, wfProcessId));
+			SortedSet<ProcessHistory> ochreSet = WorkflowProviderManager.getWorkflowAccessor()
+					.getProcessHistory(RequestInfoUtils.parseUuidParameter(wfProcessId, wfProcessId));
 
 			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
-			
+
 			ochreSet.stream().forEachOrdered(a -> restList.add(new RestWorkflowProcessHistory(a)));
-			
+
 			return new RestWorkflowProcessHistories(restList);
 		} catch (Exception e) {
 			String msg = "Failed retrieving the ordered set of process histories by process id";
@@ -152,80 +115,13 @@ public class WorkflowAPIs
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
 	}
-	
-	/**
-	 * Return RestBoolean indicating whether active process exists for the specified concept or sememe NID or UUID
-	 * 
-	 * @param nid - NID or UUID id for CONCEPT or SEMEME
-	 * @return RestBoolean
-	 * @throws RestException
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.isComponentInActiveWorkflowComponent)
-	public RestBoolean isComponentInActiveWorkflow(
-			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
-			@QueryParam(RequestParameters.nid) String nid) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.wfDefinitionId,
-				RequestParameters.nid);
-		try {
-			return new RestBoolean(
-					WorkflowProviderManager.getWorkflowAccessor().isComponentInActiveWorkflow(
-							RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
-							RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, nid)));
-		} catch (RestException re) {
-			throw re;
-		} catch (Exception e) {
-			String msg = "failed determining if component with id=" + nid + " is in active workflow for definition " + wfDefinitionId;
-			log.error(msg, e);
-			throw new RestException(msg + ". " + e.getLocalizedMessage());
-		}
-	}
 
 	/**
-	 * Return the list of user roles for the specified workflow definition and user
+	 * Return advancable process information, which is a map of process
+	 * histories by process, for a specified definition and user
 	 * 
-	 * @param wfDefinitionId - UUID id for workflow definition
-	 * @param wfUserId - Integer id for workflow user
-	 * @return RestStirngs list of user workflow roles
-	 * @throws RestException
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.permissionsForDefinitionAndUserComponent)
-	public RestStrings getUserRoles(
-			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
-			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.wfDefinitionId,
-				RequestParameters.wfUserId);
-
-		try {
-			List<String> roles = new ArrayList<>();
-			WorkflowProviderManager.getWorkflowAccessor().getUserRoles(
-					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId), 
-					RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId)).stream().forEachOrdered(a -> roles.add(a));
-			return new RestStrings(roles);
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			String msg = "Failed retrieving list of workflow roles for the specified workflow definition " + wfDefinitionId + " and user " + wfUserId;
-			log.error(msg, e);
-			throw new RestException(msg + ". " + e.getLocalizedMessage());
-		}
-	}
-	
-	/**
-	 * Return advancable process information,
-	 * which is a map of process histories by process,
-	 * for a specified definition and user
-	 * 
-	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow histories by process
+	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow
+	 *         histories by process
 	 * @throws RestException
 	 */
 	@GET
@@ -233,17 +129,15 @@ public class WorkflowAPIs
 	@Path(RestPaths.advanceableProcessInformationComponent)
 	public RestWorkflowProcessHistoriesMap getAdvanceableProcessInformation(
 			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
-			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.wfDefinitionId,
-				RequestParameters.wfUserId);
+			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+				RequestParameters.wfDefinitionId, RequestParameters.wfUserId);
 		try {
 			Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
-			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowAccessor().getAdvanceableProcessInformation(
-					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
-					RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId));
+			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowAccessor()
+					.getAdvanceableProcessInformation(
+							RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
+							RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId));
 
 			for (Map.Entry<ProcessDetail, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 				List<RestWorkflowProcessHistory> restList = new ArrayList<>();
@@ -252,17 +146,21 @@ public class WorkflowAPIs
 			}
 			return new RestWorkflowProcessHistoriesMap(map);
 		} catch (Exception e) {
-			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId + " and user id " + wfUserId;
+			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId
+					+ " and user id " + wfUserId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
 	}
-	
+
 	/**
-	 * Return the set of available actions for the specified workflow process and user
+	 * Return the set of available actions for the specified workflow process
+	 * and user
 	 * 
-	 * @param wfProcessId - UUID id for workflow process
-	 * @param wfUserId - Integer id for a workflow user
+	 * @param wfProcessId
+	 *            - UUID id for workflow process
+	 * @param wfUserId
+	 *            - Integer id for a workflow user
 	 * @return RestWorkflowAvailableActions list of distinct actions
 	 * @throws RestException
 	 */
@@ -271,23 +169,23 @@ public class WorkflowAPIs
 	@Path(RestPaths.actionsForProcessAndUserComponent)
 	public RestWorkflowAvailableActions getActionsForProcessAndUser(
 			@QueryParam(RequestParameters.wfProcessId) String wfProcessId,
-			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.wfProcessId,
-				RequestParameters.wfUserId);
+			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+				RequestParameters.wfProcessId, RequestParameters.wfUserId);
 
 		try {
-		List<RestWorkflowAvailableAction> actions = new ArrayList<>();
-		WorkflowProviderManager.getWorkflowAccessor().getUserPermissibleActionsForProcess(
-				RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId), 
-				RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId)).stream().forEachOrdered(a -> actions.add(new RestWorkflowAvailableAction(a)));
-		return new RestWorkflowAvailableActions(actions);
+			List<RestWorkflowAvailableAction> actions = new ArrayList<>();
+			WorkflowProviderManager.getWorkflowAccessor()
+					.getUserPermissibleActionsForProcess(
+							RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
+							RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId))
+					.stream().forEachOrdered(a -> actions.add(new RestWorkflowAvailableAction(a)));
+			return new RestWorkflowAvailableActions(actions);
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
-			String msg = "Failed retrieving list of actions for the specified workflow process " + wfProcessId + " and user " + wfUserId;
+			String msg = "Failed retrieving list of actions for the specified workflow process " + wfProcessId
+					+ " and user " + wfUserId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
