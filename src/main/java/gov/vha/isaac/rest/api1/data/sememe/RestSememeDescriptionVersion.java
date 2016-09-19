@@ -21,6 +21,9 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -31,7 +34,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.rest.DescriptionUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -72,6 +77,13 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	int descriptionTypeConceptSequence;
 	
 	/**
+	 * The optional concept sequence of the concept that represents the extended type of the description.  
+	 * This should be a {@link MetaData.DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE}.
+	 */
+	@XmlElement
+	Integer descriptionExtendedTypeConceptSequence;
+
+	/**
 	 * The dialects attached to this sememe.  Not populated by default, include expand=nestedSememes to expand this.
 	 */
 	@XmlElement
@@ -99,6 +111,12 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		languageConceptSequence = dsv.getLanguageConceptSequence();
 		text = dsv.getText();
 		descriptionTypeConceptSequence = dsv.getDescriptionTypeConceptSequence();
+
+		// populate descriptionExtendedTypeConceptSequence
+		Optional<Integer> descriptionExtendedTypeOptional = DescriptionUtil.getDescriptionExtendedTypeConceptSequence(RequestInfo.get().getStampCoordinate(), dsv.getNid());
+		if (descriptionExtendedTypeOptional.isPresent()) {
+			descriptionExtendedTypeConceptSequence = descriptionExtendedTypeOptional.get();
+		}
 	}
 
 	/**
@@ -134,6 +152,14 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	}
 
 	/**
+	 * @return the descriptionExtendedTypeConceptSequence
+	 */
+	@XmlTransient
+	public int getDescriptionExtendedTypeConceptSequence() {
+		return descriptionExtendedTypeConceptSequence;
+	}
+
+	/**
 	 * @return the dialects
 	 */
 	@XmlTransient
@@ -151,6 +177,7 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 				+ ", languageConceptSequence=" + languageConceptSequence
 				+ ", text=" + text
 				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
+				+ ", descriptionExtendedTypeConceptSequence=" + descriptionExtendedTypeConceptSequence
 				+ ", dialects=" + dialects
 				+ ", expandables=" + expandables
 				+ ", sememeChronology=" + sememeChronology

@@ -18,9 +18,9 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
- * {@link RestWorkflowProcessHistoriesMap}
+ * {@link RestWorkflowComponentNidToStampsMapEntry}
  * 
  * This class carries back result map
  *
@@ -39,18 +39,24 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessHistoriesMap
+public class RestWorkflowComponentNidToStampsMapEntry
 {
 	/**
-	 * The contained results
+	 * The key
 	 */
 	@XmlElement
-	Set<RestWorkflowProcessHistoriesMapEntry> entries = new HashSet<>();
+	int key;
+
+	/**
+	 * The value
+	 */
+	@XmlElement
+	List<Integer> value = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowProcessHistoriesMap()
+	protected RestWorkflowComponentNidToStampsMapEntry()
 	{
 		//For jaxb
 	}
@@ -58,9 +64,48 @@ public class RestWorkflowProcessHistoriesMap
 	/**
 	 * @param map
 	 */
-	public RestWorkflowProcessHistoriesMap(Collection<RestWorkflowProcessHistoriesMapEntry> entries) {
-		if (entries != null) {
-			this.entries.addAll(entries);
+	public RestWorkflowComponentNidToStampsMapEntry(int key, Collection<Integer> value) {
+		this.key = key;
+		if (value != null) {
+			for (int stamp : value) {
+				this.value.add(stamp);
+			}
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + key;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestWorkflowComponentNidToStampsMapEntry other = (RestWorkflowComponentNidToStampsMapEntry) obj;
+		if (key != other.key)
+			return false;
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowComponentNidToStampsMapEntry [key=" + key + ", value=" + value + "]";
 	}
 }

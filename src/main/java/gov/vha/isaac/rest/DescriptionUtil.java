@@ -23,12 +23,20 @@ import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.ConceptAsse
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.NecessarySet;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
@@ -37,6 +45,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.ComponentNidSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -44,6 +53,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.assertions.ConceptAssertion;
@@ -58,6 +68,8 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
  */
 public class DescriptionUtil
 {
+	private static Logger log = LogManager.getLogger(DescriptionUtil.class);
+
 	public static enum DescriptionType 
 	{
 		FSN, SYNONYM, DEFINITION;
@@ -165,19 +177,19 @@ public class DescriptionUtil
 						conceptId);
 		SememeChronology<DescriptionSememe<?>> newDescription = (SememeChronology<DescriptionSememe<?>>)
 				descBuilder.build(
-						ec, ChangeCheckerMode.ACTIVE);
+						ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 
 		for (int id : preferredDialectConceptIds) {
 			SememeBuilder<?> acceptabilityTypeBuilder = Get.sememeBuilderService().getComponentSememeBuilder(
 					TermAux.PREFERRED.getNid(), newDescription.getNid(),
 					id);
-			acceptabilityTypeBuilder.build(ec, ChangeCheckerMode.ACTIVE);
+			acceptabilityTypeBuilder.build(ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 		}
 		for (int id : acceptableDialectConceptIds) {
 			SememeBuilder<?> acceptabilityTypeBuilder = Get.sememeBuilderService().getComponentSememeBuilder(
 					TermAux.ACCEPTABLE.getNid(), newDescription.getNid(),
 					id);
-			acceptabilityTypeBuilder.build(ec, ChangeCheckerMode.ACTIVE);
+			acceptabilityTypeBuilder.build(ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 		}
 
 		if (sourceDescriptionTypeUUID != null)
@@ -216,7 +228,7 @@ public class DescriptionUtil
 
 		@SuppressWarnings("unchecked")
 		SememeChronology<ComponentNidSememe<?>> sc = (SememeChronology<ComponentNidSememe<?>>)sb.build(
-				ec, ChangeCheckerMode.ACTIVE);
+				ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 
 		return sc;
 	}
@@ -283,7 +295,7 @@ public class DescriptionUtil
 		SememeBuilder sb = Get.sememeBuilderService().getDynamicSememeBuilder(referencedComponentNid, 
 				Get.identifierService().getConceptSequenceForUuids(refexDynamicTypeConceptId), values);
 
-		SememeChronology<DynamicSememe<?>> sc = (SememeChronology<DynamicSememe<?>>)sb.build(ec, ChangeCheckerMode.ACTIVE);
+		SememeChronology<DynamicSememe<?>> sc = (SememeChronology<DynamicSememe<?>>)sb.build(ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 
 		return sc;
 	}
@@ -371,7 +383,7 @@ public class DescriptionUtil
 				refsetConceptSequence);
 
 		@SuppressWarnings("unchecked")
-		SememeChronology<StringSememe<?>> sc = (SememeChronology<StringSememe<?>>)sb.build(ec, ChangeCheckerMode.ACTIVE);
+		SememeChronology<StringSememe<?>> sc = (SememeChronology<StringSememe<?>>)sb.build(ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 
 		return sc;
 	}
@@ -433,7 +445,7 @@ public class DescriptionUtil
 				lc.getStatedAssemblageSequence());
 
 		@SuppressWarnings("unchecked")
-		SememeChronology<LogicGraphSememe<?>> sci = (SememeChronology<LogicGraphSememe<?>>) sb.build(ec, ChangeCheckerMode.ACTIVE);
+		SememeChronology<LogicGraphSememe<?>> sci = (SememeChronology<LogicGraphSememe<?>>) sb.build(ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 
 		if (sourceRelTypeConceptUUID != null) {
 			addUUIDAnnotation(ec, concept, sourceRelTypeConceptUUID,
@@ -458,8 +470,51 @@ public class DescriptionUtil
 
 		@SuppressWarnings("unchecked")
 		SememeChronology<LogicGraphSememe<?>> sci = (SememeChronology<LogicGraphSememe<?>>) sb.build(
-				ec, ChangeCheckerMode.ACTIVE);
+				ec, ChangeCheckerMode.ACTIVE).getNoThrow();
 
 		return sci;
+	}
+	
+	public static Optional<SememeChronology<? extends SememeVersion<?>>> getAnnotationSememe(int descriptionNid, int assemblageConceptId) {
+		Set<Integer> allowedAssemblages = new HashSet<>();
+		allowedAssemblages.add(assemblageConceptId);
+		Stream<SememeChronology<? extends SememeVersion<?>>> sememes = Get.sememeService().getSememesForComponentFromAssemblages(descriptionNid, allowedAssemblages);
+		Set<SememeChronology<? extends SememeVersion<?>>> sememeSet = sememes.distinct().collect(Collectors.toSet());
+		switch(sememeSet.size()) {
+		case 0:
+			return Optional.empty();
+		case 1:
+			return Optional.of(sememeSet.iterator().next());
+			default:
+				throw new RuntimeException("Component " + descriptionNid + " has " + sememeSet.size() + " annotations of type " + Get.conceptDescriptionText(assemblageConceptId) + " (should only have zero or 1)");
+		}
+	}
+
+	public static Optional<UUID> getDescriptionExtendedTypeConceptUuid(StampCoordinate sc, int descriptionNid) {
+		Optional<SememeChronology<? extends SememeVersion<?>>> descriptionExtendedTypeUuidAnnotationSememe =
+				getAnnotationSememe(descriptionNid, Get.identifierService().getConceptSequenceForUuids(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid()));
+		
+		if (descriptionExtendedTypeUuidAnnotationSememe.isPresent()) {
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			Optional<LatestVersion<DynamicSememeUUIDImpl>> optionalLatestSememeVersion = ((SememeChronology)(descriptionExtendedTypeUuidAnnotationSememe.get())).getLatestVersion(DynamicSememeUUIDImpl.class, sc);
+			if (optionalLatestSememeVersion.get().contradictions().isPresent() && optionalLatestSememeVersion.get().contradictions().get().size() > 0) {
+				// TODO properly handle contradictions
+				log.warn("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " + optionalLatestSememeVersion.get().contradictions().get().size() + " contradictions");
+				//throw new RuntimeException("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " + optionalLatestSememeVersion.get().contradictions().get().size() + " contradictions");
+			}
+			
+			return Optional.of(optionalLatestSememeVersion.get().value().getDataUUID());
+		} else {
+			return Optional.empty();
+		}
+	}
+	public static Optional<Integer> getDescriptionExtendedTypeConceptSequence(StampCoordinate sc, int descriptionNid) {
+		Optional<UUID> descriptionExtendedTypeConceptUuidOptional = getDescriptionExtendedTypeConceptUuid(sc, descriptionNid);
+		
+		if (descriptionExtendedTypeConceptUuidOptional.isPresent()) {
+			return Optional.of(Get.identifierService().getConceptSequenceForUuids(descriptionExtendedTypeConceptUuidOptional.get()));
+		} else {
+			return Optional.empty();
+		}
 	}
 }

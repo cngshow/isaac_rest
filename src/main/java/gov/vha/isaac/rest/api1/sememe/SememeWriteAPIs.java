@@ -39,8 +39,10 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.model.sememe.version.ComponentNidSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
@@ -49,6 +51,7 @@ import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
+import gov.vha.isaac.rest.DescriptionUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -110,9 +113,8 @@ public class SememeWriteAPIs
 							creationData.getText(),
 							creationData.getReferencedComponentNid());
 
-			@SuppressWarnings("unchecked")
 			SememeChronology<? extends DescriptionSememe<?>> newDescription = descriptionSememeBuilder.build(RequestInfo.get().getEditCoordinate(),
-					ChangeCheckerMode.ACTIVE).get(); // TODO should be ACTIVE?
+					ChangeCheckerMode.ACTIVE).get();
 
 			if (creationData.getPreferredInDialectAssemblagesIds() != null) {
 				creationData.getPreferredInDialectAssemblagesIds().forEach((id) -> {
@@ -133,14 +135,14 @@ public class SememeWriteAPIs
 				});
 			}
 
-			// TODO add extended-description-type component sememe when dan creates metadata constant
-//			if (creationData.getExtendedDescriptionTypeConceptSequence() != null && creationData.getExtendedDescriptionTypeConceptSequence() > 0) {
-//				sememeBuilderService.getComponentSememeBuilder(
-//						creationData.getExtendedDescriptionTypeConceptSequence(), 
-//						newDescription.getNid(),
-//						DESCRIPTION_SOURCE_TYPE_REFERENCE_SETS).
-//						build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE);
-//			}
+			// TODO test addition of extendedDescriptionTypeConceptSequence UUID annotation to new description
+			if (creationData.getExtendedDescriptionTypeConceptSequence() != null) {
+				DescriptionUtil.addAnnotation(
+						RequestInfo.get().getEditCoordinate(),
+						newDescription.getNid(),
+						new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(creationData.getExtendedDescriptionTypeConceptSequence()).get()),
+						DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid());
+			}
 
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" 
 					+ newDescription.getNid() + ", text=" + creationData.getText()).get();

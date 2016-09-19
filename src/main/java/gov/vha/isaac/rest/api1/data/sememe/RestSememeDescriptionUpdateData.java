@@ -67,6 +67,7 @@ public class RestSememeDescriptionUpdateData
 	@XmlElement
 	int descriptionTypeConceptSequence;
 
+	// TODO determine if extendedDescriptionTypeConceptSequence should be updatable
 //	/**
 //	 * A concept sequence of an optional concept that represents an extended type of the description.  
 //	 * This may be something like Abbreviation or Vista Name

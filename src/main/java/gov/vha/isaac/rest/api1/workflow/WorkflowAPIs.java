@@ -20,8 +20,10 @@ package gov.vha.isaac.rest.api1.workflow;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import javax.ws.rs.GET;
@@ -42,6 +44,7 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableActions;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
@@ -133,21 +136,19 @@ public class WorkflowAPIs {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.wfDefinitionId, RequestParameters.wfUserId);
 		try {
-			Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
-			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowAccessor()
-					.getAdvanceableProcessInformation(
-							RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
-							RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId));
+			Set<RestWorkflowProcessHistoriesMapEntry> entrySet = new HashSet<>();
+			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowAccessor().getAdvanceableProcessInformation(
+					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
+					RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId));
 
 			for (Map.Entry<ProcessDetail, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 				List<RestWorkflowProcessHistory> restList = new ArrayList<>();
 				ochreMapEntry.getValue().stream().forEachOrdered(a -> restList.add(new RestWorkflowProcessHistory(a)));
-				map.put(ochreMapEntry.getKey(), restList);
+				entrySet.add(new RestWorkflowProcessHistoriesMapEntry(new RestWorkflowProcess(ochreMapEntry.getKey()), restList));
 			}
-			return new RestWorkflowProcessHistoriesMap(map);
+			return new RestWorkflowProcessHistoriesMap(entrySet);
 		} catch (Exception e) {
-			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId
-					+ " and user id " + wfUserId;
+			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId + " and user id " + wfUserId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}

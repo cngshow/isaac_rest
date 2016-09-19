@@ -18,9 +18,9 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
- * {@link RestWorkflowAvailableActionsMap}
+ * {@link RestWorkflowProcessHistoriesMapEntry}
  * 
  * This class carries back result map
  *
@@ -39,18 +39,24 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowAvailableActionsMap
+public class RestWorkflowProcessHistoriesMapEntry
 {
 	/**
-	 * The contained results
+	 * The key
 	 */
 	@XmlElement
-	Map<Object, List<RestWorkflowAvailableAction>> map = new HashMap<>();
+	RestWorkflowProcess key;
+
+	/**
+	 * The value
+	 */
+	@XmlElement
+	List<RestWorkflowProcessHistory> value = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowAvailableActionsMap()
+	protected RestWorkflowProcessHistoriesMapEntry()
 	{
 		//For jaxb
 	}
@@ -58,9 +64,49 @@ public class RestWorkflowAvailableActionsMap
 	/**
 	 * @param map
 	 */
-	public RestWorkflowAvailableActionsMap(Map<Object, List<RestWorkflowAvailableAction>> map) {
-		if (map != null) {
-			this.map.putAll(map);
+	public RestWorkflowProcessHistoriesMapEntry(RestWorkflowProcess key, Collection<RestWorkflowProcessHistory> value) {
+		this.key = key;
+		if (value != null) {
+			this.value.addAll(value);
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((key == null) ? 0 : key.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestWorkflowProcessHistoriesMapEntry other = (RestWorkflowProcessHistoriesMapEntry) obj;
+		if (key == null) {
+			if (other.key != null)
+				return false;
+		} else if (!key.equals(other.key))
+			return false;
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowProcessHistoriesMapEntry [key=" + key + ", value=" + value + "]";
 	}
 }

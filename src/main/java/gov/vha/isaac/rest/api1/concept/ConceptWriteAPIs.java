@@ -236,7 +236,7 @@ public class ConceptWriteAPIs
 			//SememeChronology<DynamicSememe<?>> requiredDescriptionsExtendedTypeSememe = null;
 			if (requiredDescriptionsExtendedTypeConceptId != null) {
 				//requiredDescriptionsExtendedTypeSememe = 
-						DescriptionUtil.addAnnotation(
+				DescriptionUtil.addAnnotation(
 						editCoordinate,
 						definitionBuilder.getNid(),
 						new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(requiredDescriptionsExtendedTypeConceptId).get()),

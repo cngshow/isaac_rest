@@ -67,12 +67,12 @@ public class RestSememeDescriptionCreateData
 	@XmlElement
 	int descriptionTypeConceptSequence;
 
-//	/**
-//	 * A concept sequence of an optional concept that represents an extended type of the description.  
-//	 * This may be something like Abbreviation or Vista Name
-//	 */
-//	@XmlElement
-//	Integer extendedDescriptionTypeConceptSequence;
+	/**
+	 * A concept sequence of an optional concept that represents an extended type of the description.  
+	 * This may be something like Abbreviation or Vista Name
+	 */
+	@XmlElement
+	Integer extendedDescriptionTypeConceptSequence;
 	
 	/**
 	 * The preferred dialects attached to this sememe
@@ -161,13 +161,13 @@ public class RestSememeDescriptionCreateData
 		return descriptionTypeConceptSequence;
 	}
 	
-//	/**
-//	 * @return the extendedDescriptionTypeConceptSequence
-//	 */
-//	@XmlTransient
-//	public Integer getExtendedDescriptionTypeConceptSequence() {
-//		return extendedDescriptionTypeConceptSequence;
-//	}
+	/**
+	 * @return the extendedDescriptionTypeConceptSequence
+	 */
+	@XmlTransient
+	public Integer getExtendedDescriptionTypeConceptSequence() {
+		return extendedDescriptionTypeConceptSequence;
+	}
 
 	/**
 	 * @return the preferred dialectIds
@@ -203,6 +203,7 @@ public class RestSememeDescriptionCreateData
 				+ ", languageConceptSequence=" + languageConceptSequence
 				+ ", text=" + text
 				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
+				+ ", extendedDescriptionTypeConceptSequence=" + extendedDescriptionTypeConceptSequence
 				+ ", preferredInDialectAssemblagesIds=" + preferredInDialectAssemblagesIds
 				+ ", acceptableInDialectAssemblagesIds=" + acceptableInDialectAssemblagesIds
 				+ ", referencedComponentNid=" + referencedComponentNid
