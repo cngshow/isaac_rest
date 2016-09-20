@@ -31,6 +31,8 @@ import gov.vha.isaac.metacontent.workflow.contents.UserPermission;
 
 /**
  * 
+ * Workflow role available for a user for a given workflow definition
+ * 
  * {@link RestWorkflowUserPermission}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>

@@ -47,11 +47,12 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class CommentAPIs
 {
 	/**
-	 * Returns a single version of a comment.
+	 * Returns a single version of a comment {@link RestCommentVersion}.
+	 * 
 	 * @param id - A UUID, nid, or sememe sequence that identifies the comment.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the comment version object.  
+	 * @return the comment version object {@link RestCommentVersion}.  
 	 * 
 	 * @throws RestException 
 	 */
@@ -81,7 +82,8 @@ public class CommentAPIs
 	}
 	
 	/**
-	 * Returns the current version of any comments attached to a referenced component
+	 * Returns a list ({@link RestCommentVersions}) containing current version ({@link RestCommentVersion}) of any and all comments attached to a referenced component
+	 * 
 	 * @param id - A UUID or nid of the component being referenced by a comment
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().

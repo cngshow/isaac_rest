@@ -750,8 +750,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
 		RestCommentVersion newCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
-		Assert.assertEquals(newCommentText, newCommentObject.comment);
-		Assert.assertEquals(newCommentContext, newCommentObject.commentContext);
+		Assert.assertEquals(newCommentText, newCommentObject.getComment());
+		Assert.assertEquals(newCommentContext, newCommentObject.getCommentContext());
 		
 		// Update comment with new comment text value and empty comment context value
 		String updatedCommentText = "An updated comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
@@ -778,8 +778,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
 		RestCommentVersion updatedCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
-		Assert.assertEquals(updatedCommentText, updatedCommentObject.comment);
-		Assert.assertTrue(StringUtils.isBlank(updatedCommentObject.commentContext));
+		Assert.assertEquals(updatedCommentText, updatedCommentObject.getComment());
+		Assert.assertTrue(StringUtils.isBlank(updatedCommentObject.getCommentContext()));
 
 		// Get list of RestCommentVersion associated with MetaData.SNOROCKET_CLASSIFIER
 		Response getCommentVersionByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent + MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString())
@@ -787,11 +787,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getCommentVersionByReferencedItemResult = checkFail(getCommentVersionByReferencedItemResponse).readEntity(String.class);
 		RestCommentVersions commentVersionsObject = XMLUtils.unmarshalObject(RestCommentVersions.class, getCommentVersionByReferencedItemResult);
-		Assert.assertTrue(commentVersionsObject != null && commentVersionsObject.commentVersions.size() > 0);
+		Assert.assertTrue(commentVersionsObject != null && commentVersionsObject.getCommentVersions().size() > 0);
 		RestCommentVersion commentVersionRetrievedByReferencedItem = null;
-		for (RestCommentVersion commentVersion : commentVersionsObject.commentVersions) {
-			if (commentVersion.comment != null && commentVersion.comment.equals(updatedCommentText)
-					&& StringUtils.isBlank(commentVersion.commentContext)) {
+		for (RestCommentVersion commentVersion : commentVersionsObject.getCommentVersions()) {
+			if (commentVersion.getComment() != null && commentVersion.getComment().equals(updatedCommentText)
+					&& StringUtils.isBlank(commentVersion.getCommentContext())) {
 				commentVersionRetrievedByReferencedItem = commentVersion;
 				break;
 			}

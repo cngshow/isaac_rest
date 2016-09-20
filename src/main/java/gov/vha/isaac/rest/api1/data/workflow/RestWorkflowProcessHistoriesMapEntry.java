@@ -20,20 +20,24 @@ package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
+ * A tuple containing the key/value pair constituting a map entry
+ * in a map of List<{@link RestWorkflowProcessHistory}> by {@link RestWorkflowProcess}
+ * A set of these constitutes a {@link RestWorkflowProcessHistoriesMap}.
+
  * {@link RestWorkflowProcessHistoriesMapEntry}
  * 
- * This class carries back result map
- *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
@@ -42,13 +46,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestWorkflowProcessHistoriesMapEntry
 {
 	/**
-	 * The key
+	 * The key {@link RestWorkflowProcess}
 	 */
 	@XmlElement
 	RestWorkflowProcess key;
 
 	/**
-	 * The value
+	 * The value List<{@link RestWorkflowProcessHistory}>
 	 */
 	@XmlElement
 	List<RestWorkflowProcessHistory> value = new ArrayList<>();
@@ -69,6 +73,22 @@ public class RestWorkflowProcessHistoriesMapEntry
 		if (value != null) {
 			this.value.addAll(value);
 		}
+	}
+
+	/**
+	 * @return the key
+	 */
+	@XmlTransient
+	public RestWorkflowProcess getKey() {
+		return key;
+	}
+
+	/**
+	 * @return the value
+	 */
+	@XmlTransient
+	public List<RestWorkflowProcessHistory> getValue() {
+		return Collections.unmodifiableList(value);
 	}
 
 	/* (non-Javadoc)

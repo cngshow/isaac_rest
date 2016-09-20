@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * This class is a trivial wrapper for an int value which is serializable/deserializable by JAXB
  * 
  * {@link RestInteger}
  *
@@ -37,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestInteger
 {
 	/**
-	 * The Integer value
+	 * The int value
 	 */
 	@XmlElement
 	int value;

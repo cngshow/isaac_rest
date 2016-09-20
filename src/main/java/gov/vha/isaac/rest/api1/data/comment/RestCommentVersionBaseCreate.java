@@ -20,6 +20,9 @@ package gov.vha.isaac.rest.api1.data.comment;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -33,14 +36,15 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestCommentVersionBaseCreate extends RestCommentVersionBase
 {	
 	/**
-	 * The identifier of the object that is being commented on.  Could be a concept or a sememe
+	 * The identifier of the component that is being commented on.  Could be a concept or a sememe
 	 */
 	@XmlElement
-	public int commentedItem;
+	int commentedItem;
 
 	protected RestCommentVersionBaseCreate()
 	{
@@ -52,5 +56,22 @@ public class RestCommentVersionBaseCreate extends RestCommentVersionBase
 		super(comment, commentContext);
 		
 		this.commentedItem = commentedItem;
+	}
+
+	/**
+	 * @return the commentedItem
+	 */
+	@XmlTransient
+	public int getCommentedItem() {
+		return commentedItem;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestCommentVersionBaseCreate [commentedItem=" + commentedItem + ", comment=" + comment
+				+ ", commentContext=" + commentContext + "]";
 	}
 }

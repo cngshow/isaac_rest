@@ -29,7 +29,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
 
 /**
- * 
+ * A single advancement (history) of a given workflow {@link RestWorkflowProcess}. A new entry is
+ * added for every workflow {@link RestWorkflowAvailableAction} a user takes.
+ *
  * {@link RestWorkflowProcessHistory}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>

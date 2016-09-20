@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -81,7 +82,7 @@ public class RestSememeDescriptionVersions
 	 */
 	@XmlTransient
 	public List<RestSememeDescriptionVersion> getResults() {
-		return results;
+		return Collections.unmodifiableList(results);
 	}
 
 	/* (non-Javadoc)

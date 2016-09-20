@@ -20,18 +20,21 @@ package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
- * {@link RestWorkflowProcessHistories}
- * 
+ * A wrapper for a list of {@link RestWorkflowProcessHistory}
  * This class carries back result sets
+
+ * {@link RestWorkflowProcessHistories}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
@@ -61,5 +64,21 @@ public class RestWorkflowProcessHistories
 		if (results != null) {
 			this.results.addAll(results);
 		}
+	}
+
+	/**
+	 * @return the results
+	 */
+	@XmlTransient
+	public Collection<RestWorkflowProcessHistory> getResults() {
+		return Collections.unmodifiableList((ArrayList<RestWorkflowProcessHistory>)results);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowProcessHistories [results=" + results + "]";
 	}
 }

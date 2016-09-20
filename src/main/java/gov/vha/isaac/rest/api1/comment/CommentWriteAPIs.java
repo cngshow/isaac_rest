@@ -54,6 +54,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
 
 
 /**
+ * APIs for creating and editing comments
+ * 
  * {@link CommentWriteAPIs}
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
@@ -62,10 +64,11 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class CommentWriteAPIs
 {
 	/**
-	 * @param dataToCreateComment - RestCommentVersionBaseCreate object containing data used to construct a new comment
+	 * Create a new comment according to the 
+	 * @param dataToCreateComment - {@link RestCommentVersionBaseCreate} object containing data used to construct a new comment
 	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
 	 * getEditCoordinatesToken().
-	 * @return the Sememe sequence identifying the created sememe which stores the comment data
+	 * @return the int Sememe sequence in a {@link RestInteger} wrapper identifying the created sememe which stores the comment data
 	 * @throws RestException
 	 */
 	//TODO fix the comments above around editToken 
@@ -81,49 +84,54 @@ public class CommentWriteAPIs
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Integer commentedItemNid = null;
-		if (dataToCreateComment.commentedItem == 0) {
-			throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.commentedItem), "invalid specified id for commented item");
-		} else {
-			// Concept Sequence// NID
-			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(dataToCreateComment.commentedItem);
-			if (concept.isPresent()) {
-				commentedItemNid = concept.get().getNid();
-			} else {
-				Optional<? extends SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getOptionalSememe(dataToCreateComment.commentedItem);
-				if (sememe.isPresent()) {
-					commentedItemNid = sememe.get().getNid();
-				}
-			}
-			if (commentedItemNid == null) {
-				throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.commentedItem), "no concept or sememe for specified id for commented item");
-			}
-		}
-		
-		Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
-		
-		if (StringUtils.isBlank(dataToCreateComment.commentContext)) 
-		{
-			throw new RestException("The parameter 'commentText' is required");
-		}
-
-		SememeChronology<? extends DynamicSememe<?>> built =  Get.sememeBuilderService().getDynamicSememeBuilder(
-				commentedItemNid,  
-				DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
-				new DynamicSememeData[] {
-						new DynamicSememeStringImpl(dataToCreateComment.comment),
-						(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
-				).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
-		
 		try
 		{
+			Integer commentedItemNid = null;
+			if (dataToCreateComment.getCommentedItem() == 0) {
+				throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.getCommentedItem()), "invalid specified id for commented item");
+			} else {
+				// Concept Sequence// NID
+				Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(dataToCreateComment.getCommentedItem());
+				if (concept.isPresent()) {
+					commentedItemNid = concept.get().getNid();
+				} else {
+					Optional<? extends SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getOptionalSememe(dataToCreateComment.getCommentedItem());
+					if (sememe.isPresent()) {
+						commentedItemNid = sememe.get().getNid();
+					}
+				}
+				if (commentedItemNid == null) {
+					throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.getCommentedItem()), "no concept or sememe for specified id for commented item");
+				}
+			}
+
+			Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
+
+			if (StringUtils.isBlank(dataToCreateComment.getCommentContext())) 
+			{
+				throw new RestException("The parameter 'commentText' is required");
+			}
+
+			SememeChronology<? extends DynamicSememe<?>> built =  Get.sememeBuilderService().getDynamicSememeBuilder(
+					commentedItemNid,  
+					DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
+					new DynamicSememeData[] {
+							new DynamicSememeStringImpl(dataToCreateComment.getComment()),
+							(StringUtils.isBlank(dataToCreateComment.getCommentContext()) ? null : new DynamicSememeStringImpl(dataToCreateComment.getCommentContext()))}
+					).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+
 			Get.commitService().commit("Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
+
+			return new RestInteger(built.getSememeSequence());
+		}
+		catch (RestException e)
+		{
+			throw  e;
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException(e);
+			throw new RestException("Failed creating new comment " + dataToCreateComment + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage(), e);
 		}
-		return new RestInteger(built.getSememeSequence());
 	}
 	
 	/**
@@ -179,8 +187,8 @@ public class CommentWriteAPIs
 		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse, RequestInfo.get().getEditCoordinate());
 		
 		editVersion.setData(
-			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.comment),
-			(StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToUpdateComment.commentContext))});
+			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.getComment()),
+			(StringUtils.isBlank(dataToUpdateComment.getCommentContext()) ? null : new DynamicSememeStringImpl(dataToUpdateComment.getCommentContext()))});
 		
 		Get.commitService().addUncommitted(sc);
 		

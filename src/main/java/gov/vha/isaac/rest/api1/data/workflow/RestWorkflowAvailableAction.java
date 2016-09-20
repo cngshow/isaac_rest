@@ -30,6 +30,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
 
 /**
+ * The available workflow actions as defined via the workflow definition. Each
+ * entry contains a single initialState/action/outcomeState triplet that is an
+ * available action for a given role.
+ * 
+ * The workflow must be in the initial state and a user must have the workflow
+ * role to be able to perform the action.
  * 
  * {@link RestWorkflowAvailableAction}
  *
@@ -41,7 +47,7 @@ import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
 public class RestWorkflowAvailableAction
 {
 	/**
-	 * The identifier data
+	 * The identifier
 	 */
 	@XmlElement
 	UUID id;

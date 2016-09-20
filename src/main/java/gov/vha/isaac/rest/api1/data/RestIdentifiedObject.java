@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.data;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +42,7 @@ public class RestIdentifiedObject
 	 * The globally unique, fixed, stable set of identifiers for the object
 	 */
 	@XmlElement
-	List<UUID> uuids;
+	List<UUID> uuids = new ArrayList<>();
 	
 	RestIdentifiedObject() {
 		// For JAXB only
@@ -49,9 +50,14 @@ public class RestIdentifiedObject
 	
 	public RestIdentifiedObject(List<UUID> uuids)
 	{
-		this.uuids = uuids;
+		if (uuids != null) {
+			this.uuids.addAll(uuids);
+		}
 	}
 	
+	/**
+	 * @return UUIDs
+	 */
 	@XmlTransient
 	public List<UUID> getUuids() {
 		return Collections.unmodifiableList(uuids);

@@ -99,21 +99,21 @@ public class RestConceptCreateData
 	 * @param requiredDescriptionsAcceptableDialectsConceptIds
 	 */
 	public RestConceptCreateData(
-			Collection<Integer> parentIds,
+			Collection<Integer> parentConceptIds,
 			String fsn,
 			String preferredTerm,
-			int requiredDescriptionsLanguageSequence,
+			int requiredDescriptionsLanguageConceptId,
 			Integer requiredDescriptionsExtendedTypeId,
 			Collection<Integer> requiredDescriptionsPreferredDialects,
 			Collection<Integer> requiredDescriptionsAcceptableDialects) {
 		super();
-		if (parentIds.size() < 1) {
+		if (parentConceptIds.size() < 1) {
 			throw new IllegalArgumentException("At least one parent concept sequence is required");
 		}
-		this.parentConceptIds.addAll(parentIds);
+		this.parentConceptIds.addAll(parentConceptIds);
 		this.fsn = fsn;
 		this.preferredTerm = preferredTerm;
-		this.requiredDescriptionsLanguageConceptId = requiredDescriptionsLanguageSequence;
+		this.requiredDescriptionsLanguageConceptId = requiredDescriptionsLanguageConceptId;
 		
 		this.requiredDescriptionsExtendedTypeConceptId = requiredDescriptionsExtendedTypeId;
 		if (requiredDescriptionsPreferredDialects != null) {

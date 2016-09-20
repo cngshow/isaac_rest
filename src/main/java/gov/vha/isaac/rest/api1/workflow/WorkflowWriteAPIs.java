@@ -193,7 +193,7 @@ public class WorkflowWriteAPIs
 	 * 
 	 * Remove component from workflow for process and component NID
 	 * 
-	 * @param roleData RestWorkflowRoleChangeData workflow definition user role change data
+	 * @param nid identifier of component to be removed from workflow
 	 * @throws RestException
 	 */
 	@PUT

@@ -35,6 +35,8 @@ import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
 /**
+ * The metadata associated with a given workflow process (or workflow instance). This doesn't
+ * include its history which is available via {@link RestWorkflowProcessHistory}
  * 
  * {@link RestWorkflowProcess}
  *
@@ -46,37 +48,37 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 {
 	/**
-	 * The identifier
+	 * The workflow process identifier
 	 */
 	@XmlElement
 	UUID id;
 
 	/**
-	 * The time created
+	 * The time workflow process created
 	 */
 	@XmlElement
 	long timeCreated;
 
 	/**
-	 * The time launched
+	 * The time workflow process launched
 	 */
 	@XmlElement
 	long timeLaunched = -1L;
 
 	/**
-	 * The time cancelled or concluded
+	 * The time workflow process cancelled or concluded
 	 */
 	@XmlElement
 	long timeCancelledOrConcluded = -1L;
 
 	/**
-	 * The defining status
+	 * The defining workflow process status
 	 */
 	@XmlElement
 	RestWorkflowProcessStatusType processStatus;
 
 	/**
-	 * The stamp sequences by component nid
+	 * The stamp sequences by component nid associated with the workflow process
 	 */
 	@XmlElement
 	Set<RestWorkflowComponentNidToStampsMapEntry> componentNidToStampsMap = new HashSet<>();

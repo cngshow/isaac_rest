@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api.data.wrappers;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * This class is a trivial wrapper for a list of String values which is serializable/deserializable by JAXB
  * 
  * {@link RestStrings}
  *
@@ -70,7 +72,7 @@ public class RestStrings
 	 */
 	@XmlTransient
 	public Collection<String> getValue() {
-		return Collections.unmodifiableCollection(value);
+		return Collections.unmodifiableList((ArrayList<String>)value);
 	}
 
 	/* (non-Javadoc)

@@ -24,12 +24,15 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
+ * A wrapper for a list of {@link RestWorkflowDefinitionDetail}
+ * 
  * {@link RestWorkflowDefinitionDetails}
  * 
  * This class carries back result sets
@@ -62,5 +65,21 @@ public class RestWorkflowDefinitionDetails
 		if (results != null) {
 			this.results.addAll(results);
 		}
+	}
+
+	/**
+	 * @return the results
+	 */
+	@XmlTransient
+	public List<RestWorkflowDefinitionDetail> getResults() {
+		return results;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowDefinitionDetails [results=" + results + "]";
 	}
 }

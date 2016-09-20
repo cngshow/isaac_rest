@@ -19,11 +19,13 @@
 package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -62,5 +64,21 @@ public class RestWorkflowProcessHistoriesMap
 		if (entries != null) {
 			this.entries.addAll(entries);
 		}
+	}
+
+	/**
+	 * @return the entries
+	 */
+	@XmlTransient
+	public Set<RestWorkflowProcessHistoriesMapEntry> getEntries() {
+		return Collections.unmodifiableSet(entries);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowProcessHistoriesMap [entries=" + entries + "]";
 	}
 }

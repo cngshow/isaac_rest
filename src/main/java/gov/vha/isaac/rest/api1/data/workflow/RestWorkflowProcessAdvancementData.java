@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * Object containing data required to advance a {@link RestWorkflowProcess}.  Passed to {@link WorkflowWriteAPIs#advanceWorkflowProcess}.
  * 
  * {@link RestWorkflowProcessAdvancementData}
  *

@@ -20,7 +20,9 @@ package gov.vha.isaac.rest.api1.data.comment;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -33,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestCommentVersionBase
 {
@@ -40,12 +43,13 @@ public class RestCommentVersionBase
 	 * The comment
 	 */
 	@XmlElement
-	public String comment;
+	String comment;
+
 	/**
 	 * An (optional) comment context to store with the comment.  Typically used for key words, etc. 
 	 */
 	@XmlElement
-	public String commentContext;
+	String commentContext;
 
 	protected RestCommentVersionBase()
 	{
@@ -55,6 +59,22 @@ public class RestCommentVersionBase
 	public RestCommentVersionBase(String comment, String commentContext) {
 		this.comment = comment;
 		this.commentContext = commentContext;
+	}
+
+	/**
+	 * @return the comment
+	 */
+	@XmlTransient
+	public String getComment() {
+		return comment;
+	}
+
+	/**
+	 * @return the commentContext
+	 */
+	@XmlTransient
+	public String getCommentContext() {
+		return commentContext;
 	}
 
 	/* (non-Javadoc)

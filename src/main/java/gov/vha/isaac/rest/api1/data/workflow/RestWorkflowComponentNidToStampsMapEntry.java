@@ -20,16 +20,22 @@ package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
-/**
+/** 
+ * A tuple containing the key/value pair constituting a map entry
+ * in a map of component nids to stamps
+ * A set of these constitutes a map contained in {@link RestWorkflowProcess}
+ * 
  * {@link RestWorkflowComponentNidToStampsMapEntry}
  * 
  * This class carries back result map
@@ -71,6 +77,22 @@ public class RestWorkflowComponentNidToStampsMapEntry
 				this.value.add(stamp);
 			}
 		}
+	}
+
+	/**
+	 * @return the key
+	 */
+	@XmlTransient
+	public int getKey() {
+		return key;
+	}
+
+	/**
+	 * @return the value
+	 */
+	@XmlTransient
+	public List<Integer> getValue() {
+		return Collections.unmodifiableList(value);
 	}
 
 	/* (non-Javadoc)

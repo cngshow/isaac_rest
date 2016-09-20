@@ -30,9 +30,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
- * {@link RestWorkflowAvailableActions}
+ * A wrapper for a list of {@link RestWorkflowAvailableAction}
  * 
- * This class carries back result sets
+ * {@link RestWorkflowAvailableActions}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
