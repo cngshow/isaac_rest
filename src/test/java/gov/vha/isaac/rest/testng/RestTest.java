@@ -256,6 +256,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	
 	// PLACE TEST METHODS BELOW HERE
 	@Test
+	public void testGetDescriptionExtendedType()
+	{
+		
+		
+	}
+	@Test
 	public void testSememeAPIs()
 	{
 		// Create a random string to confirm target data are relevant

@@ -30,6 +30,7 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentSpecificationData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -193,29 +194,25 @@ public class WorkflowWriteAPIs
 	 * 
 	 * Remove component from workflow for process and component NID
 	 * 
-	 * @param nid identifier of component to be removed from workflow
 	 * @throws RestException
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponentFromWorkflowComponent)
 	public void removeComponentFromWorkflow(
-			@QueryParam(RequestParameters.wfProcessId) String wfProcessId,
-			@QueryParam(RequestParameters.nid) String nid) throws RestException
+			RestWorkflowProcessComponentSpecificationData specifiedComponent) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.wfProcessId,
-				RequestParameters.nid);
+				RequestInfo.get().getParameters());
 		
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
 		try {
 			provider.removeComponentFromWorkflow(
-					RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
-					RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, nid));
+					specifiedComponent.getProcessId(),
+					RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid", specifiedComponent.getComponentNid()));
 		} catch (Exception e) {
-			throw new RestException("Failed removing component " + nid + " from process " + wfProcessId + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			throw new RestException("Failed removing component " + specifiedComponent + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
 	}
 }
