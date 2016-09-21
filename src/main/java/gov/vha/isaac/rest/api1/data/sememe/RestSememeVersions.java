@@ -70,4 +70,12 @@ public class RestSememeVersions
 		this.results = results;
 		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeVersions [results=" + results + "]";
+	}
 }

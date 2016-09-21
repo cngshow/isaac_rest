@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -51,19 +52,24 @@ public class RestWorkflowDefinitionDetail
 	UUID id;
 
 	/** The bpmn2 id that contains the definition if it exists. */
+	@XmlElement
 	String bpmn2Id;
 
 	/** The definition name. */
+	@XmlElement
 	String name;
 
 	/** The definition namespace. */
+	@XmlElement
 	String namespace;
 
 	/** The version of the definition. */
+	@XmlElement
 	String version;
 
 	/** The workflow roles available defined via the definition . */
-	Set<String> roles;
+	@XmlElement
+	Set<String> roles = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only

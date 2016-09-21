@@ -22,7 +22,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
@@ -48,8 +47,10 @@ public class WorkflowWriteAPIs
 	//private static Logger log = LogManager.getLogger(WorkflowWriteAPIs.class);
 
 	/**
+	 * Creates a new workflow process. In turn, a new entry is added to
+	 * the {@link RestWorkflowProcess} content store. The process status defaults as DEFINED.
 	 * 
-	 * Start a new workflow process
+	 * Used by users when creating a new process
 	 * 
 	 * @param workflowProcessCreationData structure containing data required to create a new workflow process
 	 * @return RestUUID uuid of new workflow process
@@ -139,8 +140,11 @@ public class WorkflowWriteAPIs
 	// WorkflowUpdater
 
 	/**
+	 * Advance an existing process {@link RestWorkflowProcess} with the specified action. In doing so, the
+	 * user must add an advancement comment.
 	 * 
-	 * Advance existing workflow process
+	 * Used by filling in the information prompted for after selecting a
+	 * Transition Workflow action.
 	 * 
 	 * @param processAdvancementData RestWorkflowProcessAdvancementData workflow advancement data
 	 * @throws RestException
@@ -191,8 +195,16 @@ public class WorkflowWriteAPIs
 	}
 */	
 	/**
+	 * Removes a component from a process {@link RestWorkflowProcess} where the component had been
+	 * previously saved and associated with. In doing so, reverts the component
+	 * to its original state prior to the saves associated with the component.
 	 * 
-	 * Remove component from workflow for process and component NID
+	 * The revert is performed by adding new versions to ensure that the
+	 * component attributes are identical prior to any modification associated
+	 * with the process. Note that nothing prevents future edits to be performed
+	 * upon the component associated with the same process.
+	 * 
+	 * Used when component is removed from the process' component details panel
 	 * 
 	 * @throws RestException
 	 */
