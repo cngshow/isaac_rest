@@ -26,8 +26,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.metacontent.workflow.contents.AvailableAction;
+import gov.vha.isaac.ochre.workflow.model.contents.AvailableAction;
 
 /**
  * The available workflow actions as defined via the workflow definition. Each

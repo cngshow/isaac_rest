@@ -64,9 +64,7 @@ import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
-import gov.vha.isaac.ochre.workflow.provider.Bpmn2FileImporter;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
+import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
@@ -117,7 +115,7 @@ import gov.vha.isaac.rest.tokens.CoordinatesTokens;
  */
 public class RestTest extends JerseyTestNg.ContainerPerClassTest
 {
-	private static final String BPMN_FILE_PATH = "src/test/resources/gov/vha/isaac/ochre/workflow/provider/StaticRestTestingDefinition.bpmn2";
+	private static final String BPMN_FILE_PATH = "/gov/vha/isaac/ochre/workflow/provider/StaticRestTestingDefinition.bpmn2";
 
 	private final static String taxonomyCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.taxonomyCoordinatePathComponent;
 	private final static String stampCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.stampCoordinatePathComponent;
@@ -149,7 +147,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			System.out.println("Launching Jersey within Grizzley for tests");
 			new File("target/test.data").mkdirs();
 			System.setProperty(DATA_STORE_ROOT_LOCATION_PROPERTY, "target/test.data");
-			setupWorkflow();
+			WorkflowProvider.BPMN_PATH = BPMN_FILE_PATH;
 			return LocalJettyRunner.configureJerseyServer();
 		}
 		catch (Exception e)
@@ -182,20 +180,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.fail("Test data file not found", e);
 		}
 		Assert.assertTrue(Get.conceptDescriptionText(MetaData.ASSEMBLAGE.getConceptSequence()).equals("assemblage (ISAAC)"));
-	}
-
-	private void setupWorkflow() throws ExecutionException {
-		try {
-			MVStoreMetaContentProvider store = new MVStoreMetaContentProvider(new File("target"), "testRestCalls", true);
-			Bpmn2FileImporter importer = new Bpmn2FileImporter(store, BPMN_FILE_PATH);
-			WorkflowProcessInitializerConcluder initConcluder= new WorkflowProcessInitializerConcluder(store);
-			UUID processId = initConcluder.createWorkflowProcess(importer.getCurrentDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
-		
-			WorkflowUpdater updater = new WorkflowUpdater();
-			updater.setRestTestProcessId(processId);
-		} catch (Exception e) {
-			throw new ExecutionException(e);
-		}
 	}
 
 	@Test

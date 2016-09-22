@@ -28,8 +28,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.metacontent.workflow.contents.DefinitionDetail;
+import gov.vha.isaac.ochre.workflow.model.contents.DefinitionDetail;
 
 /**
  * The metadata defining a given process (or workflow instance). This doesn't

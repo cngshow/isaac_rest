@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -50,6 +51,7 @@ import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
+import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.DescriptionUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
@@ -72,17 +74,6 @@ import javafx.concurrent.Task;
 public class SememeWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(SememeWriteAPIs.class);
-
-	static WorkflowUpdater updater = null;
-	
-	static {
-		try {
-			updater = new WorkflowUpdater();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	};
 
 	/**
 	 * Create a new description sememe associated with a specified concept
@@ -147,7 +138,10 @@ public class SememeWriteAPIs
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" 
 					+ newDescription.getNid() + ", text=" + creationData.getText()).get();
 
-			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord);
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
 
 			return new RestInteger(newDescription.getSememeSequence());
 		} catch (Exception e) {
@@ -197,7 +191,10 @@ public class SememeWriteAPIs
 			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 
 					+ ", NID=" + sememeChronology.getNid() + " with " + updateData);
 
-			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord.get());
+			}
 		} catch (Exception e) {
 			throw new RestException("Failed updating description " + id + " with " + updateData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
@@ -368,7 +365,10 @@ public class SememeWriteAPIs
 			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating sememe " + id + " from " + rawSememeUpdatePair.latest.getState() 
 				+ " to " + rawSememeUpdatePair.mutable.getState() + ": SEQ=" + sememeSequence + ", NID=" + sememe.getNid());
 
-			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord.get());
+			}
 		} catch (RestException e) {	
 			throw e;
 		} catch (Exception e) {	

@@ -26,8 +26,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 
 /**
  * A single advancement (history) of a given workflow {@link RestWorkflowProcess}. A new entry is

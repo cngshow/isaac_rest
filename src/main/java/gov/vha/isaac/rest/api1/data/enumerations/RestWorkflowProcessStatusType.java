@@ -21,10 +21,9 @@ package gov.vha.isaac.rest.api1.data.enumerations;
 import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlRootElement;
-
-import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
-import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 
 /**
  * {@link RestWorkflowProcessStatusType}

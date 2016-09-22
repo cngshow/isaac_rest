@@ -30,8 +30,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
 /**

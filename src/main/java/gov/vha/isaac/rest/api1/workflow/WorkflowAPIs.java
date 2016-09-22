@@ -33,9 +33,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import gov.vha.isaac.metacontent.workflow.contents.ProcessDetail;
-import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;

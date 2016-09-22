@@ -84,20 +84,6 @@ public class ConceptWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(ConceptWriteAPIs.class);
 	
-	//TODO get rid of static!
-	static WorkflowUpdater updater = null;
-	
-	static {
-		try {
-			updater = new WorkflowUpdater();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	};
-	
-	//private static Logger log = LogManager.getLogger(ConceptWriteAPIs.class);
-	
 	/**
 	 * @param creationData - object containing data used to create new concept
 	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
@@ -251,7 +237,10 @@ public class ConceptWriteAPIs
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
 					+ ", PT=" + preferredTerm).get();
 			
-			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord);
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
 			
 			return newCon.getConceptSequence();
 		}
@@ -360,7 +349,10 @@ public class ConceptWriteAPIs
 			
 			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("committing concept with state=" + state + ": SEQ=" + concept.get().getConceptSequence() + ", UUID=" + concept.get().getPrimordialUuid() + ", DESC=" + concept.get().getConceptDescriptionText());
 			
-			updater.addCommitRecordToWorkflow(updater.getRestTestProcessId(), commitRecord.get());
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord.get());
+			}
 		} catch (Exception e) {
 			throw new RestException("Failed setting to state " + state + " concept " + id + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
