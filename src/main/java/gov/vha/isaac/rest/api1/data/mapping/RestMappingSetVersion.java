@@ -190,7 +190,8 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 						{
 							value = ds.getData(1);
 						}
-						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(1, value)));
+						//column number makes no sense here.
+						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(-1, value)));
 					}
 				}
 			);
