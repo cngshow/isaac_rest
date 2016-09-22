@@ -331,4 +331,31 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	{
 		return (children == null  || children.size() == 0 ? (childCount == null ? 0 : childCount) : children.size());
 	}
+
+	/**
+	 * @return the children
+	 */
+	@XmlTransient
+	public List<RestConceptVersion> getChildren() {
+		return Collections.unmodifiableList(children);
+	}
+
+	/**
+	 * @return the sememeMembership
+	 */
+	@XmlTransient
+	public Set<Integer> getSememeMembership() {
+		return Collections.unmodifiableSet(sememeMembership);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestConceptVersion [conChronology=" + conChronology + ", conVersion=" + conVersion
+				+ ", isConceptDefined=" + isConceptDefined + ", parents=" + parents + ", children=" + children
+				+ ", childCount=" + childCount + ", parentCount=" + parentCount + ", sememeMembership="
+				+ sememeMembership + "]";
+	}
 }

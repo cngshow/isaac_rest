@@ -46,7 +46,7 @@ public class RestStrings
 	 * The Integer value
 	 */
 	@XmlElement
-	Collection<String> value = new ArrayList<String>();
+	List<String> value = new ArrayList<String>();
 	
 	RestStrings() {
 		// For JAXB
@@ -71,8 +71,8 @@ public class RestStrings
 	 * @return the value
 	 */
 	@XmlTransient
-	public Collection<String> getValue() {
-		return Collections.unmodifiableList((ArrayList<String>)value);
+	public List<String> getValue() {
+		return Collections.unmodifiableList(value);
 	}
 
 	/* (non-Javadoc)
