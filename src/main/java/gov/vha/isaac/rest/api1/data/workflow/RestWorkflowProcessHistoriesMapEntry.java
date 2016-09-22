@@ -18,11 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -52,10 +47,10 @@ public class RestWorkflowProcessHistoriesMapEntry
 	RestWorkflowProcess key;
 
 	/**
-	 * The value List<{@link RestWorkflowProcessHistory}>
+	 * The value {@link RestWorkflowProcessHistories}
 	 */
 	@XmlElement
-	List<RestWorkflowProcessHistory> value = new ArrayList<>();
+	RestWorkflowProcessHistories value;
 
 	/**
 	 * Constructor for JAXB only
@@ -66,13 +61,12 @@ public class RestWorkflowProcessHistoriesMapEntry
 	}
 
 	/**
-	 * @param map
+	 * @param key
+	 * @param value
 	 */
-	public RestWorkflowProcessHistoriesMapEntry(RestWorkflowProcess key, Collection<RestWorkflowProcessHistory> value) {
+	public RestWorkflowProcessHistoriesMapEntry(RestWorkflowProcess key, RestWorkflowProcessHistories value) {
 		this.key = key;
-		if (value != null) {
-			this.value.addAll(value);
-		}
+		this.value = value;
 	}
 
 	/**
@@ -87,8 +81,8 @@ public class RestWorkflowProcessHistoriesMapEntry
 	 * @return the value
 	 */
 	@XmlTransient
-	public List<RestWorkflowProcessHistory> getValue() {
-		return Collections.unmodifiableList(value);
+	public RestWorkflowProcessHistories getValue() {
+		return value;
 	}
 
 	/* (non-Javadoc)

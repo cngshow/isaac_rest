@@ -58,11 +58,14 @@ public class WorkflowAPIs {
 	private static Logger log = LogManager.getLogger(WorkflowAPIs.class);
 
 	/**
-	 * Return the process for the specified process id
+	 * Gets the {@link RestWorkflowProcess} for the specified process key
+	 * 
+	 * Used to access all information associated with a given workflow process
+	 * (i.e. an instance of a {@link RestWorkflowDefinitionDetail}).
 	 * 
 	 * @param wfProcessId
-	 *            - UUID id for process
-	 * @return RestWorkflowProcessDetail
+	 *            - UUID workflow-specific id for process
+	 * @return RestWorkflowProcess
 	 * @throws RestException
 	 */
 	@GET
@@ -86,11 +89,13 @@ public class WorkflowAPIs {
 	}
 
 	/**
-	 * Return a sorted set of distinct workflow histories for the specified
-	 * process id
+	 * Returns all {@link RestWorkflowProcessHistory} entries associated with the {@link RestWorkflowProcess}
+	 * (an instance of a {@link RestWorkflowDefinitionDetail}) specified by the workflow-specific process id.
+	 * This contains all the advancements made during the given process.
+	 * {@link RestWorkflowProcessHistories} is sorted by advancement time, with last being most recent.
 	 * 
-	 * @return RestWorkflowProcessHistories sorted set of distinct workflow
-	 *         histories for a specified process
+	 * @return {@link RestWorkflowProcessHistories} list which is a sorted set of distinct workflow
+	 *         histories ({@link RestWorkflowProcessHistory}) for a specified process
 	 * @throws RestException
 	 */
 	@GET
@@ -118,11 +123,16 @@ public class WorkflowAPIs {
 	}
 
 	/**
-	 * Return advancable process information, which is a map of process
-	 * histories by process, for a specified definition and user
+	 * Map the process history {@link RestWorkflowProcessHistories} by each process {@link RestWorkflowProcess}
+	 * for which the user's permissions/entitlements enable them to advance workflow based on the process' current state.
+	 * Only active processes can be advanced thus only those processes with such
+	 * a status are returned.
+	 * 
+	 * Used to determine which processes to list when the user selects the
+	 * "Author Workflows" link
 	 * 
 	 * @return RestWorkflowProcessHistoriesMap map of lists of distinct workflow
-	 *         histories by process
+	 *         histories ({@link RestWorkflowProcessHistories}) by process ({@link RestWorkflowProcess})
 	 * @throws RestException
 	 */
 	@GET
@@ -142,7 +152,7 @@ public class WorkflowAPIs {
 			for (Map.Entry<ProcessDetail, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 				List<RestWorkflowProcessHistory> restList = new ArrayList<>();
 				ochreMapEntry.getValue().stream().forEachOrdered(a -> restList.add(new RestWorkflowProcessHistory(a)));
-				entrySet.add(new RestWorkflowProcessHistoriesMapEntry(new RestWorkflowProcess(ochreMapEntry.getKey()), restList));
+				entrySet.add(new RestWorkflowProcessHistoriesMapEntry(new RestWorkflowProcess(ochreMapEntry.getKey()), new RestWorkflowProcessHistories(restList)));
 			}
 			return new RestWorkflowProcessHistoriesMap(entrySet);
 		} catch (Exception e) {
@@ -156,10 +166,12 @@ public class WorkflowAPIs {
 	 * Return the set of available actions for the specified workflow process
 	 * and user
 	 * 
+	 * Used to determine which actions populate the Transition Workflow picklist
+	 * 
 	 * @param wfProcessId
-	 *            - UUID id for workflow process
+	 *            - UUID workflow-specific id for workflow process {@link RestWorkflowProcess}
 	 * @param wfUserId
-	 *            - Integer id for a workflow user
+	 *            - Integer workflow-specific id for a workflow user
 	 * @return RestWorkflowAvailableActions list of distinct actions
 	 * @throws RestException
 	 */
