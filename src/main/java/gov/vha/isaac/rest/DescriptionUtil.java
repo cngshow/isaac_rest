@@ -486,21 +486,26 @@ public class DescriptionUtil
 		case 1:
 			return Optional.of(sememeSet.iterator().next());
 			default:
-				throw new RuntimeException("Component " + descriptionNid + " has " + sememeSet.size() + " annotations of type " + Get.conceptDescriptionText(assemblageConceptId) + " (should only have zero or 1)");
+				throw new RuntimeException("Component " + descriptionNid + " has " + sememeSet.size() + " annotations of type " + 
+						Get.conceptDescriptionText(assemblageConceptId) + " (should only have zero or 1)");
 		}
 	}
 
 	public static Optional<UUID> getDescriptionExtendedTypeConceptUuid(StampCoordinate sc, int descriptionNid) {
 		Optional<SememeChronology<? extends SememeVersion<?>>> descriptionExtendedTypeUuidAnnotationSememe =
-				getAnnotationSememe(descriptionNid, Get.identifierService().getConceptSequenceForUuids(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid()));
+				getAnnotationSememe(descriptionNid, Get.identifierService().getConceptSequenceForUuids(DynamicSememeConstants.get()
+						.DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid()));
 		
 		if (descriptionExtendedTypeUuidAnnotationSememe.isPresent()) {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
-			Optional<LatestVersion<DynamicSememeUUIDImpl>> optionalLatestSememeVersion = ((SememeChronology)(descriptionExtendedTypeUuidAnnotationSememe.get())).getLatestVersion(DynamicSememeUUIDImpl.class, sc);
+			Optional<LatestVersion<DynamicSememeUUIDImpl>> optionalLatestSememeVersion = ((SememeChronology)(descriptionExtendedTypeUuidAnnotationSememe.get()))
+				.getLatestVersion(DynamicSememeUUIDImpl.class, sc);
 			if (optionalLatestSememeVersion.get().contradictions().isPresent() && optionalLatestSememeVersion.get().contradictions().get().size() > 0) {
 				// TODO properly handle contradictions
-				log.warn("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " + optionalLatestSememeVersion.get().contradictions().get().size() + " contradictions");
-				//throw new RuntimeException("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " + optionalLatestSememeVersion.get().contradictions().get().size() + " contradictions");
+				log.warn("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " + optionalLatestSememeVersion.get()
+					.contradictions().get().size() + " contradictions");
+				//throw new RuntimeException("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " 
+				//+ optionalLatestSememeVersion.get().contradictions().get().size() + " contradictions");
 			}
 			
 			return Optional.of(optionalLatestSememeVersion.get().value().getDataUUID());
