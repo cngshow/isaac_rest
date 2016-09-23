@@ -18,9 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,6 +29,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
@@ -77,10 +77,10 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	RestWorkflowProcessStatusType processStatus;
 
 	/**
-	 * The stamp sequences by component nid associated with the workflow process
+	 * The component nids associated with the workflow process
 	 */
 	@XmlElement
-	Set<RestWorkflowComponentNidToStampsMapEntry> componentNidToStampsMap = new HashSet<>();
+	Set<Integer> componentNids = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -103,9 +103,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.timeCreated = process.getTimeCreated();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
-		for (Map.Entry<Integer, List<Integer>> entry : process.getComponentNidToStampsMap().entrySet()) {
-			this.componentNidToStampsMap.add(new RestWorkflowComponentNidToStampsMapEntry(entry.getKey(), entry.getValue()));
-		}
+		this.componentNids.addAll(process.getComponentNidToStampsMap().keySet());
 	}
 
 	/**
@@ -149,11 +147,11 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	}
 
 	/**
-	 * @return the componentNidToStampsMap
+	 * @return the componentNids
 	 */
 	@XmlTransient
-	public Set<RestWorkflowComponentNidToStampsMapEntry> getComponentNidToStampsMap() {
-		return componentNidToStampsMap;
+	public Set<Integer> getComponentNids() {
+		return Collections.unmodifiableSet(componentNids);
 	}
 
 	/* (non-Javadoc)
@@ -194,6 +192,6 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	public String toString() {
 		return "RestWorkflowProcess [id=" + id + ", timeCreated=" + timeCreated + ", timeLaunched=" + timeLaunched
 				+ ", timeCancelledOrConcluded=" + timeCancelledOrConcluded + ", processStatus=" + processStatus
-				+ ", componentNidToStampsMap=" + componentNidToStampsMap + "]";
+				+ ", componentNids=" + componentNids + "]";
 	}
 }

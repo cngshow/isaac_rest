@@ -175,4 +175,13 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	public List<RestConceptVersion> getVersions() {
 		return Collections.unmodifiableList(versions);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestConceptChronology [conceptSequence=" + conceptSequence + ", description=" + description
+				+ ", identifiers=" + identifiers + ", versions=" + versions + "]";
+	}
 }
