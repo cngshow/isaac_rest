@@ -251,19 +251,20 @@ public class RequestInfo
 	public UUID getWorkflowProcessId()
 	{
 		//TODO implement this properly - need the active workflow in this session
-		try
-		{
-			if (workflowProcessId == null)
-			{
-				workflowProcessId =  LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder()
-						.createWorkflowProcess(LookupService.getService(WorkflowProvider.class).getBPMNInfo().getDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
-			}
-		}
-		catch (Exception e)
-		{
-			log.error("Unexpected", e);
-		}
-		return workflowProcessId;
+//		try
+//		{
+//			if (workflowProcessId == null)
+//			{
+//				workflowProcessId =  LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder()
+//						.createWorkflowProcess(LookupService.getService(WorkflowProvider.class).getBPMNInfo().getDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
+//			}
+//		}
+//		catch (Exception e)
+//		{
+//			log.error("Unexpected", e);
+//		}
+//		return workflowProcessId;
+		return null;
 	}
 
 	/**
