@@ -24,13 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
@@ -39,6 +37,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableActions;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistories;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMap;
@@ -186,8 +185,7 @@ public class WorkflowAPIs {
 
 		try {
 			List<RestWorkflowAvailableAction> actions = new ArrayList<>();
-			RequestInfo.get().getWorkflow().getWorkflowAccessor()
-					.getUserPermissibleActionsForProcess(
+			RequestInfo.get().getWorkflow().getWorkflowAccessor().getUserPermissibleActionsForProcess(
 							RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
 							RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId))
 					.stream().forEachOrdered(a -> actions.add(new RestWorkflowAvailableAction(a)));

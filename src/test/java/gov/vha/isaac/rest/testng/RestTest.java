@@ -48,7 +48,6 @@ import org.w3c.dom.NodeList;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.vha.isaac.MetaData;
-import gov.vha.isaac.metacontent.MVStoreMetaContentProvider;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -237,14 +236,45 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		map.put(key,  value);
 		return map.entrySet().iterator().next();
 	}
+
+	private static String getCaughtParameterValidationExceptionMessage(String badParamName, String badParamValue, Throwable t) {
+		for (Throwable ex : getAllExceptionsAndCauses(t)) {
+			if (ex.getLocalizedMessage().contains("The parameter '" + badParamName + "' with value '[" + badParamValue + "]'  resulted in the error: Invalid or unsupported parameter name")) {
+				return ex.getLocalizedMessage();
+			}
+		}
+		
+		return null;
+	}
+	
+	private static List<Throwable> getAllExceptionsAndCauses(Throwable t) {
+		List<Throwable> list = new ArrayList<>();
+
+		if (t != null) {
+			if (t.getCause() == null || t.getCause() == t) {
+				list.add(t);
+			} else {
+				list.addAll(getAllExceptionsAndCauses(t.getCause()));
+			}
+		}
+		
+		return list;
+	}
+
+	private int getIntegerIdForUuid(UUID uuid, String outputType) {
+		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
+				uuid.toString();
+		Response response = target(url)
+				.queryParam(RequestParameters.inputType, "uuid")
+				.queryParam(RequestParameters.outputType, outputType)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String idXml = checkFail(response).readEntity(String.class);
+		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
+		return Integer.parseInt(restId.value);
+	}
 	
 	// PLACE TEST METHODS BELOW HERE
-	@Test
-	public void testGetDescriptionExtendedType()
-	{
-		
-		
-	}
 	@Test
 	public void testSememeAPIs()
 	{
@@ -490,9 +520,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
 		
 		// retire concept
-		Response deactivateConceptResponse = target(RestPaths.conceptDeactivateAppPathComponent + newConceptSequence)
+		RestBoolean isActive = new RestBoolean(false);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(isActive);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response deactivateConceptResponse = target(RestPaths.conceptUpdateStateAppPathComponent + newConceptSequence)
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(isActive));
 		checkContentlessFail(deactivateConceptResponse);
 		
 		// Retrieve retired concept and validate
@@ -1961,42 +1998,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} finally {
 			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES_DEFAULT;
 		}
-	}
-
-	private static String getCaughtParameterValidationExceptionMessage(String badParamName, String badParamValue, Throwable t) {
-		for (Throwable ex : getAllExceptionsAndCauses(t)) {
-			if (ex.getLocalizedMessage().contains("The parameter '" + badParamName + "' with value '[" + badParamValue + "]'  resulted in the error: Invalid or unsupported parameter name")) {
-				return ex.getLocalizedMessage();
-			}
-		}
-		
-		return null;
-	}
-	private static List<Throwable> getAllExceptionsAndCauses(Throwable t) {
-		List<Throwable> list = new ArrayList<>();
-
-		if (t != null) {
-			if (t.getCause() == null || t.getCause() == t) {
-				list.add(t);
-			} else {
-				list.addAll(getAllExceptionsAndCauses(t.getCause()));
-			}
-		}
-		
-		return list;
-	}
-	
-	private int getIntegerIdForUuid(UUID uuid, String outputType) {
-		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
-				uuid.toString();
-		Response response = target(url)
-				.queryParam(RequestParameters.inputType, "uuid")
-				.queryParam(RequestParameters.outputType, outputType)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String idXml = checkFail(response).readEntity(String.class);
-		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
-		return Integer.parseInt(restId.value);
 	}
 	
 //	public static void main(String[] argv) {
