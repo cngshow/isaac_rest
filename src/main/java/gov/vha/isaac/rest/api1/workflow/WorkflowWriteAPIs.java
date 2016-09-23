@@ -65,7 +65,7 @@ public class WorkflowWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters());
 		
-		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
+		WorkflowProcessInitializerConcluder provider = RequestInfo.get().getWorkflow().getWorkflowProcessInitializerConcluder();
 		try {
 			return new RestUUID(provider.createWorkflowProcess(
 					workflowProcessCreationData.getDefinitionId(),
@@ -159,7 +159,7 @@ public class WorkflowWriteAPIs
 				RequestInfo.get().getParameters());
 		
 		// TODO test advanceWorkflowProcess()
-		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
+		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
 			provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment());
 		} catch (Exception e) {
@@ -218,7 +218,7 @@ public class WorkflowWriteAPIs
 				RequestInfo.get().getParameters());
 		
 		// TODO test removeComponentFromWorkflow()
-		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
+		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
 			provider.removeComponentFromWorkflow(
 					specifiedComponent.getProcessId(),

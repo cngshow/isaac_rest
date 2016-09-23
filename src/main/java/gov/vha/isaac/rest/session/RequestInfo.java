@@ -64,6 +64,9 @@ public class RequestInfo
 	
 	private String coordinatesToken_ = null;
 	
+	//just a cache
+	private WorkflowProvider wfp_;
+	
 	//TODO hack that needs to go away.
 	private static UUID workflowProcessId;
 
@@ -328,5 +331,18 @@ public class RequestInfo
 			coordinatesToken_ = CoordinatesTokens.getDefaultCoordinatesToken().getSerialized();
 			return CoordinatesTokens.getDefaultCoordinatesToken();
 		}
+	}
+	
+	public WorkflowProvider getWorkflow()
+	{
+		if (wfp_ == null)
+		{
+			wfp_ = LookupService.getService(WorkflowProvider.class);
+			if (wfp_ == null)
+			{
+				throw new RuntimeException("Workflow service not available!");
+			}
+		}
+		return wfp_;
 	}
 }

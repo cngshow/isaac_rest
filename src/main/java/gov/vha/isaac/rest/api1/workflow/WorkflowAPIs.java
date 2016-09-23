@@ -77,7 +77,7 @@ public class WorkflowAPIs {
 				RequestParameters.wfProcessId);
 
 		try {
-			return new RestWorkflowProcess(WorkflowProviderManager.getWorkflowAccessor().getProcessDetails(
+			return new RestWorkflowProcess(RequestInfo.get().getWorkflow().getWorkflowAccessor().getProcessDetails(
 					RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId)));
 		} catch (RestException e) {
 			throw e;
@@ -107,7 +107,7 @@ public class WorkflowAPIs {
 				RequestParameters.wfProcessId);
 
 		try {
-			SortedSet<ProcessHistory> ochreSet = WorkflowProviderManager.getWorkflowAccessor()
+			SortedSet<ProcessHistory> ochreSet = RequestInfo.get().getWorkflow().getWorkflowAccessor()
 					.getProcessHistory(RequestInfoUtils.parseUuidParameter(wfProcessId, wfProcessId));
 
 			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
@@ -145,7 +145,7 @@ public class WorkflowAPIs {
 				RequestParameters.wfDefinitionId, RequestParameters.wfUserId);
 		try {
 			Set<RestWorkflowProcessHistoriesMapEntry> entrySet = new HashSet<>();
-			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = WorkflowProviderManager.getWorkflowAccessor().getAdvanceableProcessInformation(
+			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = RequestInfo.get().getWorkflow().getWorkflowAccessor().getAdvanceableProcessInformation(
 					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
 					RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId));
 
@@ -186,7 +186,7 @@ public class WorkflowAPIs {
 
 		try {
 			List<RestWorkflowAvailableAction> actions = new ArrayList<>();
-			WorkflowProviderManager.getWorkflowAccessor()
+			RequestInfo.get().getWorkflow().getWorkflowAccessor()
 					.getUserPermissibleActionsForProcess(
 							RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
 							RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId))
