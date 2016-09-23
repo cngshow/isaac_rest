@@ -113,6 +113,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
 				if (latest.isPresent())
 				{
+					//TODO handle contradictions
 					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false));
 				}
 			}

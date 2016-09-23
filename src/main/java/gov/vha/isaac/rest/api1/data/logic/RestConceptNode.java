@@ -114,6 +114,7 @@ public class RestConceptNode extends RestLogicNode {
 		ConceptChronology cc = Get.conceptService().getConcept(conceptSequence);
 		@SuppressWarnings("unchecked")
 		Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+		//TODO handle contradictions
 		conceptVersion = new RestConceptVersion(olcv.get().value(), true);
 	} else {
 		conceptVersion = null;

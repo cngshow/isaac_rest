@@ -209,6 +209,7 @@ public class SememeAPIs
 		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 		if (sv.isPresent())
 		{
+			//TODO handle contradictions
 			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 		}
@@ -522,6 +523,7 @@ public class SememeAPIs
 						@SuppressWarnings({ "unchecked" })
 						Optional<LatestVersion<SememeVersion<?>>> sv = chronology.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 						if (sv.isPresent()) {
+							//TODO handle contradictions
 							ochreResults.add(sv.get().value());
 						}
 					}
@@ -596,6 +598,7 @@ public class SememeAPIs
 					if (sv.isPresent()) {
 						try
 						{
+							//TODO handle contradictions
 							results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested, expandReferenced));
 						}
 						catch (RestException e)

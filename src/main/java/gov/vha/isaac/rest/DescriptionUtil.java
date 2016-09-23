@@ -501,7 +501,7 @@ public class DescriptionUtil
 			Optional<LatestVersion<DynamicSememeUUIDImpl>> optionalLatestSememeVersion = ((SememeChronology)(descriptionExtendedTypeUuidAnnotationSememe.get()))
 				.getLatestVersion(DynamicSememeUUIDImpl.class, sc);
 			if (optionalLatestSememeVersion.get().contradictions().isPresent() && optionalLatestSememeVersion.get().contradictions().get().size() > 0) {
-				// TODO properly handle contradictions
+				//TODO handle contradictions
 				log.warn("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " + optionalLatestSememeVersion.get()
 					.contradictions().get().size() + " contradictions");
 				//throw new RuntimeException("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " 

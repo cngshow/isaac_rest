@@ -274,6 +274,7 @@ public class SearchAPIs
 					RequestInfo.get().getStampCoordinate());
 			if (text.isPresent())
 			{
+				//TODO handle contradictions
 				return Optional.of(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState()));
 			}
 			break;
@@ -282,6 +283,7 @@ public class SearchAPIs
 					RequestInfo.get().getStampCoordinate());
 			if (longSememe.isPresent())
 			{
+				//TODO handle contradictions
 				return Optional.of(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore(), 
 						longSememe.get().value().getState()));
 			}

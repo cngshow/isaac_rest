@@ -123,6 +123,7 @@ public class ConceptAPIs
 		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 		if (cv.isPresent())
 		{
+			//TODO handle contradictions
 			return new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					Boolean.parseBoolean(includeParents.trim()),

@@ -463,6 +463,7 @@ public class MappingWriteAPIs
 						stampCoord);
 				if (latest.isPresent())
 				{
+					//TODO handle contradictions
 					DescriptionSememe<?> ds = latest.get().value();
 					if (ds.getDescriptionTypeConceptSequence() == MetaData.SYNONYM.getConceptSequence())
 					{
@@ -536,7 +537,7 @@ public class MappingWriteAPIs
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<DynamicSememe<?>>> latestVersion = ((SememeChronology)mappingSememe.get()).getLatestVersion(DynamicSememe.class, 
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
-		
+		//TODO handle contradictions
 		DynamicSememe<?> latest = latestVersion.get().value();
 		
 		if (latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
@@ -637,7 +638,7 @@ public class MappingWriteAPIs
 		/* DynamicSememe<?> rdv = */ latest.get().value();
 		
 		if (latest.get().contradictions().isPresent() && latest.get().contradictions().get().size() > 0) {
-			// TODO properly handle contradictions
+			//TODO handle contradictions
 			log.warn("Updating mapping item " + mappingItemSememe.getSememeSequence() + " with " + latest.get().contradictions().get().size() + " contradictions");
 		}
 

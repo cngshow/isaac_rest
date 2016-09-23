@@ -334,7 +334,7 @@ public class ConceptWriteAPIs
 			if (! rawLatestVersion.isPresent()) {
 				throw new RestException("Failed getting latest version of " + concept.get().getOchreObjectType()  + " concept " + concept.get().getConceptSequence());
 			} else if (rawLatestVersion.get().contradictions().isPresent()) {
-				// TODO properly handle contradictions
+				//TODO handle contradictions
 				log.warn("Resetting state of " + concept.get().getOchreObjectType() + " " + concept.get().getConceptSequence() + " with " + rawLatestVersion.get().contradictions().get().size() + " version contradictions from " + rawLatestVersion.get().value().getState() + " to " + state);
 			}
 			

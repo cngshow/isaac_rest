@@ -148,6 +148,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			Optional<LatestVersion<LogicGraphSememe>> sv = ((SememeChronology)sememe.get()).getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
 			if (sv.isPresent())
 			{
+				//TODO handle contradictions
 				isConceptDefined = Frills.isConceptFullyDefined(sv.get().value());
 			}
 		}

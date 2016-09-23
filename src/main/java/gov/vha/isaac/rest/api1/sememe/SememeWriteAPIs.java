@@ -250,6 +250,7 @@ public class SememeWriteAPIs
 		@SuppressWarnings("unchecked")
 		T mutableVersion = (T)rawMutableVersion;
 
+		//TODO handle contradictions
 		@SuppressWarnings("unchecked")
 		T latestVersion = (T)rawLatestVersion.get().value();
 

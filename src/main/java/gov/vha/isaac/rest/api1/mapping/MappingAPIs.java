@@ -84,7 +84,7 @@ public class MappingAPIs
 			
 			if (latest.isPresent())
 			{
-				//TODO handle contradictions properly
+				//TODO handle contradictions
 				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments)));
 			}
 		});
@@ -129,6 +129,7 @@ public class MappingAPIs
 				RequestInfo.get().getStampCoordinate());
 		if (latest.isPresent())
 		{
+			//TODO handle contradictions
 			return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments));
 		} 
 		else 
@@ -173,7 +174,7 @@ public class MappingAPIs
 			
 			if (latest.isPresent())
 			{
-				//TODO figure out how to handle contradictions!
+				//TODO handle contradictions
 				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 					RequestInfo.get().shouldExpand(ExpandUtil.comments)));
