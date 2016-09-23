@@ -114,6 +114,7 @@ public class RestPaths
 	public static final String conceptCreateAppPathComponent = writePathComponent + conceptAPIsPathComponent + createPathComponent;
 	public static final String conceptActivateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + activateComponent;
 	public static final String conceptDeactivateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + deactivateComponent;
+	public static final String conceptUpdateStateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + updateStateComponent;
 
 	
 	public static final String sememeAPIsPathComponent = apiVersionComponent + "sememe/";

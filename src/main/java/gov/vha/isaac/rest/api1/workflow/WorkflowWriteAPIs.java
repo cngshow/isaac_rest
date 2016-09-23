@@ -24,6 +24,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
@@ -65,7 +67,7 @@ public class WorkflowWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters());
 		
-		WorkflowProcessInitializerConcluder provider = WorkflowProviderManager.getWorkflowProcessInitializerConcluder();
+		WorkflowProcessInitializerConcluder provider = LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder();
 		try {
 			return new RestUUID(provider.createWorkflowProcess(
 					workflowProcessCreationData.getDefinitionId(),
@@ -159,7 +161,7 @@ public class WorkflowWriteAPIs
 				RequestInfo.get().getParameters());
 		
 		// TODO test advanceWorkflowProcess()
-		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
+		WorkflowUpdater provider = LookupService.getService(WorkflowProvider.class).getWorkflowUpdater();
 		try {
 			provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment());
 		} catch (Exception e) {
@@ -218,7 +220,7 @@ public class WorkflowWriteAPIs
 				RequestInfo.get().getParameters());
 		
 		// TODO test removeComponentFromWorkflow()
-		WorkflowUpdater provider = WorkflowProviderManager.getWorkflowUpdater();
+		WorkflowUpdater provider = LookupService.getService(WorkflowProvider.class).getWorkflowUpdater();
 		try {
 			provider.removeComponentFromWorkflow(
 					specifiedComponent.getProcessId(),
