@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,20 +50,46 @@ public class UserToken
 	private transient boolean validForSubmit = false;
 	
 	private static HashMap<Integer, Long> validTokens = new HashMap<>();
-	
-	private int userIdentity;
+
+	// Generate UUID
+	// Using the text 'NO_ACTIVE_WORKFLOW'
+	// and the domain '5a2e7786-3e41-11dc-8314-0800200c9a66' (path ID from FSN description)
+	private static final UUID NULL_UUID = UUID.fromString("a051e620-4fe1-5174-97d9-53dbce2ead0d");
+
+	private final int userIdentity;
 	private long creationTime;
+
+	private final int authorSequence;
+	private final int moduleSequence;
+	private final int pathSequence;
+	private final UUID workflowProcessId;
 	
 	/**
 	 * Create a new user token, valid for a short period of time.
 	 * @param authenticatedUserIdentity
 	 */
-	public UserToken(int authenticatedUserIdentity)
+	public UserToken(
+			int authenticatedUserIdentity,
+			int authorSequence,
+			int moduleSequence,
+			int pathSequence,
+			UUID workflowProcessId)
 	{
-		userIdentity = authenticatedUserIdentity;
-		creationTime = System.currentTimeMillis();
+		this.userIdentity = authenticatedUserIdentity;
+		this.creationTime = System.currentTimeMillis();
+
+		this.authorSequence = authorSequence;
+		this.moduleSequence = moduleSequence;
+		this.pathSequence = pathSequence;
+		this.workflowProcessId = workflowProcessId;
 	}
-	
+	public UserToken(
+			int authenticatedUserIdentity,
+			int authorSequence,
+			int moduleSequence,
+			int pathSequence) {
+		this(authenticatedUserIdentity, authorSequence, moduleSequence, pathSequence, (UUID)null);
+	}
 	/**
 	 * Parse a user token back
 	 * @param encodedData
@@ -90,6 +117,17 @@ public class UserToken
 		int increment = buffer.getInt();
 		userIdentity = buffer.getInt();
 		creationTime = buffer.getLong();
+
+		authorSequence = buffer.getInt();
+		moduleSequence = buffer.getInt();
+		pathSequence = buffer.getInt();
+		
+		UUID tmpUuid = buffer.getUuid();
+		if (tmpUuid.equals(NULL_UUID)) {
+			workflowProcessId = null;
+		} else {
+			workflowProcessId = tmpUuid;
+		}
 
 		Long temp = validTokens.remove(increment);
 		if (temp == null || (System.currentTimeMillis() - temp) > 20000)
@@ -136,6 +174,41 @@ public class UserToken
 		}
 	}
 	
+	/**
+	 * @return the creationTime
+	 */
+	public long getCreationTime() {
+		return creationTime;
+	}
+
+	/**
+	 * @return the authorSequence
+	 */
+	public int getAuthorSequence() {
+		return authorSequence;
+	}
+
+	/**
+	 * @return the moduleSequence
+	 */
+	public int getModuleSequence() {
+		return moduleSequence;
+	}
+
+	/**
+	 * @return the pathSequence
+	 */
+	public int getPathSequence() {
+		return pathSequence;
+	}
+
+	/**
+	 * @return the workflowProcessId
+	 */
+	public UUID getWorkflowProcessId() {
+		return workflowProcessId;
+	}
+
 	public boolean isValidForSubmit()
 	{
 		return validForSubmit;
@@ -150,6 +223,16 @@ public class UserToken
 		buffer.putInt(thisIncrement);
 		buffer.putInt(userIdentity);
 		buffer.putLong(creationTime);
+		buffer.putInt(authorSequence);
+		buffer.putInt(moduleSequence);
+		buffer.putInt(pathSequence);
+		
+		if (workflowProcessId == null) {
+			buffer.putUuid(NULL_UUID);
+		} else {
+			buffer.putUuid(workflowProcessId);
+		}
+
 		buffer.trimToSize();
 		return buffer.getData();
 	}
@@ -174,8 +257,6 @@ public class UserToken
 		return secret_;
 	}
 	
-	
-	
 	public int getUserIdentity()
 	{
 		return userIdentity;
@@ -183,7 +264,9 @@ public class UserToken
 
 	public static void main(String[] args) throws Exception
 	{
-		UserToken t = new UserToken(5678);
+		UUID randomUuid = UUID.randomUUID();
+		
+		UserToken t = new UserToken(5678, 1, 2, 3, randomUuid);
 		String token = t.serialize();
 		System.out.println(token);
 		UserToken t1 = new UserToken(token);
