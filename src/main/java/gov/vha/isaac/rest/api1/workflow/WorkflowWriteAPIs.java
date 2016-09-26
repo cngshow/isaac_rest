@@ -59,7 +59,7 @@ public class WorkflowWriteAPIs
 	 */
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.createPathComponent + RestPaths.createWorkflowProcessComponent)
+	@Path(RestPaths.createPathComponent + RestPaths.createWorkflowProcessComponent)
 	public RestUUID createWorkflowProcess(
 			RestWorkflowProcessBaseCreate workflowProcessCreationData) throws RestException
 	{
@@ -87,7 +87,7 @@ public class WorkflowWriteAPIs
 //	 */
 //	@PUT
 //	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.launchWorkflowProcessComponent)
+//	@Path(RestPaths.updatePathComponent + RestPaths.launchWorkflowProcessComponent)
 //	public void launchWorkflowProcess(
 //			RestUUID processId) throws RestException
 //	{
@@ -112,7 +112,7 @@ public class WorkflowWriteAPIs
 //	 */
 //	@PUT
 //	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.endWorkflowProcessComponent)
+//	@Path(RestPaths.updatePathComponent + RestPaths.endWorkflowProcessComponent)
 //	public void endWorkflowProcess(
 //			RestWorkflowProcessEndData endData) throws RestException
 //	{
@@ -152,7 +152,7 @@ public class WorkflowWriteAPIs
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceWorkflowProcessComponent)
+	@Path(RestPaths.updatePathComponent + RestPaths.advanceWorkflowProcessComponent)
 	public void advanceWorkflowProcess(
 			RestWorkflowProcessAdvancementData processAdvancementData) throws RestException
 	{
@@ -179,7 +179,7 @@ public class WorkflowWriteAPIs
 	/*
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.addWorkflowUserRoleComponent)
+	@Path(RestPaths.updatePathComponent + RestPaths.addWorkflowUserRoleComponent)
 	public RestUUID addWorkflowUserRole(
 			RestWorkflowRoleChangeData roleData) throws RestException
 	{
@@ -211,7 +211,7 @@ public class WorkflowWriteAPIs
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponentFromWorkflowComponent)
+	@Path(RestPaths.updatePathComponent + RestPaths.removeComponentFromWorkflowComponent)
 	public void removeComponentFromWorkflow(
 			RestWorkflowProcessComponentSpecificationData specifiedComponent) throws RestException
 	{

@@ -102,6 +102,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersions;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersions;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -293,6 +294,32 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	// PLACE TEST METHODS BELOW HERE
+//	@Test
+//	public void testWorkflowAPIs()
+//	{
+//		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+//		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+//		
+//		UUID definitionId = null;
+//		Integer processCreatorNid = null;
+//		String processName = "A test worklfow name";
+//		String processDescription = "A test worklfow description";
+//		
+//		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCrate();
+//		
+//		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+//		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
+//
+//		//System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence);
+//		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence)
+//				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+//		RestConceptVersion conceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+//		Assert.assertEquals(conceptVersionObject.getConChronology().getConceptSequence(), parent1Sequence);
+//	}
+	
 	@Test
 	public void testSememeAPIs()
 	{
@@ -421,9 +448,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(deactivateDescriptionResponse);
 		// Retrieve all descriptions referring to referenced concept
-		Map<String, Object> queryParams = new HashMap<>();
-		queryParams.put(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation());
-		conceptDescriptionsObject = getDescriptionsForConcept(queryParams, referencedConceptNid);
+		conceptDescriptionsObject =
+				getDescriptionsForConcept(
+						buildParams(param(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation())),
+						referencedConceptNid);
 		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
 		// Iterate description list to find new description
 		matchingVersion = null;
@@ -450,18 +478,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
-		
-		//Pull a different concept taxonomy, in order to validate that the caching in the TaxonomyProvider gets cleaned up properly when the new concept is created.
-		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid())
-				.queryParam(RequestParameters.includeParents, true)
-				.queryParam(RequestParameters.descriptionTypePrefs, "fsn,definition,synonym")
-				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		checkFail(getConceptVersionResponse).readEntity(String.class);
 
 		//System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence);
-		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence)
+		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence)
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();

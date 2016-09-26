@@ -4,9 +4,10 @@ Any time a code change is made that impacts the API returned to callers, increme
 
 During development, we can increment this, so long as our client code (komet) is aware of the changes.
 
-After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/)
-If reverse compatibility is required to be maintained, then the rest/1 code must remain.
+After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
+If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+2016/09/26 - 1.4.7 - Fixing bug causing incorrect paths for WorkflowWriteAPIs REST methods
 2016/09/19 - 1.4.6 - Adding description extended type to DTOs and populating in SememeAPIs, modifying workflow APIs to eliminate Enunciate errors caused by use of Map
 2016/09/15 - 1.4.5 - Tweaking some aspects of mapset / map item APIs (adding fields, changing return type from int to UUID on create/edit)
 2016/09/01 - 1.4.4 - Added ConceptWriteAPIs and replaced exposed OCHRE State enum with REST RestStateType. Also lowered visibility of DTO fields
