@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -51,7 +53,7 @@ public class RestSememeVersions
 	 * The contained results
 	 */
 	@XmlElement
-	public List<RestSememeVersion> results = null;
+	public List<RestSememeVersion> results = new ArrayList<>();
 
 	protected RestSememeVersions()
 	{
@@ -66,9 +68,21 @@ public class RestSememeVersions
 	 * @param results
 	 * @throws RestException 
 	 */
-	public RestSememeVersions(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, List<RestSememeVersion> results) throws RestException {
-		this.results = results;
+	public RestSememeVersions(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, Collection<RestSememeVersion> results) throws RestException {
+		if (results != null) {
+			this.results.addAll(results);
+		}
 		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
+	}
+	/**
+	 * @param results
+	 * @throws RestException 
+	 */
+	public RestSememeVersions(Collection<RestSememeVersion> results) throws RestException {
+		if (results != null) {
+			this.results.addAll(results);
+		}
+		this.paginationData = null;
 	}
 
 	/* (non-Javadoc)

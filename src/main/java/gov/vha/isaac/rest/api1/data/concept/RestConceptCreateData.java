@@ -95,8 +95,9 @@ public class RestConceptCreateData
 	 * @param fsn
 	 * @param preferredTerm
 	 * @param requiredDescriptionsLanguageConceptId
-	 * @param requiredDescriptionsPreferredDialectsConceptIds
-	 * @param requiredDescriptionsAcceptableDialectsConceptIds
+	 * @param requiredDescriptionsExtendedTypeId (optional)
+	 * @param requiredDescriptionsPreferredDialectsConceptIds (optional)
+	 * @param requiredDescriptionsAcceptableDialectsConceptIds (optional)
 	 */
 	public RestConceptCreateData(
 			Collection<Integer> parentConceptIds,

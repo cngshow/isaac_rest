@@ -59,6 +59,7 @@ import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.assertions.ConceptAssertion;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
+import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 
 /**
  * 
@@ -498,8 +499,8 @@ public class DescriptionUtil
 		
 		if (descriptionExtendedTypeUuidAnnotationSememe.isPresent()) {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
-			Optional<LatestVersion<DynamicSememeUUIDImpl>> optionalLatestSememeVersion = ((SememeChronology)(descriptionExtendedTypeUuidAnnotationSememe.get()))
-				.getLatestVersion(DynamicSememeUUIDImpl.class, sc);
+			Optional<LatestVersion<DynamicSememeImpl>> optionalLatestSememeVersion = ((SememeChronology)(descriptionExtendedTypeUuidAnnotationSememe.get()))
+				.getLatestVersion(DynamicSememeImpl.class, sc);
 			if (optionalLatestSememeVersion.get().contradictions().isPresent() && optionalLatestSememeVersion.get().contradictions().get().size() > 0) {
 				//TODO handle contradictions
 				log.warn("Component " + descriptionNid + " " + " has DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation with " + optionalLatestSememeVersion.get()
@@ -508,7 +509,12 @@ public class DescriptionUtil
 				//+ optionalLatestSememeVersion.get().contradictions().get().size() + " contradictions");
 			}
 			
-			return Optional.of(optionalLatestSememeVersion.get().value().getDataUUID());
+			for (DynamicSememeData data : optionalLatestSememeVersion.get().value().getData()) {
+				if (data.getDynamicSememeDataType() == DynamicSememeDataType.UUID) {
+					return Optional.of(((DynamicSememeUUIDImpl)data).getDataUUID());
+				}
+			}
+			throw new RuntimeException("Failed to find UUID DynamicSememeData type in DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation dynamic sememe");
 		} else {
 			return Optional.empty();
 		}
