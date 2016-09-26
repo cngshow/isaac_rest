@@ -50,6 +50,7 @@ public class RestPaths
 	public static final String prefixComponent = "prefix/";
 	public static final String byAssemblageComponent = "byAssemblage/"; // TODO change to forAssemblage
 	public static final String byReferencedComponentComponent = "byReferencedComponent/"; // TODO change to forReferencedComponent
+	public static final String sememesObjectForReferencedComponentComponent = "sememesObjectByReferencedComponent/"; // Testing
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";

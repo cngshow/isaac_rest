@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -273,7 +274,24 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestId restId = XMLUtils.unmarshalObject(RestId.class, idXml);
 		return Integer.parseInt(restId.value);
 	}
-	
+
+	private RestSememeDescriptionVersions getDescriptionsForConcept(Object id) {
+		return getDescriptionsForConcept((Map<String, Object>)null, id);
+	}
+
+	private RestSememeDescriptionVersions getDescriptionsForConcept(Map<String, Object> params, Object id) {
+		WebTarget webTarget = target(conceptDescriptionsObjectRequestPath + id.toString());
+		if (params != null) {
+			for (Map.Entry<String, Object> entry : params.entrySet()) {
+				webTarget = webTarget.queryParam(entry.getKey(), entry.getValue());
+			}
+		}
+		Response getDescriptionVersionsResponse =
+				webTarget.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
+		return XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+	}
+
 	// PLACE TEST METHODS BELOW HERE
 	@Test
 	public void testSememeAPIs()
@@ -330,11 +348,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(descriptionSememeSequence != 0);
 		
 		// Retrieve all descriptions referring to referenced concept
-		Response getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
-		RestSememeDescriptionVersions conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+		RestSememeDescriptionVersions conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid);
 		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
 		// Iterate description list to find new description
 		RestSememeDescriptionVersion matchingVersion = null;
@@ -377,11 +391,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		checkContentlessFail(updateDescriptionResponse);
 
 		// Retrieve all descriptions referring to referenced concept
-		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
-		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+		conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid);
 		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
 		// Iterate description list to find new description
 		matchingVersion = null;
@@ -411,12 +421,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(deactivateDescriptionResponse);
 		// Retrieve all descriptions referring to referenced concept
-		getDescriptionVersionsResponse = target(conceptDescriptionsObjectRequestPath + referencedConceptNid)
-				.queryParam(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
-		conceptDescriptionsObject = XMLUtils.unmarshalObject(RestSememeDescriptionVersions.class, descriptionVersionsResult);
+		Map<String, Object> queryParams = new HashMap<>();
+		queryParams.put(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation());
+		conceptDescriptionsObject = getDescriptionsForConcept(queryParams, referencedConceptNid);
 		Assert.assertTrue(conceptDescriptionsObject.getResults().size() > 0);
 		// Iterate description list to find new description
 		matchingVersion = null;
@@ -442,6 +449,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 		
 		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
 
 		//System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence);
 		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence)
@@ -465,7 +473,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				parentIds,
 				fsn,
 				pt,
-				requiredDescriptionsLanguageSequence);
+				requiredDescriptionsLanguageSequence,
+				requiredDescriptionsExtendedTypeSequence,
+				(Collection<Integer>)null,
+				(Collection<Integer>)null);
 
 		String xml = null;
 		try {
@@ -500,7 +511,20 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent2Sequence)
 				|| (newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent2Sequence
 						&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
-		
+
+		// Retrieve all descriptions referring to new concept
+		RestSememeDescriptionVersions conceptDescriptionsObject = getDescriptionsForConcept(newConceptSequence);
+		Assert.assertTrue(conceptDescriptionsObject.getResults().size() >= 2);
+		// Iterate description list to find description with an extended type annotation sememe
+		boolean foundDescriptionWithCorrectExtendedType = false;
+		for (RestSememeDescriptionVersion version : conceptDescriptionsObject.getResults()) {
+			if (version.getDescriptionExtendedTypeConceptSequence() == requiredDescriptionsExtendedTypeSequence) {
+				foundDescriptionWithCorrectExtendedType = true;
+				break;
+			}
+		}
+		Assert.assertTrue(foundDescriptionWithCorrectExtendedType);
+
 		// Retrieve new concept and validate fields (Preferred Term in description)
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
 				.queryParam(RequestParameters.includeParents, true)
