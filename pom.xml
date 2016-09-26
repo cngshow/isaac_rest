@@ -28,7 +28,7 @@
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
-		<enunciate.version>2.6.0</enunciate.version>
+		<enunciate.version>2.6.0-patch1</enunciate.version>
 	</properties>
 
 	<dependencies>
