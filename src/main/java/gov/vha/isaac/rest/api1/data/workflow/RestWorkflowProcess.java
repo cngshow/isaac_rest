@@ -103,7 +103,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.timeCreated = process.getTimeCreated();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
-		this.componentNids.addAll(process.getComponentNidToStampsMap().keySet());
+		this.componentNids.addAll(process.getComponentNids());
 	}
 
 	/**
