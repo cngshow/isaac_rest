@@ -110,7 +110,8 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		super();
 	}
 
-	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean expandDescriptions, boolean expandComments)
+	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, int targetColPosition, int qualifierColPosition, 
+			boolean expandDescriptions, boolean expandComments)
 	{
 		sememeSequence = sememe.getSememeSequence();
 		identifiers = new RestIdentifiedObject(sememe.getUuidList());
@@ -129,18 +130,25 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		
 		if (data != null)
 		{
-			targetConcept = ((data.length > 0 && data[0] != null) ? 
-				Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[0]).getDataUUID())
-				: null);
-			
-			qualifierConcept = ((data.length > 1 && data[1] != null) ? 
-				Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[1]).getDataUUID()) 
-				: null); 
-			
 			mapItemExtendedFields = new ArrayList<>();
-			for (int i = 2; i < data.length; i++)
+			for (int i = 0; i < data.length; i++)
 			{
-				mapItemExtendedFields.add(RestDynamicSememeData.translate(i, data[i]));
+				if (i == targetColPosition)
+				{
+					targetConcept = ((data[i] != null) ? 
+						Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID())
+						: null);
+				}
+				else if (i == qualifierColPosition)
+				{
+					qualifierConcept = ((data[i] != null) ? 
+							Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID()) 
+							: null);
+				}
+				else
+				{
+					mapItemExtendedFields.add(RestDynamicSememeData.translate(i, data[i]));
+				}
 			}
 		}
 

@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.mapping;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,7 +32,10 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
+import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -158,7 +162,8 @@ public class MappingAPIs
 		@QueryParam(RequestParameters.expand) String expand,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		//TODO not sure if we will need to page these
+		//TODO this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
+		//will make it fast for early pages... still slow for later pages, unless we enhance the underlying isaac code to handle paging natively
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -167,19 +172,57 @@ public class MappingAPIs
 		
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		
-		Get.sememeService().getSememesFromAssemblage(Util.convertToConceptSequence(id)).forEach(sememeC -> 
+		int sememeConceptSequence = Util.convertToConceptSequence(id);
+		AtomicInteger targetPos = new AtomicInteger(-1);
+		AtomicInteger qualifierPos = new AtomicInteger(-1);
+		
+		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(sememeConceptSequence);
+		for (int i = 0; i < dsud.getColumnInfo().length; i++)
 		{
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-			
-			if (latest.isPresent())
+			if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid()))
 			{
-				//TODO handle contradictions
-				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
-					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-					RequestInfo.get().shouldExpand(ExpandUtil.comments)));
+				targetPos.set(i);
 			}
-		});
+			else if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_QUALIFIER.getPrimordialUuid()))
+			{
+				qualifierPos.set(i);;
+			}
+			if (targetPos.get() >= 0 && qualifierPos.get() >= 0)
+			{
+				break;
+			}
+		}
+		if (targetPos.get() < 0 || qualifierPos.get() < 0)
+		{
+			throw new RuntimeException("Unexpecter error reading mapping sememe - possibly invalidly specified");
+		}
+		
+		try
+		{
+			Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
+			{
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
+				
+				if (latest.isPresent())
+				{
+					//TODO handle contradictions
+					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+						targetPos.get(), qualifierPos.get(),
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+						RequestInfo.get().shouldExpand(ExpandUtil.comments)));
+				}
+				if (results.size() >= 1000)
+				{
+					throw new RuntimeException("Java 9 will fix this with takeWhile...");
+				}
+				
+			});
+		}
+		catch (RuntimeException e)
+		{
+			// Just the limit / shortcircut from the stream API
+		}
 		return new RestMappingItemVersions(results);
 	}
 	
