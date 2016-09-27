@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -204,7 +205,7 @@ public class Util
 	}
 	
 	/**
-	 * Return the latest version of each unique comment attached to an object
+	 * Return the latest version of each unique comment attached to an object, sorted from oldest to newest.
 	 * @param id the nid of UUID of the object to check for comments on
 	 * @return The comment(s)
 	 * @throws RestException
@@ -224,6 +225,15 @@ public class Util
 					results.add(new RestCommentVersion(sv.get().value()));
 				}
 			});
+		
+		results.sort(new Comparator<RestCommentVersion>()
+		{
+			@Override
+			public int compare(RestCommentVersion o1, RestCommentVersion o2)
+			{
+				return Long.compare(o1.getCommentStamp().time, o2.getCommentStamp().time);
+			}
+		});
 		return results;
 	}
 }
