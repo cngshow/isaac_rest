@@ -54,36 +54,25 @@ public class RestConceptCreateData
 	 */
 	@XmlElement
 	String fsn;
-	
-	/**
-	 * The required Preferred Term description of this concept.
-	 */
-	@XmlElement
-	String preferredTerm;
 
 	/**
-	 * The language concept associated with the required descriptions
+	 * The required language concept associated with the required descriptions
 	 */
 	@XmlElement
-	int requiredDescriptionsLanguageConceptId;
+	int descriptionLanguageConceptId;
 	
 	/**
-	 * The preferred dialects associated with the required descriptions
+	 * The optional preferred dialects associated with the required description.
+	 * A default will be assigned if not set.
 	 */
 	@XmlElement
-	Collection<Integer> requiredDescriptionsPreferredInDialectAssemblagesConceptIds = new HashSet<>();
-
-	/**
-	 * The acceptable dialects associated with the required descriptions
-	 */
-	@XmlElement
-	Collection<Integer> requiredDescriptionsAcceptableInDialectAssemblagesConceptIds = new HashSet<>();
+	Collection<Integer> descriptionPreferredInDialectAssemblagesConceptIds = new HashSet<>();
 	
 	/**
 	 * An optional extended description type applying to required descriptions
 	 */
 	@XmlElement
-	Integer requiredDescriptionsExtendedTypeConceptId = null;
+	Integer descriptionExtendedTypeConceptId = null;
 	
 	protected RestConceptCreateData()
 	{
@@ -93,56 +82,44 @@ public class RestConceptCreateData
 	/**
 	 * @param parentConceptIds
 	 * @param fsn
-	 * @param preferredTerm
-	 * @param requiredDescriptionsLanguageConceptId
-	 * @param requiredDescriptionsExtendedTypeId (optional)
-	 * @param requiredDescriptionsPreferredDialectsConceptIds (optional)
-	 * @param requiredDescriptionsAcceptableDialectsConceptIds (optional)
+	 * @param descriptionLanguageConceptId
+	 * @param descriptionExtendedTypeId (optional)
+	 * @param descriptionPreferredDialectsConceptIds (optional)
 	 */
 	public RestConceptCreateData(
 			Collection<Integer> parentConceptIds,
 			String fsn,
-			String preferredTerm,
-			int requiredDescriptionsLanguageConceptId,
-			Integer requiredDescriptionsExtendedTypeId,
-			Collection<Integer> requiredDescriptionsPreferredDialects,
-			Collection<Integer> requiredDescriptionsAcceptableDialects) {
+			int descriptionsLanguageConceptId,
+			Integer descriptionsExtendedTypeId,
+			Collection<Integer> descriptionsPreferredDialects) {
 		super();
 		if (parentConceptIds.size() < 1) {
 			throw new IllegalArgumentException("At least one parent concept sequence is required");
 		}
 		this.parentConceptIds.addAll(parentConceptIds);
 		this.fsn = fsn;
-		this.preferredTerm = preferredTerm;
-		this.requiredDescriptionsLanguageConceptId = requiredDescriptionsLanguageConceptId;
+		this.descriptionLanguageConceptId = descriptionsLanguageConceptId;
 		
-		this.requiredDescriptionsExtendedTypeConceptId = requiredDescriptionsExtendedTypeId;
-		if (requiredDescriptionsPreferredDialects != null) {
-			this.requiredDescriptionsPreferredInDialectAssemblagesConceptIds.addAll(requiredDescriptionsPreferredDialects);
-		}
-		if (requiredDescriptionsAcceptableDialects != null) {
-			this.requiredDescriptionsAcceptableInDialectAssemblagesConceptIds.addAll(requiredDescriptionsAcceptableDialects);
+		this.descriptionExtendedTypeConceptId = descriptionsExtendedTypeId;
+		if (descriptionsPreferredDialects != null) {
+			this.descriptionPreferredInDialectAssemblagesConceptIds.addAll(descriptionsPreferredDialects);
 		}
 	}
 	
 	/**
 	 * @param parentConceptIds
 	 * @param fsn
-	 * @param preferredTerm
-	 * @param requiredDescriptionsLanguageConceptId
+	 * @param descriptionLanguageConceptId
 	 */
 	public RestConceptCreateData(
 			Collection<Integer> parentConceptIds,
 			String fsn,
-			String preferredTerm,
-			int requiredDescriptionsLanguageConceptId) {
+			int descriptionLanguageConceptId) {
 		this(
 				parentConceptIds,
 				fsn,
-				preferredTerm,
-				requiredDescriptionsLanguageConceptId,
+				descriptionLanguageConceptId,
 				(Integer)null,
-				(Collection<Integer>)null,
 				(Collection<Integer>)null);
 	}
 
@@ -163,43 +140,27 @@ public class RestConceptCreateData
 	}
 
 	/**
-	 * @return the preferredTerm
+	 * @return the descriptionLanguageConceptId
 	 */
 	@XmlTransient
-	public String getPreferredTerm() {
-		return preferredTerm;
+	public int getDescriptionLanguageConceptId() {
+		return descriptionLanguageConceptId;
 	}
 
 	/**
-	 * @return the requiredDescriptionsLanguageConceptId
+	 * @return the descriptionExtendedTypeConceptId
 	 */
 	@XmlTransient
-	public int getRequiredDescriptionsLanguageConceptId() {
-		return requiredDescriptionsLanguageConceptId;
+	public Integer getDescriptionExtendedTypeConceptId() {
+		return descriptionExtendedTypeConceptId;
 	}
 
 	/**
-	 * @return the requiredDescriptionsExtendedTypeConceptId
+	 * @return the descriptionPreferredInDialectAssemblagesConceptIds
 	 */
 	@XmlTransient
-	public Integer getRequiredDescriptionsExtendedTypeConceptId() {
-		return requiredDescriptionsExtendedTypeConceptId;
-	}
-
-	/**
-	 * @return the requiredDescriptionsPreferredInDialectAssemblagesConceptIds
-	 */
-	@XmlTransient
-	public Collection<Integer> getRequiredDescriptionsPreferredInDialectAssemblagesConceptIds() {
-		return Collections.unmodifiableCollection(requiredDescriptionsPreferredInDialectAssemblagesConceptIds);
-	}
-
-	/**
-	 * @return the requiredDescriptionsAcceptableInDialectAssemblagesConceptIds
-	 */
-	@XmlTransient
-	public Collection<Integer> getRequiredDescriptionsAcceptableInDialectAssemblagesConceptIds() {
-		return Collections.unmodifiableCollection(requiredDescriptionsAcceptableInDialectAssemblagesConceptIds);
+	public Collection<Integer> getDescriptionPreferredInDialectAssemblagesConceptIds() {
+		return Collections.unmodifiableCollection(descriptionPreferredInDialectAssemblagesConceptIds);
 	}
 
 	/* (non-Javadoc)
@@ -208,11 +169,10 @@ public class RestConceptCreateData
 	@Override
 	public String toString() {
 		return "RestConceptCreateData ["
-				+ "fsn=" + fsn + ", preferredTerm=" + preferredTerm
-				+ ", requiredDescriptionsLanguageSequence=" + requiredDescriptionsLanguageConceptId
-				+ ", requiredDescriptionsExtendedTypeId=" + requiredDescriptionsExtendedTypeConceptId
-				+ ", requiredDescriptionsPreferredInDialectAssemblagesConceptIds=" + requiredDescriptionsPreferredInDialectAssemblagesConceptIds
-				+ ", requiredDescriptionsAcceptableInDialectAssemblagesConceptIds=" + requiredDescriptionsAcceptableInDialectAssemblagesConceptIds
+				+ "fsn=" + fsn
+				+ ", descriptionLanguageSequence=" + descriptionLanguageConceptId
+				+ ", descriptionExtendedTypeId=" + descriptionExtendedTypeConceptId
+				+ ", descriptionPreferredInDialectAssemblagesConceptIds=" + descriptionPreferredInDialectAssemblagesConceptIds
 				+ ", parentConceptIds=" + parentConceptIds + "]";
 	}
 }
