@@ -100,6 +100,7 @@ public class LogicGraphAPIs
 		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
 		if (lgs.isPresent())
 		{
+			//TODO handle contradictions
 			return new RestSememeLogicGraphVersion(lgs.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable));
 		}
 		throw new RestException(RequestParameters.id, id, "No concept was found");

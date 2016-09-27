@@ -20,20 +20,25 @@ package gov.vha.isaac.rest.api1.data.comment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * A wrapper for a list of {@link RestCommentVersion} objects
  * 
  * {@link RestCommentVersions}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestCommentVersions
 {
@@ -41,7 +46,7 @@ public class RestCommentVersions
 	 * The list of RestCommentVersion objects
 	 */
 	@XmlElement
-	public List<RestCommentVersion> commentVersions = new ArrayList<>();
+	List<RestCommentVersion> commentVersions = new ArrayList<>();
 	
 	RestCommentVersions() {
 		// For JAXB
@@ -49,7 +54,17 @@ public class RestCommentVersions
 	
 	public RestCommentVersions(Collection<RestCommentVersion> commentVersions)
 	{
-		this.commentVersions.addAll(commentVersions);
+		if (commentVersions != null) {
+			this.commentVersions.addAll(commentVersions);
+		}
+	}
+
+	/**
+	 * @return the commentVersions
+	 */
+	@XmlTransient
+	public List<RestCommentVersion> getCommentVersions() {
+		return Collections.unmodifiableList(commentVersions);
 	}
 
 	/* (non-Javadoc)

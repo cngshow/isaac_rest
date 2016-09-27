@@ -18,18 +18,22 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.metacontent.workflow.contents.DefinitionDetail;
+import gov.vha.isaac.ochre.workflow.model.contents.DefinitionDetail;
 
 /**
+ * The metadata defining a given process (or workflow instance). This doesn't
+ * include its history, which is available via {@link RestWorkflowProcessHistory}}
  * 
  * {@link RestWorkflowDefinitionDetail}
  *
@@ -41,25 +45,30 @@ import gov.vha.isaac.metacontent.workflow.contents.DefinitionDetail;
 public class RestWorkflowDefinitionDetail
 {
 	/**
-	 * The identifier data
+	 * The definition identifier
 	 */
 	@XmlElement
 	UUID id;
 
-	/** The bpmn2 id. */
+	/** The bpmn2 id that contains the definition if it exists. */
+	@XmlElement
 	String bpmn2Id;
 
-	/** The name. */
+	/** The definition name. */
+	@XmlElement
 	String name;
 
-	/** The namespace. */
+	/** The definition namespace. */
+	@XmlElement
 	String namespace;
 
-	/** The version. */
+	/** The version of the definition. */
+	@XmlElement
 	String version;
 
-	/** The roles. */
-	Set<String> roles;
+	/** The workflow roles available defined via the definition . */
+	@XmlElement
+	Set<String> roles = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -80,5 +89,62 @@ public class RestWorkflowDefinitionDetail
 		this.namespace = processDetail.getNamespace();
 		this.version = processDetail.getVersion();
 		this.roles = processDetail.getRoles();
+	}
+
+	/**
+	 * @return the id
+	 */
+	@XmlTransient
+	public UUID getId() {
+		return id;
+	}
+
+	/**
+	 * @return the bpmn2Id
+	 */
+	@XmlTransient
+	public String getBpmn2Id() {
+		return bpmn2Id;
+	}
+
+	/**
+	 * @return the name
+	 */
+	@XmlTransient
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @return the namespace
+	 */
+	@XmlTransient
+	public String getNamespace() {
+		return namespace;
+	}
+
+	/**
+	 * @return the version
+	 */
+	@XmlTransient
+	public String getVersion() {
+		return version;
+	}
+
+	/**
+	 * @return the roles
+	 */
+	@XmlTransient
+	public Set<String> getRoles() {
+		return Collections.unmodifiableSet(roles);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowDefinitionDetail [id=" + id + ", bpmn2Id=" + bpmn2Id + ", name=" + name + ", namespace="
+				+ namespace + ", version=" + version + ", roles=" + roles + "]";
 	}
 }

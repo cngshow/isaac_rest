@@ -41,7 +41,7 @@ public class RestStampedVersion
 	 * The stamp sequence of this version
 	 */
 	@XmlElement
-	int stampSequence;
+	public int stampSequence;
 	
 	/**
 	 * The State of this version (active, inactive, primordial or cancelled)
@@ -53,25 +53,25 @@ public class RestStampedVersion
 	 * The time stamp of this version (in standard java form)
 	 */
 	@XmlElement
-	long time;
+	public long time;
 	
 	/**
 	 * The concept sequence of the concept that identifies the author of this version 
 	 */
 	@XmlElement
-	int authorSequence;
+	public int authorSequence;
 	
 	/**
 	 * The concept sequence of the module that this version is in
 	 */
 	@XmlElement
-	int moduleSequence;
+	public int moduleSequence;
 	
 	/**
 	 * The concept sequence of the path that this version is in
 	 */
 	@XmlElement
-	int pathSequence;
+	public int pathSequence;
 
 	@XmlTransient
 	public RestStateType getState() {

@@ -29,8 +29,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * Object containing data required to specify a component in a process.
  * 
- * {@link RestWorkflowProcessComponentAdditionData}
+ * {@link RestWorkflowProcessComponentSpecificationData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
@@ -38,42 +39,34 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessComponentAdditionData {
-
+public class RestWorkflowProcessComponentSpecificationData {
 	/**
-	 * The process id of the process to which to add concepts
+	 * The process id of the process to advance
 	 */
 	@XmlElement
 	UUID processId;
 
 	/**
-	 * The nid of component to add
+	 * The specified component int NID
 	 */
 	@XmlElement
-	int componentNid = 0;
-	
-	/**
-	 * The stamp sequence of component to add
-	 */
-	@XmlElement
-	int stampSequence = -1;
+	int componentNid;
 
 	/**
 	 * Constructor for JAXB
 	 */
-	protected RestWorkflowProcessComponentAdditionData() {
+	protected RestWorkflowProcessComponentSpecificationData() {
 		super();
 	}
 
 	/**
-	 * @param processId - UUID id of process to which to add concepts
-	 * @param conceptNids - integer nids of components to add to the specified workflow process
+	 * @param processId - workflow process UUID
+	 * @param componentNid - component int NID
 	 */
-	public RestWorkflowProcessComponentAdditionData(UUID processId, int componentNid, int stampSeq) {
+	public RestWorkflowProcessComponentSpecificationData(UUID processId, int componentNid) {
 		super();
 		this.processId = processId;
 		this.componentNid = componentNid;
-		this.stampSequence = stampSeq;
 	}
 
 	/**
@@ -85,19 +78,11 @@ public class RestWorkflowProcessComponentAdditionData {
 	}
 
 	/**
-	 * @return the componentNid
+	 * @return the component int NID
 	 */
 	@XmlTransient
 	public int getComponentNid() {
 		return componentNid;
-	}
-
-	/**
-	 * @return the stampSequence
-	 */
-	@XmlTransient
-	public int getStampSequence() {
-		return stampSequence;
 	}
 
 	/* (non-Javadoc)
@@ -105,10 +90,7 @@ public class RestWorkflowProcessComponentAdditionData {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessConceptsAdditionData ["
-				+ "processId=" + processId
-				+ ", componentNid=" + componentNid
-				+ ", stampSequence=" + stampSequence
+		return "RestWorkflowProcessComponentSpecificationData [processId=" + processId + ", componentNid=" + componentNid
 				+ "]";
 	}
 }

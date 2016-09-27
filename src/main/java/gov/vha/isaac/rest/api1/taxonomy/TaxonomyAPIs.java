@@ -115,6 +115,7 @@ public class TaxonomyAPIs
 		if (cv.isPresent())
 		{
 			//parent / child expansion is handled here by providing a depth, not with expandables.
+			//TODO handle contradictions
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership);  
@@ -185,6 +186,7 @@ public class TaxonomyAPIs
 			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
+				//TODO handle contradictions
 				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
 					includeSemmemMembership);
 				rcv.addChild(childVersion);
@@ -288,6 +290,7 @@ public class TaxonomyAPIs
 				if (cv.isPresent())
 				{
 					//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
+					//TODO handle contradictions
 					RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated(), 
 							includeSememeMembership);
 					rcv.addParent(parentVersion);

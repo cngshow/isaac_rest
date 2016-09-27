@@ -18,12 +18,14 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -45,7 +47,7 @@ public class RestWorkflowProcessHistoriesMap
 	 * The contained results
 	 */
 	@XmlElement
-	Map<Object, List<RestWorkflowProcessHistory>> map = new HashMap<>();
+	Set<RestWorkflowProcessHistoriesMapEntry> entries = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -58,9 +60,25 @@ public class RestWorkflowProcessHistoriesMap
 	/**
 	 * @param map
 	 */
-	public RestWorkflowProcessHistoriesMap(Map<Object, List<RestWorkflowProcessHistory>> map) {
-		if (map != null) {
-			this.map.putAll(map);
+	public RestWorkflowProcessHistoriesMap(Collection<RestWorkflowProcessHistoriesMapEntry> entries) {
+		if (entries != null) {
+			this.entries.addAll(entries);
 		}
+	}
+
+	/**
+	 * @return the entries
+	 */
+	@XmlTransient
+	public Set<RestWorkflowProcessHistoriesMapEntry> getEntries() {
+		return Collections.unmodifiableSet(entries);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowProcessHistoriesMap [entries=" + entries + "]";
 	}
 }

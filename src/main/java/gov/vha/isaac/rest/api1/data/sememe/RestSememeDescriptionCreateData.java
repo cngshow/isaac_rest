@@ -67,12 +67,12 @@ public class RestSememeDescriptionCreateData
 	@XmlElement
 	int descriptionTypeConceptSequence;
 
-//	/**
-//	 * A concept sequence of an optional concept that represents an extended type of the description.  
-//	 * This may be something like Abbreviation or Vista Name
-//	 */
-//	@XmlElement
-//	Integer extendedDescriptionTypeConceptSequence;
+	/**
+	 * A concept sequence of an optional concept that represents an extended type of the description.  
+	 * This may be something like Abbreviation or Vista Name
+	 */
+	@XmlElement
+	Integer extendedDescriptionTypeConceptSequence;
 	
 	/**
 	 * The preferred dialects attached to this sememe
@@ -120,8 +120,12 @@ public class RestSememeDescriptionCreateData
 		this.text = text;
 		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
 //		this.extendedDescriptionTypeConceptSequence = extendedDescriptionTypeConceptSequence;
-		this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
-		this.acceptableInDialectAssemblagesIds.addAll(acceptableInDialectAssemblagesIds);
+		if (preferredInDialectAssemblagesIds != null) {
+			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
+		}
+		if (acceptableInDialectAssemblagesIds != null) {
+			this.acceptableInDialectAssemblagesIds.addAll(acceptableInDialectAssemblagesIds);
+		}
 		this.referencedComponentNid = referencedComponentNid;
 	}
 
@@ -157,13 +161,13 @@ public class RestSememeDescriptionCreateData
 		return descriptionTypeConceptSequence;
 	}
 	
-//	/**
-//	 * @return the extendedDescriptionTypeConceptSequence
-//	 */
-//	@XmlTransient
-//	public Integer getExtendedDescriptionTypeConceptSequence() {
-//		return extendedDescriptionTypeConceptSequence;
-//	}
+	/**
+	 * @return the extendedDescriptionTypeConceptSequence
+	 */
+	@XmlTransient
+	public Integer getExtendedDescriptionTypeConceptSequence() {
+		return extendedDescriptionTypeConceptSequence;
+	}
 
 	/**
 	 * @return the preferred dialectIds
@@ -187,5 +191,22 @@ public class RestSememeDescriptionCreateData
 	@XmlTransient
 	public int getReferencedComponentNid() {
 		return referencedComponentNid;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeDescriptionCreateData ["
+				+ "caseSignificanceConceptSequence=" + caseSignificanceConceptSequence
+				+ ", languageConceptSequence=" + languageConceptSequence
+				+ ", text=" + text
+				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
+				+ ", extendedDescriptionTypeConceptSequence=" + extendedDescriptionTypeConceptSequence
+				+ ", preferredInDialectAssemblagesIds=" + preferredInDialectAssemblagesIds
+				+ ", acceptableInDialectAssemblagesIds=" + acceptableInDialectAssemblagesIds
+				+ ", referencedComponentNid=" + referencedComponentNid
+				+ "]";
 	}
 }

@@ -25,6 +25,9 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
+
 
 /**
  * 
@@ -64,6 +67,7 @@ public class RestSememeDescriptionUpdateData
 	@XmlElement
 	int descriptionTypeConceptSequence;
 
+	// TODO determine if extendedDescriptionTypeConceptSequence should be updatable
 //	/**
 //	 * A concept sequence of an optional concept that represents an extended type of the description.  
 //	 * This may be something like Abbreviation or Vista Name
@@ -101,6 +105,22 @@ public class RestSememeDescriptionUpdateData
 		this.text = text;
 		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
 		this.active = active;
+	}
+
+	/**
+	 * @param caseSignificanceConceptSequence
+	 * @param languageConceptSequence
+	 * @param text
+	 * @param descriptionTypeConceptSequence
+	 */
+	public RestSememeDescriptionUpdateData(
+			RestSememeDescriptionVersion version) {
+		this(
+				version.getCaseSignificanceConceptSequence(),
+				version.getLanguageConceptSequence(),
+				version.getText(),
+				version.getDescriptionTypeConceptSequence(),
+				version.getSememeVersion().getState().equals(new RestStateType(State.ACTIVE)));
 	}
 
 	/**
@@ -149,5 +169,40 @@ public class RestSememeDescriptionUpdateData
 	@XmlTransient
 	public boolean isActive() {
 		return active;
+	}
+
+	/**
+	 * @param caseSignificanceConceptSequence the caseSignificanceConceptSequence to set
+	 */
+	public void setCaseSignificanceConceptSequence(int caseSignificanceConceptSequence) {
+		this.caseSignificanceConceptSequence = caseSignificanceConceptSequence;
+	}
+
+	/**
+	 * @param languageConceptSequence the languageConceptSequence to set
+	 */
+	public void setLanguageConceptSequence(int languageConceptSequence) {
+		this.languageConceptSequence = languageConceptSequence;
+	}
+
+	/**
+	 * @param text the text to set
+	 */
+	public void setText(String text) {
+		this.text = text;
+	}
+
+	/**
+	 * @param descriptionTypeConceptSequence the descriptionTypeConceptSequence to set
+	 */
+	public void setDescriptionTypeConceptSequence(int descriptionTypeConceptSequence) {
+		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
+	}
+
+	/**
+	 * @param active the active to set
+	 */
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 }

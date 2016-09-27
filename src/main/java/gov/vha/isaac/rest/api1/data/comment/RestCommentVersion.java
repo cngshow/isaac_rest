@@ -20,6 +20,9 @@ package gov.vha.isaac.rest.api1.data.comment;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
@@ -27,12 +30,14 @@ import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 /**
+ * A comment attached to a component
  * 
  * {@link RestCommentVersion}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestCommentVersion extends RestCommentVersionBaseCreate
 {
@@ -40,7 +45,7 @@ public class RestCommentVersion extends RestCommentVersionBaseCreate
 	 * The identifier data for the object
 	 */
 	@XmlElement
-	public RestIdentifiedObject identifiers;
+	RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this comment
@@ -64,5 +69,30 @@ public class RestCommentVersion extends RestCommentVersionBaseCreate
 		{
 			throw new RuntimeException("The provided sememe isn't a comment!");
 		}
+	}
+
+	/**
+	 * @return the identifiers
+	 */
+	@XmlTransient
+	public RestIdentifiedObject getIdentifiers() {
+		return identifiers;
+	}
+
+	/**
+	 * @return the commentStamp
+	 */
+	@XmlTransient
+	public RestStampedVersion getCommentStamp() {
+		return commentStamp;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestCommentVersion [identifiers=" + identifiers + ", commentStamp=" + commentStamp + ", commentedItem="
+				+ commentedItem + ", comment=" + comment + ", commentContext=" + commentContext + "]";
 	}
 }

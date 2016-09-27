@@ -22,4 +22,6 @@ to upgrade it.
 	$ mvn -Dmaven.test.skip=true -Dfortify.sca.buildId=isaac-rest -Dfortify.sca.toplevel.artifactId=isaac-parent com.hpe.security.fortify.maven.plugin:sca-maven-plugin:clean
 	$ mvn -Dmaven.test.skip=true -Dfortify.sca.buildId=isaac-rest -Dfortify.sca.toplevel.artifactId=isaac-parent com.hpe.security.fortify.maven.plugin:sca-maven-plugin:translate
 	$ mvn -Dmaven.test.skip=true -Dfortify.sca.buildId=isaac-rest -Dfortify.sca.toplevel.artifactId=isaac-parent com.hpe.security.fortify.maven.plugin:sca-maven-plugin:scan
+	
+- Check API ChangeLog.md for API updates
 

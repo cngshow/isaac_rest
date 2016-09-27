@@ -16,51 +16,73 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.workflow;
+package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.rest.api.exceptions.RestException;
+
 
 /**
- * {@link RestWorkflowUserPermissions}
+ * {@link RestSememeDescriptionVersions}
  * 
- * This class carries back result sets
+ * This class carries back result sets in a way that allows pagination
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowUserPermissions
+public class RestSememeDescriptionVersions
 {
 	/**
 	 * The contained results
 	 */
 	@XmlElement
-	Collection<RestWorkflowUserPermission> results = new ArrayList<>();
+	List<RestSememeDescriptionVersion> results = new ArrayList<>();
 
-	/**
-	 * Constructor for JAXB only
-	 */
-	protected RestWorkflowUserPermissions()
+	protected RestSememeDescriptionVersions()
 	{
 		//For jaxb
 	}
 
 	/**
 	 * @param results
+	 * @throws RestException 
 	 */
-	public RestWorkflowUserPermissions(Collection<RestWorkflowUserPermission> results) {
+	public RestSememeDescriptionVersions(Collection<RestSememeDescriptionVersion> results) throws RestException {
 		if (results != null) {
 			this.results.addAll(results);
 		}
+	}
+
+	/**
+	 * @param results
+	 * @throws RestException 
+	 */
+	public RestSememeDescriptionVersions(RestSememeDescriptionVersion...results) throws RestException {
+		if (results != null) {
+			this.results.addAll(Arrays.asList(results));
+		}
+	}
+
+	/**
+	 * @return the results
+	 */
+	@XmlTransient
+	public List<RestSememeDescriptionVersion> getResults() {
+		return Collections.unmodifiableList(results);
 	}
 
 	/* (non-Javadoc)
@@ -68,6 +90,6 @@ public class RestWorkflowUserPermissions
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowUserPermissions [results=" + results + "]";
+		return "RestSememeDescriptionVersions [results=" + getResults() + "]";
 	}
 }

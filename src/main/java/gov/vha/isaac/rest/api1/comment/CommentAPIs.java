@@ -18,21 +18,16 @@
  */
 package gov.vha.isaac.rest.api1.comment;
 
-import java.util.ArrayList;
 import java.util.Optional;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -52,11 +47,12 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class CommentAPIs
 {
 	/**
-	 * Returns a single version of a comment.
+	 * Returns a single version of a comment {@link RestCommentVersion}.
+	 * 
 	 * @param id - A UUID, nid, or sememe sequence that identifies the comment.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the comment version object.  
+	 * @return the comment version object {@link RestCommentVersion}.  
 	 * 
 	 * @throws RestException 
 	 */
@@ -86,7 +82,8 @@ public class CommentAPIs
 	}
 	
 	/**
-	 * Returns the current version of any comments attached to a referenced component
+	 * Returns a list ({@link RestCommentVersions}) containing current version ({@link RestCommentVersion}) of any and all comments attached to a referenced component
+	 * 
 	 * @param id - A UUID or nid of the component being referenced by a comment
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
@@ -106,19 +103,6 @@ public class CommentAPIs
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		ArrayList<RestCommentVersion> results = new ArrayList<>();
-		
-		Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
-			.forEach(sememeChronology -> 
-			{
-				@SuppressWarnings({ "rawtypes", "unchecked" })
-				Optional<LatestVersion<DynamicSememe<?>>> sv = ((SememeChronology)sememeChronology).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-				if (sv.isPresent())
-				{
-					//TODO handle contradictions
-					results.add(new RestCommentVersion(sv.get().value()));
-				}
-			});
-		return new RestCommentVersions(results);
+		return new RestCommentVersions(Util.readComments(id));
 	}
 }

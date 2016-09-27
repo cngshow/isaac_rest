@@ -30,8 +30,6 @@ import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
-import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
@@ -59,7 +57,17 @@ public class RequestInfoUtils {
 			throw new RestException(parameterName, str, "invalid integer " + parameterName + " parameter value: " + str);
 		}
 	}
-
+	
+	public static int getNidFromParameter(String parameterName, int nid) throws RestException {
+		if (nid >= 0) {
+			throw new RestException(parameterName, nid + "", "invalid " + parameterName + " NID parameter value: " + nid);
+		}
+		if (! Get.conceptService().hasConcept(nid) && ! Get.sememeService().hasSememe(nid)) {
+			throw new RestException(parameterName, nid + "", "no concept or sememe exists corresponding to NID " + parameterName + " parameter value: " + nid);
+		} else {
+			return nid;
+		}
+	}
 	public static int getNidFromUuidOrNidParameter(String parameterName, String str) throws RestException {
 		try {
 			UUID uuid = null;

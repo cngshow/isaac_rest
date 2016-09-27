@@ -28,8 +28,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * 
  * {@link RestMappingSetVersions}
+ * 
+ * A trivial wrapper class for a list to make REST objects serialize better.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */

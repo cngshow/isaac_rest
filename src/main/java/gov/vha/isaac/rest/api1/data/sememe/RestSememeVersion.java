@@ -19,11 +19,15 @@
 package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
@@ -59,6 +63,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @XmlSeeAlso ({RestSememeDescriptionVersion.class, RestDynamicSememeVersion.class, RestSememeLogicGraphVersion.class})
 @JsonSeeAlso ({RestSememeDescriptionVersion.class, RestDynamicSememeVersion.class, RestSememeLogicGraphVersion.class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @XmlRootElement
 public abstract class RestSememeVersion 
 {
@@ -72,20 +77,20 @@ public abstract class RestSememeVersion
 	 * The sememe chronology for this concept.  Depending on the expand parameter, may be empty.
 	 */
 	@XmlElement
-	public RestSememeChronology sememeChronology;
+	RestSememeChronology sememeChronology;
 	
 	
 	/**
 	 * The StampedVersion details for this version of this sememe.
 	 */
 	@XmlElement
-	public RestStampedVersion sememeVersion;
+	RestStampedVersion sememeVersion;
 	
 	/**
 	 * The nested sememes attached to this sememe.  Not populated by default, include expand=nested to expand these.
 	 */
 	@XmlElement
-	List<RestDynamicSememeVersion> nestedSememes;
+	List<RestDynamicSememeVersion> nestedSememes = new ArrayList<>();
 
 	protected RestSememeVersion()
 	{
@@ -140,7 +145,7 @@ public abstract class RestSememeVersion
 		
 		if (expandNested)
 		{
-			nestedSememes = new ArrayList<>();
+			nestedSememes.clear();
 			//Always include the chronology for nested sememes... otherwise, the user would always have to make a return trip to find out what the 
 			//nested thing is
 			SememeVersions temp = SememeAPIs.get(sv.getNid() + "", null, 1, Integer.MAX_VALUE, true);
@@ -158,7 +163,7 @@ public abstract class RestSememeVersion
 		}
 		else
 		{
-			nestedSememes = null;
+			nestedSememes.clear();
 			if (RequestInfo.get().returnExpandableLinks() && sv.getChronology().getSememeType() != SememeType.LOGIC_GRAPH)
 			{
 				expandables.add(new Expandable(ExpandUtil.nestedSememesExpandable, getRequestPathForExpandable(sv) + "?" 
@@ -196,5 +201,43 @@ public abstract class RestSememeVersion
 				throw new RestException("Sememe Type " + sv.getChronology().getSememeType() + " not currently supported");
 			
 		}
+	}
+
+	/**
+	 * @return the expandables
+	 */
+	@XmlTransient
+	public Expandables getExpandables() {
+		return expandables;
+	}
+	/**
+	 * @return the sememeChronology
+	 */
+	@XmlTransient
+	public RestSememeChronology getSememeChronology() {
+		return sememeChronology;
+	}
+	/**
+	 * @return the sememeVersion
+	 */
+	@XmlTransient
+	public RestStampedVersion getSememeVersion() {
+		return sememeVersion;
+	}
+	/**
+	 * @return the nestedSememes
+	 */
+	@XmlTransient
+	public List<RestDynamicSememeVersion> getNestedSememes() {
+		return Collections.unmodifiableList(nestedSememes);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeVersion [expandables=" + expandables + ", sememeChronology=" + sememeChronology
+				+ ", sememeVersion=" + sememeVersion + ", nestedSememes=" + nestedSememes + "]";
 	}
 }

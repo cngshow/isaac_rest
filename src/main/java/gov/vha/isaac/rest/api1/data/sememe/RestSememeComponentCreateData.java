@@ -16,9 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.workflow;
-
-import java.util.UUID;
+package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,93 +25,78 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.metacontent.workflow.contents.UserPermission;
 
 /**
  * 
- * {@link RestWorkflowUserPermission}
+ * {@link RestSememeComponentCreateData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowUserPermission
+public class RestSememeComponentCreateData
 {
 	/**
-	 * The identifier data
+	 * The sememe sequence of the new component sememe
 	 */
 	@XmlElement
-	UUID id;
-
-	/**
-	 * The workflow definition id
-	 */
-	@XmlElement
-	UUID definitionId;
+	int componentSememeSequence;
 	
 	/**
-	 * The id of the workflow user
+	 * The concept sequence of the assemblage of which the new component must be a member
 	 */
 	@XmlElement
-	int userId;
-	
-	/**
-	 * The workflow role
-	 */
-	@XmlElement
-	String role;
+	int assemblageConceptSequence;
 
 	/**
-	 * Constructor for JAXB only
+	 * The nid of the component to which this sememe refers
 	 */
-	protected RestWorkflowUserPermission()
+	@XmlElement
+	int referencedComponentNid;
+	
+	protected RestSememeComponentCreateData()
 	{
 		//for Jaxb
+	}
+
+	/**
+	 * @param componentSememeSequence
+	 * @param assemblageConceptSequence
+	 * @param referencedComponentNid
+	 */
+	public RestSememeComponentCreateData(
+			int componentSememeSequence,
+			int assemblageConceptSequence,
+			int referencedComponentNid) {
 		super();
-	}
-	 
-	/**
-	 * @param permission - ISAAC workflow UserPermission
-	 */
-	public RestWorkflowUserPermission(UserPermission permission)
-	{
-		this.id = permission.getId();
-		this.definitionId = permission.getDefinitionId();
-		this.userId = permission.getUserNid();
-		this.role = permission.getRole();
+		this.componentSememeSequence = componentSememeSequence;
+		this.assemblageConceptSequence = assemblageConceptSequence;
+		this.referencedComponentNid = referencedComponentNid;
 	}
 
 	/**
-	 * @return the id
+	 * @return the componentSememeSequence
 	 */
 	@XmlTransient
-	public UUID getId() {
-		return id;
+	public int getComponentSememeSequence() {
+		return componentSememeSequence;
 	}
 
 	/**
-	 * @return the definitionId
+	 * @return the assemblageConceptSequence
 	 */
 	@XmlTransient
-	public UUID getDefinitionId() {
-		return definitionId;
+	public int getAssemblageConceptSequence() {
+		return assemblageConceptSequence;
 	}
 
 	/**
-	 * @return the userId
+	 * @return the referencedComponentNid
 	 */
 	@XmlTransient
-	public int getUserId() {
-		return userId;
-	}
-
-	/**
-	 * @return the role
-	 */
-	@XmlTransient
-	public String getRole() {
-		return role;
+	public int getReferencedComponentNid() {
+		return referencedComponentNid;
 	}
 
 	/* (non-Javadoc)
@@ -121,7 +104,10 @@ public class RestWorkflowUserPermission
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowUserPermission [getId()=" + getId() + ", getDefinitionId()=" + getDefinitionId()
-				+ ", getUserId()=" + getUserId() + ", getRole()=" + getRole() + "]";
+		return "RestSememeComponentCreateData ["
+				+ "componentSememeSequence=" + componentSememeSequence
+				+ ", assemblageConceptSequence=" + assemblageConceptSequence
+				+ ", referencedComponentNid=" + referencedComponentNid
+				+ "]";
 	}
 }

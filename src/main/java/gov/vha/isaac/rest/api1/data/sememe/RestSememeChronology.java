@@ -140,6 +140,7 @@ public class RestSememeChronology
 							.getLatestVersion(DescriptionSememe.class, RequestInfo.get().getStampCoordinate());
 					if (ds.isPresent())
 					{
+						//TODO handle contradictions
 						referencedComponentNidDescription = ds.get().value().getText();
 					}
 				}

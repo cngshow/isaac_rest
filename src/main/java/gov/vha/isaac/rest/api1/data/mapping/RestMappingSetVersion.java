@@ -25,7 +25,7 @@ import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
+import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
@@ -47,10 +47,17 @@ import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.mapping.data.MappingSetDAO;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
+import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.rest.api.data.Expandable;
+import gov.vha.isaac.rest.api.data.Expandables;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -63,6 +70,19 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingSetVersion extends RestMappingSetVersionBase implements Comparable<RestMappingSetVersion>
 {
+	/**
+	 * The data that was not expanded as part of this call (but can be)
+	 * TODO populate expandables
+	 */
+	@XmlElement
+	Expandables expandables;
+	
+	/**
+	 * The concept sequence of the concept that represents this mapping set
+	 */
+	@XmlElement
+	public int conceptSequence;
+	
 	/**
 	 * The identifier data of the concept that represents this mapping set
 	 */
@@ -86,6 +106,12 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 */
 	@XmlElement
 	List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = new ArrayList<>();
+	
+	/**
+	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
+	 */
+	@XmlElement
+	List<RestCommentVersion> comments;
 
 	protected RestMappingSetVersion()
 	{
@@ -98,13 +124,13 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * @param sememe
 	 * @param stampCoord
 	 */
-	public RestMappingSetVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord)
+	public RestMappingSetVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments)
 	{
 		Optional<ConceptVersion<?>> mappingConcept = MappingSetDAO.getMappingConcept(sememe, stampCoord); 
 		
 		if (mappingConcept.isPresent())
 		{
-			
+			conceptSequence = mappingConcept.get().getChronology().getConceptSequence();
 			identifiers = new RestIdentifiedObject(mappingConcept.get().getUuidList());
 			//TODO whenever we make an edit to any component of the map set, we will also need to commit the concept, so that this stamp
 			//always updates with any other stamp that is updated
@@ -123,7 +149,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			}
 
 			//Read the extended fields off of the map set concept.
-			//Strings			
+			//Strings
 			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
 					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(stringExtensionSememe ->
 				{
@@ -164,7 +190,8 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 						{
 							value = ds.getData(1);
 						}
-						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(1, value)));
+						//column number makes no sense here.
+						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(-1, value)));
 					}
 				}
 			);
@@ -213,6 +240,27 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 						}
 					}
 				});
+			if (includeComments)
+			{
+				try
+				{
+					comments = Util.readComments(sememe.getNid() + "");
+				}
+				catch (RestException e)
+				{
+					LogManager.getLogger().error("Unexpected", e);
+					throw new RuntimeException(e);
+				}
+			}
+			else
+			{
+				expandables = new Expandables();
+				if (RequestInfo.get().returnExpandableLinks())
+				{
+					//TODO fix this expandable link
+					expandables.add(new Expandable(ExpandUtil.comments, ""));
+				}
+			}
 		}
 		else
 		{

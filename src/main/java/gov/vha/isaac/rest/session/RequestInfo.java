@@ -27,8 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
@@ -39,6 +41,7 @@ import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
+import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
@@ -60,6 +63,12 @@ public class RequestInfo
 	private Map<String, List<String>> parameters_ = new HashMap<>();
 	
 	private String coordinatesToken_ = null;
+	
+	//just a cache
+	private WorkflowProvider wfp_;
+	
+	//TODO hack that needs to go away.
+	private static UUID workflowProcessId;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	//Default to this, users may override by specifying expandables=true
@@ -238,6 +247,28 @@ public class RequestInfo
 		//TODO implement this properly - find the right author/module/path
 		return EditCoordinates.getDefaultUserSolorOverlay();
 	}
+	
+	/**
+	 * @return
+	 */
+	public UUID getWorkflowProcessId()
+	{
+		//TODO implement this properly - need the active workflow in this session
+//		try
+//		{
+//			if (workflowProcessId == null)
+//			{
+//				workflowProcessId =  LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder()
+//						.createWorkflowProcess(LookupService.getService(WorkflowProvider.class).getBPMNInfo().getDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
+//			}
+//		}
+//		catch (Exception e)
+//		{
+//			log.error("Unexpected", e);
+//		}
+//		return workflowProcessId;
+		return null;
+	}
 
 	/**
 	 * @return
@@ -276,14 +307,6 @@ public class RequestInfo
 			return getTaxonomyCoordinate().getTaxonomyType() == PremiseType.INFERRED ? getTaxonomyCoordinate() : getTaxonomyCoordinate().makeAnalog(PremiseType.INFERRED);
 		}
 	}
-
-	/**
-	 * @return
-	 */
-	public boolean useFsn()
-	{
-		return getLanguageCoordinate().isFSNPreferred();
-	}
 	
 	/**
 	 * @return
@@ -308,5 +331,18 @@ public class RequestInfo
 			coordinatesToken_ = CoordinatesTokens.getDefaultCoordinatesToken().getSerialized();
 			return CoordinatesTokens.getDefaultCoordinatesToken();
 		}
+	}
+	
+	public WorkflowProvider getWorkflow()
+	{
+		if (wfp_ == null)
+		{
+			wfp_ = LookupService.getService(WorkflowProvider.class);
+			if (wfp_ == null)
+			{
+				throw new RuntimeException("Workflow service not available!");
+			}
+		}
+		return wfp_;
 	}
 }

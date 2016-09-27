@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * This class is a trivial wrapper for a UUID value which is serializable/deserializable by JAXB
  * 
  * {@link RestUUID}
  *

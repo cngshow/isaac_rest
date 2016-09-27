@@ -19,16 +19,23 @@
 package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.rest.DescriptionUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -37,6 +44,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeDescriptionVersion extends RestSememeVersion
 {
@@ -68,10 +76,17 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	int descriptionTypeConceptSequence;
 	
 	/**
+	 * The optional concept sequence of the concept that represents the extended type of the description.  
+	 * This should be a {@link MetaData.DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE}.
+	 */
+	@XmlElement
+	Integer descriptionExtendedTypeConceptSequence;
+
+	/**
 	 * The dialects attached to this sememe.  Not populated by default, include expand=nestedSememes to expand this.
 	 */
 	@XmlElement
-	List<RestDynamicSememeVersion> dialects;
+	List<RestDynamicSememeVersion> dialects = new ArrayList<>();
 
 	protected RestSememeDescriptionVersion()
 	{
@@ -81,10 +96,6 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean expandReferenced) throws RestException
 	{
 		super();
-		if (expandNested)
-		{
-			dialects = new ArrayList<>();
-		}
 		setup(dsv, includeChronology, expandNested, expandReferenced, (restSememeVersion ->
 		{
 			//If the assemblage is a dialect, put it in our list.
@@ -99,5 +110,78 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		languageConceptSequence = dsv.getLanguageConceptSequence();
 		text = dsv.getText();
 		descriptionTypeConceptSequence = dsv.getDescriptionTypeConceptSequence();
+
+		// populate descriptionExtendedTypeConceptSequence
+		Optional<Integer> descriptionExtendedTypeOptional = DescriptionUtil.getDescriptionExtendedTypeConceptSequence(RequestInfo.get().getStampCoordinate(), dsv.getNid());
+		if (descriptionExtendedTypeOptional.isPresent()) {
+			descriptionExtendedTypeConceptSequence = descriptionExtendedTypeOptional.get();
+		}
+	}
+
+	/**
+	 * @return the caseSignificanceConceptSequence
+	 */
+	@XmlTransient
+	public int getCaseSignificanceConceptSequence() {
+		return caseSignificanceConceptSequence;
+	}
+
+	/**
+	 * @return the languageConceptSequence
+	 */
+	@XmlTransient
+	public int getLanguageConceptSequence() {
+		return languageConceptSequence;
+	}
+
+	/**
+	 * @return the text
+	 */
+	@XmlTransient
+	public String getText() {
+		return text;
+	}
+
+	/**
+	 * @return the descriptionTypeConceptSequence
+	 */
+	@XmlTransient
+	public int getDescriptionTypeConceptSequence() {
+		return descriptionTypeConceptSequence;
+	}
+
+	/**
+	 * @return the descriptionExtendedTypeConceptSequence
+	 */
+	@XmlTransient
+	public int getDescriptionExtendedTypeConceptSequence() {
+		return descriptionExtendedTypeConceptSequence;
+	}
+
+	/**
+	 * @return the dialects
+	 */
+	@XmlTransient
+	public List<RestDynamicSememeVersion> getDialects() {
+		return Collections.unmodifiableList(dialects);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeDescriptionVersion ["
+				+ "caseSignificanceConceptSequence=" + caseSignificanceConceptSequence
+				+ ", languageConceptSequence=" + languageConceptSequence
+				+ ", text=" + text
+				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
+				+ ", descriptionExtendedTypeConceptSequence=" + descriptionExtendedTypeConceptSequence
+				+ ", dialects=" + dialects
+				+ ", expandables=" + expandables
+				+ ", sememeChronology=" + sememeChronology
+				+ ", sememeVersion=" + sememeVersion
+				+ ", nestedSememes=" + nestedSememes
+				+ "]";
 	}
 }

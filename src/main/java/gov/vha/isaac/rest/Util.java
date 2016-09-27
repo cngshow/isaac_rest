@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -26,10 +28,14 @@ import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 public class Util
@@ -165,17 +171,9 @@ public class Util
 		
 		int conceptNid = Get.identifierService().getConceptNid(conceptId);
 		
-		if (RequestInfo.get().useFsn())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getFullySpecifiedDescription(
-				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
-		
-		if (!descriptionOptional.isPresent())
-		{
-			descriptionOptional = RequestInfo.get().getLanguageCoordinate().getPreferredDescription(
-				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()), RequestInfo.get().getStampCoordinate());
-		}
+		descriptionOptional = RequestInfo.get().getLanguageCoordinate().getDescription(
+				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()),
+				RequestInfo.get().getStampCoordinate());
 		
 		if (descriptionOptional.isPresent())
 		{
@@ -204,5 +202,38 @@ public class Util
 		{
 			return null;
 		}
+	}
+	
+	/**
+	 * Return the latest version of each unique comment attached to an object, sorted from oldest to newest.
+	 * @param id the nid of UUID of the object to check for comments on
+	 * @return The comment(s)
+	 * @throws RestException
+	 */
+	public static ArrayList<RestCommentVersion> readComments(String id) throws RestException
+	{
+		ArrayList<RestCommentVersion> results = new ArrayList<>();
+		
+		Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
+			.forEach(sememeChronology -> 
+			{
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				Optional<LatestVersion<DynamicSememe<?>>> sv = ((SememeChronology)sememeChronology).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
+				if (sv.isPresent())
+				{
+					//TODO handle contradictions
+					results.add(new RestCommentVersion(sv.get().value()));
+				}
+			});
+		
+		results.sort(new Comparator<RestCommentVersion>()
+		{
+			@Override
+			public int compare(RestCommentVersion o1, RestCommentVersion o2)
+			{
+				return Long.compare(o1.getCommentStamp().time, o2.getCommentStamp().time);
+			}
+		});
+		return results;
 	}
 }

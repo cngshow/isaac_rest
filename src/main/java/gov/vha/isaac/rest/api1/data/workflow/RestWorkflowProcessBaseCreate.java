@@ -29,6 +29,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
+ * Object containing fields used in creation of a new {@link RestWorkflowProcess}.
+ * Passed as argument to {@link WorkflowWriteAPIs#createWorkflowProcess()}.
  * 
  * {@link RestWorkflowProcessBaseCreate}
  *

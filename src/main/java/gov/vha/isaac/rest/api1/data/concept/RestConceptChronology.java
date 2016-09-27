@@ -113,6 +113,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
 				if (latest.isPresent())
 				{
+					//TODO handle contradictions
 					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false));
 				}
 			}
@@ -174,5 +175,14 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 */
 	public List<RestConceptVersion> getVersions() {
 		return Collections.unmodifiableList(versions);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestConceptChronology [conceptSequence=" + conceptSequence + ", description=" + description
+				+ ", identifiers=" + identifiers + ", versions=" + versions + "]";
 	}
 }

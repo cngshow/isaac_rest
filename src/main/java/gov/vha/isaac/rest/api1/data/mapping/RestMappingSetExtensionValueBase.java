@@ -40,7 +40,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 public class RestMappingSetExtensionValueBase
 {
 	/**
-	 * The value to store on for this maping set extension.  By the API, this could support any implementing type of RestDynamicSememeData - but
+	 * The value to store for this mapping set extension.  By the API, this could support any implementing type of RestDynamicSememeData - but
 	 * in practice, the only currently supported types are:
 	 * {@link RestDynamicSememeString} (for arbitrary values) and {@link RestDynamicSememeNid}, {@link RestDynamicSememeUUID} for storing a reference
 	 * to another concept or sememe.  Internally, the  UUID type will be mapped to nid - and a read operation will only return {@link RestDynamicSememeString}

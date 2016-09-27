@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.junit;
 
+import java.util.UUID;
+
 import org.junit.Assert;
 import org.junit.Test;
 import gov.vha.isaac.rest.tokens.UserToken;
@@ -32,7 +34,9 @@ public class UserTokenTest
 	@Test
 	public void testTokenRoundTrip() throws Exception
 	{
-		UserToken ut = new UserToken(5555);
+		UUID randomUuid = UUID.randomUUID();
+		
+		UserToken ut = new UserToken(5555, 1, 2, 3, randomUuid);
 		String token = ut.serialize();
 		
 		UserToken read = new UserToken(token);

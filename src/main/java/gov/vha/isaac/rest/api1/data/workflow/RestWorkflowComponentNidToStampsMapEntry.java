@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.workflow;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,48 +31,96 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
-/**
- * A wrapper for a list of {@link RestWorkflowProcessHistory}
- * This class carries back result sets
-
- * {@link RestWorkflowProcessHistories}
+/** 
+ * A tuple containing the key/value pair constituting a map entry
+ * in a map of component nids to stamps
+ * A set of these constitutes a map contained in {@link RestWorkflowProcess}
+ * 
+ * {@link RestWorkflowComponentNidToStampsMapEntry}
+ * 
+ * This class carries back result map
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessHistories
+public class RestWorkflowComponentNidToStampsMapEntry
 {
 	/**
-	 * The contained results
+	 * The key
 	 */
 	@XmlElement
-	Collection<RestWorkflowProcessHistory> results = new ArrayList<>();
+	int key;
+
+	/**
+	 * The value
+	 */
+	@XmlElement
+	List<Integer> value = new ArrayList<>();
 
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowProcessHistories()
+	protected RestWorkflowComponentNidToStampsMapEntry()
 	{
 		//For jaxb
 	}
 
 	/**
-	 * @param results
+	 * @param map
 	 */
-	public RestWorkflowProcessHistories(Collection<RestWorkflowProcessHistory> results) {
-		if (results != null) {
-			this.results.addAll(results);
+	public RestWorkflowComponentNidToStampsMapEntry(int key, Collection<Integer> value) {
+		this.key = key;
+		if (value != null) {
+			for (int stamp : value) {
+				this.value.add(stamp);
+			}
 		}
 	}
 
 	/**
-	 * @return the results
+	 * @return the key
 	 */
 	@XmlTransient
-	public Collection<RestWorkflowProcessHistory> getResults() {
-		return Collections.unmodifiableList((ArrayList<RestWorkflowProcessHistory>)results);
+	public int getKey() {
+		return key;
+	}
+
+	/**
+	 * @return the value
+	 */
+	@XmlTransient
+	public List<Integer> getValue() {
+		return Collections.unmodifiableList(value);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + key;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestWorkflowComponentNidToStampsMapEntry other = (RestWorkflowComponentNidToStampsMapEntry) obj;
+		if (key != other.key)
+			return false;
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -79,6 +128,6 @@ public class RestWorkflowProcessHistories
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessHistories [results=" + results + "]";
+		return "RestWorkflowComponentNidToStampsMapEntry [key=" + key + ", value=" + value + "]";
 	}
 }

@@ -209,6 +209,7 @@ public class SememeAPIs
 		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 		if (sv.isPresent())
 		{
+			//TODO handle contradictions
 			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
 		}
@@ -375,7 +376,20 @@ public class SememeAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						Boolean.parseBoolean(includeDescriptions.trim()));
 	}
-
+	// For unit testing only
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.sememesObjectForReferencedComponentComponent + "{" + RequestParameters.id + "}")
+	public RestSememeVersions getSememeVersionsByReferencedComponent(
+			@PathParam(RequestParameters.id) String id,
+			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
+			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) 
+			throws RestException
+	{
+		return new RestSememeVersions(getByReferencedComponent(id, assemblage, includeDescriptions, expand, coordToken));
+	}
 	/**
 	 * Return the full description of a particular sememe - including its intended use, the types of any data columns that will be attached, etc.
 	 * @param id - The UUID, nid or concept sequence of the concept that represents the sememe assemblage.
@@ -522,6 +536,7 @@ public class SememeAPIs
 						@SuppressWarnings({ "unchecked" })
 						Optional<LatestVersion<SememeVersion<?>>> sv = chronology.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 						if (sv.isPresent()) {
+							//TODO handle contradictions
 							ochreResults.add(sv.get().value());
 						}
 					}
@@ -596,6 +611,7 @@ public class SememeAPIs
 					if (sv.isPresent()) {
 						try
 						{
+							//TODO handle contradictions
 							results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested, expandReferenced));
 						}
 						catch (RestException e)

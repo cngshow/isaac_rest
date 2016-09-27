@@ -22,14 +22,16 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.metacontent.workflow.contents.ProcessHistory;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 
 /**
- * 
+ * A single advancement (history) of a given workflow {@link RestWorkflowProcess}. A new entry is
+ * added for every workflow {@link RestWorkflowAvailableAction} a user takes.
+ *
  * {@link RestWorkflowProcessHistory}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
@@ -101,6 +103,70 @@ public class RestWorkflowProcessHistory
 		this.action = processHistory.getAction();
 		this.outcomeState = processHistory.getOutcomeState();
 		this.comment = processHistory.getComment();
+	}
+
+	/**
+	 * @return the id
+	 */
+	@XmlTransient
+	public UUID getId() {
+		return id;
+	}
+
+	/**
+	 * @return the processId
+	 */
+	@XmlTransient
+	public UUID getProcessId() {
+		return processId;
+	}
+
+	/**
+	 * @return the userId
+	 */
+	@XmlTransient
+	public int getUserId() {
+		return userId;
+	}
+
+	/**
+	 * @return the timeAdvanced
+	 */
+	@XmlTransient
+	public long getTimeAdvanced() {
+		return timeAdvanced;
+	}
+
+	/**
+	 * @return the initialState
+	 */
+	@XmlTransient
+	public String getInitialState() {
+		return initialState;
+	}
+
+	/**
+	 * @return the action
+	 */
+	@XmlTransient
+	public String getAction() {
+		return action;
+	}
+
+	/**
+	 * @return the outcomeState
+	 */
+	@XmlTransient
+	public String getOutcomeState() {
+		return outcomeState;
+	}
+
+	/**
+	 * @return the comment
+	 */
+	@XmlTransient
+	public String getComment() {
+		return comment;
 	}
 
 	/* (non-Javadoc)
