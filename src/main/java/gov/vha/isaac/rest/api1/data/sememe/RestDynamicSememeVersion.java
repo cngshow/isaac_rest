@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -86,6 +87,14 @@ public class RestDynamicSememeVersion extends RestSememeVersion
 	{
 		super(sv, includeChronology, expandNested, populateReferenced, null);
 		//no data
+	}
+
+	/**
+	 * @return the dataColumns
+	 */
+	@XmlTransient
+	public List<RestDynamicSememeData> getDataColumns() {
+		return dataColumns;
 	}
 
 	public static List<RestDynamicSememeData> translateData(DynamicSememeData[] data)
