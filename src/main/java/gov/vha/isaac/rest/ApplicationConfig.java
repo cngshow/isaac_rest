@@ -27,6 +27,7 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import com.fasterxml.jackson.jaxrs.xml.JacksonXMLProvider;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
@@ -73,8 +74,9 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	{
 		//If we leave everything to annotations, is picks up the eclipse moxy gson writer, which doesn't handle abstract classes properly.
 		//The goal here is to force it to use Jackson, but it seems that registering jackson disables scanning, so also have to re-enable 
-		//scanning.  It also seems ot forget to scan this class... so register itself..
-		super(new ResourceConfig().packages("gov.vha.isaac.rest").register(JacksonFeature.class).register(ApplicationConfig.class));
+		//scanning.  It also seems to forget to scan this class... so register itself..
+		super(new ResourceConfig().packages("gov.vha.isaac.rest").register(JacksonFeature.class).register(JacksonXMLProvider.class)
+				.register(ApplicationConfig.class));
 	}
 	
 	public static ApplicationConfig getInstance()

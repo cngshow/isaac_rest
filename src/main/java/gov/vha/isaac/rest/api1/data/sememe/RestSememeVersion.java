@@ -64,7 +64,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @JsonSeeAlso ({RestSememeDescriptionVersion.class, RestDynamicSememeVersion.class, RestSememeLogicGraphVersion.class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@XmlRootElement
+@XmlRootElement(name = "restSememeVersion")
 public abstract class RestSememeVersion 
 {
 	/**

@@ -35,7 +35,7 @@ import gov.vha.isaac.rest.tokens.CoordinatesToken;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-@XmlRootElement
+@XmlRootElement(name = "restCoordinatesToken")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestCoordinatesToken {
 	

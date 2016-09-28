@@ -34,7 +34,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl = RestMappingSetVersionBaseCreate.class)
 public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 {
 	/**

@@ -33,6 +33,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.server.ResourceConfig;
+import com.fasterxml.jackson.jaxrs.xml.JacksonXMLProvider;
 import eu.infomas.annotation.AnnotationDetector;
 import gov.va.oia.HK2Utilities.AnnotatedClasses;
 import gov.va.oia.HK2Utilities.AnnotationReporter;
@@ -58,6 +59,7 @@ public class LocalJettyRunner
 		
 		Set<Class<?>> temp = new HashSet<Class<?>>(Arrays.asList(ac.getAnnotatedClasses()));
 		temp.add(JacksonFeature.class);  //No annotations in this class
+		temp.add(JacksonXMLProvider.class);
 		
 		ResourceConfig rc = new ResourceConfig(temp);
 		

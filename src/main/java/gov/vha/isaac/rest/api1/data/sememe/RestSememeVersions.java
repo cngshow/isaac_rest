@@ -38,7 +38,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
-@XmlRootElement
+@XmlRootElement(name = "restSememeVersions")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeVersions
 {

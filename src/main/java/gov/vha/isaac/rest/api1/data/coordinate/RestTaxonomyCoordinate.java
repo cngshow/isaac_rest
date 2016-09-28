@@ -34,7 +34,7 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-@XmlRootElement
+@XmlRootElement(name="restTaxonomyCoordinate")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestTaxonomyCoordinate {
 	/**

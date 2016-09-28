@@ -33,7 +33,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@XmlRootElement
+@XmlRootElement(name = "restId")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestId
 {

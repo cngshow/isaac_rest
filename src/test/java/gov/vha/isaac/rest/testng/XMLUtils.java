@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-
+import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -91,20 +91,34 @@ public class XMLUtils {
 	{
 		try
 		{
-			T object = null;
+//			XmlMapper mapper = new XmlMapper();
+//			
+//			try
+//			{
+//				JavaType type = mapper.getTypeFactory().constructParametrizedType(List.class, List.class, classType);
+//				Object o = mapper.readValue(xmlString, type);
+//			}
+//
+//			catch (Exception e)
+//			{
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+			
+			Object object = null;
 			StringReader stringReader = new StringReader(xmlString);
 			StreamSource streamSource = new StreamSource(stringReader);
 
 			JAXBContext jaxbContext = JAXBContext.newInstance(classType);
 
 			Unmarshaller unMarshaller = jaxbContext.createUnmarshaller();
-			object = (T)unMarshaller.unmarshal(streamSource);
+			object = unMarshaller.unmarshal(streamSource);
 			return (T)object;
 		}
 		catch (JAXBException e)
 		{
 			e.printStackTrace();
-			throw new RuntimeException("Error unmarshalling class : " + classType.getName() + ". " + "Caught " + e.getClass().getName() + " " + e.getMessage());
+			throw new RuntimeException("Error unmarshalling class : " + classType.getName() + ". cause: " + e.getCause() + " message " + e.getMessage(), e);
 		}
 	} 
 
