@@ -223,4 +223,15 @@ public class RestSememeChronology
 	public String getReferencedComponentNidDescription() {
 		return referencedComponentNidDescription;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeChronology [sememeSequence=" + sememeSequence + ", assemblageSequence=" + assemblageSequence
+				+ ", referencedComponentNid=" + referencedComponentNid + ", referencedComponentNidObjectType="
+				+ referencedComponentNidObjectType + ", referencedComponentNidDescription="
+				+ referencedComponentNidDescription + ", identifiers=" + identifiers + ", versions=" + versions + "]";
+	}
 }

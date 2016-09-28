@@ -154,7 +154,7 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	 * @return the descriptionExtendedTypeConceptSequence
 	 */
 	@XmlTransient
-	public int getDescriptionExtendedTypeConceptSequence() {
+	public Integer getDescriptionExtendedTypeConceptSequence() {
 		return descriptionExtendedTypeConceptSequence;
 	}
 

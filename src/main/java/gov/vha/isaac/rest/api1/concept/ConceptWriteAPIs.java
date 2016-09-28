@@ -24,7 +24,9 @@ import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.NecessarySe
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -50,8 +52,8 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptBuilderService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilder;
-import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
@@ -105,9 +107,6 @@ public class ConceptWriteAPIs
 		if (StringUtils.isBlank(creationData.getFsn())) {
 			throw new RestException("RestConceptCreateData.fsn", creationData.getFsn(), "FSN required");
 		}
-		if (StringUtils.isBlank(creationData.getPreferredTerm())) {
-			throw new RestException("RestConceptCreateData.preferredTerm", creationData.getPreferredTerm(), "Preferred Term required");
-		}
 		
 		if (creationData.getParentConceptIds().size() < 1) {
 			throw new RestException("RestConceptCreateData.parentIds", creationData.getParentConceptIds() + "", "At least one parent concept id required");
@@ -122,33 +121,25 @@ public class ConceptWriteAPIs
 			index++;
 		}
 
-		if (! Get.conceptService().hasConcept(creationData.getRequiredDescriptionsLanguageConceptId())) {
-			throw new RestException("RestConceptCreateData.requiredDescriptionsLanguageConceptId", creationData.getRequiredDescriptionsLanguageConceptId() + "", "Integer id does not correspond to an existing concept");
+		if (! Get.conceptService().hasConcept(creationData.getDescriptionLanguageConceptId())) {
+			throw new RestException("RestConceptCreateData.descriptionLanguageConceptId", creationData.getDescriptionLanguageConceptId() + "", "Integer id does not correspond to an existing concept");
 		}
 		
 		index = 0;
-		for (int id : creationData.getRequiredDescriptionsPreferredInDialectAssemblagesConceptIds()) {
+		for (int id : creationData.getDescriptionPreferredInDialectAssemblagesConceptIds()) {
 			if (! Get.conceptService().hasConcept(id)) {
-				throw new RestException("RestConceptCreateData.requiredDescriptionsPreferredInDialectAssemblagesConceptIds[" + index + "]", id + "", "Integer id does not correspond to an existing concept");
-			}
-			
-			index++;
-		}
-		index = 0;
-		for (int id : creationData.getRequiredDescriptionsAcceptableInDialectAssemblagesConceptIds()) {
-			if (! Get.conceptService().hasConcept(id)) {
-				throw new RestException("RestConceptCreateData.requiredDescriptionsAcceptableInDialectAssemblagesConceptIds[" + index + "]", id + "", "Integer id does not correspond to an existing concept");
+				throw new RestException("RestConceptCreateData.descriptionPreferredInDialectAssemblagesConceptIds[" + index + "]", id + "", "Integer id does not correspond to an existing concept");
 			}
 			
 			index++;
 		}
 
-		if (creationData.getRequiredDescriptionsExtendedTypeConceptId() != null) {
-			if (! Get.conceptService().hasConcept(creationData.getRequiredDescriptionsExtendedTypeConceptId())) {
-				throw new RestException("RestConceptCreateData.requiredDescriptionsExtendedTypeConceptId", creationData.getRequiredDescriptionsExtendedTypeConceptId() + "", "Integer id does not correspond to an existing concept");
+		if (creationData.getDescriptionExtendedTypeConceptId() != null) {
+			if (! Get.conceptService().hasConcept(creationData.getDescriptionExtendedTypeConceptId())) {
+				throw new RestException("RestConceptCreateData.descriptionExtendedTypeConceptId", creationData.getDescriptionExtendedTypeConceptId() + "", "Integer id does not correspond to an existing concept");
 			}
-			if (! Get.identifierService().getUuidPrimordialFromConceptSequence(creationData.getRequiredDescriptionsExtendedTypeConceptId()).isPresent()) {
-				throw new RestException("RestConceptCreateData.requiredDescriptionsExtendedTypeConceptId", creationData.getRequiredDescriptionsExtendedTypeConceptId() + "", "Integer id does not correspond to an existing concept UUID");
+			if (! Get.identifierService().getUuidPrimordialFromConceptSequence(creationData.getDescriptionExtendedTypeConceptId()).isPresent()) {
+				throw new RestException("RestConceptCreateData.descriptionExtendedTypeConceptId", creationData.getDescriptionExtendedTypeConceptId() + "", "Integer id does not correspond to an existing concept UUID");
 			}
 		}
 
@@ -158,11 +149,9 @@ public class ConceptWriteAPIs
 					RequestInfo.get().getLogicCoordinate(),
 					creationData.getParentConceptIds(),
 					creationData.getFsn(),
-					creationData.getPreferredTerm(),
-					creationData.getRequiredDescriptionsLanguageConceptId(),
-					creationData.getRequiredDescriptionsPreferredInDialectAssemblagesConceptIds(),
-					creationData.getRequiredDescriptionsAcceptableInDialectAssemblagesConceptIds(),
-					creationData.getRequiredDescriptionsExtendedTypeConceptId());
+					creationData.getDescriptionLanguageConceptId(),
+					creationData.getDescriptionPreferredInDialectAssemblagesConceptIds(),
+					creationData.getDescriptionExtendedTypeConceptId());
 			
 			return new RestInteger(seq);
 		} catch (Exception e) {
@@ -175,21 +164,21 @@ public class ConceptWriteAPIs
 			LogicCoordinate lc,
 			Collection<Integer> parentConceptIds,
 			String fsn,
-			String preferredTerm,
-			int requiredDescriptionsLanguageConceptId,
-			Collection<Integer> requiredDescriptionsPreferredInDialectAssemblagesConceptIds,
-			Collection<Integer> requiredDescriptionsAcceptableInDialectAssemblagesConceptIds,
-			Integer requiredDescriptionsExtendedTypeConceptId) throws RestException
+			int descriptionLanguageConceptId,
+			Collection<Integer> descriptionPreferredInDialectAssemblagesConceptIds,
+			Integer descriptionExtendedTypeConceptId) throws RestException
 	{
 		try
 		{
 			ConceptBuilderService conceptBuilderService = LookupService.getService(ConceptBuilderService.class);
-			ConceptSpecification requiredDescriptionsLanguageConceptSpec = Get.conceptSpecification(requiredDescriptionsLanguageConceptId);			
+			ConceptSpecification requiredDescriptionsLanguageConceptSpec = Get.conceptSpecification(descriptionLanguageConceptId);
+			ConceptSpecification defaultDescriptionDialectConceptSpec = (descriptionPreferredInDialectAssemblagesConceptIds != null && descriptionPreferredInDialectAssemblagesConceptIds.size() > 0) ? Get.conceptSpecification(descriptionPreferredInDialectAssemblagesConceptIds.iterator().next()) : MetaData.US_ENGLISH_DIALECT;	
+		
 			conceptBuilderService.setDefaultLanguageForDescriptions(requiredDescriptionsLanguageConceptSpec);
-			conceptBuilderService.setDefaultDialectAssemblageForDescriptions(MetaData.US_ENGLISH_DIALECT);
+			conceptBuilderService.setDefaultDialectAssemblageForDescriptions(defaultDescriptionDialectConceptSpec);
 			conceptBuilderService.setDefaultLogicCoordinate(lc);
 
-			DescriptionBuilderService descriptionBuilderService = LookupService.getService(DescriptionBuilderService.class);
+			//DescriptionBuilderService descriptionBuilderService = LookupService.getService(DescriptionBuilderService.class);
 			LogicalExpressionBuilder defBuilder = LookupService.getService(LogicalExpressionBuilderService.class).getLogicalExpressionBuilder();
 
 			for (int parentConceptNidOrSequence : parentConceptIds) {
@@ -200,42 +189,43 @@ public class ConceptWriteAPIs
 
 			LogicalExpression parentDef = defBuilder.build();
 
-			ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(fsn, null, parentDef);
-
-			DescriptionBuilder<?, ?> definitionBuilder = descriptionBuilderService.getDescriptionBuilder(
-					preferredTerm,
-					builder,
-					MetaData.SYNONYM,
-					requiredDescriptionsLanguageConceptSpec);
-			if (requiredDescriptionsPreferredInDialectAssemblagesConceptIds != null && requiredDescriptionsPreferredInDialectAssemblagesConceptIds.size() > 0) {
-				for (int id : requiredDescriptionsPreferredInDialectAssemblagesConceptIds) {
-					definitionBuilder.setPreferredInDialectAssemblage(Get.conceptSpecification(id));
-				}
-			} else {
-				definitionBuilder.setPreferredInDialectAssemblage(MetaData.US_ENGLISH_DIALECT);
-			}
-			for (int id : requiredDescriptionsAcceptableInDialectAssemblagesConceptIds) {
-				definitionBuilder.setAcceptableInDialectAssemblage(Get.conceptSpecification(id));
-			}
+			ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(
+					fsn,
+					null,
+					parentDef);
 			
+			// Add optional descriptionExtendedTypeConceptId, if exists
 			// TODO confirm that requiredDescriptionsExtendedType is being added to new concept required descriptions
-			//SememeChronology<DynamicSememe<?>> requiredDescriptionsExtendedTypeSememe = null;
-			if (requiredDescriptionsExtendedTypeConceptId != null) {
-				//requiredDescriptionsExtendedTypeSememe = 
-				DescriptionUtil.addAnnotation(
-						editCoordinate,
-						definitionBuilder.getNid(),
-						new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(requiredDescriptionsExtendedTypeConceptId).get()),
-						DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid());
+			SememeChronology<DynamicSememe<?>> requiredDescriptionsExtendedTypeSememe = null;
+			if (descriptionExtendedTypeConceptId != null) {
+				UUID referencedComponentUuid = builder.getFullySpecifiedDescriptionBuilder().getPrimordialUuid();
+				int referencedComponentNid = Get.identifierService().getNidForUuids(referencedComponentUuid);
+				requiredDescriptionsExtendedTypeSememe = 
+						DescriptionUtil.addAnnotation(
+								editCoordinate,
+								referencedComponentNid,
+								new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(descriptionExtendedTypeConceptId).get()),
+								DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid());
 			}
-
-			builder.addDescription(definitionBuilder);
 			
-			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, new ArrayList<>()).getNoThrow();
+			// Add optional descriptionPreferredInDialectAssemblagesConceptIdsList beyond first (already added , if exists
+			if (descriptionPreferredInDialectAssemblagesConceptIds != null && descriptionPreferredInDialectAssemblagesConceptIds.size() > 0) {
+				for (int i : descriptionPreferredInDialectAssemblagesConceptIds) {
+					builder.getFullySpecifiedDescriptionBuilder().setPreferredInDialectAssemblage(Get.conceptSpecification(i));
+				}
+			}
+			
+			List<?> createdObjects = new ArrayList<>();
+			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(editCoordinate, ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
 
 			Get.commitService().addUncommitted(newCon).get();
-			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn 
-					+ ", PT=" + preferredTerm).get();
+
+			if (requiredDescriptionsExtendedTypeSememe != null) {
+				Get.commitService().addUncommitted(requiredDescriptionsExtendedTypeSememe).get();
+			}
+			
+			Optional<CommitRecord> commitRecord = Get.commitService().commit(
+					"creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn).get();
 			
 			if (RequestInfo.get().getWorkflowProcessId() != null)
 			{
