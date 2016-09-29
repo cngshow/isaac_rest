@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,37 +32,37 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * This class is a trivial wrapper for a list of String values which is serializable/deserializable by JAXB
+ * This class is a trivial wrapper for a list of UUID values which is serializable/deserializable by JAXB
  * 
- * {@link RestStrings}
+ * {@link RestUUIDs}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestStrings
+public class RestUUIDs
 {
 	/**
-	 * The String values
+	 * The UUID values
 	 */
 	@XmlElement
-	List<String> value = new ArrayList<String>();
+	List<UUID> value = new ArrayList<UUID>();
 	
-	RestStrings() {
+	RestUUIDs() {
 		// For JAXB
 	}
 	
-	public RestStrings(Collection<String> value)
+	public RestUUIDs(Collection<UUID> value)
 	{
 		if (value != null) {
 			this.value.addAll(value);
 		}
 	}
-	public RestStrings(String...values)
+	public RestUUIDs(UUID...values)
 	{
 		if (values != null) {
-			for (String value : values) {
+			for (UUID value : values) {
 				this.value.add(value);
 			}
 		}
@@ -71,7 +72,7 @@ public class RestStrings
 	 * @return the value
 	 */
 	@XmlTransient
-	public List<String> getValue() {
+	public List<UUID> getValue() {
 		return Collections.unmodifiableList(value);
 	}
 
@@ -80,6 +81,6 @@ public class RestStrings
 	 */
 	@Override
 	public String toString() {
-		return "RestStrings [value=" + value + "]";
+		return "RestUUIDs [value=" + value + "]";
 	}
 }
