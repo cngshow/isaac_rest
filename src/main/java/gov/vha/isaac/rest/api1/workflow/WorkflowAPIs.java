@@ -33,6 +33,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
+import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.rest.api.data.wrappers.RestUUIDs;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
@@ -198,5 +200,29 @@ public class WorkflowAPIs {
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
+	}
+	
+	/**
+	 * Return the default workflow definition UUID
+	 * 
+	 * @return default definition UUID
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.defaultDefinitionComponent)
+	public RestUUID getDefaultDefinition() {
+		return new RestUUID(RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet().iterator().next());
+	}
+
+	/**
+	 * Return the available workflow definition UUIDs
+	 * 
+	 * @return available definition UUIDs
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.availableDefinitionsComponent)
+	public RestUUIDs getAvailableDefinitions() {
+		return new RestUUIDs(RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet());
 	}
 }

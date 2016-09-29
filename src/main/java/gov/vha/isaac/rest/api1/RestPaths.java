@@ -59,6 +59,8 @@ public class RestPaths
 	// WorkflowAccessor
 	public static final String permissionsForDefinitionAndUserComponent = "permissionsForDefinitionAndUser/";
 	public static final String actionsForProcessAndUserComponent = "actionsForProcessAndUser/";
+	public static final String defaultDefinitionComponent = "defaultDefinition/";
+	public static final String availableDefinitionsComponent = "availableDefinitions/";
 
 	public static final String historiesForProcessComponent = "historiesForProcess/";
 	public static final String processComponent = "process/";

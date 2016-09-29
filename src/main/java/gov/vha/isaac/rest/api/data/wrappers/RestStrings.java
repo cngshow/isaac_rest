@@ -43,7 +43,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestStrings
 {
 	/**
-	 * The Integer value
+	 * The String values
 	 */
 	@XmlElement
 	List<String> value = new ArrayList<String>();
@@ -80,6 +80,6 @@ public class RestStrings
 	 */
 	@Override
 	public String toString() {
-		return "RestInteger [value=" + value + "]";
+		return "RestStrings [value=" + value + "]";
 	}
 }
