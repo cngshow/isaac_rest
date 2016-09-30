@@ -33,6 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
+import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUIDs;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -224,5 +225,20 @@ public class WorkflowAPIs {
 	@Path(RestPaths.availableDefinitionsComponent)
 	public RestUUIDs getAvailableDefinitions() {
 		return new RestUUIDs(RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet());
+	}
+
+	/**
+	 * Return the the locked state of the specified process
+	 * 
+	 * @return RestBoolean containing true iff locked, else containing false
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.workflowLockStateComponent)
+	public RestBoolean isWorkflowLocked() {
+		boolean isLocked = false;
+		
+		//isLocked = RequestInfo.get().getWorkflow()
+		return new RestBoolean(isLocked);
 	}
 }

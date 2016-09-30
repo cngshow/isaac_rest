@@ -61,6 +61,7 @@ public class RestPaths
 	public static final String actionsForProcessAndUserComponent = "actionsForProcessAndUser/";
 	public static final String defaultDefinitionComponent = "defaultDefinition/";
 	public static final String availableDefinitionsComponent = "availableDefinitions/";
+	public static final String workflowLockStateComponent = "workflowLockState/";
 
 	public static final String historiesForProcessComponent = "historiesForProcess/";
 	public static final String processComponent = "process/";
@@ -78,7 +79,9 @@ public class RestPaths
 	public static final String advanceWorkflowProcessComponent = "advanceWorkflowProcess/";
 	public static final String addWorkflowUserRoleComponent = "addWorkflowUserRole/";
 	public static final String removeComponentFromWorkflowComponent = "removeComponentFromWorkflow/";
-	public static final String addComponentToWorkflowComponent = "addComponentToWorkflow";
+	public static final String addComponentToWorkflowComponent = "addComponentToWorkflow/";
+	public static final String acquireWorkflowLockComponent = "acquireWorkflowLock/";
+	public static final String releaseWorkflowLockComponent = "releaseWorkflowLock/";
 	
 //	public static final String addStampToExistingWorkflowProcessComponent = "addStampToExistingWorkflowProcess/";
 //	public static final String addConceptsToExistingWorkflowProcessComponent = "addStampsToExistingWorkflowProcess/";
