@@ -20,7 +20,9 @@ package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -74,10 +76,10 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	RestWorkflowProcessStatusType processStatus;
 
 	/**
-	 * The component nids associated with the workflow process
+	 * The component nids associated with the workflow process and their respective initial edit times
 	 */
 	@XmlElement
-	Map<Integer, Long> componentToIntitialEditMap = new HashMap<>();
+	Set<RestWorkflowComponentNidToInitialEditEpochMapEntry> componentToIntitialEditMap = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -100,7 +102,9 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.timeCreated = process.getTimeCreated();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
-		this.componentToIntitialEditMap.putAll(process.getComponentToInitialEditMap());
+		for (Map.Entry<Integer, Long> entry : process.getComponentToInitialEditMap().entrySet()) {
+			this.componentToIntitialEditMap.add(new RestWorkflowComponentNidToInitialEditEpochMapEntry(entry));
+		}
 	}
 
 	/**
@@ -147,8 +151,8 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 * @return the componentNids
 	 */
 	@XmlTransient
-	public Map<Integer, Long> getComponentToIntitialEditMap() {
-		return Collections.unmodifiableMap(componentToIntitialEditMap);
+	public Set<RestWorkflowComponentNidToInitialEditEpochMapEntry> getComponentToIntitialEditMap() {
+		return Collections.unmodifiableSet(componentToIntitialEditMap);
 	}
 
 	/* (non-Javadoc)

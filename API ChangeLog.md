@@ -7,6 +7,7 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+2016/10/01 - 1.4.10 - Changing componentToIntitialEditMap in RestWorkflowProcess to be Set of RestWorkflowComponentNidToInitialEditEpochMapEntry to avoid Enunciate errors
 2016/09/26 - 1.4.9 - Adding WorkflowAPIs getDefaultDefinition() and getAvailableDefinitions()
 2016/09/26 - 1.4.8 - Removing preferred term and acceptable dialects from RestConceptCreateData, changing field names in RestConceptCreateData, changing getDescriptionExtendedTypeConceptId() to return Integer rather than int 
 2016/09/26 - 1.4.7 - Fixing bug causing incorrect paths for WorkflowWriteAPIs REST methods, sorted comments by time, fixed a bug in reading / parsing

@@ -18,10 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -36,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * in a map of component nids to stamps
  * A set of these constitutes a map contained in {@link RestWorkflowProcess}
  * 
- * {@link RestWorkflowComponentNidToStampsMapEntry}
+ * {@link RestWorkflowComponentNidToInitialEditEpochMapEntry}
  * 
  * This class carries back result map
  *
@@ -45,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowComponentNidToStampsMapEntry
+public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 {
 	/**
 	 * The key
@@ -57,12 +54,12 @@ public class RestWorkflowComponentNidToStampsMapEntry
 	 * The value
 	 */
 	@XmlElement
-	List<Integer> value = new ArrayList<>();
+	long value;
 
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowComponentNidToStampsMapEntry()
+	protected RestWorkflowComponentNidToInitialEditEpochMapEntry()
 	{
 		//For jaxb
 	}
@@ -70,13 +67,12 @@ public class RestWorkflowComponentNidToStampsMapEntry
 	/**
 	 * @param map
 	 */
-	public RestWorkflowComponentNidToStampsMapEntry(int key, Collection<Integer> value) {
+	public RestWorkflowComponentNidToInitialEditEpochMapEntry(int key, long value) {
 		this.key = key;
-		if (value != null) {
-			for (int stamp : value) {
-				this.value.add(stamp);
-			}
-		}
+		this.value = value;
+	}
+	public RestWorkflowComponentNidToInitialEditEpochMapEntry(Map.Entry<Integer, Long> entry) {
+		this(entry.getKey(), entry.getValue());
 	}
 
 	/**
@@ -91,8 +87,8 @@ public class RestWorkflowComponentNidToStampsMapEntry
 	 * @return the value
 	 */
 	@XmlTransient
-	public List<Integer> getValue() {
-		return Collections.unmodifiableList(value);
+	public long getValue() {
+		return value;
 	}
 
 	/* (non-Javadoc)
@@ -117,7 +113,7 @@ public class RestWorkflowComponentNidToStampsMapEntry
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RestWorkflowComponentNidToStampsMapEntry other = (RestWorkflowComponentNidToStampsMapEntry) obj;
+		RestWorkflowComponentNidToInitialEditEpochMapEntry other = (RestWorkflowComponentNidToInitialEditEpochMapEntry) obj;
 		if (key != other.key)
 			return false;
 		return true;
