@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.UUID;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -35,7 +36,6 @@ import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUIDs;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
@@ -223,8 +223,13 @@ public class WorkflowAPIs {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.availableDefinitionsComponent)
-	public RestUUIDs getAvailableDefinitions() {
-		return new RestUUIDs(RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet());
+	public RestUUID[] getAvailableDefinitions() {
+		ArrayList<RestUUID> temp = new ArrayList<>();
+		for (UUID uuid : RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet())
+		{
+			temp.add(new RestUUID(uuid));
+		}
+		return temp.toArray(new RestUUID[temp.size()]);
 	}
 
 	/**
