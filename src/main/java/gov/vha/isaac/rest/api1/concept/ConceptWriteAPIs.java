@@ -64,7 +64,7 @@ import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
-import gov.vha.isaac.rest.DescriptionUtil;
+import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -199,7 +199,7 @@ public class ConceptWriteAPIs
 			if (descriptionExtendedTypeConceptId != null) {
 				int referencedComponentNid = builder.getFullySpecifiedDescriptionBuilder().getNid();
 				requiredDescriptionsExtendedTypeSememe = 
-						DescriptionUtil.addAnnotation(
+						SememeUtil.addAnnotation(
 								editCoordinate,
 								referencedComponentNid,
 								new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(descriptionExtendedTypeConceptId).get()),

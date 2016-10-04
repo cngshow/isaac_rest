@@ -63,13 +63,13 @@ import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 
 /**
  * 
- * {@link DescriptionUtil}
+ * {@link SememeUtil}
  * 
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
-public class DescriptionUtil
+public class SememeUtil
 {
-	private static Logger log = LogManager.getLogger(DescriptionUtil.class);
+	private static Logger log = LogManager.getLogger(SememeUtil.class);
 
 	public static enum DescriptionType 
 	{

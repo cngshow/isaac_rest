@@ -40,6 +40,9 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestParameters {
 	private RequestParameters() {}
+	
+	// CoordinatesToken
+	public final static String ssoToken = "ssoToken";
 
 	// CoordinatesToken
 	public final static String coordToken = "coordToken";
@@ -166,6 +169,8 @@ public class RequestParameters {
 		params.addAll(PAGINATION_PARAM_NAMES);
 		params.addAll(COMMENT_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
+			ssoToken,
+				
 			id,
 			nid,
 
