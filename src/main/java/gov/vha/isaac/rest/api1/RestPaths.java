@@ -43,14 +43,12 @@ public class RestPaths
 	public static final String idTranslateComponent = "translate/";
 	public static final String idTypesComponent = "types/";
 	public static final String descriptionsComponent = "descriptions/";
-	public static final String descriptionsObjectComponent = "descriptionsObject/"; // Testing
 	public static final String descriptionComponent = "description/";
 	public static final String componentComponent = "component/";
 	public static final String sememesComponent = "sememes/";
 	public static final String prefixComponent = "prefix/";
 	public static final String byAssemblageComponent = "byAssemblage/"; // TODO change to forAssemblage
 	public static final String byReferencedComponentComponent = "byReferencedComponent/"; // TODO change to forReferencedComponent
-	public static final String sememesObjectForReferencedComponentComponent = "sememesObjectByReferencedComponent/"; // Testing
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";

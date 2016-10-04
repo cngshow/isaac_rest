@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -31,10 +30,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -51,7 +48,6 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersions;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -228,7 +224,7 @@ public class ConceptAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent + "{" + RequestParameters.id + "}")
-	public List<RestSememeDescriptionVersion> getDescriptions(
+	public RestSememeDescriptionVersion[] getDescriptions(
 			@PathParam(RequestParameters.id) String id, 
 			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
 			@QueryParam(RequestParameters.expand) String expand,
@@ -243,7 +239,7 @@ public class ConceptAPIs
 
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		
-		List<RestSememeVersion> descriptions = SememeAPIs.get(
+		RestSememeVersion[] descriptions = SememeAPIs.get(
 				findConceptChronology(id).getNid() + "",
 				getAllDescriptionTypes(),
 				true, 
@@ -262,19 +258,7 @@ public class ConceptAPIs
 				result.add((RestSememeDescriptionVersion) d);
 			}
 		}
-		return result;
-	}
-	// For testing only.  Returns RestSememeDescriptionVersions serializable by JAXB
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.descriptionsObjectComponent + "{" + RequestParameters.id + "}")
-	public RestSememeDescriptionVersions getDescriptionVersions(
-			@PathParam(RequestParameters.id) String id, 
-			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
-			@QueryParam(RequestParameters.expand) String expand,
-			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
-	{
-		return new RestSememeDescriptionVersions(getDescriptions(id, includeAttributes, expand, coordToken));
+		return result.toArray(new RestSememeDescriptionVersion[result.size()]);
 	}
 	
 	private Set<Integer> getAllDescriptionTypes()

@@ -58,7 +58,7 @@ import gov.vha.isaac.rest.api.data.PaginationUtils;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
-import gov.vha.isaac.rest.api1.data.search.RestSearchResults;
+import gov.vha.isaac.rest.api1.data.search.RestSearchResultPage;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -86,7 +86,7 @@ public class SearchAPIs
 		return 	requestedBatch < truncationThreshold ? truncationThreshold : calculatedLimit;
 	}
 	
-	private RestSearchResults getRestSearchResultsFromOchreSearchResults(
+	private RestSearchResultPage getRestSearchResultsFromOchreSearchResults(
 			List<SearchResult> ochreSearchResults,
 			int pageNum,
 			int maxPageSize,
@@ -100,7 +100,7 @@ public class SearchAPIs
 			}
 		}
 		
-		return new RestSearchResults(
+		return new RestSearchResultPage(
 				pageNum, maxPageSize, ochreSearchResults.size(), restPath,
 				restSearchResults);
 	}
@@ -132,7 +132,7 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionsComponent)
-	public RestSearchResults descriptionSearch(
+	public RestSearchResultPage descriptionSearch(
 			@QueryParam(RequestParameters.query) String query,
 			@QueryParam(RequestParameters.descriptionType) String descriptionType, 
 			@QueryParam(RequestParameters.extendedDescriptionTypeId) String extendedDescriptionTypeId,
@@ -231,7 +231,7 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.prefixComponent)
-	public RestSearchResults prefixSearch(
+	public RestSearchResultPage prefixSearch(
 			@QueryParam(RequestParameters.query) String query,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
@@ -359,7 +359,7 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememesComponent)
-	public RestSearchResults sememeSearch(
+	public RestSearchResultPage sememeSearch(
 			@QueryParam(RequestParameters.query) String query,
 			@QueryParam(RequestParameters.treatAsString) Boolean treatAsString,
 			@QueryParam(RequestParameters.sememeAssemblageId) Set<String> sememeAssemblageId, 
@@ -526,7 +526,7 @@ public class SearchAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.byReferencedComponentComponent)
-	public RestSearchResults nidReferences(
+	public RestSearchResultPage nidReferences(
 			@QueryParam(RequestParameters.nid) int nid,
 			@QueryParam(RequestParameters.sememeAssemblageId) Set<String> sememeAssemblageId, 
 			@QueryParam(RequestParameters.dynamicSememeColumns) Set<Integer> dynamicSememeColumns,

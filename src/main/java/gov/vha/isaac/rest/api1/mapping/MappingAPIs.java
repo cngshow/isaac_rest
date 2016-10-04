@@ -42,9 +42,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersions;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersions;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -71,7 +69,7 @@ public class MappingAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetsComponent)
-	public RestMappingSetVersions getMappingSets(
+	public RestMappingSetVersion[] getMappingSets(
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -92,7 +90,7 @@ public class MappingAPIs
 				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments)));
 			}
 		});
-		return new RestMappingSetVersions(results);
+		return results.toArray(new RestMappingSetVersion[results.size()]);
 	}
 	
 	/**
@@ -157,7 +155,7 @@ public class MappingAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemsComponent + "{" + RequestParameters.id +"}")
-	public RestMappingItemVersions getMappingItems(
+	public RestMappingItemVersion[] getMappingItems(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.expand) String expand,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
@@ -223,7 +221,7 @@ public class MappingAPIs
 		{
 			// Just the limit / shortcircut from the stream API
 		}
-		return new RestMappingItemVersions(results);
+		return results.toArray(new RestMappingItemVersion[results.size()]);
 	}
 	
 	//TODO will need to add APIs for editing and/or removing extended field information from the map set definition.  Not currently possible

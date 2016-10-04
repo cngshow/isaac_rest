@@ -29,7 +29,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /**
  * A tuple containing the key/value pair constituting a map entry
  * in a map of List<{@link RestWorkflowProcessHistory}> by {@link RestWorkflowProcess}
- * A set of these constitutes a {@link RestWorkflowProcessHistoriesMap}.
 
  * {@link RestWorkflowProcessHistoriesMapEntry}
  * 
@@ -47,10 +46,10 @@ public class RestWorkflowProcessHistoriesMapEntry
 	RestWorkflowProcess key;
 
 	/**
-	 * The value {@link RestWorkflowProcessHistories}
+	 * The array of {@link RestWorkflowProcessHistory} objects
 	 */
 	@XmlElement
-	RestWorkflowProcessHistories value;
+	RestWorkflowProcessHistory[] value;
 
 	/**
 	 * Constructor for JAXB only
@@ -64,7 +63,7 @@ public class RestWorkflowProcessHistoriesMapEntry
 	 * @param key
 	 * @param value
 	 */
-	public RestWorkflowProcessHistoriesMapEntry(RestWorkflowProcess key, RestWorkflowProcessHistories value) {
+	public RestWorkflowProcessHistoriesMapEntry(RestWorkflowProcess key, RestWorkflowProcessHistory[] value) {
 		this.key = key;
 		this.value = value;
 	}
@@ -81,7 +80,7 @@ public class RestWorkflowProcessHistoriesMapEntry
 	 * @return the value
 	 */
 	@XmlTransient
-	public RestWorkflowProcessHistories getValue() {
+	public RestWorkflowProcessHistory[] getValue() {
 		return value;
 	}
 

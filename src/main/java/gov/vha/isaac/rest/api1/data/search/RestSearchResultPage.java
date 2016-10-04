@@ -16,69 +16,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.workflow;
+package gov.vha.isaac.rest.api1.data.search;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-
+import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.rest.api.data.Pagination;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 
 /**
- * A wrapper for a list of {@link RestWorkflowProcessHistory}
- * This class carries back result sets
-
- * {@link RestWorkflowProcessHistories}
+ * {@link RestSearchResultPage}
+ * 
+ * This class carries back result sets in a way that allows pagination
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessHistories
+public class RestSearchResultPage
 {
+	
+	/**
+	 * Link to retrieve current page
+	 */
+	@XmlElement
+	Pagination paginationData;
+
 	/**
 	 * The contained results
 	 */
 	@XmlElement
-	Collection<RestWorkflowProcessHistory> results = new ArrayList<>();
+	RestSearchResult[] results;
 
-	/**
-	 * Constructor for JAXB only
-	 */
-	protected RestWorkflowProcessHistories()
+	protected RestSearchResultPage()
 	{
 		//For jaxb
 	}
 
 	/**
-	 * @param results
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
+	 * @param approximateTotal approximate size of full matching set of which this paginated result is a subset
+	 * @param baseUrl url used to construct example previous and next urls
+	 * @param results list of RestSearchResult
+	 * @throws RestException 
 	 */
-	public RestWorkflowProcessHistories(Collection<RestWorkflowProcessHistory> results) {
-		if (results != null) {
-			this.results.addAll(results);
-		}
+	public RestSearchResultPage(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, List<RestSearchResult> results) throws RestException {
+		this.results = results.toArray(new RestSearchResult[results.size()]);
+		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
 	}
 
 	/**
 	 * @return the results
 	 */
 	@XmlTransient
-	public Collection<RestWorkflowProcessHistory> getResults() {
-		return Collections.unmodifiableList((ArrayList<RestWorkflowProcessHistory>)results);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "RestWorkflowProcessHistories [results=" + results + "]";
+	public RestSearchResult[] getResults() {
+		return results;
 	}
 }

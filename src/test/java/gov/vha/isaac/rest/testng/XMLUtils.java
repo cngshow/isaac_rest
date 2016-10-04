@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -39,13 +38,13 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
+import gov.vha.isaac.rest.jaxbCrutch.ArrayUnwrapper;
+import gov.vha.isaac.rest.jaxbCrutch.ArrayUnwrappers;
 
 /**
  * 
@@ -99,15 +98,40 @@ public class XMLUtils {
 
 			Unmarshaller unMarshaller = jaxbContext.createUnmarshaller();
 			object = (T)unMarshaller.unmarshal(streamSource);
-			return (T)object;
+			return object;
 		}
 		catch (JAXBException e)
 		{
 			e.printStackTrace();
 			throw new RuntimeException("Error unmarshalling class : " + classType.getName() + ". " + "Caught " + e.getClass().getName() + " " + e.getMessage());
 		}
-	} 
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> T[] unmarshalObjectArray(Class<T> classType, String xmlString)
+	{
+		try
+		{
+			StringReader stringReader = new StringReader(xmlString);
+			StreamSource streamSource = new StreamSource(stringReader);
+			
+			JAXBContext jaxbContext;
+			jaxbContext = JAXBContext.newInstance(ArrayUnwrappers.RestCommentVersions.class, ArrayUnwrappers.RestSememeDescriptionVersions.class, 
+					ArrayUnwrappers.RestMappingSetVersions.class, ArrayUnwrappers.RestMappingItemVersions.class, ArrayUnwrappers.RestWorkflowProcessHistorys.class, 
+					ArrayUnwrappers.RestWorkflowProcessHistoriesMapEntrys.class, ArrayUnwrappers.RestWorkflowAvailableActions.class);
 
+			Unmarshaller unMarshaller = jaxbContext.createUnmarshaller();
+			ArrayUnwrapper object = (ArrayUnwrapper)unMarshaller.unmarshal(streamSource);
+			
+			return  (T[])object.getValues();
+		}
+		catch (JAXBException e)
+		{
+			e.printStackTrace();
+			throw new RuntimeException("Error unmarshalling class : " + classType.getName() + ". " + "Caught " + e.getClass().getName() + " " + e.getMessage());
+		}
+	}
+	
 	public static Double getNumberFromXml(String xmlStr, String xPathStr) {
 		return (Double)getFromXml(xmlStr, xPathStr, XPathConstants.NUMBER);
 	}
