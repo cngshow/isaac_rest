@@ -365,7 +365,7 @@ public class MappingWriteAPIs
 		
 		DynamicSememeUsageDescription rdud = Frills.createNewDynamicSememeUsageDescriptionConcept(
 				mappingName, mappingName, description, columns,
-				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getConceptSequence(), ObjectChronologyType.CONCEPT, null);
+				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getConceptSequence(), ObjectChronologyType.CONCEPT, null, editCoord);
 		
 		Get.workExecutors().getExecutor().execute(() ->
 		{
