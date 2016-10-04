@@ -80,6 +80,11 @@ class UserTokenUtil {
 			) throws RestException {
 		Integer authorSequence = null;
 		// Try to find existing author by PRISME user id
+		
+		//TODO this needs to be redone - this Sememe design was off / didn't make sense.
+		//User should be located by a direct hash of "uniqueKeyFromSSO -> UUID".
+		//We don't even need to store anything else on a sememe to do this hash - (though we can, for convenience)
+		
 		SememeSequenceSet prismeUserAnnotationSememeSequences = Get.sememeService().getSememeSequencesFromAssemblage(DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getConceptSequence());
 		for (int prismeUserAnnotationSememeSequence : prismeUserAnnotationSememeSequences.asArray()) {
 			SememeChronology prismeUserAnnotationSememeChronology = Get.sememeService().getSememe(prismeUserAnnotationSememeSequence);
