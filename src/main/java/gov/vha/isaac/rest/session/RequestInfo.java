@@ -30,9 +30,13 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
@@ -41,11 +45,18 @@ import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
+import gov.vha.isaac.ochre.model.coordinate.EditCoordinateImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.concept.ConceptWriteAPIs;
+import gov.vha.isaac.rest.session.PRISMEServices.Role;
+import gov.vha.isaac.rest.session.PRISMEServices.User;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
+import gov.vha.isaac.rest.tokens.UserToken;
 
 /**
  * {@link RequestInfo}
@@ -64,11 +75,16 @@ public class RequestInfo
 	
 	private String coordinatesToken_ = null;
 	
+	private UserToken userToken_ = null;
+	//private Integer authorSequence;
+	private Set<String> roles_ = new HashSet<>();
+	private EditCoordinate editCoordinate_ = null;
+	
 	//just a cache
 	private WorkflowProvider wfp_;
 	
 	//TODO hack that needs to go away.
-	private static UUID workflowProcessId;
+	static UUID workflowProcessId;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	//Default to this, users may override by specifying expandables=true
@@ -136,10 +152,10 @@ public class RequestInfo
 
 		readExpandables(parameters);
 
-		String serializedTokenByParams = CoordinatesTokens.get(CoordinatesUtil.getCoordinateParameters(parameters));
-		if (serializedTokenByParams != null) {
+		String serializedCoordinatesTokenByParams = CoordinatesTokens.get(CoordinatesUtil.getCoordinateParameters(parameters));
+		if (serializedCoordinatesTokenByParams != null) {
 			log.debug("Using CoordinatesToken value cached by parameter");
-			requestInfo.get().coordinatesToken_ = serializedTokenByParams;
+			requestInfo.get().coordinatesToken_ = serializedCoordinatesTokenByParams;
 		} else {
 			log.debug("Constructing CoordinatesToken from parameters");
 			
@@ -211,6 +227,42 @@ public class RequestInfo
 			}
 		}
 		
+		User user = null;
+		if (parameters.containsKey(RequestParameters.ssoToken) && parameters.get(RequestParameters.ssoToken) != null && parameters.get(RequestParameters.ssoToken).size() > 0) {
+			user = PRISMEServices.getUser(parameters.get(RequestParameters.ssoToken).iterator().next());
+		}
+
+		UUID workflowProcessId = null;
+		if (parameters.containsKey(RequestParameters.wfProcessId) && parameters.get(RequestParameters.wfProcessId) != null) {
+			if (parameters.get(RequestParameters.wfProcessId).size() > 1) {
+				throw new RestException(RequestParameters.wfProcessId, parameters.get(RequestParameters.wfProcessId) + "", "too many (" + parameters.get(RequestParameters.wfProcessId).size() + ") values for parameter.  Should be only zero or 1.");
+			} else {
+				workflowProcessId = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters.get(RequestParameters.wfProcessId).iterator().next());
+			}
+		}
+
+		final EditCoordinate defaultEditCoordinate = EditCoordinates.getDefaultUserSolorOverlay();
+		if (user != null) {
+			userToken_ = UserTokenUtil.getUserToken(
+				user,
+				defaultEditCoordinate,
+				getStampCoordinate(),
+				getLanguageCoordinate(),
+				getLogicCoordinate(),
+				workflowProcessId
+				);
+
+			for (Role role : user.getRoles()) {
+				roles_.add(role.getRoleName());
+			}
+		} else {
+			userToken_ = new UserToken(
+					defaultEditCoordinate.getAuthorSequence(),
+					defaultEditCoordinate.getModuleSequence(),
+					defaultEditCoordinate.getPathSequence(),
+					workflowProcessId);
+		}
+
 		return requestInfo.get();
 	}
 	
@@ -245,15 +297,30 @@ public class RequestInfo
 	public EditCoordinate getEditCoordinate()
 	{
 		//TODO implement this properly - find the right author/module/path
-		return EditCoordinates.getDefaultUserSolorOverlay();
+		//return EditCoordinates.getDefaultUserSolorOverlay();
+		if (editCoordinate_ == null) {
+			editCoordinate_ = new EditCoordinateImpl(
+                userToken_.getAuthorSequence(),
+                userToken_.getModuleSequence(),
+                userToken_.getPathSequence());
+		}
+		
+		return editCoordinate_;
 	}
 	
+	/**
+	 * @return
+	 */
+	public Set<String> getRoles() { return Collections.unmodifiableSet(roles_); }
+
 	/**
 	 * @return
 	 */
 	public UUID getWorkflowProcessId()
 	{
 		//TODO implement this properly - need the active workflow in this session
+		return userToken_.getWorkflowProcessId();
+		
 //		try
 //		{
 //			if (workflowProcessId == null)
@@ -267,7 +334,7 @@ public class RequestInfo
 //			log.error("Unexpected", e);
 //		}
 //		return workflowProcessId;
-		return null;
+//		return null;
 	}
 
 	/**
