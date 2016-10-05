@@ -75,7 +75,7 @@ public class WorkflowWriteAPIs
 					workflowProcessCreationData.getName(),
 					workflowProcessCreationData.getDescription()));
 		} catch (Exception e) {
-			throw new RestException("Failed creating new workflow process from " + (workflowProcessCreationData != null ? workflowProcessCreationData : null));
+			throw new RestException("Failed creating new workflow process from " + (workflowProcessCreationData != null ? workflowProcessCreationData : "NULL"));
 		}
 	}
 
@@ -165,7 +165,7 @@ public class WorkflowWriteAPIs
 		try {
 			provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment(), RequestInfo.get().getEditCoordinate());
 		} catch (Exception e) {
-			throw new RestException("Failed advancing workflow process with " + (processAdvancementData != null ? processAdvancementData : null));
+			throw new RestException("Failed advancing workflow process with " + (processAdvancementData != null ? processAdvancementData : "NULL"));
 		}
 	}
 

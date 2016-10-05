@@ -22,6 +22,7 @@ package gov.vha.isaac.rest.session;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -245,10 +246,10 @@ public class RequestParameters {
 			}
 		}
 		for (String parameterName : parameters.keySet()) {
-			String parameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? parameterName.toUpperCase() : parameterName;
+			String parameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? parameterName.toUpperCase(Locale.ENGLISH) : parameterName;
 			boolean foundMatch = false;
 			for (String supportedParameterName : supportedParameterNamesSet) {
-				String supportedParameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? supportedParameterName.toUpperCase() : supportedParameterName;
+				String supportedParameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? supportedParameterName.toUpperCase(Locale.ENGLISH) : supportedParameterName;
 				if (supportedParameterNameToCompare.equals(parameterNameToCompare)) {
 					foundMatch = true;
 					break;

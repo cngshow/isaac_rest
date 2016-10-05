@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -237,25 +238,25 @@ public class CoordinatesUtil {
 						return seq;
 					}
 				}
-			} else if (languageParamStr.trim().toLowerCase().startsWith("english")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("english")) {
 				return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("spanish")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("spanish")) {
 				return TermAux.SPANISH_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("french")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("french")) {
 				return TermAux.FRENCH_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("danish")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("danish")) {
 				return TermAux.DANISH_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("polish")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("polish")) {
 				return TermAux.POLISH_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("dutch")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("dutch")) {
 				return TermAux.DUTCH_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("lithuanian")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("lithuanian")) {
 				return TermAux.LITHUANIAN_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("chinese")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("chinese")) {
 				return TermAux.CHINESE_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("japanese")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("japanese")) {
 				return TermAux.JAPANESE_LANGUAGE.getConceptSequence();
-			} else if (languageParamStr.trim().toLowerCase().startsWith("swedish")) {
+			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("swedish")) {
 				return TermAux.SWEDISH_LANGUAGE.getConceptSequence();
 			}
 		}
@@ -294,10 +295,10 @@ public class CoordinatesUtil {
 								continue;
 							}
 						}
-					} else if (dialectId.trim().toLowerCase().startsWith("us")) {
+					} else if (dialectId.trim().toLowerCase(Locale.ENGLISH).startsWith("us")) {
 						seqList.add(TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence());
 						continue;
-					} else if (dialectId.trim().toLowerCase().startsWith("gb")) {
+					} else if (dialectId.trim().toLowerCase(Locale.ENGLISH).startsWith("gb")) {
 						seqList.add(TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence());
 						continue;
 					}
@@ -349,13 +350,13 @@ public class CoordinatesUtil {
 								continue;
 							}
 						}
-					} else if (descTypeId.trim().toLowerCase().startsWith("fsn")) {
+					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("fsn")) {
 						seqList.add(TermAux.FULLY_SPECIFIED_DESCRIPTION_TYPE.getConceptSequence());
 						continue;
-					} else if (descTypeId.trim().toLowerCase().startsWith("synonym")) {
+					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("synonym")) {
 						seqList.add(TermAux.SYNONYM_DESCRIPTION_TYPE.getConceptSequence());
 						continue;
-					} else if (descTypeId.trim().toLowerCase().startsWith("definition")) {
+					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("definition")) {
 						seqList.add(TermAux.DEFINITION_DESCRIPTION_TYPE.getConceptSequence());
 						continue;
 					}

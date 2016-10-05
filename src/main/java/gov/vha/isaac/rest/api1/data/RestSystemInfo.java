@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -180,7 +181,7 @@ public class RestSystemInfo
 				public FileVisitResult visitFile(java.nio.file.Path path, BasicFileAttributes attrs) throws IOException
 				{
 					File f = path.toFile();
-					if (f.isFile() && f.getName().toLowerCase().equals("pom.properties"))
+					if (f.isFile() && f.getName().toLowerCase(Locale.ENGLISH).equals("pom.properties"))
 					{
 						Properties p = new Properties();
 						FileReader fileReader = null;
@@ -203,15 +204,16 @@ public class RestSystemInfo
 						metadataVersion.set(p.getProperty("isaac-metadata.version"));
 						readDbMetadataFromProperties.set(true);
 						return readDbMetadataFromPom.get() ? FileVisitResult.TERMINATE : FileVisitResult.CONTINUE;
-					} else if (f.isFile() && f.getName().toLowerCase().equals("pom.xml")) {
+					} else if (f.isFile() && f.getName().toLowerCase(Locale.ENGLISH).equals("pom.xml")) {
 						DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
 						DocumentBuilder builder;
 						Document dDoc = null;
 						XPath xPath = XPathFactory.newInstance().newXPath();
 
 						try {
+							domFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 							builder = domFactory.newDocumentBuilder();
-
+							
 							dDoc = builder.parse(f);
 							
 							{
@@ -303,6 +305,7 @@ public class RestSystemInfo
 		//if running from eclipse - our launch folder should be "ISAAC-rest".
 		File f = new File("").getAbsoluteFile();
 		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+		domFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 		DocumentBuilder builder = domFactory.newDocumentBuilder();
 
 		if (ApplicationConfig.getInstance().getServletContext() != null)

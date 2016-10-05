@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.tokens;
 
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -253,8 +254,9 @@ public class UserToken
 					byte[] temp = new byte[20];
 					
 					//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
-					new Random().nextBytes(temp);
+					//new Random().nextBytes(temp);
 					//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
+					new SecureRandom().nextBytes(temp);
 					secret_ = temp;
 				}
 			}
