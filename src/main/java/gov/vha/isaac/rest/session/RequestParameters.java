@@ -106,8 +106,7 @@ public class RequestParameters {
 	
 	// Expandables
 	public final static String expand = "expand";
-	public final static String expandables = "expandables";
-	public final static Set<String> EXPANDABLES_PARAM_NAMES = unmodifiableSet(expand, expandables);
+	public final static String returnExpandableLinks = "expandables";
 
 	// Pagination
 	public final static String pageNum = "pageNum";
@@ -163,12 +162,13 @@ public class RequestParameters {
 	 */
 	public final static Set<String> ALL_VALID_PARAMETERS;
 	static {
+		//TODO add new
 		Set<String> params = new HashSet<>();
 		params.addAll(COORDINATE_PARAM_NAMES);
-		params.addAll(EXPANDABLES_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
 		params.addAll(COMMENT_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
+			expand,
 			ssoToken,
 				
 			id,

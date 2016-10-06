@@ -110,7 +110,7 @@ public class ConceptAPIs
 				RequestParameters.includeChildren,
 				RequestParameters.countChildren,
 				RequestParameters.sememeMembership,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		@SuppressWarnings("rawtypes")
@@ -153,7 +153,7 @@ public class ConceptAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
@@ -234,7 +234,7 @@ public class ConceptAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.includeAttributes,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();

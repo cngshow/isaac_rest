@@ -101,7 +101,7 @@ public class TaxonomyAPIs
 				RequestParameters.childDepth,
 				RequestParameters.countChildren,
 				RequestParameters.sememeMembership,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
