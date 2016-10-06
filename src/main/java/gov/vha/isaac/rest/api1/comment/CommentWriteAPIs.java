@@ -140,7 +140,7 @@ public class CommentWriteAPIs
 	 * 
 	 * @param dataToUpdateComment - RestCommentVersionBase object containing data for updating a comment
 	 * @param id - The id (nid, sequence or UUID) of the comment to be updated 
-	 * @param state - The state to put the comment into
+	 * @param state - The state to put the comment into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
 	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
 	 * getEditCoordinatesToken().
 	 * @throws RestException
@@ -165,26 +165,13 @@ public class CommentWriteAPIs
 			throw new RestException(RequestParameters.id, null, "invalid (null) comment id");
 		}
 		
-		State stateToUse = null;
-		try {
-			if (RestStateType.valueOf(state).equals(new RestStateType(State.ACTIVE))) {
-				stateToUse = State.ACTIVE;
-			} else if (RestStateType.valueOf(state).equals(new RestStateType(State.INACTIVE))) {
-				stateToUse = State.INACTIVE;
-			} else {
-				throw new RestException(RequestParameters.state, state, "unsupported comment State. Should be one of \"active\" or \"inactive\"");
-			}
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new RestException(RequestParameters.state, state, "invalid comment State. Should be one of \"active\" or \"inactive\"");
-		}
+		RestStateType stateToUse = RestStateType.valueOf(state);
 
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);
 		
 		@SuppressWarnings("unchecked")
-		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse, RequestInfo.get().getEditCoordinate());
+		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse.toState(), RequestInfo.get().getEditCoordinate());
 		
 		editVersion.setData(
 			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.getComment()),

@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.jerseyConfig;
 
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -54,6 +55,7 @@ public class MyJacksonMapperConfig implements ContextResolver<ObjectMapper>
 		final ObjectMapper result = new ObjectMapper();
 		result.enable(SerializationFeature.INDENT_OUTPUT);
 		result.setAnnotationIntrospector(createJaxbJacksonAnnotationIntrospector());
+		result.setSerializationInclusion(Include.NON_NULL);
 
 		return result;
 	}

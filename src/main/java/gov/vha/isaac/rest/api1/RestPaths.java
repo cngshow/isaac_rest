@@ -101,6 +101,14 @@ public class RestPaths
 	public static final String mappingItemCreateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + createPathComponent;
 	public static final String mappingItemUpdateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + updatePathComponent;
 	
+	public static final String associationAPIsPathComponent = apiVersionComponent + "association/";
+	public static final String associationComponent = "type/";
+	public static final String associationItemComponent = "item/";
+	public static final String associationsComponent = "types/";
+	public static final String associationsWithTypeComponent = "withType/";
+	public static final String associationsWithSourceComponent = "withSource/";
+	public static final String associationsWithTargetComponent = "withTarget/";
+	
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";
 	public static final String enumerationRestDynamicSememeValidatorTypeComponent = enumerationComponent + "restDynamicSememeValidatorType/";

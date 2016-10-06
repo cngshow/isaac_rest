@@ -100,9 +100,8 @@ public class SearchAPIs
 			}
 		}
 		
-		return new RestSearchResultPage(
-				pageNum, maxPageSize, ochreSearchResults.size(), restPath,
-				restSearchResults);
+		return new RestSearchResultPage(pageNum, maxPageSize, ochreSearchResults.size(), false, ochreSearchResults.size() > (pageNum * maxPageSize),
+				restPath, restSearchResults);
 	}
 	/**
 	 * A simple search interface which is evaluated across all indexed descriptions in the terminology.   
@@ -147,7 +146,7 @@ public class SearchAPIs
 				RequestParameters.descriptionType,
 				RequestParameters.extendedDescriptionTypeId,
 				RequestParameters.PAGINATION_PARAM_NAMES,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		if (StringUtils.isBlank(query))
@@ -242,7 +241,7 @@ public class SearchAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.query,
 				RequestParameters.PAGINATION_PARAM_NAMES,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		if (StringUtils.isBlank(query))
@@ -376,7 +375,7 @@ public class SearchAPIs
 				RequestParameters.sememeAssemblageId,
 				RequestParameters.dynamicSememeColumns,
 				RequestParameters.PAGINATION_PARAM_NAMES,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.sememesComponent
@@ -541,7 +540,7 @@ public class SearchAPIs
 				RequestParameters.sememeAssemblageId,
 				RequestParameters.dynamicSememeColumns,
 				RequestParameters.PAGINATION_PARAM_NAMES,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
+				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent

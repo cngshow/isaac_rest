@@ -66,9 +66,10 @@ public class RestSearchResultPage
 	 * @param results list of RestSearchResult
 	 * @throws RestException 
 	 */
-	public RestSearchResultPage(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, List<RestSearchResult> results) throws RestException {
+	public RestSearchResultPage(int pageNum, int maxPageSize, int approximateTotal, boolean totalIsExact, boolean hasMoreData, String baseUrl, 
+			List<RestSearchResult> results) throws RestException {
 		this.results = results.toArray(new RestSearchResult[results.size()]);
-		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
+		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, totalIsExact, hasMoreData, baseUrl);
 	}
 
 	/**

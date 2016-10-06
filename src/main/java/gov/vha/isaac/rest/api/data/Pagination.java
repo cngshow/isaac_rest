@@ -39,7 +39,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class Pagination
 {
 	/**
-	 * Link to retrieve previous result set page
+	 * Link to retrieve previous result set page - not provided if no previous page exists.
 	 */
 	@XmlElement
 	String previousUrl;
@@ -60,6 +60,12 @@ public class Pagination
 	 */
 	@XmlElement
 	int approximateTotal;
+	
+	/**
+	 * True if the approximateTotal value is an exact count of results, false if the value is an estimate.
+	 */
+	@XmlElement
+	boolean totalIsExact;
 
 	protected Pagination()
 	{
@@ -73,53 +79,33 @@ public class Pagination
 	 * @param baseUrl base URL used to construct and return example previous and next URLs
 	 * @throws RestException 
 	 */
-	public Pagination(int pageNum, int maxPageSize, int approximateTotal, String baseUrl) throws RestException {
+	public Pagination(int pageNum, int maxPageSize, int approximateTotal, boolean totalIsExact, boolean hasMorePages, String baseUrl) throws RestException {
 		PaginationUtils.validateParameters(pageNum, maxPageSize);
 
 		this.pageNum = pageNum;
+		this.approximateTotal = approximateTotal < 0 ? -1 : approximateTotal;
+		this.totalIsExact = totalIsExact;
 
 		boolean baseUrlHasParams = baseUrl.contains("?");
 		
-		int previousPageNum = 0;
-		int previousPageSize = 0;
 		if (this.pageNum == 1) {
 			// At beginning
-			previousPageNum = 1;
-			previousPageSize = 0;
-		} else if ((this.pageNum - 1) * maxPageSize <= approximateTotal || approximateTotal < 0) {
-			// Within first chunk
-			previousPageNum = this.pageNum - 1;
-			previousPageSize = maxPageSize;
-		} else {
-			// Somewhere in the middle
-			previousPageNum = this.pageNum - 1;
-			previousPageSize = maxPageSize;
+			previousUrl = null;
 		}
-		this.previousUrl = baseUrl + (baseUrlHasParams ? "&" : "?") + RequestParameters.pageNum + "=" + previousPageNum + "&" + RequestParameters.maxPageSize + "=" + previousPageSize;
+		else
+		{
+			this.previousUrl = baseUrl + (baseUrlHasParams ? "&" : "?") + RequestParameters.pageNum + "=" + (this.pageNum - 1) 
+					+ "&" + RequestParameters.maxPageSize + "=" + maxPageSize;
+		}
 		
-		int nextPageNum = 0;
-		int nextPageSize = 0;
-		if (approximateTotal < 0) {
-			// If total < 0 then no known limit
-			nextPageNum = this.pageNum + 1;
-			nextPageSize = maxPageSize;
-			this.approximateTotal = -1; // total unknown
-		} else {
-			this.approximateTotal = approximateTotal; // total unknown
-			if ((this.pageNum * maxPageSize) >= approximateTotal) {
-				// Current result contains or is past end of results
-				nextPageNum = this.pageNum;
-				nextPageSize = 0;
-			} else if (((this.pageNum + 1) * maxPageSize) >= approximateTotal) {
-				// Next result contains end of results
-				nextPageNum = this.pageNum + 1;
-				nextPageSize = approximateTotal - (this.pageNum * maxPageSize);
-			} else {
-				// Somewhere near beginning or middle
-				nextPageNum = this.pageNum + 1;
-				nextPageSize = maxPageSize;
-			}
+		if (hasMorePages)
+		{
+			this.nextUrl = baseUrl + (baseUrlHasParams ? "&" : "?") + RequestParameters.pageNum + "=" + (this.pageNum + 1) 
+				+ "&" + RequestParameters.maxPageSize + "=" + maxPageSize;
 		}
-		this.nextUrl = baseUrl + (baseUrlHasParams ? "&" : "?") + RequestParameters.pageNum + "=" + nextPageNum + "&" + RequestParameters.maxPageSize + "=" + nextPageSize;
+		else
+		{
+			nextUrl = null;
+		}
 	}
 }

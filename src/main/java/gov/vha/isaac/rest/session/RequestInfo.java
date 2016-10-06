@@ -122,9 +122,9 @@ public class RequestInfo
 				}
 			}
 		}
-		if (parameters.containsKey(RequestParameters.expandables))
+		if (parameters.containsKey(RequestParameters.returnExpandableLinks))
 		{
-			List<String> temp = parameters.get(RequestParameters.expandables);
+			List<String> temp = parameters.get(RequestParameters.returnExpandableLinks);
 			if (temp.size() > 0)
 			{
 				returnExpandableLinks_ = Boolean.parseBoolean(temp.get(0).trim());
@@ -300,9 +300,9 @@ public class RequestInfo
 		//return EditCoordinates.getDefaultUserSolorOverlay();
 		if (editCoordinate_ == null) {
 			editCoordinate_ = new EditCoordinateImpl(
-                userToken_.getAuthorSequence(),
-                userToken_.getModuleSequence(),
-                userToken_.getPathSequence());
+				userToken_.getAuthorSequence(),
+				userToken_.getModuleSequence(),
+				userToken_.getPathSequence());
 		}
 		
 		return editCoordinate_;
