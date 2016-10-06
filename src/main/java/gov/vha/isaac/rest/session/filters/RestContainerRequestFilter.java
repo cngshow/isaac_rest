@@ -82,6 +82,10 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 
 		try  {
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
+
+			if (requestContext.getUriInfo().getPath().contains("/write/")) {
+				RequestInfo.get().getEditCoordinate();
+			}
 		} 
 		catch (IOException e) {
 			throw e;

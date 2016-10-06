@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;
-import gov.vha.isaac.rest.tokens.UserToken;
+import gov.vha.isaac.rest.tokens.EditToken;
 
 /**
  * {@link UserTokenTest}
@@ -36,7 +36,7 @@ public class UserTokenTest
 	{
 		UUID randomUuid = UUID.randomUUID();
 		
-		UserToken ut = new UserToken(
+		EditToken ut = new EditToken(
 				//5555,
 				1,
 				2,
@@ -44,13 +44,13 @@ public class UserTokenTest
 				randomUuid);
 		String token = ut.serialize();
 		
-		UserToken read = new UserToken(token);
+		EditToken read = new EditToken(token);
 		//Assert.assertTrue(ut.getUserIdentity() + " does not equal " + read.getUserIdentity() , ut.getUserIdentity() == read.getUserIdentity());
 		Assert.assertTrue(ut.getAuthorSequence() + " does not equal " + read.getAuthorSequence() , ut.getAuthorSequence() == read.getAuthorSequence());
 		Assert.assertTrue("is not valid?", read.isValidForSubmit());
 		
 		//Can only use a token once for submit
-		Assert.assertFalse("is valid when it shouldn't be", new UserToken(token).isValidForSubmit());
+		Assert.assertFalse("is valid when it shouldn't be", new EditToken(token).isValidForSubmit());
 		
 	}
 }

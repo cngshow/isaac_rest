@@ -45,6 +45,9 @@ import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.coordinate.EditCoordinateImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
@@ -52,11 +55,10 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.concept.ConceptWriteAPIs;
-import gov.vha.isaac.rest.session.PRISMEServices.Role;
-import gov.vha.isaac.rest.session.PRISMEServices.User;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
-import gov.vha.isaac.rest.tokens.UserToken;
+import gov.vha.isaac.rest.tokens.EditToken;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link RequestInfo}
@@ -72,24 +74,23 @@ public class RequestInfo
 	private static Logger log = LogManager.getLogger();
 
 	private Map<String, List<String>> parameters_ = new HashMap<>();
-	
+
 	private String coordinatesToken_ = null;
-	
-	private UserToken userToken_ = null;
+
+	private EditToken editToken_ = null;
 	//private Integer authorSequence;
-	private Set<String> roles_ = new HashSet<>();
 	private EditCoordinate editCoordinate_ = null;
-	
+
 	//just a cache
 	private WorkflowProvider wfp_;
-	
+
 	//TODO hack that needs to go away.
-	static UUID workflowProcessId;
+	static UUID workflowProcessId_;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	//Default to this, users may override by specifying expandables=true
 	private boolean returnExpandableLinks_ = ApplicationConfig.getInstance().isDebugDeploy();
-	
+
 	private static final ThreadLocal<RequestInfo> requestInfo = new ThreadLocal<RequestInfo>()
 	{
 		@Override
@@ -107,7 +108,7 @@ public class RequestInfo
 	private RequestInfo()
 	{
 	}
-	
+
 	public static void remove() {
 		requestInfo.remove();
 	}
@@ -132,14 +133,14 @@ public class RequestInfo
 		}
 		return get();
 	}
-	
+
 	private static <E extends Enum<E>> byte[] byteArrayFromEnumSet(EnumSet<E> set) {
 		byte[] returnValue = new byte[set.size()];
 		int index = 0;
 		for (Iterator<E> it = set.iterator(); it.hasNext();) {
 			returnValue[index++] = (byte)it.next().ordinal();
 		}
-		
+
 		return returnValue;
 	}
 
@@ -158,7 +159,7 @@ public class RequestInfo
 			requestInfo.get().coordinatesToken_ = serializedCoordinatesTokenByParams;
 		} else {
 			log.debug("Constructing CoordinatesToken from parameters");
-			
+
 			// Set RequestInfo coordinatesToken string to parameter value if set, otherwise set to default
 			Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenParameterTokenObjectValue(parameters);
 			if (token.isPresent()) {
@@ -173,7 +174,7 @@ public class RequestInfo
 
 			// Determine if any relevant coordinate parameters set
 			Map<String,List<String>> coordinateParameters = new HashMap<>();
-			coordinateParameters.putAll(CoordinatesUtil.getParametersSubset(parameters,
+			coordinateParameters.putAll(RequestInfoUtils.getParametersSubset(parameters,
 					RequestParameters.COORDINATE_PARAM_NAMES));
 
 			// If no coordinate parameter or only coordToken value set, then use
@@ -222,55 +223,19 @@ public class RequestInfo
 				requestInfo.get().coordinatesToken_ = tokenObj.getSerialized();
 
 				CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), tokenObj);
-				
+
 				log.debug("Created CoordinatesToken \"" + requestInfo.get().coordinatesToken_ + "\"");
 			}
-		}
-		
-		User user = null;
-		if (parameters.containsKey(RequestParameters.ssoToken) && parameters.get(RequestParameters.ssoToken) != null && parameters.get(RequestParameters.ssoToken).size() > 0) {
-			user = PRISMEServices.getUser(parameters.get(RequestParameters.ssoToken).iterator().next());
-		}
-
-		UUID workflowProcessId = null;
-		if (parameters.containsKey(RequestParameters.wfProcessId) && parameters.get(RequestParameters.wfProcessId) != null) {
-			if (parameters.get(RequestParameters.wfProcessId).size() > 1) {
-				throw new RestException(RequestParameters.wfProcessId, parameters.get(RequestParameters.wfProcessId) + "", "too many (" + parameters.get(RequestParameters.wfProcessId).size() + ") values for parameter.  Should be only zero or 1.");
-			} else {
-				workflowProcessId = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters.get(RequestParameters.wfProcessId).iterator().next());
-			}
-		}
-
-		final EditCoordinate defaultEditCoordinate = EditCoordinates.getDefaultUserSolorOverlay();
-		if (user != null) {
-			userToken_ = UserTokenUtil.getUserToken(
-				user,
-				defaultEditCoordinate,
-				getStampCoordinate(),
-				getLanguageCoordinate(),
-				getLogicCoordinate(),
-				workflowProcessId
-				);
-
-			for (Role role : user.getRoles()) {
-				roles_.add(role.getRoleName());
-			}
-		} else {
-			userToken_ = new UserToken(
-					defaultEditCoordinate.getAuthorSequence(),
-					defaultEditCoordinate.getModuleSequence(),
-					defaultEditCoordinate.getPathSequence(),
-					workflowProcessId);
 		}
 
 		return requestInfo.get();
 	}
-	
+
 	public boolean shouldExpand(String expandable)
 	{
 		return expandablesForDirectExpansion_.contains(expandable);
 	}
-	
+
 	public boolean returnExpandableLinks()
 	{
 		return returnExpandableLinks_;
@@ -290,28 +255,110 @@ public class RequestInfo
 	{
 		return getCoordinatesToken().getTaxonomyCoordinate().getStampCoordinate();
 	}
-	
+
 	/**
+	 * Lazily create, cache and return an EditCoordinate
+	 *
+	 * @return EditToken
+	 */
+	public EditToken getEditToken() {
+		if (editToken_ == null) {
+			try {
+				EditToken editToken = null;
+
+				Integer module = null;
+				Integer path = null;
+				UUID workflowProcessid = null;
+
+				EditCoordinate defaultEditCoordinate = EditCoordinates.getDefaultUserSolorOverlay();
+				
+				// Set default EditToken parameters to values in passedEditToken if set, otherwise set to default
+				Optional<EditToken> passedEditToken = EditTokens.getEditTokenParameterTokenObjectValue(parameters_);
+				if (passedEditToken.isPresent()) {
+					// Found valid EditToken passed as parameter
+					log.debug("Applying EditToken " + RequestParameters.editToken + " parameter \"" + passedEditToken.get().getSerialized() + "\"");
+
+					// Set local values to values from passed EditToken
+					editToken = passedEditToken.get();
+					module = passedEditToken.get().getModuleSequence();
+					path = passedEditToken.get().getPathSequence();
+					workflowProcessid = passedEditToken.get().getWorkflowProcessId();
+
+					// Override values from passed EditToken with values from parameters
+					if (parameters_.containsKey(RequestParameters.wfProcessId)) {
+						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.wfProcessId);
+						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters_.get(RequestParameters.wfProcessId).iterator().next());
+					}
+					if (parameters_.containsKey(RequestParameters.editModule)) {
+						module = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editModule);
+					}
+					if (parameters_.containsKey(RequestParameters.editPath)) {
+						path = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editPath);
+					}
+					
+					// Create new EditToken based on any passed parameters // TODO joel only recreate if necessary
+					editToken = new EditToken(
+							editToken.getAuthorSequence(),
+							module,
+							path,
+							workflowProcessid,
+							editToken.getRoles()
+							);
+				} else {
+					// No valid EditToken passed as parameter
+					log.debug("Retrieving new EditToken with SSO token " + parameters_.get(RequestParameters.ssoToken));
+
+					if (parameters_.containsKey(RequestParameters.wfProcessId)) {
+						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.wfProcessId);
+						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters_.get(RequestParameters.wfProcessId).iterator().next());
+					}
+					if (parameters_.containsKey(RequestParameters.editModule)) {
+						module = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editModule);
+					}
+					if (parameters_.containsKey(RequestParameters.editPath)) {
+						path = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editPath);
+					}
+					
+					// Must have either EditToken or SSO token in order to get author
+					RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
+					User user = PRISMEServices.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next());
+					editToken = EditTokenUtil.getUserToken(
+							user,
+							module != null ? module : defaultEditCoordinate.getModuleSequence(),
+							path != null ? path : defaultEditCoordinate.getPathSequence(),
+							workflowProcessid);
+				}
+
+				editToken_ = editToken;
+
+				log.debug("Created EditToken \"" + requestInfo.get().editToken_ + "\"");
+			} catch (RuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return editToken_;
+	}
+
+	/**
+	 * Lazily create, cache and return an EditCoordinate
+	 *
 	 * @return
 	 */
 	public EditCoordinate getEditCoordinate()
 	{
 		//TODO implement this properly - find the right author/module/path
-		//return EditCoordinates.getDefaultUserSolorOverlay();
 		if (editCoordinate_ == null) {
 			editCoordinate_ = new EditCoordinateImpl(
-                userToken_.getAuthorSequence(),
-                userToken_.getModuleSequence(),
-                userToken_.getPathSequence());
+					getEditToken().getAuthorSequence(),
+					getEditToken().getModuleSequence(),
+					getEditToken().getPathSequence());
 		}
-		
+
 		return editCoordinate_;
 	}
-	
-	/**
-	 * @return
-	 */
-	public Set<String> getRoles() { return Collections.unmodifiableSet(roles_); }
 
 	/**
 	 * @return
@@ -319,22 +366,22 @@ public class RequestInfo
 	public UUID getWorkflowProcessId()
 	{
 		//TODO implement this properly - need the active workflow in this session
-		return userToken_.getWorkflowProcessId();
-		
-//		try
-//		{
-//			if (workflowProcessId == null)
-//			{
-//				workflowProcessId =  LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder()
-//						.createWorkflowProcess(LookupService.getService(WorkflowProvider.class).getBPMNInfo().getDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
-//			}
-//		}
-//		catch (Exception e)
-//		{
-//			log.error("Unexpected", e);
-//		}
-//		return workflowProcessId;
-//		return null;
+		return editToken_.getWorkflowProcessId();
+
+		//		try
+		//		{
+		//			if (workflowProcessId == null)
+		//			{
+		//				workflowProcessId =  LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder()
+		//						.createWorkflowProcess(LookupService.getService(WorkflowProvider.class).getBPMNInfo().getDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
+		//			}
+		//		}
+		//		catch (Exception e)
+		//		{
+		//			log.error("Unexpected", e);
+		//		}
+		//		return workflowProcessId;
+		//		return null;
 	}
 
 	/**
@@ -344,7 +391,7 @@ public class RequestInfo
 	{
 		return getCoordinatesToken().getTaxonomyCoordinate().getLanguageCoordinate();
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -374,14 +421,14 @@ public class RequestInfo
 			return getTaxonomyCoordinate().getTaxonomyType() == PremiseType.INFERRED ? getTaxonomyCoordinate() : getTaxonomyCoordinate().makeAnalog(PremiseType.INFERRED);
 		}
 	}
-	
+
 	/**
 	 * @return
 	 */
 	public boolean getStated() {
 		return getTaxonomyCoordinate().getTaxonomyType() == PremiseType.STATED;
 	}
-	
+
 	/**
 	 * @return CoordinatesToken created from existing coordinates
 	 */
@@ -399,7 +446,7 @@ public class RequestInfo
 			return CoordinatesTokens.getDefaultCoordinatesToken();
 		}
 	}
-	
+
 	public WorkflowProvider getWorkflow()
 	{
 		if (wfp_ == null)

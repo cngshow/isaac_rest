@@ -24,15 +24,15 @@ import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.ConceptAsse
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.NecessarySet;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.collections.SememeSequenceSet;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptBuilder;
@@ -42,75 +42,57 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
+import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
-import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.session.PRISMEServices.User;
-import gov.vha.isaac.rest.tokens.UserToken;
+import gov.vha.isaac.rest.tokens.EditToken;
 
 /**
  * 
- * {@link UserTokenUtil}
+ * {@link EditTokenUtil}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-class UserTokenUtil {
-	private UserTokenUtil() {}
+class EditTokenUtil {
+	private EditTokenUtil() {}
 
-	static UserToken getUserToken(
+	static EditToken getUserToken(
 			User user,
-			EditCoordinate adminEditCoordinate,
-			StampCoordinate stampCoordinate,
-			LanguageCoordinate languageCoordinate,
-			LogicCoordinate logicCoordinate,
-			UUID wfProcessId
-			) throws RestException {
+			int moduleSequence,
+			int pathSequence,
+			UUID wfProcessId) throws RestException {
+		EditCoordinate adminEditCoordinate = EditCoordinates.getDefaultUserMetadata();
+		LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
+		LogicCoordinate logicCoordinate = LogicCoordinates.getStandardElProfile();
+		
 		Integer authorSequence = null;
-		// Try to find existing author by PRISME user id
 		
-		//TODO this needs to be redone - this Sememe design was off / didn't make sense.
-		//User should be located by a direct hash of "uniqueKeyFromSSO -> UUID".
-		//We don't even need to store anything else on a sememe to do this hash - (though we can, for convenience)
+		// FSN from userName is SSO primary key
+		final String fsn = user.getUserame();
 		
-		SememeSequenceSet prismeUserAnnotationSememeSequences = Get.sememeService().getSememeSequencesFromAssemblage(DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getConceptSequence());
-		for (int prismeUserAnnotationSememeSequence : prismeUserAnnotationSememeSequences.asArray()) {
-			SememeChronology prismeUserAnnotationSememeChronology = Get.sememeService().getSememe(prismeUserAnnotationSememeSequence);
-			Optional<LatestVersion<DynamicSememeImpl>> prismeUserAnnotationSememeVersionOptional = prismeUserAnnotationSememeChronology.getLatestVersion(DynamicSememeImpl.class, stampCoordinate);
-			DynamicSememeImpl prismeUserAnnotationSememe = prismeUserAnnotationSememeVersionOptional.get().value();
-
-			Long prismeId = null;
-			for (DynamicSememeData data : prismeUserAnnotationSememe.getData()) {
-				if (data.getDynamicSememeDataType() == DynamicSememeDataType.LONG) {
-					prismeId = ((DynamicSememeLongImpl)data).getDataLong();
-					break;
-				}
-			}
-			if (prismeId == null) {
-				throw new RuntimeException("DYNAMIC_SEMEME_PRISME_USER_ID annotation does not contain Long data value");
-			}
-			if (user.getId() == prismeId) {
-				authorSequence = Get.identifierService().getConceptSequence(prismeUserAnnotationSememe.getReferencedComponentNid());
-				break;
-			}
+		// Generate SSO T5 UUID from FSN with MetaData.USER.getPrimordialUuid() as domain
+		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
+		
+		// If the SSO UUID already persisted
+		if (Get.identifierService().hasUuid(uuidFromUserFsn)) {
+			// Set authorSequence to value corresponding to SSO UUID
+			authorSequence = Get.identifierService().getConceptSequenceForUuids(uuidFromUserFsn);
 		}
 
-		// If no existing author by PRISME user id, create new
+		// If no existing author by SSO UUID, create new author concept with that SSO UUID
 		if (authorSequence == null) {
-			final String fsn = user.getUserName();
-
 			try
 			{
 				ConceptSpecification defaultDescriptionsLanguageConceptSpec = Get.conceptSpecification(languageCoordinate.getLanguageConceptSequence());
@@ -132,17 +114,19 @@ class UserTokenUtil {
 						null,
 						parentDef);
 
+				// Set new author concept UUID to SSO UUID
+				builder.setPrimordialUuid(uuidFromUserFsn);
+
 				// Add PRISME user.id in DYNAMIC_SEMEME_PRISME_USER_ID annotation
 				// TODO confirm that user.id is being added in DYNAMIC_SEMEME_PRISME_USER_ID annotation
-				SememeChronology<DynamicSememe<?>> requiredDescriptionsExtendedTypeSememe = null;
-				requiredDescriptionsExtendedTypeSememe = 
+				SememeChronology<DynamicSememe<?>> prismeUserIdSememe = null;
+				prismeUserIdSememe = 
 						SememeUtil.addAnnotation(
-								EditCoordinates.getDefaultUserMetadata(),
+								adminEditCoordinate,
 								builder.getNid(),
 								new DynamicSememeLongImpl(user.getId()),
 								DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getPrimordialUuid());
 
-				// Add optional descriptionPreferredInDialectAssemblagesConceptIdsList beyond first (already added , if exists
 				if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
 					for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
 						builder.getFullySpecifiedDescriptionBuilder().setPreferredInDialectAssemblage(Get.conceptSpecification(i));
@@ -150,14 +134,15 @@ class UserTokenUtil {
 				}
 
 				List<?> createdObjects = new ArrayList<>();
-				ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(EditCoordinates.getDefaultUserMetadata(), ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
+				ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(adminEditCoordinate, ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
 
 				Get.commitService().addUncommitted(newCon).get();
 
-				if (requiredDescriptionsExtendedTypeSememe != null) {
-					Get.commitService().addUncommitted(requiredDescriptionsExtendedTypeSememe).get();
+				if (prismeUserIdSememe != null) {
+					Get.commitService().addUncommitted(prismeUserIdSememe).get();
 				}
 
+				@SuppressWarnings("deprecation")
 				Optional<CommitRecord> commitRecord = Get.commitService().commit(
 						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn).get();
 			}
@@ -167,11 +152,16 @@ class UserTokenUtil {
 			}
 		}
 
-		return new UserToken(
+		Set<String> roles = new HashSet<>();
+		for (Role role : user.getRoles()) {
+			roles.add(role.getName());
+		}
+		return new EditToken(
 				authorSequence,
-				adminEditCoordinate.getModuleSequence(),
-				adminEditCoordinate.getPathSequence(),
-				RequestInfo.workflowProcessId);
+				moduleSequence,
+				pathSequence,
+				wfProcessId,
+				roles);
 	}
 
 }
