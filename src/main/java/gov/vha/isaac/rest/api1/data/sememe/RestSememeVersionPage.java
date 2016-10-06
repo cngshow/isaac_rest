@@ -62,9 +62,10 @@ public class RestSememeVersionPage
 	 * @param results
 	 * @throws RestException 
 	 */
-	public RestSememeVersionPage(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, RestSememeVersion[] results) throws RestException {
+	public RestSememeVersionPage(int pageNum, int maxPageSize, int approximateTotal, boolean hasMoreData, boolean totalIsExact, String baseUrl, 
+			RestSememeVersion[] results) throws RestException {
 		this.results = results;
-		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
+		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, totalIsExact, hasMoreData, baseUrl);
 	}
 	/**
 	 * @param results

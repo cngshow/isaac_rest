@@ -100,9 +100,8 @@ public class SearchAPIs
 			}
 		}
 		
-		return new RestSearchResultPage(
-				pageNum, maxPageSize, ochreSearchResults.size(), restPath,
-				restSearchResults);
+		return new RestSearchResultPage(pageNum, maxPageSize, ochreSearchResults.size(), false, ochreSearchResults.size() > (pageNum * maxPageSize),
+				restPath, restSearchResults);
 	}
 	/**
 	 * A simple search interface which is evaluated across all indexed descriptions in the terminology.   

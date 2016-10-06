@@ -299,7 +299,7 @@ public class SememeAPIs
 						pageNum,
 						maxPageSize,
 						true);
-		//TODO this is a performance mess, we only should be converting the page of results they want.
+
 		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
 		for (SememeVersion<?> sv : versions.getValues()) {
 			restSememeVersions.add(
@@ -313,6 +313,8 @@ public class SememeAPIs
 						pageNum,
 						maxPageSize,
 						versions.getTotal(),
+						true,
+						versions.getTotal() > (pageNum * maxPageSize),
 						RestPaths.sememeByAssemblageAppPathComponent + id,
 						restSememeVersions.toArray(new RestSememeVersion[restSememeVersions.size()])
 						);
