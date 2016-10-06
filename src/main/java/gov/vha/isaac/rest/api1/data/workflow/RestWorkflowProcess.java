@@ -95,7 +95,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 */
 	public RestWorkflowProcess(ProcessDetail process) {
 		super(process.getDefinitionId(),
-				process.getCreatorNid(),
+				process.getCreatorId(),
 				process.getName(),
 				process.getDescription());
 		this.id = process.getId();
