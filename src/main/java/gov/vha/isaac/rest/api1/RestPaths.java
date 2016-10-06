@@ -43,14 +43,12 @@ public class RestPaths
 	public static final String idTranslateComponent = "translate/";
 	public static final String idTypesComponent = "types/";
 	public static final String descriptionsComponent = "descriptions/";
-	public static final String descriptionsObjectComponent = "descriptionsObject/"; // Testing
 	public static final String descriptionComponent = "description/";
 	public static final String componentComponent = "component/";
 	public static final String sememesComponent = "sememes/";
 	public static final String prefixComponent = "prefix/";
 	public static final String byAssemblageComponent = "byAssemblage/"; // TODO change to forAssemblage
 	public static final String byReferencedComponentComponent = "byReferencedComponent/"; // TODO change to forReferencedComponent
-	public static final String sememesObjectForReferencedComponentComponent = "sememesObjectByReferencedComponent/"; // Testing
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
@@ -59,6 +57,9 @@ public class RestPaths
 	// WorkflowAccessor
 	public static final String permissionsForDefinitionAndUserComponent = "permissionsForDefinitionAndUser/";
 	public static final String actionsForProcessAndUserComponent = "actionsForProcessAndUser/";
+	public static final String defaultDefinitionComponent = "defaultDefinition/";
+	public static final String availableDefinitionsComponent = "availableDefinitions/";
+	public static final String workflowLockStateComponent = "workflowLockState/";
 
 	public static final String historiesForProcessComponent = "historiesForProcess/";
 	public static final String processComponent = "process/";
@@ -76,7 +77,9 @@ public class RestPaths
 	public static final String advanceWorkflowProcessComponent = "advanceWorkflowProcess/";
 	public static final String addWorkflowUserRoleComponent = "addWorkflowUserRole/";
 	public static final String removeComponentFromWorkflowComponent = "removeComponentFromWorkflow/";
-	public static final String addComponentToWorkflowComponent = "addComponentToWorkflow";
+	public static final String addComponentToWorkflowComponent = "addComponentToWorkflow/";
+	public static final String acquireWorkflowLockComponent = "acquireWorkflowLock/";
+	public static final String releaseWorkflowLockComponent = "releaseWorkflowLock/";
 	
 //	public static final String addStampToExistingWorkflowProcessComponent = "addStampToExistingWorkflowProcess/";
 //	public static final String addConceptsToExistingWorkflowProcessComponent = "addStampsToExistingWorkflowProcess/";
@@ -97,6 +100,14 @@ public class RestPaths
 	public static final String mappingSetUpdateAppPathComponent = writePathComponent+ mappingAPIsPathComponent + mappingSetComponent + updatePathComponent;
 	public static final String mappingItemCreateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + createPathComponent;
 	public static final String mappingItemUpdateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + updatePathComponent;
+	
+	public static final String associationAPIsPathComponent = apiVersionComponent + "association/";
+	public static final String associationComponent = "type/";
+	public static final String associationItemComponent = "item/";
+	public static final String associationsComponent = "types/";
+	public static final String associationsWithTypeComponent = "withType/";
+	public static final String associationsWithSourceComponent = "withSource/";
+	public static final String associationsWithTargetComponent = "withTarget/";
 	
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";

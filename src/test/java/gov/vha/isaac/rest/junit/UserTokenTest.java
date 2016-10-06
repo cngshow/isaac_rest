@@ -36,11 +36,17 @@ public class UserTokenTest
 	{
 		UUID randomUuid = UUID.randomUUID();
 		
-		UserToken ut = new UserToken(5555, 1, 2, 3, randomUuid);
+		UserToken ut = new UserToken(
+				//5555,
+				1,
+				2,
+				3,
+				randomUuid);
 		String token = ut.serialize();
 		
 		UserToken read = new UserToken(token);
-		Assert.assertTrue(ut.getUserIdentity() + " does not equal " + read.getUserIdentity() , ut.getUserIdentity() == read.getUserIdentity());
+		//Assert.assertTrue(ut.getUserIdentity() + " does not equal " + read.getUserIdentity() , ut.getUserIdentity() == read.getUserIdentity());
+		Assert.assertTrue(ut.getAuthorSequence() + " does not equal " + read.getAuthorSequence() , ut.getAuthorSequence() == read.getAuthorSequence());
 		Assert.assertTrue("is not valid?", read.isValidForSubmit());
 		
 		//Can only use a token once for submit

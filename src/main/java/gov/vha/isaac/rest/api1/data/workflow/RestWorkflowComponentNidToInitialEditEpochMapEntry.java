@@ -18,10 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,8 +28,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
-/**
- * {@link RestWorkflowProcessHistoriesMap}
+/** 
+ * A tuple containing the key/value pair constituting a map entry
+ * in a map of component nids to stamps
+ * A set of these constitutes a map contained in {@link RestWorkflowProcess}
+ * 
+ * {@link RestWorkflowComponentNidToInitialEditEpochMapEntry}
  * 
  * This class carries back result map
  *
@@ -41,18 +42,24 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowProcessHistoriesMap
+public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 {
 	/**
-	 * The contained results
+	 * The key
 	 */
 	@XmlElement
-	Set<RestWorkflowProcessHistoriesMapEntry> entries = new HashSet<>();
+	int key;
+
+	/**
+	 * The value
+	 */
+	@XmlElement
+	long value;
 
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowProcessHistoriesMap()
+	protected RestWorkflowComponentNidToInitialEditEpochMapEntry()
 	{
 		//For jaxb
 	}
@@ -60,18 +67,56 @@ public class RestWorkflowProcessHistoriesMap
 	/**
 	 * @param map
 	 */
-	public RestWorkflowProcessHistoriesMap(Collection<RestWorkflowProcessHistoriesMapEntry> entries) {
-		if (entries != null) {
-			this.entries.addAll(entries);
-		}
+	public RestWorkflowComponentNidToInitialEditEpochMapEntry(int key, long value) {
+		this.key = key;
+		this.value = value;
+	}
+	public RestWorkflowComponentNidToInitialEditEpochMapEntry(Map.Entry<Integer, Long> entry) {
+		this(entry.getKey(), entry.getValue());
 	}
 
 	/**
-	 * @return the entries
+	 * @return the key
 	 */
 	@XmlTransient
-	public Set<RestWorkflowProcessHistoriesMapEntry> getEntries() {
-		return Collections.unmodifiableSet(entries);
+	public int getKey() {
+		return key;
+	}
+
+	/**
+	 * @return the value
+	 */
+	@XmlTransient
+	public long getValue() {
+		return value;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + key;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestWorkflowComponentNidToInitialEditEpochMapEntry other = (RestWorkflowComponentNidToInitialEditEpochMapEntry) obj;
+		if (key != other.key)
+			return false;
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -79,6 +124,6 @@ public class RestWorkflowProcessHistoriesMap
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessHistoriesMap [entries=" + entries + "]";
+		return "RestWorkflowComponentNidToStampsMapEntry [key=" + key + ", value=" + value + "]";
 	}
 }

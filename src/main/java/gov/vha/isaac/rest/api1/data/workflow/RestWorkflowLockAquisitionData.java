@@ -16,51 +16,84 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-
 /**
- * A wrapper for a list of {@link RestWorkflowAvailableAction}
+ * Object containing data required to aquire a lock on a {@link RestWorkflowProcess}.  Passed to {@link WorkflowWriteAPIs#acquireWorkflowLock}.
  * 
- * {@link RestWorkflowAvailableActions}
+ * {@link RestWorkflowLockAquisitionData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ *
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowAvailableActions
-{
-	/**
-	 * The contained results
-	 */
-	@XmlElement
-	List<RestWorkflowAvailableAction> results = new ArrayList<>();
+public class RestWorkflowLockAquisitionData {
 
 	/**
-	 * Constructor for JAXB only
+	 * The process id of the process to advance
 	 */
-	protected RestWorkflowAvailableActions()
-	{
-		//For jaxb
+	@XmlElement
+	UUID processId;
+
+	/**
+	 * The user performing the advancement
+	 */
+	@XmlElement
+	int userId;
+
+	/**
+	 * Constructor for JAXB
+	 */
+	protected RestWorkflowLockAquisitionData() {
+		super();
 	}
 
 	/**
-	 * @param results
+	 * @param processId - workflow process UUID
+	 * @param userId - workflow user id
 	 */
-	public RestWorkflowAvailableActions(Collection<RestWorkflowAvailableAction> results) {
-		if (results != null) {
-			this.results.addAll(results);
-		}
+	public RestWorkflowLockAquisitionData(UUID processId, int userId) {
+		super();
+		this.processId = processId;
+		this.userId = userId;
+	}
+
+	/**
+	 * @return the processId
+	 */
+	@XmlTransient
+	public UUID getProcessId() {
+		return processId;
+	}
+
+	/**
+	 * @return the userId
+	 */
+	@XmlTransient
+	public int getUserId() {
+		return userId;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestWorkflowProcessAdvancementData ["
+				+ "processId=" + processId
+				+ ", userId=" + userId
+				+ "]";
 	}
 }

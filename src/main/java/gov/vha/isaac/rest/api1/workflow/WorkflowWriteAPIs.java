@@ -29,6 +29,7 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockAquisitionData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
@@ -226,6 +227,40 @@ public class WorkflowWriteAPIs
 					RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid", specifiedComponent.getComponentNid()), RequestInfo.get().getEditCoordinate());
 		} catch (Exception e) {
 			throw new RestException("Failed removing component " + specifiedComponent + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		}
+	}
+	
+	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.updatePathComponent + RestPaths.releaseWorkflowLockComponent)
+	public void releaseWorkflowLock(
+			RestUUID processId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters());
+		
+		// TODO test releaseWorkflowLock()
+		try {
+			//RequestInfo.get().getWorkflow().getWorkflowUpdater().
+		} catch (Exception e) {
+			throw new RestException("Failed releasing lock on workflow process " + processId + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		}
+	}
+
+	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent)
+	public void acquireWorkflowLock(
+			RestWorkflowLockAquisitionData lockAquisitionData) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters());
+		
+		// TODO test acquireWorkflowLock()
+		try {
+			//RequestInfo.get().getWorkflow().getWorkflowUpdater().
+		} catch (Exception e) {
+			throw new RestException("Failed releasing lock on " + lockAquisitionData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
 	}
 }

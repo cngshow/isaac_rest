@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.comment;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -32,7 +33,6 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
-import gov.vha.isaac.rest.api1.data.comment.RestCommentVersions;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -82,7 +82,8 @@ public class CommentAPIs
 	}
 	
 	/**
-	 * Returns a list ({@link RestCommentVersions}) containing current version ({@link RestCommentVersion}) of any and all comments attached to a referenced component
+	 * Returns an array containing current version of any and all comments attached to a referenced component.  Note, this is not multiple versions 
+	 * of a single comment, rather, multiple comments (0 to n) at the version specified by the view coordinate.
 	 * 
 	 * @param id - A UUID or nid of the component being referenced by a comment
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
@@ -94,7 +95,7 @@ public class CommentAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.versionComponent + RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id +"}")
-	public RestCommentVersions getCommentVersionByReferencedItem(
+	public RestCommentVersion[] getCommentsByReferencedItem(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
@@ -103,6 +104,7 @@ public class CommentAPIs
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		return new RestCommentVersions(Util.readComments(id));
+		ArrayList<RestCommentVersion> temp = Util.readComments(id); 
+		return temp.toArray(new RestCommentVersion[temp.size()]);
 	}
 }

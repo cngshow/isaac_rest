@@ -19,17 +19,16 @@
 package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
@@ -77,10 +76,10 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	RestWorkflowProcessStatusType processStatus;
 
 	/**
-	 * The component nids associated with the workflow process
+	 * The component nids associated with the workflow process and their respective initial edit times
 	 */
 	@XmlElement
-	Set<Integer> componentNids = new HashSet<>();
+	Set<RestWorkflowComponentNidToInitialEditEpochMapEntry> componentToIntitialEditMap = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -103,7 +102,9 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.timeCreated = process.getTimeCreated();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
-		this.componentNids.addAll(process.getComponentNidToStampsMap().keySet());
+		for (Map.Entry<Integer, Long> entry : process.getComponentToInitialEditMap().entrySet()) {
+			this.componentToIntitialEditMap.add(new RestWorkflowComponentNidToInitialEditEpochMapEntry(entry));
+		}
 	}
 
 	/**
@@ -150,8 +151,8 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 * @return the componentNids
 	 */
 	@XmlTransient
-	public Set<Integer> getComponentNids() {
-		return Collections.unmodifiableSet(componentNids);
+	public Set<RestWorkflowComponentNidToInitialEditEpochMapEntry> getComponentToIntitialEditMap() {
+		return Collections.unmodifiableSet(componentToIntitialEditMap);
 	}
 
 	/* (non-Javadoc)
@@ -192,6 +193,6 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	public String toString() {
 		return "RestWorkflowProcess [id=" + id + ", timeCreated=" + timeCreated + ", timeLaunched=" + timeLaunched
 				+ ", timeCancelledOrConcluded=" + timeCancelledOrConcluded + ", processStatus=" + processStatus
-				+ ", componentNids=" + componentNids + "]";
+				+ ", componentToIntitialEditMap=" + componentToIntitialEditMap + "]";
 	}
 }

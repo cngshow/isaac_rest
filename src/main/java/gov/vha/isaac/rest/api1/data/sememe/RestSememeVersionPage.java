@@ -16,34 +16,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.search;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.rest.api.data.Pagination;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
 
 /**
- * {@link RestSearchResults}
+ * {@link RestSememeVersionPage}
  * 
  * This class carries back result sets in a way that allows pagination
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestSearchResults
+public class RestSememeVersionPage
 {
 	
 	/**
@@ -56,9 +47,9 @@ public class RestSearchResults
 	 * The contained results
 	 */
 	@XmlElement
-	List<RestSearchResult> results = new ArrayList<>();
+	public RestSememeVersion[] results;
 
-	protected RestSearchResults()
+	protected RestSememeVersionPage()
 	{
 		//For jaxb
 	}
@@ -68,19 +59,28 @@ public class RestSearchResults
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param approximateTotal approximate size of full matching set of which this paginated result is a subset
 	 * @param baseUrl url used to construct example previous and next urls
-	 * @param results list of RestSearchResult
+	 * @param results
 	 * @throws RestException 
 	 */
-	public RestSearchResults(int pageNum, int maxPageSize, int approximateTotal, String baseUrl, List<RestSearchResult> results) throws RestException {
-		this.results.addAll(results);
-		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, baseUrl);
+	public RestSememeVersionPage(int pageNum, int maxPageSize, int approximateTotal, boolean hasMoreData, boolean totalIsExact, String baseUrl, 
+			RestSememeVersion[] results) throws RestException {
+		this.results = results;
+		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, totalIsExact, hasMoreData, baseUrl);
+	}
+	/**
+	 * @param results
+	 * @throws RestException 
+	 */
+	public RestSememeVersionPage(RestSememeVersion[] results) throws RestException {
+		this.results = results;
+		this.paginationData = null;
 	}
 
-	/**
-	 * @return the results
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
 	 */
-	@XmlTransient
-	public List<RestSearchResult> getResults() {
-		return Collections.unmodifiableList(results);
+	@Override
+	public String toString() {
+		return "RestSememeVersions [results=" + results + "]";
 	}
 }

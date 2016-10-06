@@ -56,7 +56,7 @@ public class UserToken
 	// and the domain '5a2e7786-3e41-11dc-8314-0800200c9a66' (path ID from FSN description)
 	private static final UUID NULL_UUID = UUID.fromString("a051e620-4fe1-5174-97d9-53dbce2ead0d");
 
-	private final int userIdentity;
+	//private final int userIdentity;
 	private long creationTime;
 
 	private final int authorSequence;
@@ -69,13 +69,13 @@ public class UserToken
 	 * @param authenticatedUserIdentity
 	 */
 	public UserToken(
-			int authenticatedUserIdentity,
+			//int authenticatedUserIdentity,
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
 			UUID workflowProcessId)
 	{
-		this.userIdentity = authenticatedUserIdentity;
+		//this.userIdentity = authenticatedUserIdentity;
 		this.creationTime = System.currentTimeMillis();
 
 		this.authorSequence = authorSequence;
@@ -84,11 +84,16 @@ public class UserToken
 		this.workflowProcessId = workflowProcessId;
 	}
 	public UserToken(
-			int authenticatedUserIdentity,
+			//int authenticatedUserIdentity,
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence) {
-		this(authenticatedUserIdentity, authorSequence, moduleSequence, pathSequence, (UUID)null);
+		this(
+				//authenticatedUserIdentity,
+				authorSequence,
+				moduleSequence,
+				pathSequence,
+				(UUID)null);
 	}
 	/**
 	 * Parse a user token back
@@ -115,7 +120,7 @@ public class UserToken
 		}
 		
 		int increment = buffer.getInt();
-		userIdentity = buffer.getInt();
+		//userIdentity = buffer.getInt();
 		creationTime = buffer.getLong();
 
 		authorSequence = buffer.getInt();
@@ -221,7 +226,7 @@ public class UserToken
 		validTokens.put(thisIncrement, System.currentTimeMillis());
 		buffer.putByte(tokenVersion);
 		buffer.putInt(thisIncrement);
-		buffer.putInt(userIdentity);
+		//buffer.putInt(userIdentity);
 		buffer.putLong(creationTime);
 		buffer.putInt(authorSequence);
 		buffer.putInt(moduleSequence);
@@ -257,16 +262,21 @@ public class UserToken
 		return secret_;
 	}
 	
-	public int getUserIdentity()
-	{
-		return userIdentity;
-	}
+//	public int getUserIdentity()
+//	{
+//		return userIdentity;
+//	}
 
 	public static void main(String[] args) throws Exception
 	{
 		UUID randomUuid = UUID.randomUUID();
 		
-		UserToken t = new UserToken(5678, 1, 2, 3, randomUuid);
+		UserToken t = new UserToken(
+				//5678,
+				1,
+				2,
+				3,
+				randomUuid);
 		String token = t.serialize();
 		System.out.println(token);
 		UserToken t1 = new UserToken(token);

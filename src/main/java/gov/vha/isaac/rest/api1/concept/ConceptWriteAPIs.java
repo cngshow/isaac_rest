@@ -64,7 +64,7 @@ import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
-import gov.vha.isaac.rest.DescriptionUtil;
+import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -170,15 +170,14 @@ public class ConceptWriteAPIs
 	{
 		try
 		{
-			ConceptBuilderService conceptBuilderService = LookupService.getService(ConceptBuilderService.class);
-			ConceptSpecification requiredDescriptionsLanguageConceptSpec = Get.conceptSpecification(descriptionLanguageConceptId);
+			ConceptSpecification defaultDescriptionsLanguageConceptSpec = Get.conceptSpecification(descriptionLanguageConceptId);
 			ConceptSpecification defaultDescriptionDialectConceptSpec = (descriptionPreferredInDialectAssemblagesConceptIds != null && descriptionPreferredInDialectAssemblagesConceptIds.size() > 0) ? Get.conceptSpecification(descriptionPreferredInDialectAssemblagesConceptIds.iterator().next()) : MetaData.US_ENGLISH_DIALECT;	
-		
-			conceptBuilderService.setDefaultLanguageForDescriptions(requiredDescriptionsLanguageConceptSpec);
+
+			ConceptBuilderService conceptBuilderService = LookupService.getService(ConceptBuilderService.class);
+			conceptBuilderService.setDefaultLanguageForDescriptions(defaultDescriptionsLanguageConceptSpec);
 			conceptBuilderService.setDefaultDialectAssemblageForDescriptions(defaultDescriptionDialectConceptSpec);
 			conceptBuilderService.setDefaultLogicCoordinate(lc);
 
-			//DescriptionBuilderService descriptionBuilderService = LookupService.getService(DescriptionBuilderService.class);
 			LogicalExpressionBuilder defBuilder = LookupService.getService(LogicalExpressionBuilderService.class).getLogicalExpressionBuilder();
 
 			for (int parentConceptNidOrSequence : parentConceptIds) {
@@ -198,10 +197,9 @@ public class ConceptWriteAPIs
 			// TODO confirm that requiredDescriptionsExtendedType is being added to new concept required descriptions
 			SememeChronology<DynamicSememe<?>> requiredDescriptionsExtendedTypeSememe = null;
 			if (descriptionExtendedTypeConceptId != null) {
-				UUID referencedComponentUuid = builder.getFullySpecifiedDescriptionBuilder().getPrimordialUuid();
-				int referencedComponentNid = Get.identifierService().getNidForUuids(referencedComponentUuid);
+				int referencedComponentNid = builder.getFullySpecifiedDescriptionBuilder().getNid();
 				requiredDescriptionsExtendedTypeSememe = 
-						DescriptionUtil.addAnnotation(
+						SememeUtil.addAnnotation(
 								editCoordinate,
 								referencedComponentNid,
 								new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(descriptionExtendedTypeConceptId).get()),

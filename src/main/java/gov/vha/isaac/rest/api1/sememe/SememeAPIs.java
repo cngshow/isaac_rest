@@ -57,7 +57,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersions;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -200,7 +200,6 @@ public class SememeAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
-				RequestParameters.expandables,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		@SuppressWarnings("rawtypes")
@@ -275,7 +274,7 @@ public class SememeAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.byAssemblageComponent + "{" + RequestParameters.id +  "}")
-	public RestSememeVersions getByAssemblage(
+	public RestSememeVersionPage getByAssemblage(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
@@ -285,8 +284,8 @@ public class SememeAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
+				RequestParameters.expand,
 				RequestParameters.PAGINATION_PARAM_NAMES,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		HashSet<Integer> temp = new HashSet<>();
@@ -300,7 +299,7 @@ public class SememeAPIs
 						pageNum,
 						maxPageSize,
 						true);
-		//TODO this is a performance mess, we only should be converting the page of results they want.
+
 		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
 		for (SememeVersion<?> sv : versions.getValues()) {
 			restSememeVersions.add(
@@ -309,13 +308,15 @@ public class SememeAPIs
 							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
 		}
-		RestSememeVersions results =
-				new RestSememeVersions(
+		RestSememeVersionPage results =
+				new RestSememeVersionPage(
 						pageNum,
 						maxPageSize,
 						versions.getTotal(),
+						true,
+						versions.getTotal() > (pageNum * maxPageSize),
 						RestPaths.sememeByAssemblageAppPathComponent + id,
-						restSememeVersions
+						restSememeVersions.toArray(new RestSememeVersion[restSememeVersions.size()])
 						);
 		
 		return results;
@@ -344,7 +345,7 @@ public class SememeAPIs
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id + "}")
-	public List<RestSememeVersion> getByReferencedComponent(
+	public RestSememeVersion[] getByReferencedComponent(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
 			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
@@ -358,7 +359,6 @@ public class SememeAPIs
 				RequestParameters.assemblage,
 				RequestParameters.includeDescriptions,
 				RequestParameters.expand,
-				RequestParameters.expandables,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
@@ -376,20 +376,7 @@ public class SememeAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						Boolean.parseBoolean(includeDescriptions.trim()));
 	}
-	// For unit testing only
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.sememesObjectForReferencedComponentComponent + "{" + RequestParameters.id + "}")
-	public RestSememeVersions getSememeVersionsByReferencedComponent(
-			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
-			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
-			@QueryParam(RequestParameters.expand) String expand,
-			@QueryParam(RequestParameters.coordToken) String coordToken) 
-			throws RestException
-	{
-		return new RestSememeVersions(getByReferencedComponent(id, assemblage, includeDescriptions, expand, coordToken));
-	}
+
 	/**
 	 * Return the full description of a particular sememe - including its intended use, the types of any data columns that will be attached, etc.
 	 * @param id - The UUID, nid or concept sequence of the concept that represents the sememe assemblage.
@@ -464,8 +451,8 @@ public class SememeAPIs
 			this.approximateTotal = approximateTotal;
 		}
 
-		public List<SememeVersion<?>> getValues() {
-			return values;
+		public SememeVersion<?>[] getValues() {
+			return values.toArray(new SememeVersion[values.size()]);
 		}
 		public int getTotal() {
 			return approximateTotal;
@@ -583,7 +570,7 @@ public class SememeAPIs
 	
 	/**
 	 * @param referencedComponent - optional - if provided - takes precedence
-	 * @param assemblage - optional - if provided, either limits the referencedComponent search by this type, or, if 
+	 * @param allowedAssemblages - optional - if provided, either limits the referencedComponent search by this type, or, if 
 	 * referencedComponent is not provided - focuses the search on just this assemblage
 	 * @param expandChronology
 	 * @param expandNested
@@ -592,7 +579,7 @@ public class SememeAPIs
 	 * @return
 	 * @throws RestException
 	 */
-	public static List<RestSememeVersion> get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
+	public static RestSememeVersion[] get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
 		boolean expandReferenced, boolean allowDescriptions) throws RestException
 	{
 		final ArrayList<RestSememeVersion> results = new ArrayList<>();
@@ -664,6 +651,6 @@ public class SememeAPIs
 				Get.sememeService().getSememesFromAssemblage(assemblageId).forEach(consumer);
 			}
 		}
-		return results;
+		return results.toArray(new RestSememeVersion[results.size()]);
 	}
 }

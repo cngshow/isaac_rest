@@ -53,7 +53,7 @@ import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
-import gov.vha.isaac.rest.DescriptionUtil;
+import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -128,7 +128,7 @@ public class SememeWriteAPIs
 
 			// TODO test addition of extendedDescriptionTypeConceptSequence UUID annotation to new description
 			if (creationData.getExtendedDescriptionTypeConceptSequence() != null) {
-				DescriptionUtil.addAnnotation(
+				SememeUtil.addAnnotation(
 						RequestInfo.get().getEditCoordinate(),
 						newDescription.getNid(),
 						new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(creationData.getExtendedDescriptionTypeConceptSequence()).get()),

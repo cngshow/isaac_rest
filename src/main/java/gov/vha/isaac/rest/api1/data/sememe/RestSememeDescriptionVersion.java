@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
-import gov.vha.isaac.rest.DescriptionUtil;
+import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -112,7 +112,7 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		descriptionTypeConceptSequence = dsv.getDescriptionTypeConceptSequence();
 
 		// populate descriptionExtendedTypeConceptSequence
-		Optional<Integer> descriptionExtendedTypeOptional = DescriptionUtil.getDescriptionExtendedTypeConceptSequence(RequestInfo.get().getStampCoordinate(), dsv.getNid());
+		Optional<Integer> descriptionExtendedTypeOptional = SememeUtil.getDescriptionExtendedTypeConceptSequence(RequestInfo.get().getStampCoordinate(), dsv.getNid());
 		if (descriptionExtendedTypeOptional.isPresent()) {
 			descriptionExtendedTypeConceptSequence = descriptionExtendedTypeOptional.get();
 		}
