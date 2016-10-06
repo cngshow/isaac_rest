@@ -144,7 +144,7 @@ public class WorkflowAPIs {
 			ArrayList<RestWorkflowProcessHistoriesMapEntry> entries = new ArrayList<>();
 			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = RequestInfo.get().getWorkflow().getWorkflowAccessor().getAdvanceableProcessInformation(
 					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
-					RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId));
+					RequestInfoUtils.parseUuidParameter(RequestParameters.wfUserId, wfUserId));
 
 			for (Map.Entry<ProcessDetail, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 				List<RestWorkflowProcessHistory> restList = new ArrayList<>();
@@ -185,7 +185,7 @@ public class WorkflowAPIs {
 			List<RestWorkflowAvailableAction> actions = new ArrayList<>();
 			RequestInfo.get().getWorkflow().getWorkflowAccessor().getUserPermissibleActionsForProcess(
 							RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
-							RequestInfoUtils.parseIntegerParameter(RequestParameters.wfUserId, wfUserId))
+							RequestInfoUtils.parseUuidParameter(RequestParameters.wfUserId, wfUserId))
 					.stream().forEachOrdered(a -> actions.add(new RestWorkflowAvailableAction(a)));
 			return actions.toArray(new RestWorkflowAvailableAction[actions.size()]);
 		} catch (RestException e) {

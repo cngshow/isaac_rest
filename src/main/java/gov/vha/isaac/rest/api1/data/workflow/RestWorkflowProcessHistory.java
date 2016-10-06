@@ -55,7 +55,7 @@ public class RestWorkflowProcessHistory
 	/**
 	 * The workflow user
 	 */
-	int userId;
+	UUID userId;
 
 	/**
 	 * The time advanced
@@ -97,7 +97,7 @@ public class RestWorkflowProcessHistory
 	public RestWorkflowProcessHistory(ProcessHistory processHistory) {
 		this.id = processHistory.getId();
 		this.processId = processHistory.getProcessId();
-		this.userId = processHistory.getUserNid();
+		this.userId = processHistory.getUserId();
 		this.timeAdvanced = processHistory.getTimeAdvanced();
 		this.initialState = processHistory.getInitialState();
 		this.action = processHistory.getAction();
@@ -125,7 +125,7 @@ public class RestWorkflowProcessHistory
 	 * @return the userId
 	 */
 	@XmlTransient
-	public int getUserId() {
+	public UUID getUserId() {
 		return userId;
 	}
 
