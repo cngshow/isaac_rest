@@ -366,7 +366,7 @@ public class RequestInfo
 	public UUID getWorkflowProcessId()
 	{
 		//TODO implement this properly - need the active workflow in this session
-		return editToken_.getWorkflowProcessId();
+		return getEditToken().getWorkflowProcessId();
 
 		//		try
 		//		{

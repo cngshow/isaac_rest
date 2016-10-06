@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
+import gov.vha.isaac.rest.api1.data.RestEditToken;
 import gov.vha.isaac.rest.api1.data.coordinate.RestCoordinates;
 import gov.vha.isaac.rest.api1.data.coordinate.RestLanguageCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestLogicCoordinate;
@@ -274,5 +275,40 @@ public class CoordinateAPIs
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		return new RestLogicCoordinate(RequestInfo.get().getLogicCoordinate());
+	}
+	
+	/**
+	 * 
+	 * This method returns <code>RestEditToken</code>.
+	 * It takes an explicit serialized SSO string parameter <code>ssoToken</code>
+	 * specifying authenticated user identification.
+	 * Also accepts an optional editToken string parameter specifying all component values
+	 * as well as optional individual editModule, editPath and wfProcessId parameters.
+	 * If no optional parameters are specified,
+	 * then the editToken corresponding to the passed <code>ssoToken</code> token will be returned.
+	 * If any additional optional parameters are passed, then their values will be applied to the token specified by the
+	 * explicit serialized ssoToken string, and the resulting RestEditToken will be returned.
+	 * 
+	 * @param ssoToken specifies an explicit serialized SSO token string
+	 * 
+	 * @return RestEditToken
+	 * 
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.editTokenComponent)  
+	public RestEditToken getEditToken(
+			@QueryParam(RequestParameters.ssoToken) String coordToken,
+			@QueryParam(RequestParameters.editToken) String editToken, // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.editModule) String editModule, // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
+			) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+
+		return new RestEditToken(RequestInfo.get().getEditToken());
 	}
 }

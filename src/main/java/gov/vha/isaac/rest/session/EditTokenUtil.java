@@ -119,13 +119,13 @@ class EditTokenUtil {
 
 				// Add PRISME user.id in DYNAMIC_SEMEME_PRISME_USER_ID annotation
 				// TODO confirm that user.id is being added in DYNAMIC_SEMEME_PRISME_USER_ID annotation
-				SememeChronology<DynamicSememe<?>> prismeUserIdSememe = null;
-				prismeUserIdSememe = 
-						SememeUtil.addAnnotation(
-								adminEditCoordinate,
-								builder.getNid(),
-								new DynamicSememeLongImpl(user.getId()),
-								DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getPrimordialUuid());
+//				SememeChronology<DynamicSememe<?>> prismeUserIdSememe = null;
+//				prismeUserIdSememe = 
+//						SememeUtil.addAnnotation(
+//								adminEditCoordinate,
+//								builder.getNid(),
+//								new DynamicSememeLongImpl(user.getId()),
+//								DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getPrimordialUuid());
 
 				if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
 					for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
@@ -138,9 +138,9 @@ class EditTokenUtil {
 
 				Get.commitService().addUncommitted(newCon).get();
 
-				if (prismeUserIdSememe != null) {
-					Get.commitService().addUncommitted(prismeUserIdSememe).get();
-				}
+//				if (prismeUserIdSememe != null) {
+//					Get.commitService().addUncommitted(prismeUserIdSememe).get();
+//				}
 
 				@SuppressWarnings("deprecation")
 				Optional<CommitRecord> commitRecord = Get.commitService().commit(
@@ -156,12 +156,15 @@ class EditTokenUtil {
 		for (Role role : user.getRoles()) {
 			roles.add(role.getName());
 		}
-		return new EditToken(
+		
+		EditToken editToken = new EditToken(
 				authorSequence,
 				moduleSequence,
 				pathSequence,
 				wfProcessId,
 				roles);
+		
+		return editToken;
 	}
 
 }

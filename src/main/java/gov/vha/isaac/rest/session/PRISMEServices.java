@@ -50,15 +50,29 @@ import java.util.Set;
  *
  */
 public class PRISMEServices {
+	// TODO Joel implement prisme_all_roles_url=https://vaauscttdbs80.aac.va.gov:8080/rails_prisme/roles/get_all_roles.json
+	/*
+	 * TODO implement https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_all_roles
+	 * returning ["super_user","administrator","read_only","editor","reviewer","approver","manager"]
+	 */
+	public static String[] getAllRoles() {
+		return new String[] { "super_user","administrator","read_only","editor","reviewer","approver","manager" };
+	}
+
 	public static User getUser(String token) throws JsonParseException, JsonMappingException, IOException {
-		//URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
+		/*
+		 * Example URL for get_roles_by_token
+		 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
+		 */
 		
 		ObjectMapper mapper = new ObjectMapper();
 
 		String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
 		
+		// TODO Joel implement access to PRISME API
+
 		//Map map = mapper.readValue(url, Map.class);
-		Map map = mapper.readValue(json, Map.class);
+		Map<?,?> map = mapper.readValue(json, Map.class);
 
 		Boolean token_parsed = (Boolean)map.get("token_parsed?");
 		String userName = (String)map.get("user");
@@ -67,7 +81,7 @@ public class PRISMEServices {
 		Set<Role> roleSet = new HashSet<>();
 		Collection<?> roles = (Collection<?>)map.get("roles");
 		for (Object roleMapObject : roles) {
-			Map roleMap = (Map)roleMapObject;
+			Map<?,?> roleMap = (Map<?,?>)roleMapObject;
 			Integer roleId = (Integer)roleMap.get("id");
 			String roleName = (String)roleMap.get("name");
 			
@@ -75,31 +89,6 @@ public class PRISMEServices {
 		}
 		
 		return new User(token_parsed, userName, userType, userId, roleSet);
-//		HttpURLConnection con = (HttpURLConnection) url.openConnection();
-//		con.connect();
-//
-//		java.io.BufferedReader in = new java.io.BufferedReader
-//				(new java.io.InputStreamReader(con.getInputStream()));
-//		
-//		StringBuilder sb = new StringBuilder();
-//		String line = null;
-//		for (; (line = in.readLine()) != null; ) {
-//			if (! line.trim().startsWith("<link ")
-//					&& ! line.trim().equals("&nbsp;")) {
-//				// Web pages sometimes have <link> tags without terminators
-//				// and &nbsp;, which the parser can't handle
-//				sb.append(line + "\n");
-//			}
-//		}
-//		
-//		//HttpClient client = new DefaultHttpClient();
-//		HttpGet request = new HttpGet("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
-//		HttpResponse response = client.execute(request);
-//		BufferedReader rd = new BufferedReader (new InputStreamReader(response.getEntity().getContent()));
-//		String line = "";
-//		while ((line = rd.readLine()) != null) {
-//			System.out.println(line);
-//		}
 	}
 
 	public static boolean hasRole(String token, String roleName) throws JsonParseException, JsonMappingException, IOException {
@@ -155,6 +144,10 @@ public class PRISMEServices {
 	public static void main(String...argv) throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper reader = new ObjectMapper();
 		
+		/*
+		 * Example SSO Token
+		 * %5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx94%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFXk%5Cx80%5CxB1%5CxA3%5CxF3%5Cx8D%5CxB1%5Cx7F%5CxBC%5Cx02K%22%2C+%22k%5Cf%5CxDC%5CxF7%2CP%5CxB2%5Cx97%5Cx99%5Cx99%5CxE0%5CxE1%7C%5CxBF%5Cx1DK%22%2C+%22J%5Cf%5Cx9B%5CxD8w%5Cx15%5CxFE%5CxD3%5CxC7%5CxDC%5CxAC%5Cx9E%5Cx1C%5CxD0bG%22%5D
+		 */
 		String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
 		//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\",\"type\":\"Role\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
 	

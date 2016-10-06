@@ -41,6 +41,7 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
+import gov.vha.isaac.rest.session.PRISMEServices;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -240,5 +241,18 @@ public class WorkflowAPIs {
 		
 		//isLocked = RequestInfo.get().getWorkflow()
 		return new RestBoolean(isLocked);
+	}
+	
+
+	/**
+	 * Return all potential user roles
+	 * 
+	 * @return array of role names
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.allRolesComponent)
+	public String[] getAllRoles() {
+		return PRISMEServices.getAllRoles();
 	}
 }
