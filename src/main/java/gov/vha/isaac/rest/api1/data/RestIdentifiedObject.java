@@ -62,4 +62,9 @@ public class RestIdentifiedObject
 	public List<UUID> getUuids() {
 		return Collections.unmodifiableList(uuids);
 	}
+	
+	@XmlTransient
+	public UUID getFirst() {
+		return uuids.get(0);
+	}
 }
