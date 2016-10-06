@@ -25,6 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
+import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
  * 
@@ -46,20 +48,24 @@ public class RestStateType extends Enumeration
 		super(st.toString(), st.ordinal());
 	}
 	
-	public static RestStateType valueOf(String str) {
+	public State toState()
+	{
+		return State.values()[this.getEnumId()];
+	}
+	
+	public static RestStateType valueOf(String str) throws RestException {
+		String match = str.trim().toLowerCase();
 		for (State spValue : State.values()) {
-			if (spValue.name().equals(str.trim())
-					|| spValue.toString().equals(str.trim())
-					|| spValue.getAbbreviation().equals(str.trim())) {
+			if (spValue.name().equalsIgnoreCase(match) || spValue.getAbbreviation().toLowerCase().equals(match)) {
 				return new RestStateType(spValue);
 			} else {
-				Optional<Integer> intOptional = NumericUtils.getInt(str.trim());
+				Optional<Integer> intOptional = NumericUtils.getInt(match);
 				if (intOptional.isPresent() && intOptional.get() == spValue.ordinal()) {
 					return new RestStateType(spValue);
 				}
 			}
 		}
-		throw new IllegalArgumentException("invalid RestStateType value \"" + str + "\"");
+		throw new RestException(RequestParameters.state, "invalid RestStateType value \"" + str + "\".  Should be one of \"active\" or \"inactive\"");
 	}
 	
 	public static RestStateType[] getAll()
