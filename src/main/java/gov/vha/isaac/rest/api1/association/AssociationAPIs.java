@@ -104,6 +104,8 @@ public class AssociationAPIs
 		return results.toArray(new RestAssociationTypeVersion[results.size()]);
 	}
 	
+	//TODO add API to read association type
+	
 	/**
 	 * Return all instances of a particular type of association.  This may return a very large result.  The returned pagination data
 	 * will return an exact number of total results (not an estimate, as indicated in the API)
