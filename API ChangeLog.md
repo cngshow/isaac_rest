@@ -7,6 +7,9 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/06 - 1.5.1 - Adding Association APIs.  Cleaned up the returned pagination data, so that it stops returning page links that don't make 
+    sense when you are at the first or last page.  Added a field to pagination data to indicate if the approximateTotal is an estimate, or exact.
+    Fixed a regression in the json serializer that was leading to the serialization of null fields - null fields are no longer serialized.
 * 2016/10/03 - 1.5.0 - Getting rid of "...Versions" api classes that were confusing wrappers.  Changing return types to Array instead.  Specific 
     API changes are below that will break compatibility...
     * Removals
