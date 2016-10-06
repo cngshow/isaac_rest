@@ -18,9 +18,12 @@
  */
 package gov.vha.isaac.rest.api1.data.association;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -32,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestAssociationItemVersionBaseCreate extends RestAssociationItemVersionBase
@@ -40,12 +44,14 @@ public class RestAssociationItemVersionBaseCreate extends RestAssociationItemVer
 	 * The concept sequence of the association type
 	 */
 	@XmlElement
+	@JsonInclude
 	public int associationTypeSequence;
 	
 	/**
 	 * The nid of the source item in the association.  Typically this is a concept, but it may also be a sequence.
 	 */
 	@XmlElement
+	@JsonInclude
 	public int sourceNid;
 	
 	protected RestAssociationItemVersionBaseCreate()

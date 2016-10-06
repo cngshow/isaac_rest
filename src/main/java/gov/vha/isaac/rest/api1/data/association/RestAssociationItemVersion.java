@@ -18,11 +18,14 @@
  */
 package gov.vha.isaac.rest.api1.data.association;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -48,6 +51,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  */
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCreate
@@ -57,24 +61,28 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
+	@JsonInclude
 	Expandables expandables;
 	
 	/**
 	 * The concept sequence of the association type
 	 */
 	@XmlElement
+	@JsonInclude
 	int associationTypeSequence;
 	
 	/**
 	 * The sememe UUID(s) of the sememe that represents this association
 	 */
 	@XmlElement
+	@JsonInclude
 	RestIdentifiedObject identifiers; 
 	
 	/**
 	 * The StampedVersion details for this association entry
 	 */
 	@XmlElement
+	@JsonInclude
 	RestStampedVersion associationItemStamp;
 	
 	/**
@@ -82,6 +90,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'source' and the nid represents a concept.  If 'source' is passed, you can also pass 'versionsAll' or 'versionsLatestOnly'
 	 */
 	@XmlElement
+	@JsonInclude
 	public RestConceptChronology sourceConcept;
 	
 	/**
@@ -89,6 +98,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'source' and the nid represents a sememe.  If 'source' is passed, you can also pass 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 */
 	@XmlElement
+	@JsonInclude
 	public RestSememeChronology sourceSememe;
 	
 	/**
@@ -96,6 +106,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'target'  If 'target' is passed, you can also pass 'versionsAll' or 'versionsLatestOnly'
 	 */
 	@XmlElement
+	@JsonInclude
 	public RestConceptChronology targetConcept;
 	
 	/**
@@ -103,6 +114,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'target' and the nid represents a sememe.  If 'target' is passed, you can also pass 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 */
 	@XmlElement
+	@JsonInclude
 	public RestSememeChronology targetSememe;
 	
 	/**
@@ -110,6 +122,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * you can also pass 'referencedDetails' and 'chronology'
 	 */
 	@XmlElement
+	@JsonInclude
 	RestSememeVersion[] nestedSememes;
 
 	protected RestAssociationItemVersion()

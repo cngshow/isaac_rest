@@ -23,11 +23,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -39,6 +42,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptCreateData
@@ -47,18 +51,21 @@ public class RestConceptCreateData
 	 * The sequences of the parent concepts of this concept. At least one is required.
 	 */
 	@XmlElement
+	@JsonInclude
 	Set<Integer> parentConceptIds = new HashSet<>();
 
 	/**
 	 * The required Fully Specified Name description of this concept.  
 	 */
 	@XmlElement
+	@JsonInclude
 	String fsn;
 
 	/**
 	 * The required language concept associated with the required descriptions
 	 */
 	@XmlElement
+	@JsonInclude
 	int descriptionLanguageConceptId;
 	
 	/**
@@ -66,12 +73,14 @@ public class RestConceptCreateData
 	 * A default will be assigned if not set.
 	 */
 	@XmlElement
+	@JsonInclude
 	Collection<Integer> descriptionPreferredInDialectAssemblagesConceptIds = new HashSet<>();
 	
 	/**
 	 * An optional extended description type applying to required descriptions
 	 */
 	@XmlElement
+	@JsonInclude
 	Integer descriptionExtendedTypeConceptId = null;
 	
 	protected RestConceptCreateData()

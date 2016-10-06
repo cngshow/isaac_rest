@@ -19,6 +19,7 @@
 
 package gov.vha.isaac.rest.api1.data.enumerations;
 
+import java.util.Locale;
 import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -54,9 +55,9 @@ public class RestStateType extends Enumeration
 	}
 	
 	public static RestStateType valueOf(String str) throws RestException {
-		String match = str.trim().toLowerCase();
+		String match = str.trim().toLowerCase(Locale.ENGLISH);
 		for (State spValue : State.values()) {
-			if (spValue.name().equalsIgnoreCase(match) || spValue.getAbbreviation().toLowerCase().equals(match)) {
+			if (spValue.name().equalsIgnoreCase(match) || spValue.getAbbreviation().toLowerCase(Locale.ENGLISH).equals(match)) {
 				return new RestStateType(spValue);
 			} else {
 				Optional<Integer> intOptional = NumericUtils.getInt(match);

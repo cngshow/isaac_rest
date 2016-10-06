@@ -19,8 +19,14 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
 
@@ -34,6 +40,8 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 {
@@ -41,12 +49,14 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 * The (optional) extended fields which carry additional information about this map set definition. 
 	 */
 	@XmlElement
+	@JsonInclude
 	public List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields;
 	
 	/**
 	 * The (optional) extended fields that are declared for each map item instance that is created using this map set definition.  
 	 */
 	@XmlElement
+	@JsonInclude
 	public List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition;
 		
 	protected RestMappingSetVersionBaseCreate()

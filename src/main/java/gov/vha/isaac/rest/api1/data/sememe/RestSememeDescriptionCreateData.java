@@ -21,11 +21,15 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
@@ -36,6 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeDescriptionCreateData
@@ -45,6 +50,7 @@ public class RestSememeDescriptionCreateData
 	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
 	 */
 	@XmlElement
+	@JsonInclude
 	int caseSignificanceConceptSequence;
 	
 	/**
@@ -52,12 +58,14 @@ public class RestSememeDescriptionCreateData
 	 * the dialect)
 	 */
 	@XmlElement
+	@JsonInclude
 	int languageConceptSequence;
 	
 	/**
 	 * The text of the description
 	 */
 	@XmlElement
+	@JsonInclude
 	String text;
 	
 	/**
@@ -65,6 +73,7 @@ public class RestSememeDescriptionCreateData
 	 * This should be FSN, Synonym, or Definition.
 	 */
 	@XmlElement
+	@JsonInclude
 	int descriptionTypeConceptSequence;
 
 	/**
@@ -72,24 +81,28 @@ public class RestSememeDescriptionCreateData
 	 * This may be something like Abbreviation or Vista Name
 	 */
 	@XmlElement
+	@JsonInclude
 	Integer extendedDescriptionTypeConceptSequence;
 	
 	/**
 	 * The preferred dialects attached to this sememe
 	 */
 	@XmlElement
+	@JsonInclude
 	Collection<Integer> preferredInDialectAssemblagesIds = new HashSet<>();
 
 	/**
 	 * The acceptable dialects attached to this sememe
 	 */
 	@XmlElement
+	@JsonInclude
 	Collection<Integer> acceptableInDialectAssemblagesIds = new HashSet<>();
 
 	/**
 	 * The nid of the component to which this sememe refers
 	 */
 	@XmlElement
+	@JsonInclude
 	int referencedComponentNid;
 	
 	protected RestSememeDescriptionCreateData()
