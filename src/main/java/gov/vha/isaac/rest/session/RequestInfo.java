@@ -123,9 +123,9 @@ public class RequestInfo
 				}
 			}
 		}
-		if (parameters.containsKey(RequestParameters.expandables))
+		if (parameters.containsKey(RequestParameters.returnExpandableLinks))
 		{
-			List<String> temp = parameters.get(RequestParameters.expandables);
+			List<String> temp = parameters.get(RequestParameters.returnExpandableLinks);
 			if (temp.size() > 0)
 			{
 				returnExpandableLinks_ = Boolean.parseBoolean(temp.get(0).trim());

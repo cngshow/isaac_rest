@@ -16,25 +16,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.sememe;
+package gov.vha.isaac.rest.api1.data.association;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api.data.Pagination;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
 
 /**
- * {@link RestSememeVersionPage}
+ * {@link RestAssociationItemVersionPage}
  * 
  * This class carries back result sets in a way that allows pagination
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
 @XmlRootElement
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestSememeVersionPage
+public class RestAssociationItemVersionPage
 {
 	
 	/**
@@ -47,9 +49,9 @@ public class RestSememeVersionPage
 	 * The contained results
 	 */
 	@XmlElement
-	public RestSememeVersion[] results;
+	RestAssociationItemVersion[] results;
 
-	protected RestSememeVersionPage()
+	protected RestAssociationItemVersionPage()
 	{
 		//For jaxb
 	}
@@ -59,28 +61,19 @@ public class RestSememeVersionPage
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param approximateTotal approximate size of full matching set of which this paginated result is a subset
 	 * @param baseUrl url used to construct example previous and next urls
-	 * @param results
+	 * @param results list of RestSearchResult
 	 * @throws RestException 
 	 */
-	public RestSememeVersionPage(int pageNum, int maxPageSize, int approximateTotal, boolean hasMoreData, boolean totalIsExact, String baseUrl, 
-			RestSememeVersion[] results) throws RestException {
+	public RestAssociationItemVersionPage(int pageNum, int maxPageSize, int approximateTotal, boolean totalIsExact, boolean hasMorePages, String baseUrl, 
+			RestAssociationItemVersion[] results) throws RestException {
 		this.results = results;
-		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, totalIsExact, hasMoreData, baseUrl);
-	}
-	/**
-	 * @param results
-	 * @throws RestException 
-	 */
-	public RestSememeVersionPage(RestSememeVersion[] results) throws RestException {
-		this.results = results;
-		this.paginationData = null;
+		this.paginationData = new Pagination(pageNum, maxPageSize, approximateTotal, totalIsExact, hasMorePages, baseUrl);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
+	/**
+	 * @return the results
 	 */
-	@Override
-	public String toString() {
-		return "RestSememeVersions [results=" + results + "]";
+	public RestAssociationItemVersion[] getResults() {
+		return results;
 	}
 }

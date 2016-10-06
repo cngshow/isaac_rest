@@ -41,7 +41,7 @@ import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshot;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -148,7 +148,7 @@ public class MappingWriteAPIs
 	 * 
 	 * @param mappingSetUpdateData - object containing data used to update existing mapping set
 	 * @param id - id of mapping set concept to update
-	 * @param state - The state to put the mapping set into.  Valid values are "INACTIVE"/"Inactive"/"I" or "ACTIVE"/"Active"/"A"
+	 * @param state - The state to put the mapping set into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
 	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
 	 * getEditCoordinatesToken().
 	 * @throws RestException
@@ -179,20 +179,7 @@ public class MappingWriteAPIs
 		}
 
 		// TODO This update method doesn't currently allow updating of extended field values.  Need to figure out how to put that into the API
-		State stateToUse = null;
-		try {
-			if (RestStateType.valueOf(state).equals(new RestStateType(State.ACTIVE))) {
-				stateToUse = State.ACTIVE;
-			} else if (RestStateType.valueOf(state).equals(new RestStateType(State.INACTIVE))) {
-				stateToUse = State.INACTIVE;
-			} else {
-				throw new RestException(RequestParameters.state, state, "unsupported mapping set State. Should be one of \"active\" or \"inactive\"");
-			}
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new RestException(RequestParameters.state, state, "invalid mapping set State. Should be one of \"active\" or \"inactive\"");
-		}
+		RestStateType stateToUse = RestStateType.valueOf(state);
 		
 		ConceptChronology<?> mappingConcept = ConceptAPIs.findConceptChronology(id);
 		
@@ -204,7 +191,7 @@ public class MappingWriteAPIs
 				StringUtils.isBlank(mappingSetUpdateData.purpose) ? "" : mappingSetUpdateData.purpose.trim(),
 				RequestInfo.get().getStampCoordinate(),
 				RequestInfo.get().getEditCoordinate(),
-				stateToUse);
+				stateToUse.toState());
 	}
 	
 	/**
@@ -227,8 +214,10 @@ public class MappingWriteAPIs
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<ConceptSnapshot> sourceConcept = Frills.getConceptSnapshot(mappingItemCreationData.sourceConcept, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
-		Optional<ConceptSnapshot> targetConcept = Frills.getConceptSnapshot(mappingItemCreationData.targetConcept, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> sourceConcept = Get.conceptService().getOptionalConcept(mappingItemCreationData.sourceConcept);
+		Optional<UUID> targetConcept = (mappingItemCreationData.targetConcept == null ? Optional.empty() : 
+			Get.conceptService().hasConcept(mappingItemCreationData.targetConcept) ? 
+					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.targetConcept) : Optional.empty());
 		
 		Optional<UUID> mappingSetID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.mapSetConcept);
 		Optional<UUID> qualifierID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
@@ -240,6 +229,10 @@ public class MappingWriteAPIs
 		if (!mappingSetID.isPresent())
 		{
 			throw new RestException("mapSetConcept", mappingItemCreationData.mapSetConcept + "", "Unable to locate the map set");
+		}
+		if (mappingItemCreationData.targetConcept != null && !targetConcept.isPresent())
+		{
+			throw new RestException("targetConcept", mappingItemCreationData.targetConcept + "", "Unable to locate the target concept");
 		}
 
 		RestUUID newMappingItem =
@@ -261,7 +254,7 @@ public class MappingWriteAPIs
 	 * 
 	 * @param mappingItemUpdateData - object containing data used to update existing mapping item
 	 * @param id - id of mapping item sememe to update
-	 * @param state - The state to mapping item into.  Valid values are "INACTIVE"/"Inactive"/"I" or "ACTIVE"/"Active"/"A"
+	 * @param state - The state to mapping item into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
 	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
 	 * getEditCoordinatesToken().
 	 * @throws RestException
@@ -282,32 +275,28 @@ public class MappingWriteAPIs
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		State stateToUse = null;
-		try {
-			if (RestStateType.valueOf(state).equals(new RestStateType(State.ACTIVE))) {
-				stateToUse = State.ACTIVE;
-			} else if (RestStateType.valueOf(state).equals(new RestStateType(State.INACTIVE))) {
-				stateToUse = State.INACTIVE;
-			} else {
-				throw new RestException(RequestParameters.state, state, "unsupported mapping item State. Should be one of \"active\" or \"inactive\"");
-			}
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new RestException(RequestParameters.state, state, "invalid mapping item State. Should be one of \"active\" or \"inactive\"");
-		}
+		RestStateType stateToUse = RestStateType.valueOf(state);
 
 		SememeChronology<?> mappingItemSememeChronology = SememeAPIs.findSememeChronology(id);
+		
+		Optional<UUID> targetConcept = (mappingItemUpdateData.targetConcept == null ? Optional.empty() : 
+			Get.conceptService().hasConcept(mappingItemUpdateData.targetConcept) ? 
+					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemUpdateData.targetConcept) : Optional.empty());
+		
+		if (mappingItemUpdateData.targetConcept != null && !targetConcept.isPresent())
+		{
+			throw new RestException("targetConcept", mappingItemUpdateData.targetConcept + "", "Unable to locate the target concept");
+		}
 
 		try {
 			updateMappingItem(
 					mappingItemSememeChronology,
-					mappingItemUpdateData.targetConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.targetConcept) : null,
+					targetConcept.orElse(null),
 					mappingItemUpdateData.qualifierConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.qualifierConcept) : null,
 					mappingItemUpdateData.mapItemExtendedFields,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate(),
-					stateToUse);
+					stateToUse.toState());
 
 		} catch (IOException e) {
 			throw new RestException("Failed updating mapping item " + id + " on " + e.getClass().getName() + " exception \"" + e.getLocalizedMessage() + "\"");
@@ -365,7 +354,7 @@ public class MappingWriteAPIs
 		
 		DynamicSememeUsageDescription rdud = Frills.createNewDynamicSememeUsageDescriptionConcept(
 				mappingName, mappingName, description, columns,
-				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getConceptSequence(), ObjectChronologyType.CONCEPT, null);
+				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getConceptSequence(), ObjectChronologyType.CONCEPT, null, editCoord);
 		
 		Get.workExecutors().getExecutor().execute(() ->
 		{
@@ -387,7 +376,7 @@ public class MappingWriteAPIs
 					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).setAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 			
 			Get.sememeBuilderService().getDynamicSememeBuilder(builtDesc.getNid(),DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).build(
-					editCoord, ChangeCheckerMode.ACTIVE);
+					editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 		}
 		
 		@SuppressWarnings("rawtypes")
@@ -397,11 +386,6 @@ public class MappingWriteAPIs
 						(StringUtils.isBlank(purpose) ? null : new DynamicSememeStringImpl(purpose))}).build(
 				editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 
-		//Add the association annotation (since we match this pattern too)
-		Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
-				DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_SEMEME.getSequence()).build(
-				editCoord, ChangeCheckerMode.ACTIVE);
-		
 		if (mapSetExtendedFields != null)
 		{
 			for (RestMappingSetExtensionValueBaseCreate field : mapSetExtendedFields)
@@ -571,9 +555,9 @@ public class MappingWriteAPIs
 	 * @throws IOException
 	 */
 	private static RestUUID createMappingItem(
-			ConceptSnapshot sourceConcept,
+			ConceptChronology<?> sourceConcept,
 			UUID mappingSetID,
-			ConceptSnapshot targetConcept, 
+			UUID targetConcept, 
 			UUID qualifierID,
 			List<RestDynamicSememeData> extendedDataFields,
 			StampCoordinate stampCoord,
@@ -581,7 +565,7 @@ public class MappingWriteAPIs
 	{
 		
 		DynamicSememeData[] data = new DynamicSememeData[2 + (extendedDataFields == null ? 0 : extendedDataFields.size())];
-		data[0] = (targetConcept == null ? null : new DynamicSememeUUIDImpl(targetConcept.getPrimordialUuid()));
+		data[0] = (targetConcept == null ? null : new DynamicSememeUUIDImpl(targetConcept));
 		data[1] = (qualifierID == null ? null : new DynamicSememeUUIDImpl(qualifierID));
 		if (extendedDataFields != null)
 		{
@@ -599,7 +583,7 @@ public class MappingWriteAPIs
 		UUID mappingItemUUID = UuidT5Generator.get(IsaacMappingConstants.get().MAPPING_NAMESPACE.getUUID(), 
 				sourceConcept.getPrimordialUuid().toString() + "|" 
 				+ mappingSetID.toString() + "|"
-				+ ((targetConcept == null)? "" : targetConcept.getPrimordialUuid().toString()) + "|" 
+				+ ((targetConcept == null)? "" : targetConcept.toString()) + "|" 
 				+ ((qualifierID == null)?   "" : qualifierID.toString()));
 		
 		if (Get.identifierService().hasUuid(mappingItemUUID))
@@ -625,7 +609,7 @@ public class MappingWriteAPIs
 	
 	private static UUID updateMappingItem(
 			SememeChronology<?> mappingItemSememe,
-			ConceptChronology<?> mappingItemTargetConcept,
+			UUID mappingItemTargetConcept,
 			ConceptChronology<?> mappingItemQualifierConcept,
 			List<RestDynamicSememeData> extendedDataFields,
 			StampCoordinate stampCoord,
@@ -649,7 +633,7 @@ public class MappingWriteAPIs
 				editCoord);
 		
 		DynamicSememeData[] data = new DynamicSememeData[2 + (extendedDataFields == null ? 0 : extendedDataFields.size())];
-		data[0] = (mappingItemTargetConcept != null ? new DynamicSememeUUIDImpl(mappingItemTargetConcept.getPrimordialUuid()) : null);
+		data[0] = (mappingItemTargetConcept != null ? new DynamicSememeUUIDImpl(mappingItemTargetConcept) : null);
 		data[1] = (mappingItemQualifierConcept != null ? new DynamicSememeUUIDImpl(mappingItemQualifierConcept.getPrimordialUuid()) : null);
 		if (extendedDataFields != null)
 		{

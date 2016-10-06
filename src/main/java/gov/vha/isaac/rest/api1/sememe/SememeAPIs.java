@@ -200,7 +200,6 @@ public class SememeAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
-				RequestParameters.expandables,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		@SuppressWarnings("rawtypes")
@@ -285,8 +284,8 @@ public class SememeAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
+				RequestParameters.expand,
 				RequestParameters.PAGINATION_PARAM_NAMES,
-				RequestParameters.EXPANDABLES_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		HashSet<Integer> temp = new HashSet<>();
@@ -300,7 +299,7 @@ public class SememeAPIs
 						pageNum,
 						maxPageSize,
 						true);
-		//TODO this is a performance mess, we only should be converting the page of results they want.
+
 		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
 		for (SememeVersion<?> sv : versions.getValues()) {
 			restSememeVersions.add(
@@ -314,6 +313,8 @@ public class SememeAPIs
 						pageNum,
 						maxPageSize,
 						versions.getTotal(),
+						true,
+						versions.getTotal() > (pageNum * maxPageSize),
 						RestPaths.sememeByAssemblageAppPathComponent + id,
 						restSememeVersions.toArray(new RestSememeVersion[restSememeVersions.size()])
 						);
@@ -358,7 +359,6 @@ public class SememeAPIs
 				RequestParameters.assemblage,
 				RequestParameters.includeDescriptions,
 				RequestParameters.expand,
-				RequestParameters.expandables,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
@@ -570,7 +570,7 @@ public class SememeAPIs
 	
 	/**
 	 * @param referencedComponent - optional - if provided - takes precedence
-	 * @param assemblage - optional - if provided, either limits the referencedComponent search by this type, or, if 
+	 * @param allowedAssemblages - optional - if provided, either limits the referencedComponent search by this type, or, if 
 	 * referencedComponent is not provided - focuses the search on just this assemblage
 	 * @param expandChronology
 	 * @param expandNested
