@@ -215,8 +215,9 @@ public class MappingWriteAPIs
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> sourceConcept = Get.conceptService().getOptionalConcept(mappingItemCreationData.sourceConcept);
-		Optional<UUID> targetConcept = mappingItemCreationData.targetConcept == null ? Optional.empty() : 
-			Get.identifierService().getUuidPrimordialForNid(mappingItemCreationData.targetConcept);
+		Optional<UUID> targetConcept = (mappingItemCreationData.targetConcept == null ? Optional.empty() : 
+			Get.conceptService().hasConcept(mappingItemCreationData.targetConcept) ? 
+					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.targetConcept) : Optional.empty());
 		
 		Optional<UUID> mappingSetID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.mapSetConcept);
 		Optional<UUID> qualifierID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
@@ -232,10 +233,6 @@ public class MappingWriteAPIs
 		if (mappingItemCreationData.targetConcept != null && !targetConcept.isPresent())
 		{
 			throw new RestException("targetConcept", mappingItemCreationData.targetConcept + "", "Unable to locate the target concept");
-		}
-		if (targetConcept.isPresent()&& ObjectChronologyType.CONCEPT != Get.identifierService().getChronologyTypeForNid(mappingItemCreationData.targetConcept))
-		{
-			throw new RestException("targetConcept", mappingItemCreationData.targetConcept + "", "Target Concept must be a concept object");
 		}
 
 		RestUUID newMappingItem =
@@ -281,11 +278,20 @@ public class MappingWriteAPIs
 		RestStateType stateToUse = RestStateType.valueOf(state);
 
 		SememeChronology<?> mappingItemSememeChronology = SememeAPIs.findSememeChronology(id);
+		
+		Optional<UUID> targetConcept = (mappingItemUpdateData.targetConcept == null ? Optional.empty() : 
+			Get.conceptService().hasConcept(mappingItemUpdateData.targetConcept) ? 
+					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemUpdateData.targetConcept) : Optional.empty());
+		
+		if (mappingItemUpdateData.targetConcept != null && !targetConcept.isPresent())
+		{
+			throw new RestException("targetConcept", mappingItemUpdateData.targetConcept + "", "Unable to locate the target concept");
+		}
 
 		try {
 			updateMappingItem(
 					mappingItemSememeChronology,
-					mappingItemUpdateData.targetConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.targetConcept) : null,
+					targetConcept.orElse(null),
 					mappingItemUpdateData.qualifierConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.qualifierConcept) : null,
 					mappingItemUpdateData.mapItemExtendedFields,
 					RequestInfo.get().getStampCoordinate(),
@@ -603,7 +609,7 @@ public class MappingWriteAPIs
 	
 	private static UUID updateMappingItem(
 			SememeChronology<?> mappingItemSememe,
-			ConceptChronology<?> mappingItemTargetConcept,
+			UUID mappingItemTargetConcept,
 			ConceptChronology<?> mappingItemQualifierConcept,
 			List<RestDynamicSememeData> extendedDataFields,
 			StampCoordinate stampCoord,
@@ -627,7 +633,7 @@ public class MappingWriteAPIs
 				editCoord);
 		
 		DynamicSememeData[] data = new DynamicSememeData[2 + (extendedDataFields == null ? 0 : extendedDataFields.size())];
-		data[0] = (mappingItemTargetConcept != null ? new DynamicSememeUUIDImpl(mappingItemTargetConcept.getPrimordialUuid()) : null);
+		data[0] = (mappingItemTargetConcept != null ? new DynamicSememeUUIDImpl(mappingItemTargetConcept) : null);
 		data[1] = (mappingItemQualifierConcept != null ? new DynamicSememeUUIDImpl(mappingItemQualifierConcept.getPrimordialUuid()) : null);
 		if (extendedDataFields != null)
 		{
