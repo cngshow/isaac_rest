@@ -90,7 +90,7 @@ public class SememeWriteAPIs
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
-				RequestParameters.editToken);
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 
 		// TODO test createDescription(), including validation of creationData.getDescriptionTypeConceptSequence()
 		try {
@@ -169,7 +169,7 @@ public class SememeWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.editToken);
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 
 		// TODO test updateDescription(), including validation of updateData.getDescriptionTypeConceptSequence()
 		int sememeSequence = RequestInfoUtils.getSememeSequenceFromParameter(RequestParameters.id, id);
@@ -222,7 +222,7 @@ public class SememeWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.editToken,
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		resetSememeState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), isActive.isValue() ? State.ACTIVE : State.INACTIVE, id);

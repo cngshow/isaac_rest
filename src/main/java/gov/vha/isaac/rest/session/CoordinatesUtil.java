@@ -22,7 +22,6 @@ package gov.vha.isaac.rest.session;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -95,35 +94,11 @@ public class CoordinatesUtil {
 	public static Map<String, List<String>> getCoordinateParameters(Map<String, List<String>> params) {
 		Map<String, List<String>> coordinateParams = new TreeMap<>();
 
-		coordinateParams.putAll(getParametersSubset(params, RequestParameters.COORDINATE_PARAM_NAMES));
+		coordinateParams.putAll(RequestInfoUtils.getParametersSubset(params, RequestParameters.COORDINATE_PARAM_NAMES));
 		
 		return coordinateParams;
 	}
 	
-	/**
-	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
-	 * @param names array of parameter collections, names or objects for which toString() is used
-	 * @return
-	 */
-	public static Map<String, List<String>> getParametersSubset(Map<String, List<String>> params, Object...names) {
-		Map<String,List<String>> paramSubset = new HashMap<>();
-
-		for (Object param : names) {
-			if (param instanceof Iterable) {
-				// Passed a collection
-				for (Object paramName : (Iterable<?>)param) {
-					if (params.containsKey(paramName.toString()) && params.get(paramName.toString()) != null && params.get(paramName.toString()).size() > 0) {
-						paramSubset.put(paramName.toString(), params.get(paramName.toString()));
-					}
-				}
-			} else if (params.containsKey(param.toString()) && params.get(param.toString()) != null && params.get(param.toString()).size() > 0) {
-				paramSubset.put(param.toString(), params.get(param.toString()));
-			}
-		}
-
-		return paramSubset;
-	}
-
 	/**
 	 * 
 	 * This method returns an Optional containing a CoordinatesToken object if its parameter exists in the parameters map.

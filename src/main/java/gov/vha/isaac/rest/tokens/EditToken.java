@@ -20,31 +20,38 @@ package gov.vha.isaac.rest.tokens;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
 import gov.vha.isaac.ochre.api.util.PasswordHasher;
+import gov.vha.isaac.ochre.model.coordinate.EditCoordinateImpl;
 
 /**
  * 
- * {@link UserToken}
+ * {@link EditToken}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-public class UserToken
+public class EditToken
 {
 	private static final byte tokenVersion = 1;
 	private static final int hashRounds = 2048;
 	private static final int hashLength = 64;
 	private static final int encodedHashLength = (int)Math.ceil(hashLength / 8f / 3f) * 4;  //http://stackoverflow.com/a/4715480
 	
-	private static final Logger log = LoggerFactory.getLogger(UserToken.class);
+	private static final Logger log = LoggerFactory.getLogger(EditToken.class);
 	
 	private static volatile transient byte[] secret_;
 	private static transient AtomicInteger increment = new AtomicInteger();  //Used for CSRF protection
@@ -57,51 +64,64 @@ public class UserToken
 	// and the domain '5a2e7786-3e41-11dc-8314-0800200c9a66' (path ID from FSN description)
 	private static final UUID NULL_UUID = UUID.fromString("a051e620-4fe1-5174-97d9-53dbce2ead0d");
 
-	//private final int userIdentity;
 	private long creationTime;
 
 	private final int authorSequence;
 	private final int moduleSequence;
 	private final int pathSequence;
 	private final UUID workflowProcessId;
+	private final Set<String> roles = new TreeSet<>();
+	
+	private transient EditCoordinate editCoordinate = null;
+	
+	private final transient String serialization;
 	
 	/**
-	 * Create a new user token, valid for a short period of time.
-	 * @param authenticatedUserIdentity
+	 * Create a new edit token, valid for a short period of time.
+	 * 
+	 * @param authorSequence
+	 * @param moduleSequence
+	 * @param pathSequence
+	 * @param workflowProcessId
 	 */
-	public UserToken(
-			//int authenticatedUserIdentity,
+	public EditToken(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
-			UUID workflowProcessId)
+			UUID workflowProcessId,
+			String...roles)
 	{
-		//this.userIdentity = authenticatedUserIdentity;
 		this.creationTime = System.currentTimeMillis();
 
 		this.authorSequence = authorSequence;
 		this.moduleSequence = moduleSequence;
 		this.pathSequence = pathSequence;
 		this.workflowProcessId = workflowProcessId;
+		
+		if (roles != null && roles.length > 0) {
+			for (String role : roles) {
+				this.roles.add(role.trim());
+			}
+		}
+
+		serialization = serialize();
 	}
-	public UserToken(
-			//int authenticatedUserIdentity,
+	public EditToken(
 			int authorSequence,
 			int moduleSequence,
-			int pathSequence) {
-		this(
-				//authenticatedUserIdentity,
-				authorSequence,
-				moduleSequence,
-				pathSequence,
-				(UUID)null);
+			int pathSequence,
+			UUID workflowProcessId,
+			Collection<String> roles)
+	{
+		this(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles != null ? roles.toArray(new String[roles.size()]) : null);
 	}
+
 	/**
-	 * Parse a user token back
+	 * Parse an edit token back
 	 * @param encodedData
 	 * @throws Exception
 	 */
-	public UserToken(String encodedData) throws Exception
+	public EditToken(String encodedData) throws Exception
 	{
 		long time = System.currentTimeMillis();
 		String readHash = encodedData.substring(0, encodedHashLength);
@@ -121,7 +141,6 @@ public class UserToken
 		}
 		
 		int increment = buffer.getInt();
-		//userIdentity = buffer.getInt();
 		creationTime = buffer.getLong();
 
 		authorSequence = buffer.getInt();
@@ -135,6 +154,17 @@ public class UserToken
 			workflowProcessId = tmpUuid;
 		}
 
+		byte numRoles = buffer.getByte();
+		for (byte i = 0; i < numRoles; ++i) {
+			byte roleLength = buffer.getByte();
+			StringBuilder role = new StringBuilder();
+			for (short charLoc = 0; charLoc < roleLength; ++charLoc) {
+				role.append(buffer.getChar());
+			}
+			
+			roles.add(role.toString());
+		}
+		
 		Long temp = validTokens.remove(increment);
 		if (temp == null || (System.currentTimeMillis() - temp) > 20000)
 		{
@@ -146,8 +176,10 @@ public class UserToken
 		}
 		
 		expireUnusedTokens();
-		
+
 		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
+
+		serialization = serialize();
 	}
 	
 	private void expireUnusedTokens()
@@ -215,6 +247,32 @@ public class UserToken
 		return workflowProcessId;
 	}
 
+	/**
+	 * @return the cached EditCoordinate
+	 */
+	public EditCoordinate getEditCoordinate() {
+		if (editCoordinate == null) {
+			editCoordinate = new EditCoordinateImpl(
+					authorSequence,
+					moduleSequence,
+					pathSequence);
+		}
+		
+		return editCoordinate;
+	}
+
+	/**
+	 * @return the sorted set of roles
+	 */
+	public Set<String> getRoles() {
+		return Collections.unmodifiableSet(roles);
+	}
+
+	public String getSerialized()
+	{
+		return serialization;
+	}
+
 	public boolean isValidForSubmit()
 	{
 		return validForSubmit;
@@ -227,7 +285,6 @@ public class UserToken
 		validTokens.put(thisIncrement, System.currentTimeMillis());
 		buffer.putByte(tokenVersion);
 		buffer.putInt(thisIncrement);
-		//buffer.putInt(userIdentity);
 		buffer.putLong(creationTime);
 		buffer.putInt(authorSequence);
 		buffer.putInt(moduleSequence);
@@ -238,6 +295,16 @@ public class UserToken
 		} else {
 			buffer.putUuid(workflowProcessId);
 		}
+		
+		buffer.putByte((byte)roles.size());
+		String[] roleArray = roles.toArray(new String[roles.size()]);
+		for (byte i = 0; i < roleArray.length; ++i) {
+			String role = roleArray[i];
+			buffer.putByte((byte)role.length());
+			for (int charLoc = 0; charLoc < role.length(); ++charLoc) {
+				buffer.putChar(role.charAt(charLoc));
+			}
+		}
 
 		buffer.trimToSize();
 		return buffer.getData();
@@ -247,7 +314,7 @@ public class UserToken
 	{
 		if (secret_ == null)
 		{
-			synchronized (UserToken.class)
+			synchronized (EditToken.class)
 			{
 				if (secret_ == null)
 				{
@@ -263,30 +330,37 @@ public class UserToken
 		}
 		return secret_;
 	}
-	
-//	public int getUserIdentity()
-//	{
-//		return userIdentity;
-//	}
 
 	public static void main(String[] args) throws Exception
 	{
 		UUID randomUuid = UUID.randomUUID();
 		
-		UserToken t = new UserToken(
+		EditToken t = new EditToken(
 				//5678,
 				1,
 				2,
 				3,
-				randomUuid);
+				randomUuid,
+				"role1", "role2", "role3");
 		String token = t.serialize();
 		System.out.println(token);
-		UserToken t1 = new UserToken(token);
+		EditToken t1 = new EditToken(token);
 		System.out.println(t1.validForSubmit);
 		
 		String token1 = t1.serialize();
 		System.out.println(token1);
 		Thread.sleep(25000);
-		System.out.println(new UserToken(token1).validForSubmit);
+		System.out.println(new EditToken(token1).validForSubmit);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "EditToken [validForSubmit=" + validForSubmit + ", creationTime=" + creationTime + ", authorSequence="
+				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
+				+ ", workflowProcessId=" + workflowProcessId + ", roles=" + roles + ", serialization=" + serialization
+				+ "]";
 	}
 }

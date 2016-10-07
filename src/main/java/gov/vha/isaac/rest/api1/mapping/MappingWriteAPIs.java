@@ -117,8 +117,8 @@ public class MappingWriteAPIs
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
-				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 
 		RestUUID newMappingSet = null;
 		try 
@@ -166,8 +166,8 @@ public class MappingWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.state,
-				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 
 		if (StringUtils.isBlank(mappingSetUpdateData.name))
 		{
@@ -211,8 +211,8 @@ public class MappingWriteAPIs
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
-				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> sourceConcept = Get.conceptService().getOptionalConcept(mappingItemCreationData.sourceConcept);
 		Optional<UUID> targetConcept = (mappingItemCreationData.targetConcept == null ? Optional.empty() : 
@@ -272,8 +272,8 @@ public class MappingWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.state,
-				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 
 		RestStateType stateToUse = RestStateType.valueOf(state);
 

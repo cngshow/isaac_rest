@@ -136,6 +136,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 
+	private final static String DUMMY_SSO_TOKEN = "A DUMMY SSO TOKEN";
+	
 	@Override
 	protected Application configure()
 	{
@@ -361,6 +363,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		// POST new description data object
 		Response createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		checkFail(createDescriptionResponse);
@@ -409,6 +412,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(updateDescriptionResponse);
@@ -440,6 +444,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response deactivateDescriptionResponse = target(RestPaths.sememeUpdateStatePathComponent.replaceFirst(RestPaths.appPathComponent, "") + descriptionSememeSequence)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(deactivateDescriptionResponse);
@@ -521,6 +526,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
@@ -646,6 +652,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response deactivateConceptResponse = target(RestPaths.conceptUpdateStateAppPathComponent + newConceptSequence)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(isActive));
 		checkContentlessFail(deactivateConceptResponse);
@@ -686,6 +693,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createNewMappingSetResponse = target(RestPaths.mappingSetCreateAppPathComponent)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
@@ -722,6 +730,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -777,6 +786,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
@@ -832,6 +842,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -881,6 +892,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
@@ -911,6 +923,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
 				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()

@@ -48,9 +48,6 @@ public class RequestParameters {
 	// CoordinatesToken
 	public final static String coordToken = "coordToken";
 	
-	// CoordinatesToken
-	public final static String editToken = "editToken";
-
 	// Taxonomy Coordinate
 	public final static String stated = "stated";
 
@@ -156,7 +153,18 @@ public class RequestParameters {
 	public final static String wfProcessId = "wfProcess";
 	public final static String wfRole = "wfRole"; // String i.e. "Approver", "Reviewer"
 	public final static String wfDefinitionId = "wfDefinition"; // UUID string
-	
+
+	// Edit Token
+	public final static String editToken = "editToken";
+	public final static String editPath = "editPath";
+	public final static String editModule = "editModule";
+	public final static Set<String> EDIT_TOKEN_PARAM_NAMES =
+			unmodifiableSet(
+					ssoToken,
+					editToken,
+					editModule,
+					editPath,
+					wfProcessId);
 	
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
@@ -168,6 +176,7 @@ public class RequestParameters {
 		params.addAll(COORDINATE_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
 		params.addAll(COMMENT_PARAM_NAMES);
+		params.addAll(EDIT_TOKEN_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
 			expand,
 			ssoToken,

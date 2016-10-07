@@ -60,6 +60,7 @@ public class RestPaths
 	public static final String defaultDefinitionComponent = "defaultDefinition/";
 	public static final String availableDefinitionsComponent = "availableDefinitions/";
 	public static final String workflowLockStateComponent = "workflowLockState/";
+	public static final String allRolesComponent = "allRoles/";
 
 	public static final String historiesForProcessComponent = "historiesForProcess/";
 	public static final String processComponent = "process/";
@@ -162,6 +163,7 @@ public class RestPaths
 	public static final String languageCoordinatePathComponent = "languageCoordinate/";
 	public static final String stampCoordinatePathComponent = "stampCoordinate/";
 	public static final String logicCoordinatePathComponent = "logicCoordinate/";
+	public static final String editTokenComponent = "editToken/";
 
 	public static final String logicGraphAPIsPathComponent = apiVersionComponent + "logicGraph/";
 	public static final String logicGraphVersionAppPathComponent = appPathComponent + logicGraphAPIsPathComponent + versionComponent;
