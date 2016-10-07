@@ -19,16 +19,19 @@
 package gov.vha.isaac.rest.api1.data.workflow;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import gov.vha.isaac.ochre.api.commit.Stamp;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
@@ -102,7 +105,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.timeCreated = process.getTimeCreated();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
-		for (Map.Entry<Integer, Long> entry : process.getComponentToInitialEditMap().entrySet()) {
+		for (Map.Entry<Integer, Stamp> entry : process.getComponentToInitialEditMap().entrySet()) {
 			this.componentToIntitialEditMap.add(new RestWorkflowComponentNidToInitialEditEpochMapEntry(entry));
 		}
 	}

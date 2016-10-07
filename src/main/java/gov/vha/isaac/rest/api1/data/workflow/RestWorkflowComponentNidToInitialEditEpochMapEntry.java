@@ -27,6 +27,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.commit.Stamp;
+
 
 /** 
  * A tuple containing the key/value pair constituting a map entry
@@ -54,7 +56,7 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 	 * The value
 	 */
 	@XmlElement
-	long value;
+	Stamp value;
 
 	/**
 	 * Constructor for JAXB only
@@ -67,11 +69,11 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 	/**
 	 * @param map
 	 */
-	public RestWorkflowComponentNidToInitialEditEpochMapEntry(int key, long value) {
+	public RestWorkflowComponentNidToInitialEditEpochMapEntry(int key, Stamp value) {
 		this.key = key;
 		this.value = value;
 	}
-	public RestWorkflowComponentNidToInitialEditEpochMapEntry(Map.Entry<Integer, Long> entry) {
+	public RestWorkflowComponentNidToInitialEditEpochMapEntry(Map.Entry<Integer, Stamp> entry) {
 		this(entry.getKey(), entry.getValue());
 	}
 
@@ -87,7 +89,7 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 	 * @return the value
 	 */
 	@XmlTransient
-	public long getValue() {
+	public Stamp getValue() {
 		return value;
 	}
 
