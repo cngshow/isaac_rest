@@ -61,28 +61,28 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Expandables expandables;
 	
 	/**
 	 * The concept sequence of the association type
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int associationTypeSequence;
 	
 	/**
 	 * The sememe UUID(s) of the sememe that represents this association
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestIdentifiedObject identifiers; 
 	
 	/**
 	 * The StampedVersion details for this association entry
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestStampedVersion associationItemStamp;
 	
 	/**
@@ -90,7 +90,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'source' and the nid represents a concept.  If 'source' is passed, you can also pass 'versionsAll' or 'versionsLatestOnly'
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestConceptChronology sourceConcept;
 	
 	/**
@@ -98,7 +98,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'source' and the nid represents a sememe.  If 'source' is passed, you can also pass 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestSememeChronology sourceSememe;
 	
 	/**
@@ -106,7 +106,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'target'  If 'target' is passed, you can also pass 'versionsAll' or 'versionsLatestOnly'
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestConceptChronology targetConcept;
 	
 	/**
@@ -114,7 +114,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * 'target' and the nid represents a sememe.  If 'target' is passed, you can also pass 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestSememeChronology targetSememe;
 	
 	/**
@@ -122,7 +122,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * you can also pass 'referencedDetails' and 'chronology'
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestSememeVersion[] nestedSememes;
 
 	protected RestAssociationItemVersion()

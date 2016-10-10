@@ -47,14 +47,14 @@ public class RestCommentVersionBase
 	 * The comment
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String comment;
 
 	/**
 	 * An (optional) comment context to store with the comment.  Typically used for key words, etc. 
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String commentContext;
 
 	protected RestCommentVersionBase()

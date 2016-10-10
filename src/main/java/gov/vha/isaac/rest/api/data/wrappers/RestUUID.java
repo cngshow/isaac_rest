@@ -47,7 +47,7 @@ public class RestUUID
 	 * The Integer value
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID value;
 	
 	RestUUID() {

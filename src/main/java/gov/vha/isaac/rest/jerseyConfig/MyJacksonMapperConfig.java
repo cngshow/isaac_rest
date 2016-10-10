@@ -54,8 +54,8 @@ public class MyJacksonMapperConfig implements ContextResolver<ObjectMapper>
 	{
 		final ObjectMapper result = new ObjectMapper();
 		result.enable(SerializationFeature.INDENT_OUTPUT);
-		result.setAnnotationIntrospector(createJaxbJacksonAnnotationIntrospector());
 		result.setSerializationInclusion(Include.NON_NULL);
+		result.setAnnotationIntrospector(createJaxbJacksonAnnotationIntrospector());
 
 		return result;
 	}

@@ -45,7 +45,7 @@ public class RestAssociationItemVersionBase
 	 * association type and source component.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Integer targetNid;
 	
 	protected RestAssociationItemVersionBase()

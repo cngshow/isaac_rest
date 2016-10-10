@@ -50,14 +50,14 @@ public class RestMappingItemVersionBase
 	 * is available.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Integer targetConcept;
 
 	/**
 	 * An (optional) concept sequence used to qualify this mapping entry 
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Integer qualifierConcept;
 
 	/**
@@ -66,7 +66,7 @@ public class RestMappingItemVersionBase
 	 * the RestMappingSetVersion of {@link #mapSetConcept}
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestDynamicSememeData> mapItemExtendedFields;
 	
 	protected RestMappingItemVersionBase()

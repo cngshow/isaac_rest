@@ -44,14 +44,14 @@ public class RestAssociationItemVersionBaseCreate extends RestAssociationItemVer
 	 * The concept sequence of the association type
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public int associationTypeSequence;
 	
 	/**
 	 * The nid of the source item in the association.  Typically this is a concept, but it may also be a sequence.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public int sourceNid;
 	
 	protected RestAssociationItemVersionBaseCreate()

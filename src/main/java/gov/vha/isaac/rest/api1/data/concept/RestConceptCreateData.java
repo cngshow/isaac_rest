@@ -51,21 +51,21 @@ public class RestConceptCreateData
 	 * The sequences of the parent concepts of this concept. At least one is required.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Set<Integer> parentConceptIds = new HashSet<>();
 
 	/**
 	 * The required Fully Specified Name description of this concept.  
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String fsn;
 
 	/**
 	 * The required language concept associated with the required descriptions
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int descriptionLanguageConceptId;
 	
 	/**
@@ -73,14 +73,14 @@ public class RestConceptCreateData
 	 * A default will be assigned if not set.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Collection<Integer> descriptionPreferredInDialectAssemblagesConceptIds = new HashSet<>();
 	
 	/**
 	 * An optional extended description type applying to required descriptions
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Integer descriptionExtendedTypeConceptId = null;
 	
 	protected RestConceptCreateData()

@@ -49,7 +49,7 @@ public class RestSememeDescriptionUpdateData
 	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int caseSignificanceConceptSequence;
 	
 	/**
@@ -57,14 +57,14 @@ public class RestSememeDescriptionUpdateData
 	 * the dialect)
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int languageConceptSequence;
 	
 	/**
 	 * The text of the description
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String text;
 	
 	/**
@@ -72,7 +72,7 @@ public class RestSememeDescriptionUpdateData
 	 * This should be FSN, Synonym, or Definition.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int descriptionTypeConceptSequence;
 
 	// TODO determine if extendedDescriptionTypeConceptSequence should be updatable
@@ -87,7 +87,7 @@ public class RestSememeDescriptionUpdateData
 	 * The boolean indicating whether specified sememe should be saved as ACTIVE
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	boolean active;
 	
 	protected RestSememeDescriptionUpdateData()

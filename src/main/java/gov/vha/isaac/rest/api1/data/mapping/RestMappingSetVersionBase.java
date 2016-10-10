@@ -46,7 +46,7 @@ public class RestMappingSetVersionBase
 	 * The primary name of this map set.  
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String name;
 	
 	/**
@@ -54,21 +54,21 @@ public class RestMappingSetVersionBase
 	 * ingredient-of <--> has-ingredient 
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String inverseName;
 	
 	/**
 	 * The description of this map set
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String description;
 	
 	/**
 	 * The (optional) purpose of this map set - or extended description of this map set.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String purpose;
 	
 

@@ -49,7 +49,7 @@ public class RestCommentVersionBaseCreate extends RestCommentVersionBase
 	 * The identifier of the component that is being commented on.  Could be a concept or a sememe
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int commentedItem;
 
 	protected RestCommentVersionBaseCreate()

@@ -45,7 +45,7 @@ public class RestAssociationTypeVersionBaseCreate
 	 * This would typically be a value like "broader than"
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String associationName;
 	
 	/**
@@ -53,13 +53,13 @@ public class RestAssociationTypeVersionBaseCreate
 	 * field may not be present.  This would typically be a value like "narrower than"
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String associationInverseName;
 
 	/**
 	 * The description of the purpose of this association.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String description;
 }

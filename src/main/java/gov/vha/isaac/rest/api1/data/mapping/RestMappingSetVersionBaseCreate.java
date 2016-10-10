@@ -49,14 +49,14 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 * The (optional) extended fields which carry additional information about this map set definition. 
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields;
 	
 	/**
 	 * The (optional) extended fields that are declared for each map item instance that is created using this map set definition.  
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition;
 		
 	protected RestMappingSetVersionBaseCreate()

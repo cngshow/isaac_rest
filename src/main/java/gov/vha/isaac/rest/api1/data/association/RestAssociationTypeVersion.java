@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.association;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.associations.AssociationType;
@@ -48,24 +49,28 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCr
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Expandables expandables;
 	
 	/**
 	 * The concept sequence of the concept that represents the association definition.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public int associationConceptSequence;
 	
 	/**
 	 * The concept UUID(s) of the concept that represents the association definition
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this association type
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestStampedVersion associationItemStamp;
 	
 	/**
@@ -73,6 +78,7 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCr
 	 * 'referencedConcept'  If 'referencedConcept' is passed, you can also pass 'versionsAll' or 'versionsLatestOnly'
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestConceptChronology associationConcept;
 
 	protected RestAssociationTypeVersion()

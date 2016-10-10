@@ -50,7 +50,7 @@ public class RestSememeDescriptionCreateData
 	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int caseSignificanceConceptSequence;
 	
 	/**
@@ -58,14 +58,14 @@ public class RestSememeDescriptionCreateData
 	 * the dialect)
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int languageConceptSequence;
 	
 	/**
 	 * The text of the description
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String text;
 	
 	/**
@@ -73,7 +73,7 @@ public class RestSememeDescriptionCreateData
 	 * This should be FSN, Synonym, or Definition.
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int descriptionTypeConceptSequence;
 
 	/**
@@ -81,28 +81,28 @@ public class RestSememeDescriptionCreateData
 	 * This may be something like Abbreviation or Vista Name
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Integer extendedDescriptionTypeConceptSequence;
 	
 	/**
 	 * The preferred dialects attached to this sememe
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Collection<Integer> preferredInDialectAssemblagesIds = new HashSet<>();
 
 	/**
 	 * The acceptable dialects attached to this sememe
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Collection<Integer> acceptableInDialectAssemblagesIds = new HashSet<>();
 
 	/**
 	 * The nid of the component to which this sememe refers
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int referencedComponentNid;
 	
 	protected RestSememeDescriptionCreateData()

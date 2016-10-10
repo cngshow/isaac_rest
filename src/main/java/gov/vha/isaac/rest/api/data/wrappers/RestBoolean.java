@@ -45,7 +45,7 @@ public class RestBoolean
 	 * The boolean value
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	boolean value;
 	
 	RestBoolean() {
