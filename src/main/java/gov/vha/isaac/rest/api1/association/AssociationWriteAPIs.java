@@ -91,8 +91,7 @@ public class AssociationWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		
 		if (StringUtils.isBlank(associationCreationData.associationName))
@@ -172,8 +171,7 @@ public class AssociationWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		Optional<? extends ObjectChronology<? extends StampedVersion>> source = Get.identifiedObjectService()
 				.getIdentifiedObjectChronology(associationItemCreationData.sourceNid);
@@ -253,8 +251,7 @@ public class AssociationWriteAPIs
 				RequestParameters.id,
 				RequestParameters.state,
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		RestStateType stateToUse = RestStateType.valueOf(state);
 

@@ -82,8 +82,7 @@ public class CommentWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		try
 		{
@@ -160,8 +159,7 @@ public class CommentWriteAPIs
 				RequestParameters.id,
 				RequestParameters.state,
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		if (id == null) {
 			throw new RestException(RequestParameters.id, null, "invalid (null) comment id");

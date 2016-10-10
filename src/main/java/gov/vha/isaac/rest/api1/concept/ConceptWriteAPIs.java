@@ -102,7 +102,7 @@ public class ConceptWriteAPIs
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+				RequestParameters.editToken);
 
 		if (StringUtils.isBlank(creationData.getFsn())) {
 			throw new RestException("RestConceptCreateData.fsn", creationData.getFsn(), "FSN required");
@@ -254,7 +254,7 @@ public class ConceptWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.COORDINATE_PARAM_NAMES,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+				RequestParameters.editToken);
 
 		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, State.ACTIVE);
 	}
@@ -274,7 +274,7 @@ public class ConceptWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES,
+				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, State.INACTIVE);
@@ -297,7 +297,7 @@ public class ConceptWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES,
+				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, isActive.isValue() ? State.ACTIVE : State.INACTIVE);

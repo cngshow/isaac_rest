@@ -55,6 +55,12 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	UUID id;
 
 	/**
+	 * The creator concept id
+	 */
+	@XmlElement
+	UUID creatorId; 
+	
+	/**
 	 * The time workflow process created
 	 */
 	@XmlElement
@@ -98,10 +104,10 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 */
 	public RestWorkflowProcess(ProcessDetail process) {
 		super(process.getDefinitionId(),
-				process.getCreatorId(),
 				process.getName(),
 				process.getDescription());
 		this.id = process.getId();
+		this.creatorId = process.getCreatorId();
 		this.timeCreated = process.getTimeCreated();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
@@ -116,6 +122,14 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	@XmlTransient
 	public UUID getId() {
 		return id;
+	}
+
+	/**
+	 * @return the creator id
+	 */
+	@XmlTransient
+	public UUID getCreatorId() {
+		return creatorId;
 	}
 
 	/**
@@ -194,7 +208,9 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcess [id=" + id + ", timeCreated=" + timeCreated + ", timeLaunched=" + timeLaunched
+		return "RestWorkflowProcess ["
+				+ super.toString()
+				+ "id=" + id + ", creatorId=" + creatorId + ", timeCreated=" + timeCreated + ", timeLaunched=" + timeLaunched
 				+ ", timeCancelledOrConcluded=" + timeCancelledOrConcluded + ", processStatus=" + processStatus
 				+ ", componentToIntitialEditMap=" + componentToIntitialEditMap + "]";
 	}

@@ -160,7 +160,7 @@ public class RequestParameters {
 	public final static String editModule = "editModule";
 	public final static Set<String> EDIT_TOKEN_PARAM_NAMES =
 			unmodifiableSet(
-					ssoToken,
+					//ssoToken,
 					editToken,
 					editModule,
 					editPath,

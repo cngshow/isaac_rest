@@ -331,6 +331,17 @@ public class EditToken
 		return secret_;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "EditToken [validForSubmit=" + validForSubmit + ", creationTime=" + creationTime + ", authorSequence="
+				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
+				+ ", workflowProcessId=" + workflowProcessId + ", roles=" + roles + ", serialization=" + serialization
+				+ "]";
+	}
+
 	public static void main(String[] args) throws Exception
 	{
 		UUID randomUuid = UUID.randomUUID();
@@ -351,16 +362,5 @@ public class EditToken
 		System.out.println(token1);
 		Thread.sleep(25000);
 		System.out.println(new EditToken(token1).validForSubmit);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "EditToken [validForSubmit=" + validForSubmit + ", creationTime=" + creationTime + ", authorSequence="
-				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
-				+ ", workflowProcessId=" + workflowProcessId + ", roles=" + roles + ", serialization=" + serialization
-				+ "]";
 	}
 }

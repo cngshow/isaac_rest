@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
@@ -73,9 +74,11 @@ public class WorkflowAPIs {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.processComponent)
-	public RestWorkflowProcess getProcess(@QueryParam(RequestParameters.wfProcessId) String wfProcessId)
+	public RestWorkflowProcess getProcess(
+			@QueryParam(RequestParameters.wfProcessId) String wfProcessId)
 			throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
 				RequestParameters.wfProcessId);
 
 		try {
@@ -105,7 +108,8 @@ public class WorkflowAPIs {
 	@Path(RestPaths.historiesForProcessComponent)
 	public RestWorkflowProcessHistory[] getHistoriesForProcess(
 			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
 				RequestParameters.wfProcessId);
 
 		try {
@@ -142,14 +146,16 @@ public class WorkflowAPIs {
 	@Path(RestPaths.advanceableProcessInformationComponent)
 	public RestWorkflowProcessHistoriesMapEntry[] getAdvanceableProcessInformation(
 			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
-			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException {
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.wfDefinitionId, RequestParameters.wfUserId);
+				RequestParameters.wfDefinitionId, RequestParameters.editToken);
+		UUID userId = null;
 		try {
+			userId = Get.identifierService().getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get();
 			ArrayList<RestWorkflowProcessHistoriesMapEntry> entries = new ArrayList<>();
 			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = RequestInfo.get().getWorkflow().getWorkflowAccessor().getAdvanceableProcessInformation(
 					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
-					RequestInfoUtils.parseUuidParameter(RequestParameters.wfUserId, wfUserId));
+					userId);
 
 			for (Map.Entry<ProcessDetail, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
 				List<RestWorkflowProcessHistory> restList = new ArrayList<>();
@@ -158,7 +164,7 @@ public class WorkflowAPIs {
 			}
 			return entries.toArray(new RestWorkflowProcessHistoriesMapEntry[entries.size()]);
 		} catch (Exception e) {
-			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId + " and user id " + wfUserId;
+			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId + " and user id " + userId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
@@ -172,8 +178,8 @@ public class WorkflowAPIs {
 	 * 
 	 * @param wfProcessId
 	 *            - UUID workflow-specific id for workflow process {@link RestWorkflowProcess}
-	 * @param wfUserId
-	 *            - Integer workflow-specific id for a workflow user
+	 * @param editToken
+	 *            - String serialization of EditToken identifying a workflow user
 	 * @return RestWorkflowAvailableActions list of distinct actions
 	 * @throws RestException
 	 */
@@ -182,22 +188,24 @@ public class WorkflowAPIs {
 	@Path(RestPaths.actionsForProcessAndUserComponent)
 	public RestWorkflowAvailableAction[] getActionsForProcessAndUser(
 			@QueryParam(RequestParameters.wfProcessId) String wfProcessId,
-			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException {
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.wfProcessId, RequestParameters.wfUserId);
+				RequestParameters.wfProcessId, RequestParameters.editToken);
 
+		UUID userId = null;
 		try {
+			userId = Get.identifierService().getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get();
 			List<RestWorkflowAvailableAction> actions = new ArrayList<>();
 			RequestInfo.get().getWorkflow().getWorkflowAccessor().getUserPermissibleActionsForProcess(
 							RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
-							RequestInfoUtils.parseUuidParameter(RequestParameters.wfUserId, wfUserId))
+							userId)
 					.stream().forEachOrdered(a -> actions.add(new RestWorkflowAvailableAction(a)));
 			return actions.toArray(new RestWorkflowAvailableAction[actions.size()]);
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
 			String msg = "Failed retrieving list of actions for the specified workflow process " + wfProcessId
-					+ " and user " + wfUserId;
+					+ " and user " + userId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
@@ -240,7 +248,8 @@ public class WorkflowAPIs {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.workflowLockStateComponent)
-	public RestBoolean isWorkflowLocked(@QueryParam(RequestParameters.wfProcessId) String wfProcessId)
+	public RestBoolean isWorkflowLocked(
+			@QueryParam(RequestParameters.wfProcessId) String wfProcessId)
 			throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.wfProcessId);
