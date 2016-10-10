@@ -20,8 +20,14 @@ package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.List;
 import java.util.UUID;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
@@ -37,6 +43,8 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingItemVersionBaseCreate extends RestMappingItemVersionBase
 {
@@ -44,12 +52,14 @@ public class RestMappingItemVersionBaseCreate extends RestMappingItemVersionBase
 	 * The concept sequence that identifies the map set that this entry belongs to
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public int mapSetConcept;
 	
 	/**
 	 * The source concept sequence being mapped by this map item
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public int sourceConcept;
 	
 	public RestMappingItemVersionBaseCreate()

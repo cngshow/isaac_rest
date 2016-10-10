@@ -18,11 +18,14 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.State;
@@ -36,6 +39,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeDescriptionUpdateData
@@ -45,6 +49,7 @@ public class RestSememeDescriptionUpdateData
 	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int caseSignificanceConceptSequence;
 	
 	/**
@@ -52,12 +57,14 @@ public class RestSememeDescriptionUpdateData
 	 * the dialect)
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int languageConceptSequence;
 	
 	/**
 	 * The text of the description
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String text;
 	
 	/**
@@ -65,6 +72,7 @@ public class RestSememeDescriptionUpdateData
 	 * This should be FSN, Synonym, or Definition.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int descriptionTypeConceptSequence;
 
 	// TODO determine if extendedDescriptionTypeConceptSequence should be updatable
@@ -79,6 +87,7 @@ public class RestSememeDescriptionUpdateData
 	 * The boolean indicating whether specified sememe should be saved as ACTIVE
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	boolean active;
 	
 	protected RestSememeDescriptionUpdateData()

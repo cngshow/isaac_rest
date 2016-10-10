@@ -20,6 +20,7 @@
 package gov.vha.isaac.rest.session;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,6 +42,12 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  */
 public class RequestInfoUtils {
 	private RequestInfoUtils() {}
+
+	public static void validateSingleParameterValue(Map<String, List<String>> params, String parameterName) throws RestException {
+		if (params == null || params.get(parameterName) == null || params.get(parameterName).size() != 1) {
+			throw new RestException(parameterName, params.get(parameterName) + "", "incorrect number (" + (params.get(parameterName) != null ? params.get(parameterName).size() : 0) + " of values. Expected exactly 1 value.");
+		}
+	}
 
 	public static UUID parseUuidParameter(String parameterName, String str) throws RestException {
 		try {
@@ -104,6 +111,12 @@ public class RequestInfoUtils {
 		}
 	}
 	
+	public static int getConceptSequenceFromParameter(Map<String, List<String>> params, String parameterName) throws RestException {
+		validateSingleParameterValue(params, parameterName);
+		
+		return getConceptSequenceFromParameter(parameterName, params.get(parameterName).iterator().next());
+	}
+
 	public static int getConceptSequenceFromParameter(String parameterName, String str) throws RestException {
 		try {
 			UUID uuid = null;
@@ -210,5 +223,29 @@ public class RequestInfoUtils {
 		}
 		
 		return expandedList;
+	}
+
+	/**
+	 * @param params parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @param names array of parameter collections, names or objects for which toString() is used
+	 * @return
+	 */
+	public static Map<String, List<String>> getParametersSubset(Map<String, List<String>> params, Object...names) {
+		Map<String,List<String>> paramSubset = new HashMap<>();
+	
+		for (Object param : names) {
+			if (param instanceof Iterable) {
+				// Passed a collection
+				for (Object paramName : (Iterable<?>)param) {
+					if (params.containsKey(paramName.toString()) && params.get(paramName.toString()) != null && params.get(paramName.toString()).size() > 0) {
+						paramSubset.put(paramName.toString(), params.get(paramName.toString()));
+					}
+				}
+			} else if (params.containsKey(param.toString()) && params.get(param.toString()) != null && params.get(param.toString()).size() > 0) {
+				paramSubset.put(param.toString(), params.get(param.toString()));
+			}
+		}
+	
+		return paramSubset;
 	}
 }

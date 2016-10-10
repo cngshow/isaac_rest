@@ -18,9 +18,12 @@
  */
 package gov.vha.isaac.rest.api1.data.association;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -32,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestAssociationTypeVersionBaseCreate
@@ -41,6 +45,7 @@ public class RestAssociationTypeVersionBaseCreate
 	 * This would typically be a value like "broader than"
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String associationName;
 	
 	/**
@@ -48,11 +53,13 @@ public class RestAssociationTypeVersionBaseCreate
 	 * field may not be present.  This would typically be a value like "narrower than"
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String associationInverseName;
 
 	/**
 	 * The description of the purpose of this association.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String description;
 }

@@ -22,6 +22,7 @@ package gov.vha.isaac.rest.session;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,9 +48,6 @@ public class RequestParameters {
 	// CoordinatesToken
 	public final static String coordToken = "coordToken";
 	
-	// CoordinatesToken
-	public final static String editToken = "editToken";
-
 	// Taxonomy Coordinate
 	public final static String stated = "stated";
 
@@ -155,7 +153,18 @@ public class RequestParameters {
 	public final static String wfProcessId = "wfProcess";
 	public final static String wfRole = "wfRole"; // String i.e. "Approver", "Reviewer"
 	public final static String wfDefinitionId = "wfDefinition"; // UUID string
-	
+
+	// Edit Token
+	public final static String editToken = "editToken";
+	public final static String editPath = "editPath";
+	public final static String editModule = "editModule";
+	public final static Set<String> EDIT_TOKEN_PARAM_NAMES =
+			unmodifiableSet(
+					ssoToken,
+					editToken,
+					editModule,
+					editPath,
+					wfProcessId);
 	
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
@@ -167,6 +176,7 @@ public class RequestParameters {
 		params.addAll(COORDINATE_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
 		params.addAll(COMMENT_PARAM_NAMES);
+		params.addAll(EDIT_TOKEN_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
 			expand,
 			ssoToken,
@@ -245,10 +255,10 @@ public class RequestParameters {
 			}
 		}
 		for (String parameterName : parameters.keySet()) {
-			String parameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? parameterName.toUpperCase() : parameterName;
+			String parameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? parameterName.toUpperCase(Locale.ENGLISH) : parameterName;
 			boolean foundMatch = false;
 			for (String supportedParameterName : supportedParameterNamesSet) {
-				String supportedParameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? supportedParameterName.toUpperCase() : supportedParameterName;
+				String supportedParameterNameToCompare = IGNORE_CASE_VALIDATING_PARAM_NAMES ? supportedParameterName.toUpperCase(Locale.ENGLISH) : supportedParameterName;
 				if (supportedParameterNameToCompare.equals(parameterNameToCompare)) {
 					foundMatch = true;
 					break;

@@ -16,81 +16,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.Map;
+package gov.vha.isaac.rest.session;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.ochre.api.commit.Stamp;
-
-
-/** 
- * A tuple containing the key/value pair constituting a map entry
- * in a map of component nids to stamps
- * A set of these constitutes a map contained in {@link RestWorkflowProcess}
- * 
- * {@link RestWorkflowComponentNidToInitialEditEpochMapEntry}
- * 
- * This class carries back result map
+/**
+ * {
+ * 		"id":10000,
+ * 		"name":"read_only",
+ * 		"resource_id":null,
+ * 		"resource_type":null,
+ * 		"created_at":"2016-09-13T14:48:18.000Z",
+ * 		"updated_at":"2016-09-13T14:48:18.000Z"
+ * 	}
+ * {@link Role}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ *
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowComponentNidToInitialEditEpochMapEntry
-{
-	/**
-	 * The key
-	 */
-	@XmlElement
-	int key;
+//@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+public class Role {
+	long id;
+	String name;
+
+	Role() {}
 
 	/**
-	 * The value
+	 * @param id
+	 * @param name
 	 */
-	@XmlElement
-	Stamp value;
-
-	/**
-	 * Constructor for JAXB only
-	 */
-	protected RestWorkflowComponentNidToInitialEditEpochMapEntry()
-	{
-		//For jaxb
+	public Role(
+			long id,
+			String name) {
+		super();
+		this.id = id;
+		this.name = name;
 	}
 
 	/**
-	 * @param map
+	 * @return the id
 	 */
-	public RestWorkflowComponentNidToInitialEditEpochMapEntry(int key, Stamp value) {
-		this.key = key;
-		this.value = value;
-	}
-	public RestWorkflowComponentNidToInitialEditEpochMapEntry(Map.Entry<Integer, Stamp> entry) {
-		this(entry.getKey(), entry.getValue());
+	public long getId() {
+		return id;
 	}
 
 	/**
-	 * @return the key
+	 * @return the role name
 	 */
-	@XmlTransient
-	public int getKey() {
-		return key;
-	}
-
-	/**
-	 * @return the value
-	 */
-	@XmlTransient
-	public Stamp getValue() {
-		return value;
+	public String getName() {
+		return name;
 	}
 
 	/* (non-Javadoc)
@@ -100,7 +81,7 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + key;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
 
@@ -115,8 +96,11 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RestWorkflowComponentNidToInitialEditEpochMapEntry other = (RestWorkflowComponentNidToInitialEditEpochMapEntry) obj;
-		if (key != other.key)
+		Role other = (Role) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
 			return false;
 		return true;
 	}
@@ -126,6 +110,6 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowComponentNidToStampsMapEntry [key=" + key + ", value=" + value + "]";
+		return "Role [id=" + id + ", name=" + name + "]";
 	}
 }

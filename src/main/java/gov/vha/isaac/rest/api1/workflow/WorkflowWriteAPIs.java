@@ -65,17 +65,18 @@ public class WorkflowWriteAPIs
 			RestWorkflowProcessBaseCreate workflowProcessCreationData) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
+				RequestInfo.get().getParameters(),
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 		
 		WorkflowProcessInitializerConcluder provider = RequestInfo.get().getWorkflow().getWorkflowProcessInitializerConcluder();
 		try {
 			return new RestUUID(provider.createWorkflowProcess(
 					workflowProcessCreationData.getDefinitionId(),
-					workflowProcessCreationData.getCreatorNid(),
+					workflowProcessCreationData.getCreatorId(),
 					workflowProcessCreationData.getName(),
 					workflowProcessCreationData.getDescription()));
 		} catch (Exception e) {
-			throw new RestException("Failed creating new workflow process from " + (workflowProcessCreationData != null ? workflowProcessCreationData : null));
+			throw new RestException("Failed creating new workflow process from " + (workflowProcessCreationData != null ? workflowProcessCreationData : "NULL"));
 		}
 	}
 
@@ -158,14 +159,15 @@ public class WorkflowWriteAPIs
 			RestWorkflowProcessAdvancementData processAdvancementData) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
+				RequestInfo.get().getParameters(),
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 		
 		// TODO test advanceWorkflowProcess()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
 			provider.advanceWorkflow(processAdvancementData.getProcessId(), processAdvancementData.getUserId(), processAdvancementData.getActionRequested(), processAdvancementData.getComment(), RequestInfo.get().getEditCoordinate());
 		} catch (Exception e) {
-			throw new RestException("Failed advancing workflow process with " + (processAdvancementData != null ? processAdvancementData : null));
+			throw new RestException("Failed advancing workflow process with " + (processAdvancementData != null ? processAdvancementData : "NULL"));
 		}
 	}
 
@@ -217,7 +219,8 @@ public class WorkflowWriteAPIs
 			RestWorkflowProcessComponentSpecificationData specifiedComponent) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
+				RequestInfo.get().getParameters(),
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 		
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
@@ -237,7 +240,8 @@ public class WorkflowWriteAPIs
 			RestUUID processId) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
+				RequestInfo.get().getParameters(),
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 		
 		// TODO test releaseWorkflowLock()
 		try {
@@ -254,7 +258,8 @@ public class WorkflowWriteAPIs
 			RestWorkflowLockAquisitionData lockAquisitionData) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters());
+				RequestInfo.get().getParameters(),
+				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 		
 		// TODO test acquireWorkflowLock()
 		try {

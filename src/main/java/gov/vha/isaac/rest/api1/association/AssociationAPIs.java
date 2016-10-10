@@ -104,7 +104,34 @@ public class AssociationAPIs
 		return results.toArray(new RestAssociationTypeVersion[results.size()]);
 	}
 	
-	//TODO add API to read association type
+	/**
+	 * Return the description of a particular association type
+	 * 
+	 * @param id - A UUID, nid, or concept sequence of a concept that defines an association type
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
+	 * be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param expand - the optional items to be expanded.  Supports 'referencedConcept'  If 'referencedConcept' is passed, you can also pass 
+	 * 'versionsAll' or 'versionsLatestOnly'
+	 * @return the latest version of the specified associationType 
+	 * 
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.associationComponent+ "{" + RequestParameters.id +"}")
+	public RestAssociationTypeVersion getAssociationType(
+		@PathParam(RequestParameters.id) String id, 
+		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.expand) String expand) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.expand,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		return new RestAssociationTypeVersion(AssociationType.read(Util.convertToConceptSequence(id), RequestInfo.get().getStampCoordinate()));
+	}
 	
 	/**
 	 * Return all instances of a particular type of association.  This may return a very large result.  The returned pagination data
@@ -118,7 +145,7 @@ public class AssociationAPIs
 	 * @param expand - the optional items to be expanded.  Supports 'source', 'target', 'nestedSememes'
 	 * When 'source' or 'target' is expanded, the following expand options are supported for expanded source and/or target: 'versionsAll', 'versionsLatestOnly'
 	 * When 'nestedSememes' is expanded, the following expand options are supported for the nested sememes: 'referencedDetails', 'chronology'
-	 * @return the latest version of each unique association instance of type assoicationType 
+	 * @return the latest version of each unique association instance of type associationType 
 	 * 
 	 * @throws RestException 
 	 */

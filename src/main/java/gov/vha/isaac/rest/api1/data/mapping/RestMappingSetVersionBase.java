@@ -18,8 +18,13 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -31,6 +36,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingSetVersionBase
 {
@@ -39,6 +46,7 @@ public class RestMappingSetVersionBase
 	 * The primary name of this map set.  
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String name;
 	
 	/**
@@ -46,18 +54,21 @@ public class RestMappingSetVersionBase
 	 * ingredient-of <--> has-ingredient 
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String inverseName;
 	
 	/**
 	 * The description of this map set
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String description;
 	
 	/**
 	 * The (optional) purpose of this map set - or extended description of this map set.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String purpose;
 	
 
