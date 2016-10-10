@@ -23,15 +23,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
+import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -152,7 +156,7 @@ public class WorkflowAPIs {
 				ochreMapEntry.getValue().stream().forEachOrdered(a -> restList.add(new RestWorkflowProcessHistory(a)));
 				entries.add(new RestWorkflowProcessHistoriesMapEntry(new RestWorkflowProcess(ochreMapEntry.getKey()), restList.toArray(new RestWorkflowProcessHistory[restList.size()])));
 			}
-			return entries.toArray(entries.toArray(new RestWorkflowProcessHistoriesMapEntry[entries.size()]));
+			return entries.toArray(new RestWorkflowProcessHistoriesMapEntry[entries.size()]);
 		} catch (Exception e) {
 			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId + " and user id " + wfUserId;
 			log.error(msg, e);
@@ -236,12 +240,23 @@ public class WorkflowAPIs {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.workflowLockStateComponent)
-	public RestBoolean isWorkflowLocked() {
-		boolean isLocked = false;
-		
-		//isLocked = RequestInfo.get().getWorkflow()
-		return new RestBoolean(isLocked);
-	}
+	public RestBoolean isWorkflowLocked(@QueryParam(RequestParameters.wfProcessId) String wfProcessId)
+			throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+				RequestParameters.wfProcessId);
+
+		try {
+			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
+					.getProcessDetails(RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId));
+			return new RestBoolean(processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS));
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			String msg = "Failed retrieving the process for the specified process id " + wfProcessId;
+			log.error(msg, e);
+			throw new RestException(msg + ". " + e.getLocalizedMessage());
+		}
+	} 
 	
 
 	/**

@@ -24,6 +24,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
+import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
@@ -245,9 +247,18 @@ public class WorkflowWriteAPIs
 		
 		// TODO test releaseWorkflowLock()
 		try {
-			//RequestInfo.get().getWorkflow().getWorkflowUpdater().
+			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
+					.getProcessDetails(processId.getValue());
+
+			if (!processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
+				throw new RestException("Cannot acquire a process that is already locked");
+			}
+			
+			WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
+
+			provider.setProcessOwner(processId.getValue(), BPMNInfo.UNOWNED_PROCESS);
 		} catch (Exception e) {
-			throw new RestException("Failed releasing lock on workflow process " + processId + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			throw new RestException("Failed releasing lock on " + processId.getValue() + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
 	}
 
@@ -263,9 +274,18 @@ public class WorkflowWriteAPIs
 		
 		// TODO test acquireWorkflowLock()
 		try {
-			//RequestInfo.get().getWorkflow().getWorkflowUpdater().
+			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
+					.getProcessDetails(lockAquisitionData.getProcessId());
+
+			if (!processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
+				throw new RestException("Cannot acquire a process that is already locked");
+			}
+			
+			WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
+
+			provider.setProcessOwner(lockAquisitionData.getProcessId(), lockAquisitionData.getUserId());
 		} catch (Exception e) {
-			throw new RestException("Failed releasing lock on " + lockAquisitionData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			throw new RestException("Failed aquiring lock on " + lockAquisitionData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
 	}
 }

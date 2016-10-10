@@ -88,7 +88,7 @@ public class ArrayUnwrappers
 	}
 	
 	@XmlRootElement
-	public static class RestWorkflowProcessHistorys implements ArrayUnwrapper
+	public static class RestWorkflowProcessHistories implements ArrayUnwrapper
 	{
 		@XmlElement
 		protected RestWorkflowProcessHistory[] restWorkflowProcessHistory;
@@ -101,7 +101,7 @@ public class ArrayUnwrappers
 	
 
 	@XmlRootElement
-	public static class RestWorkflowProcessHistoriesMapEntrys implements ArrayUnwrapper
+	public static class RestWorkflowProcessHistoriesMapEntries implements ArrayUnwrapper
 	{
 		@XmlElement
 		protected RestWorkflowProcessHistoriesMapEntry[] restWorkflowProcessHistoriesMapEntry;

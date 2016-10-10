@@ -57,7 +57,7 @@ public class RestWorkflowLockAquisitionData {
 	 */
 	@XmlElement
 	@JsonInclude
-	int userId;
+	UUID userId;
 
 	/**
 	 * Constructor for JAXB
@@ -70,7 +70,7 @@ public class RestWorkflowLockAquisitionData {
 	 * @param processId - workflow process UUID
 	 * @param userId - workflow user id
 	 */
-	public RestWorkflowLockAquisitionData(UUID processId, int userId) {
+	public RestWorkflowLockAquisitionData(UUID processId, UUID userId) {
 		super();
 		this.processId = processId;
 		this.userId = userId;
@@ -88,7 +88,7 @@ public class RestWorkflowLockAquisitionData {
 	 * @return the userId
 	 */
 	@XmlTransient
-	public int getUserId() {
+	public UUID getUserId() {
 		return userId;
 	}
 
