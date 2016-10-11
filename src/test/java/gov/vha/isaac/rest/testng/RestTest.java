@@ -171,6 +171,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			reader.getStream().forEach((object) -> {
 				commitService.importNoChecks(object);
 			});
+			commitService.postProcessImportNoChecks();
 
 			Get.startIndexTask((Class<IndexServiceBI>[])null).get();
 		}
