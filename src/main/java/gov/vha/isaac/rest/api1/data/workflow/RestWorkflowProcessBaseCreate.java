@@ -52,10 +52,6 @@ public class RestWorkflowProcessBaseCreate {
 	@JsonInclude
 	UUID definitionId;
 
-	/** The creator. */
-	@XmlElement
-	@JsonInclude
-	UUID creatorId;
 	/**
 	 * The process name
 	 */
@@ -79,19 +75,16 @@ public class RestWorkflowProcessBaseCreate {
 
 	/**
 	 * @param definitionId
-	 * @param stampSequences
-	 * @param conceptNids
-	 * @param creatorNid
-	 * @param subjectMatter
+	 * @param creatorId
+	 * @param name
+	 * @param description
 	 */
 	public RestWorkflowProcessBaseCreate(
 			UUID definitionId,
-			UUID creatorId,
 			String name,
 			String description) {
 		super();
 		this.definitionId = definitionId;
-		this.creatorId = creatorId;
 		this.name = name;
 		this.description = description;
 	}
@@ -102,14 +95,6 @@ public class RestWorkflowProcessBaseCreate {
 	@XmlTransient
 	public UUID getDefinitionId() {
 		return definitionId;
-	}
-
-	/**
-	 * @return the creatorNid
-	 */
-	@XmlTransient
-	public UUID getCreatorId() {
-		return creatorId;
 	}
 
 	/**
@@ -135,7 +120,6 @@ public class RestWorkflowProcessBaseCreate {
 	public String toString() {
 		return "RestWorkflowProcessCreate ["
 				+ "definitionId=" + definitionId
-				+ ", creatorNid=" + creatorId
 				+ ", name=" + name
 				+ ", description=" + description
 				+ "]";

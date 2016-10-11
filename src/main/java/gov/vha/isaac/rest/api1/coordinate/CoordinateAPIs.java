@@ -307,6 +307,7 @@ public class CoordinateAPIs
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
+				RequestParameters.ssoToken,
 				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
 
 		return new RestEditToken(RequestInfo.get().getEditToken());

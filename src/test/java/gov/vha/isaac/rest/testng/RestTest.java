@@ -50,6 +50,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
@@ -103,6 +104,7 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
+import gov.vha.isaac.rest.tokens.EditToken;
 
 /**
  * {@link RestTest}
@@ -136,7 +138,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 
-	private final static String DUMMY_SSO_TOKEN = "A DUMMY SSO TOKEN";
+	//private final static String DUMMY_SSO_TOKEN = "A DUMMY SSO TOKEN";
 	
 	@Override
 	protected Application configure()
@@ -292,6 +294,27 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, descriptionVersionsResult);
 	}
 
+	public static EditToken DEFAULT_EDIT_TOKEN = null;
+	
+	public EditToken getDefaultEditToken() {
+		if (DEFAULT_EDIT_TOKEN == null) {
+			int authorId = TermAux.IHTSDO_CLASSIFIER.getConceptSequence();
+			int moduleId = TermAux.SOLOR_OVERLAY_MODULE.getConceptSequence();
+			int pathId = TermAux.DEVELOPMENT_PATH.getConceptSequence();
+
+			String[] roles = new String[] { "super_user","administrator","read_only","editor","reviewer","approver","manager" };
+
+			DEFAULT_EDIT_TOKEN = new EditToken(
+					authorId,
+					moduleId,
+					pathId,
+					(UUID)null,
+					roles);
+		}
+
+		return DEFAULT_EDIT_TOKEN;
+	}
+	
 	// PLACE TEST METHODS BELOW HERE
 //	@Test
 //	public void testWorkflowAPIs()
@@ -318,6 +341,27 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		RestConceptVersion conceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
 //		Assert.assertEquals(conceptVersionObject.getConChronology().getConceptSequence(), parent1Sequence);
 //	}
+	
+	@Test
+	public void testEditToken() {
+		EditToken editToken = getDefaultEditToken();
+		
+		String editTokenString = editToken.getSerialized();
+		
+		EditToken newEditToken = null;
+		try {
+			newEditToken = new EditToken(editTokenString);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		
+		Assert.assertNotNull(newEditToken, "Failed creating EditToken from serialized EditToken: token=" + editToken + ", string=" + editTokenString);
+
+		Assert.assertEquals(newEditToken.getAuthorSequence(), editToken.getAuthorSequence());
+		Assert.assertEquals(newEditToken.getModuleSequence(), editToken.getModuleSequence());
+		Assert.assertEquals(newEditToken.getPathSequence(), editToken.getPathSequence());
+		Assert.assertEquals(newEditToken.getWorkflowProcessId(), editToken.getWorkflowProcessId());
+	}
 	
 	@Test
 	public void testSememeAPIs()
@@ -364,7 +408,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		// POST new description data object
 		Response createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		checkFail(createDescriptionResponse);
@@ -413,7 +457,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(updateDescriptionResponse);
@@ -445,7 +489,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response deactivateDescriptionResponse = target(RestPaths.sememeUpdateStatePathComponent.replaceFirst(RestPaths.appPathComponent, "") + descriptionSememeSequence)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(deactivateDescriptionResponse);
@@ -527,7 +571,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
@@ -653,7 +697,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response deactivateConceptResponse = target(RestPaths.conceptUpdateStateAppPathComponent + newConceptSequence)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(isActive));
 		checkContentlessFail(deactivateConceptResponse);
@@ -694,7 +738,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createNewMappingSetResponse = target(RestPaths.mappingSetCreateAppPathComponent)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
@@ -731,7 +775,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -787,7 +831,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
@@ -843,7 +887,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -893,7 +937,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
@@ -924,7 +968,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
-				.queryParam(RequestParameters.ssoToken, DUMMY_SSO_TOKEN)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
 				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()

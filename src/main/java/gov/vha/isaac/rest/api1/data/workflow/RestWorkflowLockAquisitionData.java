@@ -53,13 +53,6 @@ public class RestWorkflowLockAquisitionData {
 	UUID processId;
 
 	/**
-	 * The user performing the advancement
-	 */
-	@XmlElement
-	@JsonInclude
-	int userId;
-
-	/**
 	 * Constructor for JAXB
 	 */
 	protected RestWorkflowLockAquisitionData() {
@@ -70,10 +63,9 @@ public class RestWorkflowLockAquisitionData {
 	 * @param processId - workflow process UUID
 	 * @param userId - workflow user id
 	 */
-	public RestWorkflowLockAquisitionData(UUID processId, int userId) {
+	public RestWorkflowLockAquisitionData(UUID processId) {
 		super();
 		this.processId = processId;
-		this.userId = userId;
 	}
 
 	/**
@@ -84,14 +76,6 @@ public class RestWorkflowLockAquisitionData {
 		return processId;
 	}
 
-	/**
-	 * @return the userId
-	 */
-	@XmlTransient
-	public int getUserId() {
-		return userId;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -99,7 +83,6 @@ public class RestWorkflowLockAquisitionData {
 	public String toString() {
 		return "RestWorkflowProcessAdvancementData ["
 				+ "processId=" + processId
-				+ ", userId=" + userId
 				+ "]";
 	}
 }

@@ -108,7 +108,7 @@ public class EditTokens {
 			return OBJECT_BY_TOKEN_CACHE.get(key);
 		}
 	}
-	
+
 	public static EditToken getOrCreate(String key) throws RestException {
 		EditToken token = get(key);
 		
@@ -161,7 +161,12 @@ public class EditTokens {
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			return Optional.of(EditTokens.getOrCreate(tokenStringOptional.get()));
+			//return Optional.of(EditTokens.getOrCreate(tokenStringOptional.get()));
+			try {
+				return Optional.of(new EditToken(tokenStringOptional.get()));
+			} catch (Exception e) {
+				throw new RestException("Failed creating EditToken from string \"" + tokenStringOptional.get() + "\"", e);
+			}
 		}
 	}
 	/**

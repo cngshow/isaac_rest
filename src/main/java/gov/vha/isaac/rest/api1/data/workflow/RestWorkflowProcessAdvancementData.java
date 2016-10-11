@@ -53,12 +53,6 @@ public class RestWorkflowProcessAdvancementData {
 	UUID processId;
 
 	/**
-	 * The user performing the advancement
-	 */
-	@XmlElement
-	@JsonInclude
-	UUID userId;	
-	/**
 	 * The advancement action requested
 	 */
 	@XmlElement
@@ -86,10 +80,9 @@ public class RestWorkflowProcessAdvancementData {
 	 * @param actionRequested - action requested
 	 * @param comment - comment associated with the workflow advancement
 	 */
-	public RestWorkflowProcessAdvancementData(UUID processId, UUID userId, String actionRequested, String comment) {
+	public RestWorkflowProcessAdvancementData(UUID processId, String actionRequested, String comment) {
 		super();
 		this.processId = processId;
-		this.userId = userId;
 		this.actionRequested = actionRequested;
 		this.comment = comment;
 	}
@@ -100,14 +93,6 @@ public class RestWorkflowProcessAdvancementData {
 	@XmlTransient
 	public UUID getProcessId() {
 		return processId;
-	}
-
-	/**
-	 * @return the userId
-	 */
-	@XmlTransient
-	public UUID getUserId() {
-		return userId;
 	}
 
 	/**
@@ -131,7 +116,7 @@ public class RestWorkflowProcessAdvancementData {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessAdvancementData [processId=" + processId + ", userId=" + userId + ", action=" + actionRequested + ", comment=" + comment
+		return "RestWorkflowProcessAdvancementData [processId=" + processId + ", action=" + actionRequested + ", comment=" + comment
 				+ "]";
 	}
 }
