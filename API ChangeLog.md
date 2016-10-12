@@ -7,7 +7,7 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
-* 2016/10/10 - 1.5.3 - Removing user id from wf parameters and parameter DTO, replacing with calls to RequestInfo.getEditCoordinate()
+* 2016/10/10 - 1.5.3 - Removing user id from wf parameters and parameter DTO, replacing with calls to RequestInfo.getEditCoordinate().  All relevant edit and workflow REST APIs now accept only editToken parameter, which can now be created and retrieved only by calling CoordinateAPIs.getEditToken() with ssoToken and/or editToken parameters, along with additional documented optional parameters
 * 2016/10/10 - 1.5.2 - Add an API for reading a specific association description.  Integrating fortify fixes (shouldn't cause any API / behavior change)  
 * 2016/10/06 - 1.5.1 - Adding Association APIs.  Cleaned up the returned pagination data, so that it stops returning page links that don't make 
     sense when you are at the first or last page.  Added a field to pagination data to indicate if the approximateTotal is an estimate, or exact.
