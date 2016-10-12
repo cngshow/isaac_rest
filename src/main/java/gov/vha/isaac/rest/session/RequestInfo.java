@@ -279,7 +279,6 @@ public class RequestInfo
 					log.debug("Applying EditToken " + RequestParameters.editToken + " parameter \"" + passedEditToken.get().getSerialized() + "\"");
 
 					// Set local values to values from passed EditToken
-					editToken = passedEditToken.get();
 					module = passedEditToken.get().getModuleSequence();
 					path = passedEditToken.get().getPathSequence();
 					workflowProcessid = passedEditToken.get().getWorkflowProcessId();
@@ -298,11 +297,11 @@ public class RequestInfo
 					
 					// Create new EditToken based on any passed parameters // TODO joel only recreate if necessary
 					editToken = new EditToken(
-							editToken.getAuthorSequence(),
+							passedEditToken.get().getAuthorSequence(),
 							module,
 							path,
 							workflowProcessid,
-							editToken.getRoles()
+							passedEditToken.get().getRoles()
 							);
 				} else {
 					// No valid EditToken passed as parameter

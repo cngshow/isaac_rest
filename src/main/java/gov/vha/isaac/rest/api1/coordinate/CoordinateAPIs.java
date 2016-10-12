@@ -299,16 +299,19 @@ public class CoordinateAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.editTokenComponent)  
 	public RestEditToken getEditToken(
-			@QueryParam(RequestParameters.ssoToken) String coordToken,
+			@QueryParam(RequestParameters.ssoToken) String coordToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editToken) String editToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editModule) String editModule, // Applied in RestContainerRequestFilter
-			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.editPath) String editPath, // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.wfProcessId) String wfProcessId // Applied in RestContainerRequestFilter
 			) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.ssoToken,
 				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+
+		// All work is done in RequestInfo.get().getEditToken(), initially invoked by RestContainerRequestFilter
 
 		return new RestEditToken(RequestInfo.get().getEditToken());
 	}

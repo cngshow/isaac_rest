@@ -40,31 +40,19 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-//@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public class Role {
-	long id;
 	String name;
 
 	Role() {}
 
 	/**
-	 * @param id
 	 * @param name
 	 */
 	public Role(
-			long id,
 			String name) {
 		super();
-		this.id = id;
 		this.name = name;
-	}
-
-	/**
-	 * @return the id
-	 */
-	public long getId() {
-		return id;
 	}
 
 	/**
@@ -110,6 +98,7 @@ public class Role {
 	 */
 	@Override
 	public String toString() {
-		return "Role [id=" + id + ", name=" + name + "]";
+		return "Role ["
+				+ "name=" + name + "]";
 	}
 }

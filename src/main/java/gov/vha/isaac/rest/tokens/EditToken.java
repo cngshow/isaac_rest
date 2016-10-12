@@ -278,6 +278,10 @@ public class EditToken
 		return validForSubmit;
 	}
 	
+	public void setInvalidForSubmit() {
+		validForSubmit = false;
+	}
+	
 	private byte[] getBytesToWrite()
 	{
 		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer();

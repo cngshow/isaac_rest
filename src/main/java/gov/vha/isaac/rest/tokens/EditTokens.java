@@ -109,22 +109,22 @@ public class EditTokens {
 		}
 	}
 
-	public static EditToken getOrCreate(String key) throws RestException {
-		EditToken token = get(key);
-		
-		if (token == null) {
-			try {
-				token = new EditToken(key);
-			} catch (Exception e) {
-				throw new RestException("Failed creating EditToken from \"" + key + "\".  Caught " + e.getClass().getName() + " " + e.getLocalizedMessage(), e);
-			}
-			put(token);
-		}
-		
-		return get(key);
-	}
+//	private static EditToken getOrCreate(String key) throws RestException {
+//		EditToken token = get(key);
+//		
+//		if (token == null) {
+//			try {
+//				token = new EditToken(key);
+//			} catch (Exception e) {
+//				throw new RestException("Failed creating EditToken from \"" + key + "\".  Caught " + e.getClass().getName() + " " + e.getLocalizedMessage(), e);
+//			}
+//			put(token);
+//		}
+//		
+//		return get(key);
+//	}
 
-	public static EditToken getOrCreate(
+	private static EditToken getOrCreate(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
@@ -161,11 +161,16 @@ public class EditTokens {
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			//return Optional.of(EditTokens.getOrCreate(tokenStringOptional.get()));
-			try {
-				return Optional.of(new EditToken(tokenStringOptional.get()));
-			} catch (Exception e) {
-				throw new RestException("Failed creating EditToken from string \"" + tokenStringOptional.get() + "\"", e);
+			if (EditTokens.get(tokenStringOptional.get()) != null) {
+				return Optional.of(EditTokens.get(tokenStringOptional.get()));
+			} else {
+				try {
+					EditToken token = new EditToken(tokenStringOptional.get());
+					EditTokens.put(token);
+					return Optional.of(token);
+				} catch (Exception e) {
+					throw new RestException("Failed creating EditToken from string \"" + tokenStringOptional.get() + "\"", e);
+				}
 			}
 		}
 	}
