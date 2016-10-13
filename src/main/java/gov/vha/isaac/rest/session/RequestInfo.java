@@ -28,10 +28,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.User;
@@ -313,7 +311,8 @@ public class RequestInfo
 					
 					// Must have either EditToken or SSO token in order to get author
 					RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
-					User user = new UserService().getUser(parameters_.get(RequestParameters.ssoToken).iterator().next()).get();
+					PrismeIntegratedUserService userService = LookupService.getService(PrismeIntegratedUserService.class);
+					User user = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next()).get();
 					editToken = EditTokenUtil.getUserToken(
 							user,
 							module != null ? module : defaultEditCoordinate.getModuleSequence(),
