@@ -21,9 +21,6 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
 		* getAllRoles()
 			* workflow/allRoles
 			* RestPaths.allRolesComponent
-		* removeComponentFromWorkflow ()
-			* workflow/update/ removeComponentFromWorkflow
-			* RestPaths.updatePathComponent + RestPaths. removeComponentFromWorkflowComponent
 		* releaseWorkflowLock ()
 			* workflow/update/releaseWorkflowLock 
 			* RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent 
@@ -89,6 +86,12 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
 				* RestUUID processId (was RestWorkflowLockAquisitionData lockAquisitionData) 
 			* New Input
 				* RestUUID ownerId 
+		* removeComponentFromWorkflow ()
+			* Now Method Called: removeComponentFromProcess ()
+			* New Rest Path: 
+				* workflow/update/process/component (was workflow/update/removeComponentFromWorkflow)
+				* RestPaths. updatePathComponent + RestPaths.removeComponent (was RestPaths.updatePathComponent + RestPaths. removeComponentFromWorkflowComponent)
+				
 * 2016/10/13 - 1.5.4 - Replaced all references to String roles with instances of new UserRole enum or corresponding RestUserRoleType Enumeration, 
     handling specific test String values of ssoToken in getEditToken() ("TEST_JSON1", "TEST_JSON2", "TEST_JSON3").  Changed RestWorkflowAvailableAction 
     and RestWorkflowDefinitionDetail DTOs, which will break APIs.

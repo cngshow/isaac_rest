@@ -38,9 +38,12 @@ import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentSpecificationData;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
@@ -170,6 +173,42 @@ public class WorkflowWriteAPIs {
 			provider.setProcessOwner(lockingData.getProcessId(), newLockOwner);
 		} catch (Exception e) {
 			throw new RestException("Failed aquiring lock on " + lockingData + ". Caught " + e.getClass().getName()
+					+ " " + e.getLocalizedMessage());
+		}
+	}
+
+	/**
+	 * Removes a component already changed within a workflow process instance.
+	 * 
+	 * In doing so, reverts the component to its original state prior to the
+	 * saves associated with the component. NOTE: The revert is performed by
+	 * adding new versions to ensure that the component attributes are identical
+	 * prior to any modification associated with the process. Note that nothing
+	 * prevents future edits to be performed upon the component associated with
+	 * the same process.
+	 * 
+	 * @param component
+	 *            RestWorkflowProcessComponentSpecificationData Data containing
+	 *            processId and componentId
+	 * @throws RestException
+	 */
+	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent)
+	public void removeComponentFromProcess(RestWorkflowProcessComponentSpecificationData component)
+			throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+				RequestParameters.editToken);
+
+		// TODO test removeComponentFromWorkflow()
+		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
+		try {
+			provider.removeComponentFromWorkflow(component.getProcessId(),
+					RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid",
+							component.getComponentNid()),
+					RequestInfo.get().getEditCoordinate());
+		} catch (Exception e) {
+			throw new RestException("Failed removing component " + component + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());
 		}
 	}

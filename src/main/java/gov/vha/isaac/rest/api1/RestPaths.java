@@ -63,7 +63,7 @@ public class RestPaths
 	public static final String history = process + "history/";
 	public static final String locked = process + "locked/";
 	public static final String actions = process + "actions/";
-	public static final String available = process + "avaiable/";
+	public static final String available = process + "available/";
 	public static final String createProcess = process + "create/";
 	public static final String advanceProcess = process + "advance/";
 	public static final String removeComponent = process + "component/";
