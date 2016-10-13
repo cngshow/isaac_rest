@@ -35,7 +35,7 @@ import gov.vha.isaac.ochre.api.commit.Stamp;
  * in a map of component nids to stamps
  * A set of these constitutes a map contained in {@link RestWorkflowProcess}
  * 
- * {@link RestWorkflowComponentNidToInitialEditEpochMapEntry}
+ * {@link RestWorkflowComponentToStampMapEntry}
  * 
  * This class carries back result map
  *
@@ -44,7 +44,7 @@ import gov.vha.isaac.ochre.api.commit.Stamp;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowComponentNidToInitialEditEpochMapEntry
+public class RestWorkflowComponentToStampMapEntry
 {
 	/**
 	 * The key
@@ -61,7 +61,7 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowComponentNidToInitialEditEpochMapEntry()
+	protected RestWorkflowComponentToStampMapEntry()
 	{
 		//For jaxb
 	}
@@ -69,11 +69,11 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 	/**
 	 * @param map
 	 */
-	public RestWorkflowComponentNidToInitialEditEpochMapEntry(int key, Stamp value) {
+	public RestWorkflowComponentToStampMapEntry(int key, Stamp value) {
 		this.key = key;
 		this.value = value;
 	}
-	public RestWorkflowComponentNidToInitialEditEpochMapEntry(Map.Entry<Integer, Stamp> entry) {
+	public RestWorkflowComponentToStampMapEntry(Map.Entry<Integer, Stamp> entry) {
 		this(entry.getKey(), entry.getValue());
 	}
 
@@ -115,7 +115,7 @@ public class RestWorkflowComponentNidToInitialEditEpochMapEntry
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RestWorkflowComponentNidToInitialEditEpochMapEntry other = (RestWorkflowComponentNidToInitialEditEpochMapEntry) obj;
+		RestWorkflowComponentToStampMapEntry other = (RestWorkflowComponentToStampMapEntry) obj;
 		if (key != other.key)
 			return false;
 		return true;

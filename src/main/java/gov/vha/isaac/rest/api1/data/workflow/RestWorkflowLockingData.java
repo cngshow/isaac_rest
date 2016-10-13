@@ -31,10 +31,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.rest.api1.workflow.WorkflowWriteAPIs;
+
 /**
- * Object containing data required to aquire a lock on a {@link RestWorkflowProcess}.  Passed to {@link WorkflowWriteAPIs#acquireWorkflowLock}.
+ * Object containing data required to aquire or release a lock on a {@link RestWorkflowProcess}.  Passed to {@link WorkflowWriteAPIs#setProcessLock}.
  * 
- * {@link RestWorkflowLockAquisitionData}
+ * {@link RestWorkflowLockingData}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
@@ -43,7 +45,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowLockAquisitionData {
+public class RestWorkflowLockingData {
 
 	/**
 	 * The process id of the process to advance
@@ -53,9 +55,16 @@ public class RestWorkflowLockAquisitionData {
 	UUID processId;
 
 	/**
+	 * The boolean indicating whether to acquire lock (false is to release lock)
+	 */
+	@XmlElement
+	@JsonInclude
+	boolean acquireLock;
+
+	/**
 	 * Constructor for JAXB
 	 */
-	protected RestWorkflowLockAquisitionData() {
+	protected RestWorkflowLockingData() {
 		super();
 	}
 
@@ -63,9 +72,10 @@ public class RestWorkflowLockAquisitionData {
 	 * @param processId - workflow process UUID
 	 * @param userId - workflow user id
 	 */
-	public RestWorkflowLockAquisitionData(UUID processId) {
+	public RestWorkflowLockingData(UUID processId, boolean acquireLock) {
 		super();
 		this.processId = processId;
+		this.acquireLock = acquireLock;
 	}
 
 	/**
@@ -76,6 +86,14 @@ public class RestWorkflowLockAquisitionData {
 		return processId;
 	}
 
+	/**
+	 * @return whether the lock should be acquired
+	 */
+	@XmlTransient
+	public boolean isAquireLock() {
+		return acquireLock;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -83,6 +101,7 @@ public class RestWorkflowLockAquisitionData {
 	public String toString() {
 		return "RestWorkflowProcessAdvancementData ["
 				+ "processId=" + processId
+				+ "acquireLock=" + acquireLock
 				+ "]";
 	}
 }

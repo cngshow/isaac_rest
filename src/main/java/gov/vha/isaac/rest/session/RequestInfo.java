@@ -274,9 +274,9 @@ public class RequestInfo
 					workflowProcessid = passedEditToken.get().getWorkflowProcessId();
 
 					// Override values from passed EditToken with values from parameters
-					if (parameters_.containsKey(RequestParameters.wfProcessId)) {
-						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.wfProcessId);
-						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters_.get(RequestParameters.wfProcessId).iterator().next());
+					if (parameters_.containsKey(RequestParameters.processId)) {
+						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.processId);
+						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, parameters_.get(RequestParameters.processId).iterator().next());
 					}
 					if (parameters_.containsKey(RequestParameters.editModule)) {
 						module = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editModule);
@@ -297,9 +297,9 @@ public class RequestInfo
 					// No valid EditToken passed as parameter
 					log.debug("Retrieving new EditToken with SSO token " + parameters_.get(RequestParameters.ssoToken));
 
-					if (parameters_.containsKey(RequestParameters.wfProcessId)) {
-						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.wfProcessId);
-						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters_.get(RequestParameters.wfProcessId).iterator().next());
+					if (parameters_.containsKey(RequestParameters.processId)) {
+						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.processId);
+						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, parameters_.get(RequestParameters.processId).iterator().next());
 					}
 					if (parameters_.containsKey(RequestParameters.editModule)) {
 						module = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editModule);

@@ -26,8 +26,9 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.workflow.model.contents.AvailableAction;
-import gov.vha.isaac.rest.api1.data.enumerations.RestUserRoleType;
 
 /**
  * The available workflow actions as defined via the workflow definition. Each
@@ -70,7 +71,7 @@ public class RestWorkflowAvailableAction
 	/**
 	 * The role
 	 * */
-	RestUserRoleType role;
+	UserRole role;
 
 	/**
 	 * Constructor for JAXB only
@@ -91,7 +92,7 @@ public class RestWorkflowAvailableAction
 		this.initialState = action.getInitialState();
 		this.action = action.getAction();
 		this.outcomeState = action.getOutcomeState();
-		this.role = new RestUserRoleType(action.getRole());
+		this.role = action.getRole();
 	}
 
 	/**
@@ -143,7 +144,7 @@ public class RestWorkflowAvailableAction
 	 * @return the role
 	 */
 	@XmlTransient
-	public RestUserRoleType getRole() {
+	public UserRole getRole() {
 		return role;
 	}
 

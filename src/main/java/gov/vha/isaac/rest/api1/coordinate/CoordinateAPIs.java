@@ -303,7 +303,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.editToken) String editToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editModule) String editModule, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editPath) String editPath, // Applied in RestContainerRequestFilter
-			@QueryParam(RequestParameters.wfProcessId) String wfProcessId // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.processId) String wfProcessId // Applied in RestContainerRequestFilter
 			) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(

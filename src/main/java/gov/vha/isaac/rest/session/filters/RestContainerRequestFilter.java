@@ -89,7 +89,7 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editModule)
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editPath)
-					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.wfProcessId)
+					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.processId)
 					) {
 				try {
 					// TODO Joel find out why first invocation seems to fail and fix

@@ -85,10 +85,10 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	RestWorkflowProcessStatusType processStatus;
 
 	/**
-	 * The component nids associated with the workflow process and their respective initial edit times
+	 * The component nids associated with the workflow process and their respective stamps
 	 */
 	@XmlElement
-	Set<RestWorkflowComponentNidToInitialEditEpochMapEntry> componentToIntitialEditMap = new HashSet<>();
+	Set<RestWorkflowComponentToStampMapEntry> componentToStampMap = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -112,7 +112,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
 		for (Map.Entry<Integer, Stamp> entry : process.getComponentToInitialEditMap().entrySet()) {
-			this.componentToIntitialEditMap.add(new RestWorkflowComponentNidToInitialEditEpochMapEntry(entry));
+			this.componentToStampMap.add(new RestWorkflowComponentToStampMapEntry(entry));
 		}
 	}
 
@@ -168,8 +168,8 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 * @return the componentNids
 	 */
 	@XmlTransient
-	public Set<RestWorkflowComponentNidToInitialEditEpochMapEntry> getComponentToIntitialEditMap() {
-		return Collections.unmodifiableSet(componentToIntitialEditMap);
+	public Set<RestWorkflowComponentToStampMapEntry> getComponentToIntitialEditMap() {
+		return Collections.unmodifiableSet(componentToStampMap);
 	}
 
 	/* (non-Javadoc)
@@ -212,6 +212,6 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 				+ super.toString()
 				+ "id=" + id + ", creatorId=" + creatorId + ", timeCreated=" + timeCreated + ", timeLaunched=" + timeLaunched
 				+ ", timeCancelledOrConcluded=" + timeCancelledOrConcluded + ", processStatus=" + processStatus
-				+ ", componentToIntitialEditMap=" + componentToIntitialEditMap + "]";
+				+ ", componentToIntitialEditMap=" + componentToStampMap + "]";
 	}
 }
