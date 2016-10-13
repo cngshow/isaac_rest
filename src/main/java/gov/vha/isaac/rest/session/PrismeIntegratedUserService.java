@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.session;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +30,6 @@ import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.vha.isaac.MetaData;
-import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.UserRoleService;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
@@ -148,22 +148,38 @@ public class PrismeIntegratedUserService implements UserRoleService {
 		
 		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), userName);
 
-		return Optional.of(new User(userName, uuidFromUserFsn, roleSet));
+		User newUser = new User(userName, uuidFromUserFsn, roleSet);
+		
+		UserCache.put(newUser);
+
+		return Optional.of(newUser);
 	}
 
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.ochre.api.UserRoleService#getUserRoles(java.util.UUID)
+	 * 
+	 * This method should throw exception if the user has not already been cached
+	 */
 	@Override
 	public Set<UserRole> getUserRoles(UUID userId)
 	{
-		// TODO Joel, this is where you return the roles assigned to the user according to prisme.  You should know this before the workflow service asks, 
-		//because the request won't get to workflow without coming through our security filter first, and when you ask prisme about the users roles, you cache
-		//them here....
-		return null;
+		return UserCache.get(userId).get().getRoles();
 	}
 
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.ochre.api.UserRoleService#getAllUserRoles()
+	 */
 	@Override
 	public Set<UserRole> getAllUserRoles()
 	{
-		// TODO Joel, this is where you return the subset of userroles which match the values supported by prisme (not everything in our enum, only the matches to prisme)
-		return null;
+		// TODO Joel call PRISME for available roles and return only the intersection with the enum
+		Set<UserRole> availableRoles = new HashSet<>();
+		for (UserRole role : UserRole.values()) {
+			if (role != UserRole.AUTOMATED) { // AUTOMATED will not be a PRISME role
+				availableRoles.add(role);
+			}
+		}
+		
+		return Collections.unmodifiableSet(availableRoles);
 	}
 }
