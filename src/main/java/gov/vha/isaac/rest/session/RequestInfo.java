@@ -33,7 +33,6 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserService;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -312,7 +311,7 @@ public class RequestInfo
 					
 					// Must have either EditToken or SSO token in order to get author
 					RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
-					UserService userService = LookupService.getService(UserService.class);
+					PrismeIntegratedUserService userService = LookupService.getService(PrismeIntegratedUserService.class);
 					User user = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next()).get();
 					editToken = EditTokenUtil.getUserToken(
 							user,

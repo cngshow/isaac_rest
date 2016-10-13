@@ -31,20 +31,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserRole;
-import gov.vha.isaac.ochre.api.UserService;
+import gov.vha.isaac.ochre.api.UserRoleService;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 
 /**
  * The Class MockUserService.
  *
- * {@link MockUserService}
+ * {@link PrismeIntegratedUserService}
  * 
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Service(name="rest-prismeUserService")
 @Rank(value = 10)
 @Singleton
-public class MockUserService implements UserService {
+public class PrismeIntegratedUserService implements UserRoleService {
 //	/*
 //	 * Example URL for get_roles_by_token
 //	 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
@@ -79,21 +79,18 @@ public class MockUserService implements UserService {
 			+ "{\"id\":19991,\"name\":\"editor\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 			+ "],\"token_parsed?\":true,\"user\":\"VHAISHEfronJ\",\"type\":\"ssoi\",\"id\":10005}";
 
-	private static final Set<UserRole> ALL_ROLES = new HashSet<>();
-	static {
-		for (UserRole role : UserRole.values()) {
-			ALL_ROLES.add(role);
-		}
+
+	private PrismeIntegratedUserService() {
+		//for HK2
 	}
 
-	public MockUserService() {
-		
-	}
-
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.ochre.api.UserService#getUser(java.lang.String)
+	/**
+	 * Return a user and roles available for that user
+	 *
+	 * @param ssoToken
+	 *            the user's SSO token string
+	 * @return the user and roles available to the user
 	 */
-	@Override
 	public Optional<User> getUser(String ssoToken) {
 		String jsonToUse = null;
 		if (ssoToken.equals(TEST_JSON1)) {
@@ -152,5 +149,21 @@ public class MockUserService implements UserService {
 		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), userName);
 
 		return Optional.of(new User(userName, uuidFromUserFsn, roleSet));
+	}
+
+	@Override
+	public Set<UserRole> getUserRoles(UUID userId)
+	{
+		// TODO Joel, this is where you return the roles assigned to the user according to prisme.  You should know this before the workflow service asks, 
+		//because the request won't get to workflow without coming through our security filter first, and when you ask prisme about the users roles, you cache
+		//them here....
+		return null;
+	}
+
+	@Override
+	public Set<UserRole> getAllUserRoles()
+	{
+		// TODO Joel, this is where you return the subset of userroles which match the values supported by prisme (not everything in our enum, only the matches to prisme)
+		return null;
 	}
 }
