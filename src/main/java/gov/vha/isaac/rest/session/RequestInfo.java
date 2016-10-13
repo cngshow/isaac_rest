@@ -28,12 +28,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserService;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
@@ -314,7 +313,7 @@ public class RequestInfo
 					// Must have either EditToken or SSO token in order to get author
 					RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
 					UserService userService = LookupService.getService(UserService.class);
-					UserService.User user = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next()).get();
+					User user = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next()).get();
 					editToken = EditTokenUtil.getUserToken(
 							user,
 							module != null ? module : defaultEditCoordinate.getModuleSequence(),

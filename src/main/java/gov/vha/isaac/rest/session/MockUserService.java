@@ -24,15 +24,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import javax.inject.Singleton;
-
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import gov.vha.isaac.MetaData;
+import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.UserService;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
