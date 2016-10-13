@@ -50,6 +50,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitService;
@@ -302,14 +303,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			int moduleId = TermAux.SOLOR_OVERLAY_MODULE.getConceptSequence();
 			int pathId = TermAux.DEVELOPMENT_PATH.getConceptSequence();
 
-			String[] roles = new String[] { "super_user","administrator","read_only","editor","reviewer","approver","manager" };
+			//String[] roles = new String[] { "super_user","administrator","read_only","editor","reviewer","approver","manager" };
 
 			DEFAULT_EDIT_TOKEN = new EditToken(
 					authorId,
 					moduleId,
 					pathId,
 					(UUID)null,
-					roles);
+					UserRole.values());
 		}
 
 		return DEFAULT_EDIT_TOKEN;

@@ -19,8 +19,10 @@
 package gov.vha.isaac.rest.api1.workflow;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -34,6 +36,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.UserRoleService;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
@@ -41,12 +46,12 @@ import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.enumerations.RestUserRoleType;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.session.PRISMEServices;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -276,7 +281,13 @@ public class WorkflowAPIs {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.allRolesComponent)
-	public String[] getAllRoles() {
-		return PRISMEServices.getAllRoles();
+	public RestUserRoleType[] getAllRoles() {
+		UserRoleService userService = LookupService.getService(UserRoleService.class);
+
+		Set<RestUserRoleType> restRoles = new HashSet<>();
+		for (UserRole role : userService.getAllUserRoles()) {
+			restRoles.add(new RestUserRoleType(role));
+		}
+		return restRoles.toArray(new RestUserRoleType[restRoles.size()]);
 	}
 }

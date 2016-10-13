@@ -29,7 +29,10 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.workflow.model.contents.DefinitionDetail;
+import gov.vha.isaac.rest.api1.data.enumerations.RestUserRoleType;
 
 /**
  * The metadata defining a given process (or workflow instance). This doesn't
@@ -68,7 +71,7 @@ public class RestWorkflowDefinitionDetail
 
 	/** The workflow roles available defined via the definition . */
 	@XmlElement
-	Set<String> roles = new HashSet<>();
+	Set<RestUserRoleType> roles = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -88,7 +91,9 @@ public class RestWorkflowDefinitionDetail
 		this.name = processDetail.getName();
 		this.namespace = processDetail.getNamespace();
 		this.version = processDetail.getVersion();
-		this.roles = processDetail.getRoles();
+		for (UserRole role : processDetail.getRoles()) {
+			this.roles.add(new RestUserRoleType(role));
+		}
 	}
 
 	/**
@@ -135,7 +140,7 @@ public class RestWorkflowDefinitionDetail
 	 * @return the roles
 	 */
 	@XmlTransient
-	public Set<String> getRoles() {
+	public Set<RestUserRoleType> getRoles() {
 		return Collections.unmodifiableSet(roles);
 	}
 

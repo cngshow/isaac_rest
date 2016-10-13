@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -33,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
 import gov.vha.isaac.ochre.api.util.PasswordHasher;
@@ -70,7 +70,7 @@ public class EditToken
 	private final int moduleSequence;
 	private final int pathSequence;
 	private final UUID workflowProcessId;
-	private final Set<String> roles = new TreeSet<>();
+	private final Set<UserRole> roles = new TreeSet<>();
 	
 	private transient EditCoordinate editCoordinate = null;
 	
@@ -89,7 +89,7 @@ public class EditToken
 			int moduleSequence,
 			int pathSequence,
 			UUID workflowProcessId,
-			String...roles)
+			UserRole...roles)
 	{
 		this.creationTime = System.currentTimeMillis();
 
@@ -99,8 +99,8 @@ public class EditToken
 		this.workflowProcessId = workflowProcessId;
 		
 		if (roles != null && roles.length > 0) {
-			for (String role : roles) {
-				this.roles.add(role.trim());
+			for (UserRole role : roles) {
+				this.roles.add(role);
 			}
 		}
 
@@ -111,9 +111,9 @@ public class EditToken
 			int moduleSequence,
 			int pathSequence,
 			UUID workflowProcessId,
-			Collection<String> roles)
+			Collection<UserRole> roles)
 	{
-		this(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles != null ? roles.toArray(new String[roles.size()]) : null);
+		this(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles != null ? roles.toArray(new UserRole[roles.size()]) : null);
 	}
 
 	/**
@@ -156,13 +156,7 @@ public class EditToken
 
 		byte numRoles = buffer.getByte();
 		for (byte i = 0; i < numRoles; ++i) {
-			byte roleLength = buffer.getByte();
-			StringBuilder role = new StringBuilder();
-			for (short charLoc = 0; charLoc < roleLength; ++charLoc) {
-				role.append(buffer.getChar());
-			}
-			
-			roles.add(role.toString());
+			roles.add(UserRole.safeValueOf(buffer.getInt()).get());
 		}
 		
 		Long temp = validTokens.remove(increment);
@@ -264,7 +258,7 @@ public class EditToken
 	/**
 	 * @return the sorted set of roles
 	 */
-	public Set<String> getRoles() {
+	public Set<UserRole> getRoles() {
 		return Collections.unmodifiableSet(roles);
 	}
 
@@ -301,13 +295,8 @@ public class EditToken
 		}
 		
 		buffer.putByte((byte)roles.size());
-		String[] roleArray = roles.toArray(new String[roles.size()]);
-		for (byte i = 0; i < roleArray.length; ++i) {
-			String role = roleArray[i];
-			buffer.putByte((byte)role.length());
-			for (int charLoc = 0; charLoc < role.length(); ++charLoc) {
-				buffer.putChar(role.charAt(charLoc));
-			}
+		for (UserRole role : roles) {
+			buffer.putInt(role.ordinal());
 		}
 
 		buffer.trimToSize();
@@ -356,7 +345,7 @@ public class EditToken
 				2,
 				3,
 				randomUuid,
-				"role1", "role2", "role3");
+				UserRole.ADMINISTRATOR, UserRole.EDITOR, UserRole.READ_ONLY);
 		String token = t.serialize();
 		System.out.println(token);
 		EditToken t1 = new EditToken(token);
