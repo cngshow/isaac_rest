@@ -33,21 +33,21 @@ import org.jvnet.hk2.annotations.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.vha.isaac.MetaData;
+import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserRole;
-import gov.vha.isaac.ochre.api.UserService;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 
 /**
  * The Class MockUserService.
  *
- * {@link MockUserService}
+ * {@link UserService}
  * 
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Service(name="rest-prismeUserService")
 @Rank(value = 10)
 @Singleton
-public class MockUserService implements UserService {
+public class UserService {
 //	/*
 //	 * Example URL for get_roles_by_token
 //	 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
@@ -89,14 +89,10 @@ public class MockUserService implements UserService {
 		}
 	}
 
-	public MockUserService() {
+	public UserService() {
 		
 	}
 
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.ochre.api.UserService#getUser(java.lang.String)
-	 */
-	@Override
 	public Optional<User> getUser(String ssoToken) {
 		String jsonToUse = null;
 		if (ssoToken.equals(TEST_JSON1)) {
