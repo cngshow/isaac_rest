@@ -22,7 +22,10 @@ import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.rest.tokens.EditToken;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link UserTokenTest}
@@ -36,21 +39,23 @@ public class UserTokenTest
 	{
 		UUID randomUuid = UUID.randomUUID();
 		
-		EditToken ut = new EditToken(
+		EditToken ut = EditTokens.getOrCreate(
 				//5555,
 				1,
 				2,
 				3,
-				randomUuid);
+				randomUuid,
+				(UserRole[])null);
 		String token = ut.serialize();
 		
-		EditToken read = new EditToken(token);
+		EditToken read = EditTokens.getOrCreate(token);
 		//Assert.assertTrue(ut.getUserIdentity() + " does not equal " + read.getUserIdentity() , ut.getUserIdentity() == read.getUserIdentity());
 		Assert.assertTrue(ut.getAuthorSequence() + " does not equal " + read.getAuthorSequence() , ut.getAuthorSequence() == read.getAuthorSequence());
 		Assert.assertTrue("is not valid?", read.isValidForSubmit());
 		
 		//Can only use a token once for submit
-		Assert.assertFalse("is valid when it shouldn't be", new EditToken(token).isValidForSubmit());
+		//Assert.assertFalse("is valid when it shouldn't be", new EditToken(token).isValidForSubmit());
+		Assert.assertFalse("is valid when it shouldn't be", EditTokens.getOrCreate(token).isValidForSubmit());
 		
 	}
 }

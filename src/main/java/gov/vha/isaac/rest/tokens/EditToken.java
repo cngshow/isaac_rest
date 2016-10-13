@@ -84,7 +84,7 @@ public class EditToken
 	 * @param pathSequence
 	 * @param workflowProcessId
 	 */
-	public EditToken(
+	EditToken(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
@@ -106,7 +106,7 @@ public class EditToken
 
 		serialization = serialize();
 	}
-	public EditToken(
+	EditToken(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
@@ -121,7 +121,7 @@ public class EditToken
 	 * @param encodedData
 	 * @throws Exception
 	 */
-	public EditToken(String encodedData) throws Exception
+	EditToken(String encodedData) throws Exception
 	{
 		long time = System.currentTimeMillis();
 		String readHash = encodedData.substring(0, encodedHashLength);

@@ -48,6 +48,7 @@ import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.EditToken;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * 
@@ -63,7 +64,7 @@ class EditTokenUtil {
 			User user,
 			int moduleSequence,
 			int pathSequence,
-			UUID wfProcessId) throws RestException {
+			UUID processId) throws RestException {
 		EditCoordinate adminEditCoordinate = EditCoordinates.getDefaultUserMetadata();
 		LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
 		LogicCoordinate logicCoordinate = LogicCoordinates.getStandardElProfile();
@@ -143,11 +144,11 @@ class EditTokenUtil {
 			}
 		}
 
-		EditToken editToken = new EditToken(
+		EditToken editToken = EditTokens.getOrCreate(
 				authorSequence,
 				moduleSequence,
 				pathSequence,
-				wfProcessId,
+				processId,
 				user.getRoles());
 		
 		return editToken;

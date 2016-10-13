@@ -72,8 +72,10 @@ import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
+import gov.vha.isaac.rest.api1.data.RestEditToken;
 import gov.vha.isaac.rest.api1.data.RestId;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
@@ -102,10 +104,13 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
+import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 import gov.vha.isaac.rest.tokens.EditToken;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link RestTest}
@@ -124,6 +129,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	private final static String logicCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.logicCoordinatePathComponent;
 	private final static String descriptionSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.descriptionsComponent;
 	private final static String taxonomyRequestPath = RestPaths.taxonomyAPIsPathComponent + RestPaths.versionComponent;
+	private final static String editTokenRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent;
 
 	private final static String sememeSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.sememesComponent;
 	private final static String prefixSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.prefixComponent;
@@ -305,7 +311,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			//String[] roles = new String[] { "super_user","administrator","read_only","editor","reviewer","approver","manager" };
 
-			DEFAULT_EDIT_TOKEN = new EditToken(
+			DEFAULT_EDIT_TOKEN = EditTokens.getOrCreate(
 					authorId,
 					moduleId,
 					pathId,
@@ -317,9 +323,36 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	// PLACE TEST METHODS BELOW HERE
-//	@Test
-//	public void testWorkflowAPIs()
-//	{
+	@Test
+	public void testWorkflowAPIs()
+	{
+		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
+				.queryParam(RequestParameters.ssoToken, "teststring")
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
+		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
+		
+		EditToken retrievedEditToken = null;
+		try {
+			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
+		} catch (RestException e) {
+			throw new RuntimeException(e);
+		}
+		
+		Response getAdvancableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
+				.queryParam(RequestParameters.definitionId , "ad5e175b-3cf2-420a-9f35-136760a0f7a9")
+				.queryParam(RequestParameters.editToken, retrievedEditToken.serialize())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getAdvancableProcessesResponseResult = checkFail(getAdvancableProcessesResponse).readEntity(String.class);
+		RestWorkflowProcessHistoriesMapEntry[] advancableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAdvancableProcessesResponseResult);
+		
+		Assert.assertTrue(advancableProcesses == null || advancableProcesses.length == 0);
+		
+//		
+//		
+//		
 //		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 //		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 //		
@@ -341,7 +374,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		String conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
 //		RestConceptVersion conceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
 //		Assert.assertEquals(conceptVersionObject.getConChronology().getConceptSequence(), parent1Sequence);
-//	}
+	}
 	
 	@Test
 	public void testEditToken() {
@@ -351,7 +384,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		EditToken newEditToken = null;
 		try {
-			newEditToken = new EditToken(editTokenString);
+			newEditToken = EditTokens.getOrCreate(editTokenString);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -362,6 +395,40 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newEditToken.getModuleSequence(), editToken.getModuleSequence());
 		Assert.assertEquals(newEditToken.getPathSequence(), editToken.getPathSequence());
 		Assert.assertEquals(newEditToken.getWorkflowProcessId(), editToken.getWorkflowProcessId());
+		
+		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
+				.queryParam(RequestParameters.ssoToken, "TEST_JSON1")
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
+		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
+		
+		EditToken retrievedEditToken = null;
+		try {
+			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
+		} catch (RestException e) {
+			throw new RuntimeException(e);
+		}
+		
+		Assert.assertNull(retrievedEditToken.getWorkflowProcessId());
+		
+		UUID testWfProcessUuid = UUID.randomUUID();
+		getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
+				.queryParam(RequestParameters.ssoToken, "TEST_JSON1")
+				.queryParam(RequestParameters.processId , testWfProcessUuid.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
+		restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
+
+		retrievedEditToken = null;
+		try {
+			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
+		} catch (RestException e) {
+			throw new RuntimeException(e);
+		}
+		
+		Assert.assertEquals(retrievedEditToken.getWorkflowProcessId(), testWfProcessUuid);
 	}
 	
 	@Test

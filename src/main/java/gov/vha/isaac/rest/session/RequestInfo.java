@@ -286,7 +286,7 @@ public class RequestInfo
 					}
 					
 					// Create new EditToken based on any passed parameters // TODO joel only recreate if necessary
-					editToken = new EditToken(
+					editToken = EditTokens.getOrCreate(
 							passedEditToken.get().getAuthorSequence(),
 							module,
 							path,
