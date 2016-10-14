@@ -48,7 +48,7 @@ public class RestStampedVersion
 	 * The State of this version (active, inactive, primordial or cancelled)
 	 */
 	@XmlElement
-	RestStateType state;
+	public RestStateType state;
 	
 	/**
 	 * The time stamp of this version (in standard java form)
