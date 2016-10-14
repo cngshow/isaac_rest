@@ -102,12 +102,18 @@ public class MappingWriteAPIs
 
 	/**
 	 * @param mappingSetCreationData - object containing data used to create new mapping set
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the UUID identifying the created concept which defines the map set
 	 * @throws RestException
 	 */
 	//TODO fix the comments above around editToken 
+	/**
+	 * @param mappingSetCreationData
+	 * @return
+	 * @throws RestException
+	 */
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetComponent + RestPaths.createPathComponent)
@@ -149,8 +155,9 @@ public class MappingWriteAPIs
 	 * @param mappingSetUpdateData - object containing data used to update existing mapping set
 	 * @param id - id of mapping set concept to update
 	 * @param state - The state to put the mapping set into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	//TODO fix the comments above around editToken 
@@ -196,8 +203,9 @@ public class MappingWriteAPIs
 	
 	/**
 	 * @param mappingItemCreationData - RestMappingItemVersionBaseCreate object containing data to create new mapping item
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the sememe UUID identifying the sememe which stores the created mapping item
 	 * @throws RestException
 	 */
@@ -255,8 +263,9 @@ public class MappingWriteAPIs
 	 * @param mappingItemUpdateData - object containing data used to update existing mapping item
 	 * @param id - id of mapping item sememe to update
 	 * @param state - The state to mapping item into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	//TODO fix the comments above around editToken 

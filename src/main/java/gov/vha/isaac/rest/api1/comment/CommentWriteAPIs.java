@@ -66,8 +66,9 @@ public class CommentWriteAPIs
 	/**
 	 * Create a new comment according to the 
 	 * @param dataToCreateComment - {@link RestCommentVersionBaseCreate} object containing data used to construct a new comment
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the int Sememe sequence in a {@link RestInteger} wrapper identifying the created sememe which stores the comment data
 	 * @throws RestException
 	 */
@@ -141,8 +142,9 @@ public class CommentWriteAPIs
 	 * @param dataToUpdateComment - RestCommentVersionBase object containing data for updating a comment
 	 * @param id - The id (nid, sequence or UUID) of the comment to be updated 
 	 * @param state - The state to put the comment into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	//TODO fix the comments above around editToken 

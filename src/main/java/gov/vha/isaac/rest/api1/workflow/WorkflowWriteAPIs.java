@@ -24,6 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +35,7 @@ import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
@@ -42,6 +43,7 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link WorkflowWriteAPIs}
@@ -61,6 +63,9 @@ public class WorkflowWriteAPIs {
 	 *            Structure containing data required when creating a new
 	 *            workflow process instance. Includes definitionId, name, and
 	 *            description
+	 * @param editToken
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
 	 * @return RestUUID - Id of newly created process instance
 	 * 
@@ -69,20 +74,25 @@ public class WorkflowWriteAPIs {
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent + RestPaths.createProcess)
-	public RestUUID createProcess(RestWorkflowProcessBaseCreate workflowProcessCreationData) throws RestException {
+	public RestWriteResponse createProcess(
+			RestWorkflowProcessBaseCreate workflowProcessCreationData,
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.editToken);
 
 		WorkflowProcessInitializerConcluder provider = RequestInfo.get().getWorkflow()
 				.getWorkflowProcessInitializerConcluder();
 		try {
-			return new RestUUID(
+			return new RestWriteResponse(
+					EditTokens.renew(RequestInfo.get().getEditToken()),
 					provider.createWorkflowProcess(workflowProcessCreationData.getDefinitionId(),
 							Get.identifierService()
 									.getUuidPrimordialFromConceptSequence(
 											RequestInfo.get().getEditToken().getAuthorSequence())
 									.get(),
-							workflowProcessCreationData.getName(), workflowProcessCreationData.getDescription()));
+							workflowProcessCreationData.getName(), workflowProcessCreationData.getDescription()),
+					null,
+					null);
 		} catch (Exception e) {
 			String msg = "Failed creating new workflow process from "
 					+ (workflowProcessCreationData != null ? workflowProcessCreationData : "NULL");
@@ -94,17 +104,25 @@ public class WorkflowWriteAPIs {
 	/**
 	 * Advances an existing workflow process instance with the specified action.
 	 * 
+	 * Returns a renewed RestEditToken.
+	 * 
 	 * @param processAdvancementData
 	 *            RestWorkflowProcessAdvancementData Data containing workflow
 	 *            advancement information includes processId, action selected,
 	 *            and user comment
+	 * @param editToken
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
+	 * @return renewed EditToken
 	 * @throws RestException
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.advanceProcess)
-	public void advanceProcess(RestWorkflowProcessAdvancementData processAdvancementData) throws RestException {
+	public RestWriteResponse advanceProcess(
+			RestWorkflowProcessAdvancementData processAdvancementData,
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.editToken);
 
@@ -115,6 +133,8 @@ public class WorkflowWriteAPIs {
 					.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get(),
 					processAdvancementData.getActionRequested(), processAdvancementData.getComment(),
 					RequestInfo.get().getEditCoordinate());
+
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
 		} catch (Exception e) {
 			String msg = "Failed advancing workflow process with "
 					+ (processAdvancementData != null ? processAdvancementData : "NULL");
@@ -129,16 +149,24 @@ public class WorkflowWriteAPIs {
 	 * ownerId is the current userId - Releasing a lock: In this case, the
 	 * ownerId set is BPMNInfo.UNOWNED_PROCESS
 	 * 
+	 * Returns a renewed RestEditToken.
+	 * 
 	 * @param lockingData
 	 *            RestWorkflowLockingData Data containing process being updated
 	 *            and request type (release or acquire).
+	 * @param editToken
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
+	 * @return renewed EditToken
 	 * @throws RestException
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.lock)
-	public void setProcessLock(RestWorkflowLockingData lockingData) throws RestException {
+	public RestWriteResponse setProcessLock(
+			RestWorkflowLockingData lockingData,
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.editToken);
 
@@ -168,6 +196,8 @@ public class WorkflowWriteAPIs {
 			WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 
 			provider.setProcessOwner(lockingData.getProcessId(), newLockOwner);
+			
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
 		} catch (Exception e) {
 			throw new RestException("Failed aquiring lock on " + lockingData + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());

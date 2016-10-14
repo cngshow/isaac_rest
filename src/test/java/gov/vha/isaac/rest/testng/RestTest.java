@@ -73,6 +73,7 @@ import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
@@ -106,6 +107,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
@@ -206,6 +208,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//System.out.println(response.readEntity(String.class));
 	}
 
+	private Response assertFail(Response response)
+	{
+		if (response.getStatus() == Status.OK.getStatusCode())
+		{
+			Assert.fail("Should have failed but did not. Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus())
+			+ response.readEntity(String.class));
+		}
+		
+		return response;
+	}
 	private Response checkFail(Response response)
 	{
 		if (response.getStatus() != Status.OK.getStatusCode())
@@ -338,85 +350,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	// PLACE TEST METHODS BELOW HERE
 	@Test
-	public void testWorkflowAPIs()
-	{
-		// Get an editToken string
-		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-		
-		// Construct and EditToken object from editToken String
-		EditToken retrievedEditToken = null;
-		try {
-			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
-		} catch (RestException e) {
-			throw new RuntimeException(e);
-		}
-		
-		UUID defaultDefinition = getDefaultWorkflowDefinition();
-		
-		// Pass new editToken string to available (processes)
-		Response getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
-				.queryParam(RequestParameters.editToken, retrievedEditToken.serialize())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
-		RestWorkflowProcessHistoriesMapEntry[] availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
-		
-		// We have not created any processes, so there should be no available processes returned
-		Assert.assertTrue(availableProcesses == null || availableProcesses.length == 0);
-		
-		// Test process creation
-		UUID random = UUID.randomUUID();
-		String wfProcessName = "Test WF Process Name (" + random + ")";
-		String wfProcessDescription = "Test WF Process Description (" + random + ")";
-		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCreate(
-				defaultDefinition,
-				wfProcessName,
-				wfProcessDescription);
-		String xml = null;
-		try {
-			xml = XMLUtils.marshallObject(newProcessData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-		Response createProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.createPathComponent + RestPaths.createProcess)
-				.queryParam(RequestParameters.editToken, retrievedEditToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		String createProcessResponseResult = checkFail(createProcessResponse).readEntity(String.class);
-		final RestUUID createdProcessRestUUIDObject = XMLUtils.unmarshalObject(RestUUID.class, createProcessResponseResult);
-		
-		Assert.assertNotNull(createdProcessRestUUIDObject);
-		UUID createdProcessUUID = createdProcessRestUUIDObject.getValue();
-
-		// Check for created process in retrieved available
-		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
-				.queryParam(RequestParameters.editToken, retrievedEditToken.serialize())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
-		availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
-		
-		// We have not created any processes, so there should be no available processes returned
-		Assert.assertNotNull(availableProcesses);
-		Assert.assertTrue(availableProcesses.length > 0);
-		boolean foundNewlyCreatedProcessAmongstRetrievedProcesses = false;
-		for (RestWorkflowProcessHistoriesMapEntry entry : availableProcesses) {
-			if (entry.getKey().getId().equals(createdProcessUUID)) {
-				foundNewlyCreatedProcessAmongstRetrievedProcesses = true;
-				break;
-			}
-		}
-		Assert.assertTrue(foundNewlyCreatedProcessAmongstRetrievedProcesses);
-	}
-	
-	@Test
 	public void testEditToken() {
 		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
 				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
@@ -467,6 +400,142 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Assert.assertEquals(retrievedEditToken.getWorkflowProcessId(), testWfProcessUuid);
+	}
+
+	@Test
+	public void testWorkflowAPIs()
+	{
+		// Get an editToken string
+		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
+				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
+		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
+		
+		// Construct and EditToken object from editToken String
+		EditToken editToken = null;
+		try {
+			editToken = EditTokens.getOrCreate(restEditTokenObject.token);
+		} catch (RestException e) {
+			throw new RuntimeException(e);
+		}
+		
+		UUID defaultDefinition = getDefaultWorkflowDefinition();
+		
+		// Pass new editToken string to available (processes)
+		Response getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
+				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
+				.queryParam(RequestParameters.editToken, editToken.serialize())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
+		RestWorkflowProcessHistoriesMapEntry[] availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
+		
+		// We may have not created any processes, so there may be no available processes returned
+		// Deactivating this test because restarting test without a mvn clean may otherwise fail
+		//Assert.assertTrue(availableProcesses == null || availableProcesses.length == 0);
+		
+		// Test process creation
+		UUID random = UUID.randomUUID();
+		String wfProcessName = "Test WF Process Name (" + random + ")";
+		String wfProcessDescription = "Test WF Process Description (" + random + ")";
+		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCreate(
+				defaultDefinition,
+				wfProcessName,
+				wfProcessDescription);
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newProcessData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response createProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.createPathComponent + RestPaths.createProcess)
+				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String createProcessResponseResult = checkFail(createProcessResponse).readEntity(String.class);
+		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, createProcessResponseResult);
+		
+		Assert.assertNotNull(writeResponse);
+		UUID createdProcessUUID = writeResponse.getUUID();
+		RestEditToken renewedEditToken = writeResponse.getEditToken();
+
+		// Check for created process in retrieved available
+		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
+				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
+				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
+		availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
+		
+		// We have not created any processes, so there should be no available processes returned
+		Assert.assertNotNull(availableProcesses);
+		Assert.assertTrue(availableProcesses.length > 0);
+		boolean foundNewlyCreatedProcessAmongstRetrievedProcesses = false;
+		for (RestWorkflowProcessHistoriesMapEntry entry : availableProcesses) {
+			if (entry.getKey().getId().equals(createdProcessUUID)) {
+				foundNewlyCreatedProcessAmongstRetrievedProcesses = true;
+				break;
+			}
+		}
+		Assert.assertTrue(foundNewlyCreatedProcessAmongstRetrievedProcesses);
+		
+		
+		// Acquire lock on process.  This should Fail because it's automatically locked on create.
+		RestWorkflowLockingData processLockingData = new RestWorkflowLockingData(
+				createdProcessUUID,
+				true);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(processLockingData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
+				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		assertFail(lockProcessResponse);
+
+		// Release lock on process
+		processLockingData = new RestWorkflowLockingData(
+				createdProcessUUID,
+				false);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(processLockingData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
+				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		String unlockProcessResponseResult = checkFail(unlockProcessResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, unlockProcessResponseResult);
+		renewedEditToken = writeResponse.getEditToken();
+		Assert.assertNotNull(renewedEditToken);
+		
+		// Acquire lock on process
+		processLockingData = new RestWorkflowLockingData(
+				createdProcessUUID,
+				true);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(processLockingData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
+				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		String lockProcessResponseResult = checkFail(lockProcessResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, lockProcessResponseResult);
+		renewedEditToken = writeResponse.getEditToken();
+		Assert.assertNotNull(renewedEditToken);
 	}
 	
 	@Test

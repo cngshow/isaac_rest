@@ -30,10 +30,15 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.rest.api1.data.RestEditToken;
+import gov.vha.isaac.rest.tokens.EditToken;
+
 /**
- * This class is a trivial wrapper for a UUID value which is serializable/deserializable by JAXB
+ * This class is a wrapper for a renewed RestEditToken
+ * and several optional return values from write API calls,
+ * such as a UUID id, an Integer nid and an Integer sequence
  * 
- * {@link RestUUID}
+ * {@link RestWriteResponse}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
@@ -41,30 +46,89 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestUUID
+public class RestWriteResponse
 {
+	/**
+	 * The RestEditToken value
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	RestEditToken editToken;
+
 	/**
 	 * The UUID value
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	UUID value;
+	UUID uuid;
+
+	/**
+	 * The Integer NID value
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	Integer nid;
+
+	/**
+	 * The Integer sequence value
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	Integer sequence;
 	
-	RestUUID() {
+	RestWriteResponse() {
 		// For JAXB
 	}
 	
-	public RestUUID(UUID value)
+	public RestWriteResponse(RestEditToken editToken, UUID uuid, Integer nid, Integer sequence)
 	{
-		this.value = value;
+		this.uuid = uuid;
+		this.nid = nid;
+		this.sequence = sequence;
+		this.editToken = editToken;
+	}
+	public RestWriteResponse(RestEditToken editToken) {
+		this(editToken, null, null, null);
+	}
+
+	public RestWriteResponse(EditToken editToken, UUID uuid, Integer nid, Integer sequence)
+	{
+		this(new RestEditToken(editToken), uuid, nid, sequence);
+	}
+	public RestWriteResponse(EditToken editToken) {
+		this(editToken, null, null, null);
 	}
 
 	/**
-	 * @return the value
+	 * @return the optional UUID uuid
 	 */
 	@XmlTransient
-	public UUID getValue() {
-		return value;
+	public UUID getUUID() {
+		return uuid;
+	}
+
+	/**
+	 * @return the optional Integer nid
+	 */
+	@XmlTransient
+	public Integer getNid() {
+		return nid;
+	}
+
+	/**
+	 * @return the optional Integer sequence
+	 */
+	@XmlTransient
+	public Integer getSequence() {
+		return sequence;
+	}
+	
+	/**
+	 * @return the RestEditToken
+	 */
+	@XmlTransient
+	public RestEditToken getEditToken() {
+		return editToken;
 	}
 
 	/* (non-Javadoc)
@@ -72,6 +136,7 @@ public class RestUUID
 	 */
 	@Override
 	public String toString() {
-		return "RestUUID [value=" + value + "]";
+		return "RestWriteResponse [uuid=" + uuid + ", nid=" + nid + ", sequence=" + sequence + ", editToken="
+				+ editToken + "]";
 	}
 }
