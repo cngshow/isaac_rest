@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +106,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -146,8 +148,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 
-	//private final static String DUMMY_SSO_TOKEN = "A DUMMY SSO TOKEN";
-	
+	private static final String TEST_SSO_TOKEN = "Test_User:super_user,editor,read_only,approver,administrator,reviewer,manager";
+
 	@Override
 	protected Application configure()
 	{
@@ -302,38 +304,51 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, descriptionVersionsResult);
 	}
 
-	public static EditToken DEFAULT_EDIT_TOKEN = null;
-	
-	public EditToken getDefaultEditToken() {
-		if (DEFAULT_EDIT_TOKEN == null) {
-			int authorId = TermAux.IHTSDO_CLASSIFIER.getConceptSequence();
-			int moduleId = TermAux.SOLOR_OVERLAY_MODULE.getConceptSequence();
-			int pathId = TermAux.DEVELOPMENT_PATH.getConceptSequence();
+	public static String DEFAULT_EDIT_TOKEN_STRING = null;
+	public String getDefaultEditTokenString() {
+		if (DEFAULT_EDIT_TOKEN_STRING == null) {
+			Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
+					.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+			String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
+			RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
 
-			//String[] roles = new String[] { "super_user","administrator","read_only","editor","reviewer","approver","manager" };
-
-			DEFAULT_EDIT_TOKEN = EditTokens.getOrCreate(
-					authorId,
-					moduleId,
-					pathId,
-					(UUID)null,
-					UserRole.values());
+			DEFAULT_EDIT_TOKEN_STRING = restEditTokenObject.token;
 		}
 
-		return DEFAULT_EDIT_TOKEN;
+		return DEFAULT_EDIT_TOKEN_STRING;
 	}
 	
+	private UUID getDefaultWorkflowDefinition() {
+		Response getDefinitionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.allDefinitions)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getDefinitionsResponseResult = checkFail(getDefinitionsResponse).readEntity(String.class);
+		RestUUID[] availableDefinitions = XMLUtils.unmarshalObjectArray(RestUUID.class, getDefinitionsResponseResult);
+
+		Assert.assertNotNull(availableDefinitions);
+		Assert.assertTrue(availableDefinitions.length > 0);
+		Assert.assertNotNull(availableDefinitions[0]);
+		
+		UUID defaultDefinition = availableDefinitions[0].getValue();
+		
+		return defaultDefinition;
+	}
+
 	// PLACE TEST METHODS BELOW HERE
 	@Test
 	public void testWorkflowAPIs()
 	{
+		// Get an editToken string
 		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, "teststring")
+				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
 		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
 		
+		// Construct and EditToken object from editToken String
 		EditToken retrievedEditToken = null;
 		try {
 			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
@@ -341,64 +356,70 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		
-		Response getAdvancableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , "ad5e175b-3cf2-420a-9f35-136760a0f7a9")
+		UUID defaultDefinition = getDefaultWorkflowDefinition();
+		
+		// Pass new editToken string to available (processes)
+		Response getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
+				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
 				.queryParam(RequestParameters.editToken, retrievedEditToken.serialize())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getAdvancableProcessesResponseResult = checkFail(getAdvancableProcessesResponse).readEntity(String.class);
-		RestWorkflowProcessHistoriesMapEntry[] advancableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAdvancableProcessesResponseResult);
+		String getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
+		RestWorkflowProcessHistoriesMapEntry[] availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
 		
-		Assert.assertTrue(advancableProcesses == null || advancableProcesses.length == 0);
+		// We have not created any processes, so there should be no available processes returned
+		Assert.assertTrue(availableProcesses == null || availableProcesses.length == 0);
 		
-//		
-//		
-//		
-//		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-//		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-//		
-//		UUID definitionId = null;
-//		Integer processCreatorNid = null;
-//		String processName = "A test worklfow name";
-//		String processDescription = "A test worklfow description";
-//		
-//		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCrate();
-//		
-//		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-//		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
-//
-//		//System.out.println("Trying to retrieve concept " + parent1Sequence + " from " + RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence);
-//		Response getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + parent1Sequence)
-//				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		String conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
-//		RestConceptVersion conceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
-//		Assert.assertEquals(conceptVersionObject.getConChronology().getConceptSequence(), parent1Sequence);
+		// Test process creation
+		UUID random = UUID.randomUUID();
+		String wfProcessName = "Test WF Process Name (" + random + ")";
+		String wfProcessDescription = "Test WF Process Description (" + random + ")";
+		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCreate(
+				defaultDefinition,
+				wfProcessName,
+				wfProcessDescription);
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newProcessData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response createProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.createPathComponent + RestPaths.createProcess)
+				.queryParam(RequestParameters.editToken, retrievedEditToken.getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String createProcessResponseResult = checkFail(createProcessResponse).readEntity(String.class);
+		final RestUUID createdProcessRestUUIDObject = XMLUtils.unmarshalObject(RestUUID.class, createProcessResponseResult);
+		
+		Assert.assertNotNull(createdProcessRestUUIDObject);
+		UUID createdProcessUUID = createdProcessRestUUIDObject.getValue();
+
+		// Check for created process in retrieved available
+		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
+				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
+				.queryParam(RequestParameters.editToken, retrievedEditToken.serialize())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
+		availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
+		
+		// We have not created any processes, so there should be no available processes returned
+		Assert.assertNotNull(availableProcesses);
+		Assert.assertTrue(availableProcesses.length > 0);
+		boolean foundNewlyCreatedProcessAmongstRetrievedProcesses = false;
+		for (RestWorkflowProcessHistoriesMapEntry entry : availableProcesses) {
+			if (entry.getKey().getId().equals(createdProcessUUID)) {
+				foundNewlyCreatedProcessAmongstRetrievedProcesses = true;
+				break;
+			}
+		}
+		Assert.assertTrue(foundNewlyCreatedProcessAmongstRetrievedProcesses);
 	}
 	
 	@Test
 	public void testEditToken() {
-		EditToken editToken = getDefaultEditToken();
-		
-		String editTokenString = editToken.getSerialized();
-		
-		EditToken newEditToken = null;
-		try {
-			newEditToken = EditTokens.getOrCreate(editTokenString);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		
-		Assert.assertNotNull(newEditToken, "Failed creating EditToken from serialized EditToken: token=" + editToken + ", string=" + editTokenString);
-
-		Assert.assertEquals(newEditToken.getAuthorSequence(), editToken.getAuthorSequence());
-		Assert.assertEquals(newEditToken.getModuleSequence(), editToken.getModuleSequence());
-		Assert.assertEquals(newEditToken.getPathSequence(), editToken.getPathSequence());
-		Assert.assertEquals(newEditToken.getWorkflowProcessId(), editToken.getWorkflowProcessId());
-		
 		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, "TEST_JSON1")
+				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
@@ -413,9 +434,25 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertNull(retrievedEditToken.getWorkflowProcessId());
 		
+		// Test EditToken serialization/deserialization
+		String retrievedEditTokenString = retrievedEditToken.getSerialized();
+		EditToken newEditToken = null;
+		try {
+			newEditToken = EditTokens.getOrCreate(retrievedEditTokenString);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		
+		Assert.assertNotNull(newEditToken, "Failed creating EditToken from serialized EditToken: token=" + retrievedEditToken + ", string=" + retrievedEditTokenString);
+		Assert.assertEquals(newEditToken.getAuthorSequence(), retrievedEditToken.getAuthorSequence());
+		Assert.assertEquals(newEditToken.getModuleSequence(), retrievedEditToken.getModuleSequence());
+		Assert.assertEquals(newEditToken.getPathSequence(), retrievedEditToken.getPathSequence());
+		Assert.assertEquals(newEditToken.getWorkflowProcessId(), retrievedEditToken.getWorkflowProcessId());
+		
+		// Test retrieval of an EditToken with a modifying processId parameter
 		UUID testWfProcessUuid = UUID.randomUUID();
 		getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, "TEST_JSON1")
+				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
 				.queryParam(RequestParameters.processId , testWfProcessUuid.toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
@@ -477,7 +514,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		// POST new description data object
 		Response createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		checkFail(createDescriptionResponse);
@@ -526,7 +563,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(updateDescriptionResponse);
@@ -558,7 +595,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response deactivateDescriptionResponse = target(RestPaths.sememeUpdateStatePathComponent.replaceFirst(RestPaths.appPathComponent, "") + descriptionSememeSequence)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkContentlessFail(deactivateDescriptionResponse);
@@ -640,7 +677,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
@@ -766,7 +803,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response deactivateConceptResponse = target(RestPaths.conceptUpdateStateAppPathComponent + newConceptSequence)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(isActive));
 		checkContentlessFail(deactivateConceptResponse);
@@ -807,7 +844,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createNewMappingSetResponse = target(RestPaths.mappingSetCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
@@ -844,7 +881,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -900,7 +937,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
@@ -956,7 +993,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -1006,7 +1043,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
@@ -1037,7 +1074,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()

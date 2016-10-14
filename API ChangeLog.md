@@ -7,6 +7,10 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/13 - 1.5.6:
+    a.) Changing RestWorkflowAvailableAction to contain RestUserRoleType instead of UserRole
+    b.) Changing RestWorkflowComponentToStampMapEntry to contain RestStampedVersion instead of Stamp
+    c.) Changing RestWorkflowDefinitionDetail to contain Set<RestUserRoleType> instead of Set<UserRole>
 * 2016/10/13 - 1.5.5 - Cleaned up all Workflow APIs.  This includes: 
     a) removal of 4 methods (2 in WorkflowAPI and 2 in WorkflowWriteAPI) 
     b) renaming of methods and their fields to be more straight forward and consistent

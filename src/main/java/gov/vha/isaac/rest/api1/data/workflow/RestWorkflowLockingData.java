@@ -51,14 +51,14 @@ public class RestWorkflowLockingData {
 	 * The process id of the process to advance
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID processId;
 
 	/**
 	 * The boolean indicating whether to acquire lock (false is to release lock)
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	boolean acquireLock;
 
 	/**

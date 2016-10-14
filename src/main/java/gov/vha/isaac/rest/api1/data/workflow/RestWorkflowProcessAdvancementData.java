@@ -49,14 +49,14 @@ public class RestWorkflowProcessAdvancementData {
 	 * The process id of the process to advance
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID processId;
 
 	/**
 	 * The advancement action requested
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String actionRequested;
 	
 
@@ -64,7 +64,7 @@ public class RestWorkflowProcessAdvancementData {
 	 * The comment associated with the advancement
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String comment;
 
 	/**

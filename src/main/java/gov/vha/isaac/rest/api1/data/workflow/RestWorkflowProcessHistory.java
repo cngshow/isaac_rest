@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 
@@ -45,6 +46,7 @@ public class RestWorkflowProcessHistory
 	 * The identifier data
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID id;
 
 	/**

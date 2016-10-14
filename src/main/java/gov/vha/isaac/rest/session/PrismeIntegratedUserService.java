@@ -62,23 +62,77 @@ public class PrismeIntegratedUserService implements UserRoleService {
 //	 */
 
 	public static final String TEST_JSON1 = "{\"roles\":["
-			+ "{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
+			+ "{\"id\":19990,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 			+ ","
 			+ "{\"id\":19991,\"name\":\"editor\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 			+ ","
 			+ "{\"id\":19992,\"name\":\"reviewer\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 			+ ","
-			+ "{\"id\":19993,\"name\":\"approver\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
+			+ "{\"id\":19993,\"name\":\"administrator\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
+			+ ","
+			+ "{\"id\":19994,\"name\":\"manager\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
+			+ ","
+			+ "{\"id\":19995,\"name\":\"approver\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 			+ "],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
 	public static final String TEST_JSON2 = "{\"roles\":["
 			+ "{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ "],\"token_parsed?\":true,\"user\":\"VHAISHKniazJ\",\"type\":\"ssoi\",\"id\":10005}";
+			+ "],\"token_parsed?\":true,\"user\":\"VHAISBKniazJ\",\"type\":\"ssoi\",\"id\":10005}";
 	public static final String TEST_JSON3 = "{\"roles\":["
 			+ "{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 			+ ","
 			+ "{\"id\":19991,\"name\":\"editor\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 			+ "],\"token_parsed?\":true,\"user\":\"VHAISHEfronJ\",\"type\":\"ssoi\",\"id\":10005}";
 
+	/**
+	 * 
+	 * Attempt to construct a user from a string of the following format:
+	 * 
+	 * {name}:{role1}[{,role2}[{,role3}[...]]]
+	 * 
+	 * @param arg
+	 * @return
+	 */
+	private static Optional<String> constructTestUser(String arg) {
+		try {
+			String[] components = arg.split(":");
+
+			String name = null;
+			Set<UserRole> roles = new HashSet<>();
+			if (components.length == 2) {
+				if (components[0].matches("[A-Za-z][A-Za-z0-9_]*")) {
+					name = components[0].trim();
+
+					String[] roleStrings = components[1].split(",");
+
+					for (int i = 0; i < roleStrings.length; ++i) {
+						roles.add(UserRole.safeValueOf(roleStrings[i].trim()).get());
+					}
+				}
+			}
+			
+			if (name != null && name.length() > 0 && roles.size() > 0) {
+				StringBuilder builder = new StringBuilder();
+				builder.append("{\"roles\":[");
+				boolean addedRole = false;
+				for (UserRole role : roles) {
+					if (addedRole) {
+						builder.append(",");
+					}
+					builder.append("{\"id\":19990,\"name\":\"" + role.toString() + "\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}");
+
+					addedRole = true;
+				}
+				
+				builder.append("],\"token_parsed?\":true,\"user\":\"" + name + "\",\"type\":\"ssoi\",\"id\":10005}");
+				
+				return Optional.of(builder.toString());
+			}
+		} catch (Exception e) {
+			// ignore
+		}
+
+		return Optional.empty();
+	}
 
 	private PrismeIntegratedUserService() {
 		//for HK2
@@ -90,24 +144,34 @@ public class PrismeIntegratedUserService implements UserRoleService {
 	 * @param ssoToken
 	 *            the user's SSO token string
 	 * @return the user and roles available to the user
+	 * 
+	 * For test purposes, attempt to construct a user from a string of the following format:
+	 * {name}:{role1}[{,role2}[{,role3}[...]]]
+	 *
 	 */
 	public Optional<User> getUser(String ssoToken) {
 		String jsonToUse = null;
-		if (ssoToken.equals(TEST_JSON1)) {
-			jsonToUse = TEST_JSON1;
-		} else if (ssoToken.equals(TEST_JSON2)) {
-			jsonToUse = TEST_JSON2;
-		} else if (ssoToken.equals(TEST_JSON3)) {
-			jsonToUse = TEST_JSON3;
-		} else if (ssoToken.equals("TEST_JSON1")) {
-			jsonToUse = TEST_JSON1;
-		} else if (ssoToken.equals("TEST_JSON2")) {
-			jsonToUse = TEST_JSON2;
-		} else if (ssoToken.equals("TEST_JSON3")) {
-			jsonToUse = TEST_JSON3;
+		
+		Optional<String> createdJson = constructTestUser(ssoToken);
+		if (createdJson.isPresent()) {
+			jsonToUse = createdJson.get();
 		} else {
-			// Either a real SSO token or custom JSON
-			jsonToUse = ssoToken;
+			if (ssoToken.equals(TEST_JSON1)) {
+				jsonToUse = TEST_JSON1;
+			} else if (ssoToken.equals(TEST_JSON2)) {
+				jsonToUse = TEST_JSON2;
+			} else if (ssoToken.equals(TEST_JSON3)) {
+				jsonToUse = TEST_JSON3;
+			} else if (ssoToken.equals("TEST_JSON1")) {
+				jsonToUse = TEST_JSON1;
+			} else if (ssoToken.equals("TEST_JSON2")) {
+				jsonToUse = TEST_JSON2;
+			} else if (ssoToken.equals("TEST_JSON3")) {
+				jsonToUse = TEST_JSON3;
+			} else {
+				// Either a real SSO token or custom JSON
+				jsonToUse = ssoToken;
+			}
 		}
 
 		/*

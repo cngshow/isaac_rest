@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.commit.Stamp;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 
@@ -41,7 +42,7 @@ public class RestStampedVersion
 	 * The stamp sequence of this version
 	 */
 	@XmlElement
-	public int stampSequence;
+	public int stampSequence; // TODO remove or change from into to Integer
 	
 	/**
 	 * The State of this version (active, inactive, primordial or cancelled)
@@ -91,5 +92,23 @@ public class RestStampedVersion
 		pathSequence = sv.getPathSequence();
 		moduleSequence = sv.getModuleSequence();
 	}
+	public RestStampedVersion(Stamp s)
+	{
+		stampSequence = -1; // TODO remove or change from int to Integer
+		state = new RestStateType(s.getStatus());
+		time = s.getTime();
+		authorSequence = s.getAuthorSequence();
+		pathSequence = s.getPathSequence();
+		moduleSequence = s.getModuleSequence();
+	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestStampedVersion [stampSequence=" + stampSequence + ", state=" + state + ", time=" + time
+				+ ", authorSequence=" + authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence="
+				+ pathSequence + "]";
+	}
 }
