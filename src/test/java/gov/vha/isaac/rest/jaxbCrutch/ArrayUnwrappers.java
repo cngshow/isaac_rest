@@ -20,8 +20,8 @@ package gov.vha.isaac.rest.jaxbCrutch;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
@@ -135,6 +135,19 @@ public class ArrayUnwrappers
 		public Object[] getValues()
 		{
 			return restWorkflowAvailableAction;
+		}
+	}
+	
+	
+	@XmlRootElement
+	public static class RestAssociationTypeVersions implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestAssociationTypeVersion[] restAssociationTypeVersion;
+		
+		public Object[] getValues()
+		{
+			return restAssociationTypeVersion;
 		}
 	}
 }

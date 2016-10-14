@@ -2375,10 +2375,33 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociation.description, "Just a test description type");
 		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
 		
-		//TODO check if in list
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
+					.queryParam(RequestParameters.expand, "referencedConcept")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
+		
+		RestAssociationTypeVersion[] createdAssociations = XMLUtils.unmarshalObjectArray(RestAssociationTypeVersion.class, result);
+		
+		Assert.assertEquals(1, createdAssociations.length);
+		Assert.assertEquals(createdAssociations[0].associationName, "test");
+		Assert.assertEquals(createdAssociations[0].description, "Just a test description type");
+		Assert.assertEquals(createdAssociations[0].associationInverseName, "inverse Test");
+		Assert.assertEquals(createdAssociations[0].associationConcept.getIdentifiers().getFirst(), createdAssociationId.getValue());
+		
+		//test create on association item(s)
+		
+		
+		
+		
+		//test update association
+		
+		
+		
+		//test query by source
+		
+		//test query by target
+		
+		//test query by type
 	}	
 	
 	private String jsonIze(String[] names, String[] values)
