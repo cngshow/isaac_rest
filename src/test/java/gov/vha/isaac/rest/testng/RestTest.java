@@ -2354,7 +2354,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Make one
 		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 					+ RestPaths.associationComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationName", "associationInverseName", "description"}, 
