@@ -163,7 +163,7 @@ public class AssociationWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.createPathComponent)
-	public RestUUID createNewMappingItem(
+	public RestUUID createNewAssociationItem(
 		RestAssociationItemVersionBaseCreate associationItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -193,7 +193,7 @@ public class AssociationWriteAPIs
 		}
 
 		DynamicSememeData[] data = new DynamicSememeData[1];
-		data[0] = (target.isPresent() ? null : new DynamicSememeUUIDImpl(target.get()));
+		data[0] = (target.isPresent() ?  new DynamicSememeUUIDImpl(target.get()) : null);
 		
 		SememeBuilder<? extends SememeChronology<?>> sb =  Get.sememeBuilderService().getDynamicSememeBuilder(
 				source.get().getNid(), associationItemCreationData.associationTypeSequence, data);
@@ -239,7 +239,7 @@ public class AssociationWriteAPIs
 	//TODO fix the comments above around editToken 
 	@PUT
 	@Path(RestPaths.associationItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
-	public RestUUID updateMappingItem(
+	public RestUUID updateAssociationItem(
 		RestAssociationItemVersionBase associationItemUpdateData,
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.state) String state,
