@@ -28,10 +28,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.workflow.model.contents.DefinitionDetail;
+import gov.vha.isaac.rest.api1.data.enumerations.RestUserRoleType;
 
 /**
  * The metadata defining a given process (or workflow instance). This doesn't
@@ -50,27 +52,33 @@ public class RestWorkflowDefinitionDetail
 	 * The definition identifier
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID id;
 
 	/** The bpmn2 id that contains the definition if it exists. */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String bpmn2Id;
 
 	/** The definition name. */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String name;
 
 	/** The definition namespace. */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String namespace;
 
 	/** The version of the definition. */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String version;
 
 	/** The workflow roles available defined via the definition . */
 	@XmlElement
-	Set<UserRole> roles = new HashSet<>();
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	Set<RestUserRoleType> roles = new HashSet<>();
 
 	/**
 	 * Constructor for JAXB only
@@ -90,7 +98,9 @@ public class RestWorkflowDefinitionDetail
 		this.name = processDetail.getName();
 		this.namespace = processDetail.getNamespace();
 		this.version = processDetail.getVersion();
-		this.roles = processDetail.getRoles();
+		for (UserRole role : processDetail.getRoles()) {
+			this.roles.add(new RestUserRoleType(role));
+		}
 	}
 
 	/**
@@ -137,7 +147,7 @@ public class RestWorkflowDefinitionDetail
 	 * @return the roles
 	 */
 	@XmlTransient
-	public Set<UserRole> getRoles() {
+	public Set<RestUserRoleType> getRoles() {
 		return Collections.unmodifiableSet(roles);
 	}
 

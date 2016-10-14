@@ -49,21 +49,21 @@ public class RestWorkflowProcessBaseCreate {
 	 * The workflow definition id
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID definitionId;
 
 	/**
 	 * The process name
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String name;
 
 	/**
 	 * The process description
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String description;
 	
 	/**

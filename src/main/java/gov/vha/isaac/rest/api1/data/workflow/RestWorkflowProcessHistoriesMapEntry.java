@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
@@ -43,12 +44,14 @@ public class RestWorkflowProcessHistoriesMapEntry
 	 * The key {@link RestWorkflowProcess}
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestWorkflowProcess key;
 
 	/**
 	 * The array of {@link RestWorkflowProcessHistory} objects
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestWorkflowProcessHistory[] value;
 
 	/**
