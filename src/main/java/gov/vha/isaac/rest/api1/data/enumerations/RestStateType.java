@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlRootElement;
-
+import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -55,6 +55,10 @@ public class RestStateType extends Enumeration
 	}
 	
 	public static RestStateType valueOf(String str) throws RestException {
+		if (StringUtils.isBlank(str))
+		{
+			throw new RestException(RequestParameters.state, "The state parameter is required");
+		}
 		String match = str.trim().toLowerCase(Locale.ENGLISH);
 		for (State spValue : State.values()) {
 			if (spValue.name().equalsIgnoreCase(match) || spValue.getAbbreviation().toLowerCase(Locale.ENGLISH).equals(match)) {
