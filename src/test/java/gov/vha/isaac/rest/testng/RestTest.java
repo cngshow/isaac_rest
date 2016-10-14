@@ -79,6 +79,7 @@ import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
 import gov.vha.isaac.rest.api1.data.RestEditToken;
 import gov.vha.isaac.rest.api1.data.RestId;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
@@ -2390,12 +2391,90 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//test create on association item(s)
 		
+		//Make one
+		Response createAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+					+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+						jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+								new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.DOD_MODULE.getNid() + "", 
+										MetaData.AND.getNid() + ""})));
+		
+		result = checkFail(createAssociationItemResponse).readEntity(String.class);
+		RestUUID createdAssociationItemId = XMLUtils.unmarshalObject(RestUUID.class, result);
+		
+		//readBack
+		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.getValue().toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestAssociationItemVersion createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
+		
+		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.getValue());
+		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
+		Assert.assertEquals(createdAssociationItem.targetNid.intValue(), MetaData.AND.getNid());
+		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
+		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
 		
 		
 		
 		//test update association
+		Response updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.getValue().toString())
+			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.queryParam(RequestParameters.state, "inactive")
+			.request()
+			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
+					jsonIze(new String[] {"targetNid"}, 
+							new String[] {""})));
+	
+		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
+		RestUUID updatedAssociationItemId = XMLUtils.unmarshalObject(RestUUID.class, result);
 		
+		Assert.assertEquals(updatedAssociationItemId.getValue(), createdAssociationItemId.getValue());
 		
+		//readBack
+		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.getValue().toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
+		
+		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.getValue());
+		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
+		Assert.assertNull(createdAssociationItem.targetNid);
+		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
+		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
+			
+		
+		//Make more stuff for queries
+		UUID descType2 = XMLUtils
+				.unmarshalObject(RestUUID.class,
+						checkFail(target(
+								RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + RestPaths.createPathComponent)
+										.queryParam(RequestParameters.editToken, getDefaultEditTokenString()).request()
+										.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+										.post(Entity.json(jsonIze(new String[] { "associationName", "associationInverseName", "description" },
+												new String[] { "foo", "oof", "another test description type" })))).readEntity(String.class)).getValue();
+	
+		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.request()
+			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+							new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.AMT_MODULE.getNid() + "", ""}))));
+		
+		//TODO put this on the other association type
+		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.request()
+			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+							new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.AMT_MODULE.getNid() + "", 
+									MetaData.AXIOM_ORIGIN.getNid() + ""}))));
 		
 		//test query by source
 		
