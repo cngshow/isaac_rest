@@ -78,6 +78,7 @@ import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
 import gov.vha.isaac.rest.api1.data.RestEditToken;
 import gov.vha.isaac.rest.api1.data.RestId;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
@@ -2303,6 +2304,64 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 	}
 	
-//	public static void main(String[] argv) {
-//	}
+	@Test
+	public void testAssociations()
+	{
+		String result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		//No associations in the metadata
+		Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
+		
+		//Make one
+		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+					+ RestPaths.associationComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditToken().getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+						jsonIze(new String[] {"associationName", "associationInverseName", "description"}, 
+								new String[] {"test", "inverse Test", "Just a test description type"})));
+		result = checkFail(createAssociationResponse).readEntity(String.class);
+		
+		RestUUID createdAssociationId = XMLUtils.unmarshalObject(RestUUID.class, result);
+		
+		//Read back
+		
+		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + createdAssociationId.getValue().toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestAssociationTypeVersion createdAssociation = XMLUtils.unmarshalObject(RestAssociationTypeVersion.class, result);
+		
+		Assert.assertEquals(createdAssociation.associationName, "test");
+		Assert.assertEquals(createdAssociation.description, "Just a test description type");
+		//TODO this is broken
+//		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
+		
+		//TODO check if in list
+		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
+					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+					.readEntity(String.class);
+	}	
+	
+	private String jsonIze(String[] names, String[] values)
+	{
+		String temp = "\n    ";
+		StringBuilder sb = new StringBuilder();
+		sb.append("{").append(temp);
+		for (int i = 0; i < names.length; i++)
+		{
+			sb.append("\"");
+			sb.append(names[i]);
+			sb.append("\":\"");
+			sb.append(values[i]);
+			sb.append("\",");
+			sb.append(temp);
+		}
+		sb.setLength(sb.length() - (temp.length() + 1));
+		sb.append("}");
+		return sb.toString();
+	}
+
 }
