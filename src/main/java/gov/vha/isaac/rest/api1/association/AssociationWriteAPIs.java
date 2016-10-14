@@ -52,6 +52,7 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionBase;
@@ -61,6 +62,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -85,7 +87,7 @@ public class AssociationWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationComponent + RestPaths.createPathComponent)
-	public RestUUID createNewAssociationType(
+	public RestWriteResponse createNewAssociationType(
 		RestAssociationTypeVersionBaseCreate associationCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -150,7 +152,11 @@ public class AssociationWriteAPIs
 		{
 			throw new RuntimeException();
 		}
-		return new RestUUID(Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get());
+		return new RestWriteResponse(
+				EditTokens.renew(RequestInfo.get().getEditToken()),
+				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
+				null, 
+				rdud.getDynamicSememeUsageDescriptorSequence());
 	}
 	
 	/**
@@ -165,7 +171,7 @@ public class AssociationWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.createPathComponent)
-	public RestUUID createNewAssociationItem(
+	public RestWriteResponse createNewAssociationItem(
 		RestAssociationItemVersionBaseCreate associationItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -223,7 +229,9 @@ public class AssociationWriteAPIs
 			throw new RestException("Failed committing new association item sememe");
 		}
 		
-		return new RestUUID(built.getPrimordialUuid());
+		return new RestWriteResponse(
+				EditTokens.renew(RequestInfo.get().getEditToken()),
+				built.getPrimordialUuid());
 	}
 	
 	/**
@@ -242,7 +250,7 @@ public class AssociationWriteAPIs
 	//TODO fix the comments above around editToken 
 	@PUT
 	@Path(RestPaths.associationItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
-	public RestUUID updateAssociationItem(
+	public RestWriteResponse updateAssociationItem(
 		RestAssociationItemVersionBase associationItemUpdateData,
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.state) String state,
@@ -287,7 +295,9 @@ public class AssociationWriteAPIs
 		{
 			throw new RuntimeException();
 		}
-		return new RestUUID(associationItemSememeChronology.getPrimordialUuid());
+		return new RestWriteResponse(
+				EditTokens.renew(RequestInfo.get().getEditToken()),
+				associationItemSememeChronology.getPrimordialUuid());
 		
 	}
 }

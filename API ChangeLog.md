@@ -7,6 +7,9 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/13 - 1.5.8: Changed return type of all write methods in the Associations API to be RestWriteResponse.  Bug fixes in association API
+    implementation code.  BUG - getTargetAssociations does not work for newly created association types / associations.  (problem with underlying
+    lucene indexes not updating after the commit)
 * 2016/10/13 - 1.5.7: Changing WorkflowWriteAPIs APIs to return RestWriteResponse object containing renewed EditToken along with optional identifiers
 * 2016/10/13 - 1.5.6:
     a.) Changing RestWorkflowAvailableAction to contain RestUserRoleType instead of UserRole
@@ -19,16 +22,16 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     d) simplified paths to call 
     e) removed commented out or no longer utilized resources like Workflow Data classes or items in RestPaths
     API changes are below that will break compatibility...    
-	* Removals
-		* getDefaultDefinition 
-			* workflow/defaultDefinition
-			* RestPaths.defaultDefinitionComponent
-		* getAllRoles()
-			* workflow/allRoles
-			* RestPaths.allRolesComponent
-		* releaseWorkflowLock ()
-			* workflow/update/releaseWorkflowLock 
-			* RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent 
+    * Removals
+        * getDefaultDefinition 
+            * workflow/defaultDefinition
+            * RestPaths.defaultDefinitionComponent
+        * getAllRoles()
+            * workflow/allRoles
+            * RestPaths.allRolesComponent
+        * releaseWorkflowLock ()
+            * workflow/update/releaseWorkflowLock 
+            * RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent 
     * Renames
         * getAvailableDefinitions()
             * Now Method Called:  getDefinitions()
@@ -91,12 +94,11 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
                 * RestUUID processId (was RestWorkflowLockAquisitionData lockAquisitionData) 
             * New Input
                 * RestUUID ownerId 
-		* removeComponentFromWorkflow ()
-			* Now Method Called: removeComponentFromProcess ()
-			* New Rest Path: 
-				* workflow/update/process/component (was workflow/update/removeComponentFromWorkflow)
-				* RestPaths. updatePathComponent + RestPaths.removeComponent (was RestPaths.updatePathComponent + RestPaths. removeComponentFromWorkflowComponent)
-				
+        * removeComponentFromWorkflow ()
+            * Now Method Called: removeComponentFromProcess ()
+            * New Rest Path: 
+                * workflow/update/process/component (was workflow/update/removeComponentFromWorkflow)
+                * RestPaths. updatePathComponent + RestPaths.removeComponent (was RestPaths.updatePathComponent + RestPaths. removeComponentFromWorkflowComponent)
 * 2016/10/13 - 1.5.4 - Replaced all references to String roles with instances of new UserRole enum or corresponding RestUserRoleType Enumeration, 
     handling specific test String values of ssoToken in getEditToken() ("TEST_JSON1", "TEST_JSON2", "TEST_JSON3").  Changed RestWorkflowAvailableAction 
     and RestWorkflowDefinitionDetail DTOs, which will break APIs.
