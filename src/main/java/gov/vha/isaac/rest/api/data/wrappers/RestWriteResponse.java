@@ -19,17 +19,15 @@
 package gov.vha.isaac.rest.api.data.wrappers;
 
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.RestEditToken;
 import gov.vha.isaac.rest.tokens.EditToken;
 
@@ -49,86 +47,96 @@ import gov.vha.isaac.rest.tokens.EditToken;
 public class RestWriteResponse
 {
 	/**
-	 * The RestEditToken value
+	 * The RestEditToken value - updated to be valid for a future submit.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	RestEditToken editToken;
+	public RestEditToken editToken;
 
 	/**
-	 * The UUID value
+	 * The UUID value of the item that was created or updated.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	UUID uuid;
+	public UUID uuid;
 
 	/**
-	 * The Integer NID value
+	 * The Integer NID value of the item created or updated (if applicable, may be null)
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Integer nid;
+	public Integer nid;
 
 	/**
-	 * The Integer sequence value
+	 * The Integer sequence value of the item created or updated (if applicable, may be null)
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Integer sequence;
+	public Integer sequence;
 	
 	RestWriteResponse() {
 		// For JAXB
 	}
 	
+	/**
+	 * If nid or uuid is populated, it will autopopulate any missing values of nid, uuid or sequence.
+	 * The UUID is checked for system validity, if provided (nid and sequence is not populated if uuid isn't valid)
+	 * 
+	 */
 	public RestWriteResponse(RestEditToken editToken, UUID uuid, Integer nid, Integer sequence)
 	{
 		this.uuid = uuid;
 		this.nid = nid;
 		this.sequence = sequence;
 		this.editToken = editToken;
+		if (nid == null || sequence == null || uuid == null)
+		{
+			if (nid != null || uuid != null)
+			{
+				//populate what is missing.
+				if (nid != null && uuid == null)
+				{
+					uuid = Get.identifierService().getUuidPrimordialForNid(nid).get();
+				}
+				if (uuid != null && nid == null && Get.identifierService().hasUuid(uuid))
+				{
+					
+					nid = Get.identifierService().getNidForUuids(uuid);
+				}
+			}
+			if (sequence == null && nid != null)
+			{
+				ObjectChronologyType oct = Get.identifierService().getChronologyTypeForNid(nid); 
+				if (oct == ObjectChronologyType.CONCEPT)
+				{
+					sequence = Get.identifierService().getConceptSequence(nid);
+				}
+				else if (oct == ObjectChronologyType.SEMEME)
+				{
+					sequence = Get.identifierService().getSememeSequence(nid);
+				}
+			}
+		}
 	}
-	public RestWriteResponse(RestEditToken editToken) {
-		this(editToken, null, null, null);
-	}
-
+	
+	/**
+	 * If nid or uuid is populated, it will autopopulate any missing values of nid, uuid or sequence.
+	 */
 	public RestWriteResponse(EditToken editToken, UUID uuid, Integer nid, Integer sequence)
 	{
 		this(new RestEditToken(editToken), uuid, nid, sequence);
 	}
-	public RestWriteResponse(EditToken editToken) {
-		this(editToken, null, null, null);
-	}
-
-	/**
-	 * @return the optional UUID uuid
-	 */
-	@XmlTransient
-	public UUID getUUID() {
-		return uuid;
-	}
-
-	/**
-	 * @return the optional Integer nid
-	 */
-	@XmlTransient
-	public Integer getNid() {
-		return nid;
-	}
-
-	/**
-	 * @return the optional Integer sequence
-	 */
-	@XmlTransient
-	public Integer getSequence() {
-		return sequence;
-	}
 	
 	/**
-	 * @return the RestEditToken
+	 * Populates nid and sequence from UUID, if the UUID is in the system.
 	 */
-	@XmlTransient
-	public RestEditToken getEditToken() {
-		return editToken;
+	public RestWriteResponse(EditToken editToken, UUID uuid)
+	{
+		this(new RestEditToken(editToken), uuid, null, null);
+	}
+	
+	public RestWriteResponse(EditToken editToken) {
+		this(editToken, null, null, null);
 	}
 
 	/* (non-Javadoc)
