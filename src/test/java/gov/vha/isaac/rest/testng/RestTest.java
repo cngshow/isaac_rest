@@ -2442,8 +2442,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertEquals(createdAssociation.associationName, "test");
 		Assert.assertEquals(createdAssociation.description, "Just a test description type");
-		//TODO this is broken
-//		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
+		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
 		
 		//TODO check if in list
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
