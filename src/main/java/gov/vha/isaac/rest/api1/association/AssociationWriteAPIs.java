@@ -75,8 +75,9 @@ public class AssociationWriteAPIs
 
 	/**
 	 * @param associationCreationData - object containing data used to create new association
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the UUID identifying the created concept which defines the association
 	 * @throws RestException
 	 */
@@ -154,8 +155,9 @@ public class AssociationWriteAPIs
 	
 	/**
 	 * @param associationItemCreationData - RestAssociationItemVersionBaseCreate object containing data to create new association item
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the sememe UUID identifying the sememe which stores the created association item
 	 * @throws RestException
 	 */
@@ -231,8 +233,9 @@ public class AssociationWriteAPIs
 	 * @param associationItemUpdateData - object containing data used to update existing association item
 	 * @param id - id of association item sememe to update
 	 * @param state - The state to mapping item into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the sememe UUID identifying the sememe which was updated
 	 * @throws RestException
 	 */

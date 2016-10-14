@@ -113,6 +113,30 @@ public class EditTokens {
 		}
 	}
 
+	public static EditToken renew(EditToken token) throws RestException {
+		EditToken existingToken = get(token.getSerialized());
+		
+		if (existingToken == null) {
+			return getOrCreate(token.getSerialized());
+		} else {
+			token.setInvalidForSubmit();
+			OBJECT_BY_TOKEN_CACHE.remove(token.getSerialized());
+			return getOrCreate(token.getSerialized());
+		}
+	}
+
+	public static EditToken renew(String tokenString) throws RestException {
+		EditToken token = get(tokenString);
+		
+		if (token == null) {
+			return getOrCreate(tokenString);
+		} else {
+			token.setInvalidForSubmit();
+			OBJECT_BY_TOKEN_CACHE.remove(tokenString);
+			return getOrCreate(tokenString);
+		}
+	}
+
 	public static EditToken getOrCreate(String key) throws RestException {
 		EditToken token = get(key);
 		

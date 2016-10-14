@@ -88,8 +88,9 @@ public class ConceptWriteAPIs
 	
 	/**
 	 * @param creationData - object containing data used to create new concept
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the sequence identifying the created concept
 	 * @throws RestException
 	 */
@@ -239,8 +240,9 @@ public class ConceptWriteAPIs
 	}
 
 	/**
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	@PUT
@@ -260,8 +262,9 @@ public class ConceptWriteAPIs
 	}
 
 	/**
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	@PUT
@@ -282,8 +285,9 @@ public class ConceptWriteAPIs
 	
 
 	/**
-	 * @param editToken - the edit coordinates identifying who is making the edit.  An EditToken must be obtained by a separate (prior) call to 
-	 * getEditCoordinatesToken().
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	@PUT

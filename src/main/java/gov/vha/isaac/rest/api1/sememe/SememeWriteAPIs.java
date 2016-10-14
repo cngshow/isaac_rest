@@ -78,7 +78,9 @@ public class SememeWriteAPIs
 	/**
 	 * Create a new description sememe associated with a specified concept
 	 * 
-	 * @param editToken - the edit coordinates identifying who is making the edit
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	@POST
@@ -155,7 +157,9 @@ public class SememeWriteAPIs
 	 * @param id The id for which to determine RestSememeType
 	 * If an int then assumed to be a sememe NID or sequence
 	 * If a String then parsed and handled as a sememe UUID
-	 * @param editToken - the edit coordinates identifying who is making the edit
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	@PUT
@@ -208,7 +212,9 @@ public class SememeWriteAPIs
 	 * @param id The id for which to determine RestSememeType
 	 * If an int then assumed to be a sememe NID or sequence
 	 * If a String then parsed and handled as a sememe UUID
-	 * @param editToken - the edit coordinates identifying who is making the edit
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
 	@PUT
