@@ -132,7 +132,6 @@ public class AssociationWriteAPIs
 					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).setAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT)
 						.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 			
-			//TODO change this inverse name thing to an extended description type
 			Get.sememeBuilderService().getDynamicSememeBuilder(builtDesc.getNid(),DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence())
 				.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 		}
