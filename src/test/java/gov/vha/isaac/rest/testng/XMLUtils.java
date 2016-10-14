@@ -119,7 +119,7 @@ public class XMLUtils {
 			jaxbContext = JAXBContext.newInstance(ArrayUnwrappers.RestCommentVersions.class, ArrayUnwrappers.RestSememeDescriptionVersions.class, 
 					ArrayUnwrappers.RestMappingSetVersions.class, ArrayUnwrappers.RestMappingItemVersions.class, ArrayUnwrappers.RestWorkflowProcessHistories.class, 
 					ArrayUnwrappers.RestWorkflowProcessHistoriesMapEntries.class, ArrayUnwrappers.RestUUIDs.class, ArrayUnwrappers.RestWorkflowAvailableActions.class, 
-					ArrayUnwrappers.RestAssociationTypeVersions.class);
+					ArrayUnwrappers.RestAssociationTypeVersions.class, ArrayUnwrappers.RestAssociationItemVersions.class);
 
 			Unmarshaller unMarshaller = jaxbContext.createUnmarshaller();
 			ArrayUnwrapper object = (ArrayUnwrapper)unMarshaller.unmarshal(streamSource);

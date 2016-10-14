@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.jaxbCrutch;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
@@ -143,11 +144,23 @@ public class ArrayUnwrappers
 	public static class RestAssociationTypeVersions implements ArrayUnwrapper
 	{
 		@XmlElement
-		protected RestAssociationTypeVersion[] restAssociationTypeVersion;
+		protected RestAssociationTypeVersion[] restAssociationTypeVersion = new RestAssociationTypeVersion[] {};
 		
 		public Object[] getValues()
 		{
 			return restAssociationTypeVersion;
 		}
 	}
+	
+	@XmlRootElement
+	public static class RestAssociationItemVersions implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestAssociationItemVersion[] restAssociationItemVersion = new RestAssociationItemVersion[] {};
+		
+		public Object[] getValues()
+		{
+			return restAssociationItemVersion;
+		}
+	}	
 }
