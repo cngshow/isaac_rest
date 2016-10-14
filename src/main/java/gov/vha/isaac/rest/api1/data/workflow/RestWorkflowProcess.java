@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.commit.Stamp;
@@ -52,42 +53,49 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 * The workflow process identifier
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID id;
 
 	/**
 	 * The creator concept id
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID creatorId; 
 	
 	/**
 	 * The time workflow process created
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	long timeCreated;
 
 	/**
 	 * The time workflow process launched
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	long timeLaunched = -1L;
 
 	/**
 	 * The time workflow process cancelled or concluded
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	long timeCancelledOrConcluded = -1L;
 
 	/**
 	 * The defining workflow process status
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestWorkflowProcessStatusType processStatus;
 
 	/**
 	 * The component nids associated with the workflow process and their respective stamps
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Set<RestWorkflowComponentToStampMapEntry> componentToStampMap = new HashSet<>();
 
 	/**

@@ -88,7 +88,8 @@ public class AssociationAPIs
 		
 		for (int i : associationConcepts)
 		{
-			results.add(new RestAssociationTypeVersion(AssociationType.read(i, RequestInfo.get().getStampCoordinate())));
+			results.add(new RestAssociationTypeVersion(AssociationType.read(i, RequestInfo.get().getStampCoordinate(), 
+					RequestInfo.get().getLanguageCoordinate())));
 		}
 		
 		Collections.sort(results, new Comparator<RestAssociationTypeVersion>()
@@ -130,7 +131,8 @@ public class AssociationAPIs
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		return new RestAssociationTypeVersion(AssociationType.read(Util.convertToConceptSequence(id), RequestInfo.get().getStampCoordinate()));
+		return new RestAssociationTypeVersion(AssociationType.read(Util.convertToConceptSequence(id), RequestInfo.get().getStampCoordinate(), 
+				RequestInfo.get().getLanguageCoordinate()));
 	}
 	
 	/**

@@ -7,6 +7,11 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/13 - 1.5.7: Changing WorkflowWriteAPIs APIs to return RestWriteResponse object containing renewed EditToken along with optional identifiers
+* 2016/10/13 - 1.5.6:
+    a.) Changing RestWorkflowAvailableAction to contain RestUserRoleType instead of UserRole
+    b.) Changing RestWorkflowComponentToStampMapEntry to contain RestStampedVersion instead of Stamp
+    c.) Changing RestWorkflowDefinitionDetail to contain Set<RestUserRoleType> instead of Set<UserRole>
 * 2016/10/13 - 1.5.5 - Cleaned up all Workflow APIs.  This includes: 
     a) removal of 4 methods (2 in WorkflowAPI and 2 in WorkflowWriteAPI) 
     b) renaming of methods and their fields to be more straight forward and consistent
@@ -25,67 +30,67 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
 			* workflow/update/releaseWorkflowLock 
 			* RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent 
     * Renames
-		* getAvailableDefinitions()
-			* Now Method Called:  getDefinitions()
-			* New Rest Path:
-				* workflow/definition/all (was workflow/availableDefinitions) 
-				* RestPaths.allDefinitions (was RestPaths. availableDefinitionsComponent)
-		* getProcess()
-			* New Rest Path: 
-				* workflow/definition/all (was workflow/process) 
-				* RestPaths.locked (was RestPaths.workflowLockStateComponent)
-			* Renamed Inputs
-				* processId (was wfProcessId)
- 		* getHistoriesForProcess ()
-			* Now Method Called: getProcessHistory ()
-			* New Rest Path: 
-				* workflow/process/history (was workflow/historiesForProcess)
-				* RestPaths.history (was RestPaths.historiesForProcessComponent)
-			* Renamed Inputs
-				* processId (was wfProcessId) 
-		* isWorkflowLocked ()
-			* Now Method Called: isProcessLocked()
-			* New Rest Path: 
-				* workflow/process/locked (was workflow/workflowLockState)
-				* RestPaths.locked (was RestPaths.workflowLockStateComponent)
-			* Renamed Inputs
-				* processId (was wfProcessId) 
-		* getActionsForProcessAndUser ()
-			* Now Method Called: getProcessActions()
-			* New Rest Path: 
-				* workflow/process/actions (was workflow/actionsForProcessAndUser)
-				* RestPaths.actions (was RestPaths.actionsForProcessAndUserComponent)
-			* Renamed Inputs
-				* processId (was wfProcessId) 
-			* Other Note: originally, fields were ordered “wfProcessId, editToken”.  The order was reversed to “editToken, processId”
-		* getActionsForProcessAndUser()
-			* Now Method Called: getAvailableProcesses()
-			* New Rest Path: 
-				* workflow/process/available (was workflow/advanceableProcessInformation)
-				* RestPaths.available (was RestPaths.advanceableProcessInformationComponent)
-			* Renamed Inputs
-				* definitionId (was wfDefinitionId) 
-		* createWorkflowProcess ()
-			* Now Method Called: createInstance ()
-			* New Rest Path: 
-				* workflow/create/process/create (was workflow/create/createWorkflowProcess)
-				* RestPaths.createPathComponent + RestPaths.createProcess (was RestPaths.createPathComponent + RestPaths.createWorkflowProcessComponent)
-			* Renamed Inputs
-				* definitionId (was wfDefinitionId) 
-		* advanceWorkflowProcess ()
-			* Now Method Called: advanceProcess ()
-			* New Rest Path: 
-				* workflow/update/process/advance (was workflow/update/advanceWorkflowProcess)
-				* RestPaths.createPathComponent + RestPaths.advanceProcess (was RestPaths.createPathComponent + RestPaths. advanceWorkflowProcessComponent)
-		* acquireWorkflowLock ()
-			* Now Method Called: setProcessLock ()
-			* New Rest Path: 
-				* workflow/update/process/lock (was workflow/update/acquireWorkflowLock)
-				* RestPaths. updatePathComponent + RestPaths.lock (was RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent)
-			* Changed Inputs
-				* RestUUID processId (was RestWorkflowLockAquisitionData lockAquisitionData) 
-			* New Input
-				* RestUUID ownerId 
+        * getAvailableDefinitions()
+            * Now Method Called:  getDefinitions()
+            * New Rest Path:
+                * workflow/definition/all (was workflow/availableDefinitions) 
+                * RestPaths.allDefinitions (was RestPaths. availableDefinitionsComponent)
+        * getProcess()
+            * New Rest Path: 
+                * workflow/definition/all (was workflow/process) 
+                * RestPaths.locked (was RestPaths.workflowLockStateComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId)
+         * getHistoriesForProcess ()
+            * Now Method Called: getProcessHistory ()
+            * New Rest Path: 
+                * workflow/process/history (was workflow/historiesForProcess)
+                * RestPaths.history (was RestPaths.historiesForProcessComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId) 
+        * isWorkflowLocked ()
+            * Now Method Called: isProcessLocked()
+            * New Rest Path: 
+                * workflow/process/locked (was workflow/workflowLockState)
+                * RestPaths.locked (was RestPaths.workflowLockStateComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId) 
+        * getActionsForProcessAndUser ()
+            * Now Method Called: getProcessActions()
+            * New Rest Path: 
+                * workflow/process/actions (was workflow/actionsForProcessAndUser)
+                * RestPaths.actions (was RestPaths.actionsForProcessAndUserComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId) 
+            * Other Note: originally, fields were ordered “wfProcessId, editToken”.  The order was reversed to “editToken, processId”
+        * getActionsForProcessAndUser()
+            * Now Method Called: getAvailableProcesses()
+            * New Rest Path: 
+                * workflow/process/available (was workflow/advanceableProcessInformation)
+                * RestPaths.available (was RestPaths.advanceableProcessInformationComponent)
+            * Renamed Inputs
+                * definitionId (was wfDefinitionId) 
+        * createWorkflowProcess ()
+            * Now Method Called: createInstance ()
+            * New Rest Path: 
+                * workflow/create/process/create (was workflow/create/createWorkflowProcess)
+                * RestPaths.createPathComponent + RestPaths.createProcess (was RestPaths.createPathComponent + RestPaths.createWorkflowProcessComponent)
+            * Renamed Inputs
+                * definitionId (was wfDefinitionId) 
+        * advanceWorkflowProcess ()
+            * Now Method Called: advanceProcess ()
+            * New Rest Path: 
+                * workflow/update/process/advance (was workflow/update/advanceWorkflowProcess)
+                * RestPaths.createPathComponent + RestPaths.advanceProcess (was RestPaths.createPathComponent + RestPaths. advanceWorkflowProcessComponent)
+        * acquireWorkflowLock ()
+            * Now Method Called: setProcessLock ()
+            * New Rest Path: 
+                * workflow/update/process/lock (was workflow/update/acquireWorkflowLock)
+                * RestPaths. updatePathComponent + RestPaths.lock (was RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent)
+            * Changed Inputs
+                * RestUUID processId (was RestWorkflowLockAquisitionData lockAquisitionData) 
+            * New Input
+                * RestUUID ownerId 
 		* removeComponentFromWorkflow ()
 			* Now Method Called: removeComponentFromProcess ()
 			* New Rest Path: 

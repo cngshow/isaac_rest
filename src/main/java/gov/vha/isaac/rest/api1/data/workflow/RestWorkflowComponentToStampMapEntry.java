@@ -25,9 +25,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.commit.Stamp;
+import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 
 /** 
@@ -50,13 +52,15 @@ public class RestWorkflowComponentToStampMapEntry
 	 * The key
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int key;
 
 	/**
 	 * The value
 	 */
 	@XmlElement
-	Stamp value;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	RestStampedVersion value;
 
 	/**
 	 * Constructor for JAXB only
@@ -69,12 +73,12 @@ public class RestWorkflowComponentToStampMapEntry
 	/**
 	 * @param map
 	 */
-	public RestWorkflowComponentToStampMapEntry(int key, Stamp value) {
+	public RestWorkflowComponentToStampMapEntry(int key, RestStampedVersion value) {
 		this.key = key;
 		this.value = value;
 	}
 	public RestWorkflowComponentToStampMapEntry(Map.Entry<Integer, Stamp> entry) {
-		this(entry.getKey(), entry.getValue());
+		this(entry.getKey(), new RestStampedVersion(entry.getValue()));
 	}
 
 	/**
@@ -89,7 +93,7 @@ public class RestWorkflowComponentToStampMapEntry
 	 * @return the value
 	 */
 	@XmlTransient
-	public Stamp getValue() {
+	public RestStampedVersion getValue() {
 		return value;
 	}
 
