@@ -360,6 +360,39 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		return defaultDefinition;
 	}
+	
+	private String getCurrentProcessState(UUID processId) {
+		Response getProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
+				.queryParam(RequestParameters.processId , processId.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getProcessHistoryResponseResult = checkFail(getProcessHistoryResponse).readEntity(String.class);
+		RestWorkflowProcessHistory[] processHistories = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistory.class, getProcessHistoryResponseResult);
+
+		if (processHistories != null && processHistories.length > 0) {
+			return processHistories[processHistories.length - 1].getOutcomeState();
+		} else {
+			return null;
+		}
+	}
+	
+	private RestWriteResponse removeComponentFromProcess(EditToken token, int component) {
+		RestWorkflowProcessComponentSpecificationData processComponentSpecificationData = new RestWorkflowProcessComponentSpecificationData(
+				component);
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(processComponentSpecificationData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
+				.queryParam(RequestParameters.editToken, token.getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
+		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
+		return writeResponse;
+	}
 
 	// PLACE TEST METHODS BELOW HERE
 	@Test
