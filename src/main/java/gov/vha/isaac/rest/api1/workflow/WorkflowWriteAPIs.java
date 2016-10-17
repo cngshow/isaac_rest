@@ -31,6 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
@@ -70,7 +71,7 @@ public class WorkflowWriteAPIs {
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
-	 * @return RestUUID - Id of newly created process instance
+	 * @return RestWriteResponse containing renewed EditToken and UUID of newly created process instance
 	 * 
 	 * @throws RestException
 	 */
@@ -117,7 +118,7 @@ public class WorkflowWriteAPIs {
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
-	 * @return renewed EditToken
+	 * @return RestWriteResponse containing renewed EditToken
 	 * @throws RestException
 	 */
 	@PUT
@@ -161,7 +162,7 @@ public class WorkflowWriteAPIs {
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
-	 * @return renewed EditToken
+	 * @return RestWriteResponse containing renewed EditToken
 	 * @throws RestException
 	 */
 	@PUT
@@ -218,14 +219,16 @@ public class WorkflowWriteAPIs {
 	 * the same process.
 	 * 
 	 * @param component
-	 *            RestWorkflowProcessComponentSpecificationData Data containing
-	 *            processId and componentId
-	 * @throws RestException
+	 *            RestWorkflowProcessComponentSpecificationData Data containing componentId
+	 * @param editToken
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
+	 * @return RestWriteResponse containing renewed RestEditToken
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent)
-	public void removeComponentFromProcess(
+	public RestWriteResponse removeComponentFromProcess(
 			RestWorkflowProcessComponentSpecificationData component,
 			@QueryParam(RequestParameters.editToken) String editToken)
 			throws RestException {
@@ -235,10 +238,15 @@ public class WorkflowWriteAPIs {
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
-			provider.removeComponentFromWorkflow(RequestInfo.get().getWorkflowProcessId(),
-					RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid",
-							component.getComponentNid()),
-					RequestInfo.get().getEditCoordinate());
+			int nid = RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid",
+					component.getComponentNid());
+			UUID processId = RequestInfo.get().getWorkflowProcessId();
+			EditCoordinate ec = RequestInfo.get().getEditCoordinate();
+			provider.removeComponentFromWorkflow(processId,
+					nid,
+					ec);
+			
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, nid, null);
 		} catch (Exception e) {
 			throw new RestException("Failed removing component " + component + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());
