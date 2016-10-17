@@ -225,7 +225,9 @@ public class WorkflowWriteAPIs {
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent)
-	public void removeComponentFromProcess(RestWorkflowProcessComponentSpecificationData component)
+	public void removeComponentFromProcess(
+			RestWorkflowProcessComponentSpecificationData component,
+			@QueryParam(RequestParameters.editToken) String editToken)
 			throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
 				RequestParameters.editToken);
@@ -233,7 +235,7 @@ public class WorkflowWriteAPIs {
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
-			provider.removeComponentFromWorkflow(component.getProcessId(),
+			provider.removeComponentFromWorkflow(RequestInfo.get().getWorkflowProcessId(),
 					RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid",
 							component.getComponentNid()),
 					RequestInfo.get().getEditCoordinate());

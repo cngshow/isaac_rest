@@ -19,8 +19,6 @@
 
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -45,13 +43,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestWorkflowProcessComponentSpecificationData {
 	/**
-	 * The process id of the process to advance
-	 */
-	@XmlElement
-	@JsonInclude
-	UUID processId;
-
-	/**
 	 * The specified component int NID
 	 */
 	@XmlElement
@@ -66,21 +57,11 @@ public class RestWorkflowProcessComponentSpecificationData {
 	}
 
 	/**
-	 * @param processId - workflow process UUID
 	 * @param componentNid - component int NID
 	 */
-	public RestWorkflowProcessComponentSpecificationData(UUID processId, int componentNid) {
+	public RestWorkflowProcessComponentSpecificationData(int componentNid) {
 		super();
-		this.processId = processId;
 		this.componentNid = componentNid;
-	}
-
-	/**
-	 * @return the processId
-	 */
-	@XmlTransient
-	public UUID getProcessId() {
-		return processId;
 	}
 
 	/**
@@ -96,7 +77,7 @@ public class RestWorkflowProcessComponentSpecificationData {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessComponentSpecificationData [processId=" + processId + ", componentNid=" + componentNid
+		return "RestWorkflowProcessComponentSpecificationData [componentNid=" + componentNid
 				+ "]";
 	}
 }
