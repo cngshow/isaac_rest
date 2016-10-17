@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -66,6 +67,7 @@ import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
+import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -92,6 +94,7 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
+import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
@@ -109,9 +112,13 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
@@ -423,6 +430,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		
+		Optional<UUID> userUuidOptional = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
+		Assert.assertTrue(userUuidOptional.isPresent());
+		UUID userUuid = userUuidOptional.get();
 		UUID defaultDefinition = getDefaultWorkflowDefinition();
 		
 		// Pass new editToken string to available (processes)
@@ -433,8 +443,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
 		RestWorkflowProcessHistoriesMapEntry[] availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
-		
-		// We may have not created any processes, so there may be no available processes returned
+		// We may have not created any processes, so there may be no available processes returned unless the DB has not been cleaned prior to testing
 		// Deactivating this test because restarting test without a mvn clean may otherwise fail
 		//Assert.assertTrue(availableProcesses == null || availableProcesses.length == 0);
 		
@@ -460,9 +469,35 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, createProcessResponseResult);
 		
 		Assert.assertNotNull(writeResponse);
+		Assert.assertNotNull(writeResponse.uuid);
 		UUID createdProcessUUID = writeResponse.uuid;
+		Assert.assertNotNull(writeResponse.editToken);
 		RestEditToken renewedEditToken = writeResponse.editToken;
 
+		// Check for created process using getProcess()
+		Response getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+		RestWorkflowProcess process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+		Assert.assertNotNull(process);
+		Assert.assertNotNull(process.getId());
+		Assert.assertNotNull(process.getCreatorId());
+		Assert.assertEquals(process.getCreatorId(), userUuid);
+		Assert.assertTrue(process.getTimeCreated() > 0);
+		Assert.assertTrue(process.getTimeLaunched() < 0); // Process should be DEFINED but not LAUNCHED
+		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
+		Assert.assertNotNull(process.getProcessStatus());
+		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.DEFINED));
+		
+		// Confirm that request for non-existent process should fail
+		Response getBadProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+				.queryParam(RequestParameters.processId, UUID.randomUUID().toString()) // Garbage processId
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		assertFail(getBadProcessResponse);
+		
 		// Check for created process in retrieved available
 		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
 				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
@@ -471,19 +506,103 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
 		availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
-		
-		// We have not created any processes, so there should be no available processes returned
+		// We have created a process, so at least that process should be returned
 		Assert.assertNotNull(availableProcesses);
 		Assert.assertTrue(availableProcesses.length > 0);
+		RestWorkflowProcessHistory historyFromAvailableProcesses = null;
 		boolean foundNewlyCreatedProcessAmongstRetrievedProcesses = false;
-		for (RestWorkflowProcessHistoriesMapEntry entry : availableProcesses) {
-			if (entry.getKey().getId().equals(createdProcessUUID)) {
+		for (RestWorkflowProcessHistoriesMapEntry restWorkflowProcessHistoriesMapEntry : availableProcesses) {
+			if (restWorkflowProcessHistoriesMapEntry.getKey().getId().equals(createdProcessUUID)) {
 				foundNewlyCreatedProcessAmongstRetrievedProcesses = true;
+				Assert.assertNotNull(restWorkflowProcessHistoriesMapEntry.getValue());
+				Assert.assertTrue(restWorkflowProcessHistoriesMapEntry.getValue().length > 0);
+				historyFromAvailableProcesses = restWorkflowProcessHistoriesMapEntry.getValue()[0];
+				Assert.assertNotNull(historyFromAvailableProcesses);
 				break;
 			}
 		}
 		Assert.assertTrue(foundNewlyCreatedProcessAmongstRetrievedProcesses);
+		Assert.assertNotNull(historyFromAvailableProcesses);
+		Assert.assertNotNull(historyFromAvailableProcesses.getId());
+		Assert.assertNotNull(historyFromAvailableProcesses.getProcessId());
+		Assert.assertEquals(historyFromAvailableProcesses.getProcessId(), createdProcessUUID);
+		Assert.assertNotNull(historyFromAvailableProcesses.getUserId());
+		Assert.assertEquals(historyFromAvailableProcesses.getUserId(), userUuid);
+		//Assert.assertTrue(history.getTimeAdvanced() < 0); // Process created, but not advanced // TODO retest after bug fix
+		Assert.assertNotNull(historyFromAvailableProcesses.getInitialState()); // i.e. "Assigned"
+		Assert.assertEquals(historyFromAvailableProcesses.getInitialState(), "Assigned"); // Depends on definition
+		Assert.assertNotNull(historyFromAvailableProcesses.getAction()); // i.e. "Create Workflow Process"
+		Assert.assertEquals(historyFromAvailableProcesses.getAction(), "Create Workflow Process"); // Depends on definition
+		Assert.assertNotNull(historyFromAvailableProcesses.getOutcomeState()); // i.e. "Ready for Edit"
+		Assert.assertEquals(historyFromAvailableProcesses.getOutcomeState(), "Ready for Edit"); // Depends on definition
+		Assert.assertTrue(historyFromAvailableProcesses.getComment() == null || StringUtils.isBlank(historyFromAvailableProcesses.getComment())); // TODO apply a content test when comment field added to RestWorkflowProcessBaseCreate
 		
+		// Get history and compare with history from get available
+		Response getProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
+				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getProcessHistoryResponseResult = checkFail(getProcessHistoryResponse).readEntity(String.class);
+		RestWorkflowProcessHistory[] processHistories = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistory.class, getProcessHistoryResponseResult);
+		// We have created process, so at least one history entry should exist
+		Assert.assertNotNull(processHistories);
+		Assert.assertTrue(processHistories.length > 0);
+		RestWorkflowProcessHistory historyFromHistories = processHistories[0];
+		Assert.assertNotNull(historyFromHistories);
+		Assert.assertTrue(historyFromAvailableProcesses.equals(historyFromHistories));
+		
+		// Confirm that get history returns no histories for bogus processId
+		Response getBadProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
+				.queryParam(RequestParameters.processId , UUID.randomUUID().toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getBadProcessHistoryResponseResult = checkFail(getBadProcessHistoryResponse).readEntity(String.class);
+		RestWorkflowProcessHistory[] badProcessHistories = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistory.class, getBadProcessHistoryResponseResult);
+		Assert.assertTrue(badProcessHistories == null || badProcessHistories.length == 0);
+		
+
+		// Get available actions for created process
+		Response getAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
+				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getAvailableActionsResponseResult = checkFail(getAvailableActionsResponse).readEntity(String.class);
+		RestWorkflowAvailableAction[] availableActions = XMLUtils.unmarshalObjectArray(RestWorkflowAvailableAction.class, getAvailableActionsResponseResult);
+		Assert.assertNotNull(availableActions);
+		Assert.assertTrue(availableActions.length > 0);
+		final String editAction = "Edit"; // definition-specific
+		final String cancelWorkflowAction = "Cancel Workflow"; // definition-specific
+		boolean foundEditAction = false; // definition-specific
+		boolean foundCancelWorkflowAction = false; // definition-specific
+		for (RestWorkflowAvailableAction availableAction : availableActions) {
+			Assert.assertNotNull(availableAction.getId());
+			Assert.assertNotNull(availableAction.getDefinitionId());
+			Assert.assertEquals(availableAction.getDefinitionId(), defaultDefinition);
+			Assert.assertNotNull(availableAction.getInitialState());
+			Assert.assertNotNull(availableAction.getAction());  // "Edit" or "Cancel Workflow" (definition-specific)
+			Assert.assertTrue(availableAction.getAction().equals(editAction) || availableAction.getAction().equals(cancelWorkflowAction)); // definition-specific
+			if (availableAction.getAction().equals(editAction)) { // definition-specific
+				foundEditAction = true;
+			} else if (availableAction.getAction().equals(cancelWorkflowAction)) { // definition-specific
+				foundCancelWorkflowAction = true;
+			}
+			Assert.assertNotNull(availableAction.getOutcomeState());
+			Assert.assertNotNull(availableAction.getRole());
+			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().getEnumId()).isPresent());
+			Assert.assertTrue(
+					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().getEnumId()).get())
+					|| editToken.getRoles().contains(UserRole.SUPER_USER));
+		}
+		Assert.assertTrue(foundEditAction); // definition-specific
+		Assert.assertTrue(foundCancelWorkflowAction); // definition-specific
+
+		// Confirm that call fails for bogus processId
+		Response getBadAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
+				.queryParam(RequestParameters.processId , UUID.randomUUID().toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		assertFail(getBadAvailableActionsResponse);
 		
 		// Acquire lock on process.  This should Fail because it's automatically locked on create.
 		RestWorkflowLockingData processLockingData = new RestWorkflowLockingData(
@@ -538,6 +657,35 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, lockProcessResponseResult);
 		renewedEditToken = writeResponse.editToken;
 		Assert.assertNotNull(renewedEditToken);
+		
+		// The following tests are definition-specific
+		
+		// Advance process to Edit.  Should fail because no components added yet.
+		RestWorkflowProcessAdvancementData processAdvancementData = new RestWorkflowProcessAdvancementData(
+				createdProcessUUID,
+				editAction,
+				"An edit action comment");
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(processAdvancementData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		// This should fail because no components have been added
+		Response advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceProcess)
+				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		assertFail(advanceProcessResponse);
+		
+//		advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceProcess)
+//				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+//		advanceProcessResponseResult = checkFail(advanceProcessResponse).readEntity(String.class);
+//		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, advanceProcessResponseResult);
+//		renewedEditToken = writeResponse.editToken;
+//		Assert.assertNotNull(renewedEditToken);
 	}
 	
 	@Test

@@ -57,22 +57,33 @@ public class RestWorkflowAvailableAction
 	/**
 	 * The definition id
 	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID definitionId;
 	/**
 	 * The initial state
 	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String initialState;
 	/**
 	 * The action
 	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String action;
 	/**
 	 * The outcome state
 	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String outcomeState;
 	/**
 	 * The role
-	 * */
+	 *
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestUserRoleType role;
 
 	/**
