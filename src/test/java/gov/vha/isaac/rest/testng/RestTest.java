@@ -881,7 +881,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(process.getCreatorId());
 		Assert.assertEquals(process.getCreatorId(), userUuid);
 		Assert.assertTrue(process.getTimeCreated() > 0);
-		// Assert.assertTrue(process.getTimeLaunched() > 0); // TODO debug this failure. process.getTimeLaunched() should be > 0
+		Assert.assertTrue(process.getTimeLaunched() > 0); // TODO debug this failure. process.getTimeLaunched() should be > 0
 		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
 		Assert.assertNotNull(process.getProcessStatus());
 		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.LAUNCHED));
