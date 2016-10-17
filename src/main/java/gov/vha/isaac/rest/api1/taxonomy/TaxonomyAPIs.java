@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.taxonomy;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -31,17 +32,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.tree.Tree;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
@@ -91,6 +97,7 @@ public class TaxonomyAPIs
 			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
 			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -102,6 +109,7 @@ public class TaxonomyAPIs
 				RequestParameters.countChildren,
 				RequestParameters.sememeMembership,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
@@ -110,34 +118,46 @@ public class TaxonomyAPIs
 		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);
+		
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
+		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+		StampCoordinate conceptVersionStampCoordinate = null;
+		if (processIdOptional.isPresent() && wfAccessor.isComponentInProcess(processIdOptional.get(), concept.getNid())) {
+			conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processIdOptional.get(), concept.getNid()));
+		} else {
+			conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+		}
+
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, conceptVersionStampCoordinate);
 		if (cv.isPresent())
 		{
 			//parent / child expansion is handled here by providing a depth, not with expandables.
 			//TODO handle contradictions
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership);  
+					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership,
+					processIdOptional.isPresent() ? processIdOptional.get() : null);  
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, includeSememeMembership, new ConceptSequenceSet());
+				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, includeSememeMembership, new ConceptSequenceSet(), processIdOptional.isPresent() ? processIdOptional.get() : null);
 			}
 			else if (countParentsBoolean)
 			{
-				countParents(concept.getConceptSequence(), rcv, tree);
+				countParents(concept.getConceptSequence(), rcv, tree, processIdOptional.isPresent() ? processIdOptional.get() : null);
 			}
 			
 			if (childDepth > 0)
 			{
-				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, new ConceptSequenceSet());
+				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, new ConceptSequenceSet(), processIdOptional.isPresent() ? processIdOptional.get() : null);
 			}
 			else if (countChildrenBoolean)
 			{
-				countChildren(concept.getConceptSequence(), rcv, tree);
+				countChildren(concept.getConceptSequence(), rcv, tree, processIdOptional.isPresent() ? processIdOptional.get() : null);
 			}
 			rcv.sortParentsAndChildren();
 			return rcv;
@@ -153,7 +173,8 @@ public class TaxonomyAPIs
 			boolean countParents,
 			int remainingChildDepth,
 			boolean includeSemmemMembership,
-			ConceptSequenceSet alreadyAddedChildren)
+			ConceptSequenceSet alreadyAddedChildren,
+			UUID processId)
 	{
 		if (alreadyAddedChildren.contains(conceptSequence)) {
 			// Avoiding infinite loop
@@ -181,29 +202,39 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
+			
+			final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+
+			StampCoordinate conceptVersionStampCoordinate = null;
+			if (processId != null && wfAccessor.isComponentInProcess(processId, childConcept.getNid())) {
+				conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processId, childConcept.getNid()));
+			} else {
+				conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+			}
+			
 			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, conceptVersionStampCoordinate);
 			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
 				//TODO handle contradictions
 				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
-					includeSemmemMembership);
+					includeSemmemMembership, processId);
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
 					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSemmemMembership, 
-						alreadyAddedChildren);
+						alreadyAddedChildren, processId);
 				}
 				else if (countLeafChildren)
 				{
-					countChildren(childConcept.getConceptSequence(), childVersion, tree);
+					countChildren(childConcept.getConceptSequence(), childVersion, tree, processId);
 				}
 			}
 		}
 	}
 	
-	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree)
+	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId)
 	{
 		int count = 0;
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
@@ -218,8 +249,18 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
+			
+			final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+
+			StampCoordinate conceptVersionStampCoordinate = null;
+			if (processId != null && wfAccessor.isComponentInProcess(processId, parentConcept.getNid())) {
+				conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processId, parentConcept.getNid()));
+			} else {
+				conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+			}
+
 			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, conceptVersionStampCoordinate);
 			if (cv.isPresent())
 			{
 				count++;
@@ -229,7 +270,7 @@ public class TaxonomyAPIs
 	}
 	
 	
-	public static void countChildren(int conceptSequence, RestConceptVersion rcv, Tree tree)
+	public static void countChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId)
 	{
 		int count = 0;
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
@@ -244,8 +285,18 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
+			
+			final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+
+			StampCoordinate conceptVersionStampCoordinate = null;
+			if (processId != null && wfAccessor.isComponentInProcess(processId, childConcept.getNid())) {
+				conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processId, childConcept.getNid()));
+			} else {
+				conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+			}
+
 			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, conceptVersionStampCoordinate);
 			if (cv.isPresent())
 			{
 				count++;
@@ -254,8 +305,15 @@ public class TaxonomyAPIs
 		rcv.setChildCount(count);
 	}
 
-	public static void addParents(int conceptSequence, RestConceptVersion rcv, Tree tree, boolean countLeafParents, int remainingParentDepth, 
-			boolean includeSememeMembership, ConceptSequenceSet handledConcepts)
+	public static void addParents(
+			int conceptSequence,
+			RestConceptVersion rcv,
+			Tree tree,
+			boolean countLeafParents,
+			int remainingParentDepth, 
+			boolean includeSememeMembership,
+			ConceptSequenceSet handledConcepts,
+			UUID processId)
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
@@ -285,23 +343,32 @@ public class TaxonomyAPIs
 				{
 					throw new RuntimeException("Internal Error!", e);
 				}
+				final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+
+				StampCoordinate conceptVersionStampCoordinate = null;
+				if (processId != null && wfAccessor.isComponentInProcess(processId, parentConceptChronlogy.getNid())) {
+					conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processId, parentConceptChronlogy.getNid()));
+				} else {
+					conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+				}
+				
 				@SuppressWarnings("unchecked")
-				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, conceptVersionStampCoordinate);
 				if (cv.isPresent())
 				{
 					//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
 					//TODO handle contradictions
 					RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(),true, false, false, false, false, RequestInfo.get().getStated(), 
-							includeSememeMembership);
+							includeSememeMembership, processId);
 					rcv.addParent(parentVersion);
 					if (remainingParentDepth > 0)
 					{
 						addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
-								perParentHandledConcepts);
+								perParentHandledConcepts, processId);
 					}
 					else if (countLeafParents)
 					{
-						countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree);
+						countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, processId);
 					}
 				}
 				

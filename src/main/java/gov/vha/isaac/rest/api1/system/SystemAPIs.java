@@ -20,12 +20,14 @@ package gov.vha.isaac.rest.api1.system;
 
 import java.util.Optional;
 import java.util.UUID;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
@@ -46,6 +48,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -76,14 +79,18 @@ public class SystemAPIs
 	public RestIdentifiedObjectsResult getIdentifiedObjects(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		RestConceptChronology concept = null;
 		RestSememeChronology sememe = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
@@ -94,13 +101,15 @@ public class SystemAPIs
 				// id is NID
 				ObjectChronologyType objectChronologyType = Get.identifierService().getChronologyTypeForNid(intId.get());
 				switch(objectChronologyType) {
-				case CONCEPT:
+				case CONCEPT: {
 					concept =
 							new RestConceptChronology(
 									Get.conceptService().getConcept(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									processIdOptional.isPresent() ? processIdOptional.get() : null);
 					break;
+				}
 				case SEMEME:
 					sememe =
 							new RestSememeChronology(
@@ -131,7 +140,8 @@ public class SystemAPIs
 							new RestConceptChronology(
 									Get.conceptService().getConcept(conceptNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									processIdOptional.isPresent() ? processIdOptional.get() : null);
 				}
 
 				int sememeNid = Get.identifierService().getSememeNid(intId.get());
@@ -170,7 +180,8 @@ public class SystemAPIs
 								new RestConceptChronology(
 										Get.conceptService().getConcept(nid),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+										processIdOptional.isPresent() ? processIdOptional.get() : null);
 						break;
 					case SEMEME:
 						sememe =

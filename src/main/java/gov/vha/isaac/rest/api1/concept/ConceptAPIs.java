@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.api1.concept;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -34,14 +33,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
+import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -51,6 +54,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -99,6 +103,7 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
 			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
@@ -111,12 +116,25 @@ public class ConceptAPIs
 				RequestParameters.countChildren,
 				RequestParameters.sememeMembership,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronology(id);
+		
+		WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		StampCoordinate conceptStampCoordinate = null;
+		if (processIdOptional.isPresent() && wfAccessor.isComponentInProcess(processIdOptional.get(), concept.getNid())) {
+			conceptStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processIdOptional.get(), concept.getNid()));
+		} else {
+			conceptStampCoordinate = RequestInfo.get().getStampCoordinate();
+		}
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(
+				ConceptVersionImpl.class,
+				conceptStampCoordinate);
 		if (cv.isPresent())
 		{
 			//TODO handle contradictions
@@ -127,7 +145,8 @@ public class ConceptAPIs
 					Boolean.parseBoolean(includeChildren.trim()),
 					Boolean.parseBoolean(countChildren.trim()),
 					RequestInfo.get().getStated(),
-					Boolean.parseBoolean(sememeMembership.trim()));
+					Boolean.parseBoolean(sememeMembership.trim()),
+					processIdOptional.isPresent() ? processIdOptional.get() : null);
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
 	}
@@ -147,6 +166,7 @@ public class ConceptAPIs
 	public RestConceptChronology getConceptChronology(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
@@ -154,14 +174,19 @@ public class ConceptAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		RestConceptChronology chronology =
 				new RestConceptChronology(
 						concept,
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
-						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+						processIdOptional.isPresent() ? processIdOptional.get() : null);
 
 		return chronology;
 	}
@@ -228,17 +253,19 @@ public class ConceptAPIs
 			@PathParam(RequestParameters.id) String id, 
 			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.includeAttributes,
+				RequestParameters.processId,
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
-		
+		// TODO handle processId
 		RestSememeVersion[] descriptions = SememeAPIs.get(
 				findConceptChronology(id).getNid() + "",
 				getAllDescriptionTypes(),

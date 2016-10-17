@@ -153,7 +153,8 @@ public class RestSearchResult
 			{
 				referencedConcept = new RestConceptChronology(Get.conceptService().getConcept(conceptSequence), 
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
-						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+						null); // TODO possibly handle processId
 				if (RequestInfo.get().returnExpandableLinks())
 				{
 					if (!RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable))

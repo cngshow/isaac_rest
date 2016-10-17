@@ -22,16 +22,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.AlphanumComparator;
+import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -89,8 +96,10 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	}
 	
 	@SuppressWarnings("rawtypes") 
-	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion)
+	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId)
 	{
+		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+
 		conceptSequence = cc.getConceptSequence();
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
 		
@@ -103,18 +112,24 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 			{
 				for (ConceptVersion cv : cc.getVersionList())
 				{
-					versions.add(new RestConceptVersion(cv, false, false, false, false, false, false, false));
+					versions.add(new RestConceptVersion(cv, false, false, false, false, false, false, false, processId));
 				}
 			}
 			else // if (includeLatestVersion)
 			{
+				StampCoordinate conceptVersionStampCoordinate = null;
+				if (processId != null && wfAccessor.isComponentInProcess(processId, cc.getNid())) {
+					conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processId, cc.getNid()));
+				} else {
+					conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+				}
 				@SuppressWarnings("unchecked")
 				Optional<LatestVersion<ConceptVersion>> latest = 
-						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
+						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, conceptVersionStampCoordinate);
 				if (latest.isPresent())
 				{
 					//TODO handle contradictions
-					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false));
+					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false, processId));
 				}
 			}
 		}

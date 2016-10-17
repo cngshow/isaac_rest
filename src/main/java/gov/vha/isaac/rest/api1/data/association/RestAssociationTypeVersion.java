@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.association;
 
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -88,7 +90,7 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCr
 	/**
 	 * @param read
 	 */
-	public RestAssociationTypeVersion(AssociationType read)
+	public RestAssociationTypeVersion(AssociationType read, UUID processId)
 	{
 		//TODO the way that the AssociationType is constructed, it isn't paying attention to language or FSN vs Synonym prefs.  This should be fixed...
 		associationConceptSequence = read.getAssociationTypeSequenece();
@@ -101,7 +103,8 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCr
 		{
 			associationConcept = new RestConceptChronology(Get.conceptService().getConcept(associationConceptSequence), 
 					RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+					RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+					processId);
 		}
 		else 
 		{

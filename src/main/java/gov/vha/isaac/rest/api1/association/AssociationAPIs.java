@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -33,13 +34,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.AlphanumComparator;
 import gov.vha.isaac.ochre.associations.AssociationInstance;
 import gov.vha.isaac.ochre.associations.AssociationType;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
+import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -47,6 +52,7 @@ import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionPage;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -73,23 +79,41 @@ public class AssociationAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationsComponent)
 	public RestAssociationTypeVersion[] getAssociations(
-		@QueryParam(RequestParameters.coordToken) String coordToken,
+			@QueryParam(RequestParameters.processId) String processId,
+			@QueryParam(RequestParameters.coordToken) String coordToken,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		ArrayList<RestAssociationTypeVersion> results = new ArrayList<>();
 		
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
 		
 		Set<Integer> associationConcepts = AssociationUtilities.getAssociationConceptSequences();
 		
+		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
 		for (int i : associationConcepts)
 		{
-			results.add(new RestAssociationTypeVersion(AssociationType.read(i, RequestInfo.get().getStampCoordinate(), 
-					RequestInfo.get().getLanguageCoordinate())));
+			StampCoordinate conceptVersionStampCoordinate = null;
+
+			int nid = Get.identifierService().getConceptNid(i);
+			if (processIdOptional.isPresent() && wfAccessor.isComponentInProcess(processIdOptional.get(), nid)) {
+				conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processIdOptional.get(), nid));
+			} else {
+				conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+			}
+			results.add(
+					new RestAssociationTypeVersion(
+							AssociationType.read(
+									i,
+									conceptVersionStampCoordinate, 
+									RequestInfo.get().getLanguageCoordinate()),
+							processIdOptional.isPresent() ? processIdOptional.get() : null)
+					);
 		}
 		
 		Collections.sort(results, new Comparator<RestAssociationTypeVersion>()
@@ -123,16 +147,31 @@ public class AssociationAPIs
 	public RestAssociationTypeVersion getAssociationType(
 		@PathParam(RequestParameters.id) String id, 
 		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		return new RestAssociationTypeVersion(AssociationType.read(Util.convertToConceptSequence(id), RequestInfo.get().getStampCoordinate(), 
-				RequestInfo.get().getLanguageCoordinate()));
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+
+		int sequence = Util.convertToConceptSequence(id);
+		int nid = Get.identifierService().getConceptNid(sequence);
+		StampCoordinate conceptVersionStampCoordinate = null;
+		if (processIdOptional.isPresent() && wfAccessor.isComponentInProcess(processIdOptional.get(), nid)) {
+			conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processIdOptional.get(), nid));
+		} else {
+			conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+		}	
+		
+		return new RestAssociationTypeVersion(AssociationType.read(sequence, conceptVersionStampCoordinate, 
+				RequestInfo.get().getLanguageCoordinate()),
+				processIdOptional.isPresent() ? processIdOptional.get() : null);
 	}
 	
 	/**
@@ -159,14 +198,18 @@ public class AssociationAPIs
 		@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 		@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
 		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		ArrayList<RestAssociationItemVersion> results;
 		try
 		{
@@ -190,7 +233,8 @@ public class AssociationAPIs
 								}
 								else
 								{
-									results.add(new RestAssociationItemVersion(AssociationInstance.read(latest.get().value(), RequestInfo.get().getStampCoordinate())));
+									results.add(new RestAssociationItemVersion(AssociationInstance.read(latest.get().value(), RequestInfo.get().getStampCoordinate()),
+											processIdOptional.isPresent() ? processIdOptional.get() : null));
 								}
 							}
 						}
@@ -233,18 +277,22 @@ public class AssociationAPIs
 	public RestAssociationItemVersion[] getSourceAssociations(
 		@PathParam(RequestParameters.id) String id, 
 		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		List<AssociationInstance> results = AssociationUtilities.getSourceAssociations(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		RestAssociationItemVersion[] finalResult = new RestAssociationItemVersion[results.size()];
 		for (int i = 0; i < results.size(); i++)
 		{
-			finalResult[i] = new RestAssociationItemVersion(results.get(i));
+			finalResult[i] = new RestAssociationItemVersion(results.get(i), processIdOptional.isPresent() ? processIdOptional.get() : null);
 		}
 		return finalResult;
 		
@@ -268,19 +316,23 @@ public class AssociationAPIs
 	public RestAssociationItemVersion[] getTargetAssociations(
 		@PathParam(RequestParameters.id) String id, 
 		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		//TODO lookup by target performance is not good at the moment, not sure why
 		List<AssociationInstance> results = AssociationUtilities.getTargetAssociations(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		RestAssociationItemVersion[] finalResult = new RestAssociationItemVersion[results.size()];
 		for (int i = 0; i < results.size(); i++)
 		{
-			finalResult[i] = new RestAssociationItemVersion(results.get(i));
+			finalResult[i] = new RestAssociationItemVersion(results.get(i), processIdOptional.isPresent() ? processIdOptional.get() : null);
 		}
 		return finalResult;
 		
@@ -305,16 +357,20 @@ public class AssociationAPIs
 	public RestAssociationItemVersion getAssociation(
 		@PathParam(RequestParameters.id) String id, 
 		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		Optional<AssociationInstance> result = AssociationUtilities.getAssociation(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		
-		return result.isPresent() ? new RestAssociationItemVersion(result.get()) : null;
+		return result.isPresent() ? new RestAssociationItemVersion(result.get(), processIdOptional.isPresent() ? processIdOptional.get() : null) : null;
 		
 	}
 }
