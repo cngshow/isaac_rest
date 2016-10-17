@@ -16,55 +16,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api.data.wrappers;
+package gov.vha.isaac.rest.api1.data.concept;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * This class is a trivial wrapper for an int value which is serializable/deserializable by JAXB
  * 
- * {@link RestInteger}
- *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * {@link RestConceptUpdateData}
+ * This class is used for callers to update an existing concept.
+ * 
+ * Since there are currently no editable fields on the concept, the only editable field here is state.
+ * 
+ * All other aspects of a concept need to be edited via more specific APIs.
+ * 
+ * The API never returns this class.
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestInteger
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestConceptUpdateData.class)
+public class RestConceptUpdateData
 {
 	/**
-	 * The int value
+	 * True to indicate the concept should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
 	 */
 	@XmlElement
-	int value;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
 	
-	RestInteger() {
-		// For JAXB
-	}
 	
-	public RestInteger(int value)
+	protected RestConceptUpdateData()
 	{
-		this.value = value;
-	}
-
-	/**
-	 * @return the value
-	 */
-	@XmlTransient
-	public int getValue() {
-		return value;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "RestInteger [value=" + value + "]";
+		//for Jaxb
 	}
 }

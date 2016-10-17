@@ -225,7 +225,7 @@ public class WorkflowWriteAPIs {
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent)
-	public void removeComponentFromProcess(
+	public RestWriteResponse removeComponentFromProcess(
 			RestWorkflowProcessComponentSpecificationData component,
 			@QueryParam(RequestParameters.editToken) String editToken)
 			throws RestException {
@@ -235,10 +235,9 @@ public class WorkflowWriteAPIs {
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
-			provider.removeComponentFromWorkflow(RequestInfo.get().getWorkflowProcessId(),
-					RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid",
-							component.getComponentNid()),
-					RequestInfo.get().getEditCoordinate());
+			int nid = RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid", component.getComponentNid());
+			provider.removeComponentFromWorkflow(RequestInfo.get().getWorkflowProcessId(), nid, RequestInfo.get().getEditCoordinate());
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), Get.identifierService().getUuidPrimordialForNid(nid).get());
 		} catch (Exception e) {
 			throw new RestException("Failed removing component " + component + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());

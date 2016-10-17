@@ -83,12 +83,12 @@ public class RestWriteResponse
 	 * The UUID is checked for system validity, if provided (nid and sequence is not populated if uuid isn't valid)
 	 * 
 	 */
-	public RestWriteResponse(RestEditToken editToken, UUID uuid, Integer nid, Integer sequence)
+	public RestWriteResponse(RestEditToken editTokenIn, UUID uuidIn, Integer nidIn, Integer sequenceIn)
 	{
-		this.uuid = uuid;
-		this.nid = nid;
-		this.sequence = sequence;
-		this.editToken = editToken;
+		uuid = uuidIn;
+		nid = nidIn;
+		sequence = sequenceIn;
+		editToken = editTokenIn;
 		if (nid == null || sequence == null || uuid == null)
 		{
 			if (nid != null || uuid != null)
@@ -100,7 +100,6 @@ public class RestWriteResponse
 				}
 				if (uuid != null && nid == null && Get.identifierService().hasUuid(uuid))
 				{
-					
 					nid = Get.identifierService().getNidForUuids(uuid);
 				}
 			}

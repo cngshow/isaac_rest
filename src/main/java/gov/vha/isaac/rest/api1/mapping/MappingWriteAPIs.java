@@ -40,6 +40,7 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
+import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
@@ -69,12 +70,12 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueBaseCreate;
@@ -88,6 +89,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -117,7 +119,7 @@ public class MappingWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetComponent + RestPaths.createPathComponent)
-	public RestUUID createNewMapSet(
+	public RestWriteResponse createNewMapSet(
 		RestMappingSetVersionBaseCreate mappingSetCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -126,10 +128,10 @@ public class MappingWriteAPIs
 				RequestParameters.COORDINATE_PARAM_NAMES,
 				RequestParameters.editToken);
 
-		RestUUID newMappingSet = null;
+		
 		try 
 		{
-			newMappingSet = createMappingSet(
+			return createMappingSet(
 					mappingSetCreationData.name,
 					mappingSetCreationData.inverseName,
 					mappingSetCreationData.purpose,
@@ -138,8 +140,6 @@ public class MappingWriteAPIs
 					mappingSetCreationData.mapSetExtendedFields,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate());
-			
-			return newMappingSet;
 		} 
 		catch (IOException e) 
 		{
@@ -154,7 +154,6 @@ public class MappingWriteAPIs
 	 * 
 	 * @param mappingSetUpdateData - object containing data used to update existing mapping set
 	 * @param id - id of mapping set concept to update
-	 * @param state - The state to put the mapping set into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
@@ -163,16 +162,14 @@ public class MappingWriteAPIs
 	//TODO fix the comments above around editToken 
 	@PUT
 	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
-	public void updateMapSet(
+	public RestWriteResponse updateMapSet(
 		RestMappingSetVersionBase mappingSetUpdateData,
 		@PathParam(RequestParameters.id) String id,
-		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.state,
 				RequestParameters.COORDINATE_PARAM_NAMES,
 				RequestParameters.editToken);
 
@@ -186,11 +183,11 @@ public class MappingWriteAPIs
 		}
 
 		// TODO This update method doesn't currently allow updating of extended field values.  Need to figure out how to put that into the API
-		RestStateType stateToUse = RestStateType.valueOf(state);
+		State stateToUse = (mappingSetUpdateData.active == null || mappingSetUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		
 		ConceptChronology<?> mappingConcept = ConceptAPIs.findConceptChronology(id);
 		
-		updateMappingSet(
+		return updateMappingSet(
 				mappingConcept,
 				StringUtils.isBlank(mappingSetUpdateData.name) ? "" : mappingSetUpdateData.name.trim(),
 				StringUtils.isBlank(mappingSetUpdateData.inverseName) ? "" : mappingSetUpdateData.inverseName.trim(),
@@ -198,7 +195,7 @@ public class MappingWriteAPIs
 				StringUtils.isBlank(mappingSetUpdateData.purpose) ? "" : mappingSetUpdateData.purpose.trim(),
 				RequestInfo.get().getStampCoordinate(),
 				RequestInfo.get().getEditCoordinate(),
-				stateToUse.toState());
+				stateToUse);
 	}
 	
 	/**
@@ -213,7 +210,7 @@ public class MappingWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemComponent + RestPaths.createPathComponent)
-	public RestUUID createNewMappingItem(
+	public RestWriteResponse createNewMappingItem(
 		RestMappingItemVersionBaseCreate mappingItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -243,17 +240,15 @@ public class MappingWriteAPIs
 			throw new RestException("targetConcept", mappingItemCreationData.targetConcept + "", "Unable to locate the target concept");
 		}
 
-		RestUUID newMappingItem =
-				createMappingItem(
+		return createMappingItem(
 						sourceConcept.get(),
 						mappingSetID.get(),
 						targetConcept.orElse(null),
 						qualifierID.orElse(null),
 						mappingItemCreationData.mapItemExtendedFields,
+						(mappingItemCreationData.active == null || mappingItemCreationData.active ? true : false),
 						RequestInfo.get().getStampCoordinate(),
 						RequestInfo.get().getEditCoordinate());
-		
-		return newMappingItem;
 	}
 	
 	/**
@@ -262,7 +257,6 @@ public class MappingWriteAPIs
 	 * 
 	 * @param mappingItemUpdateData - object containing data used to update existing mapping item
 	 * @param id - id of mapping item sememe to update
-	 * @param state - The state to mapping item into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
@@ -271,20 +265,18 @@ public class MappingWriteAPIs
 	//TODO fix the comments above around editToken 
 	@PUT
 	@Path(RestPaths.mappingItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
-	public void updateMappingItem(
+	public RestWriteResponse updateMappingItem(
 		RestMappingItemVersionBase mappingItemUpdateData,
 		@PathParam(RequestParameters.id) String id,
-		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.state,
 				RequestParameters.COORDINATE_PARAM_NAMES,
 				RequestParameters.editToken);
 
-		RestStateType stateToUse = RestStateType.valueOf(state);
+		State stateToUse = (mappingItemUpdateData.active == null || mappingItemUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 
 		SememeChronology<?> mappingItemSememeChronology = SememeAPIs.findSememeChronology(id);
 		
@@ -298,14 +290,14 @@ public class MappingWriteAPIs
 		}
 
 		try {
-			updateMappingItem(
+			return updateMappingItem(
 					mappingItemSememeChronology,
 					targetConcept.orElse(null),
 					mappingItemUpdateData.qualifierConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.qualifierConcept) : null,
 					mappingItemUpdateData.mapItemExtendedFields,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate(),
-					stateToUse.toState());
+					stateToUse);
 
 		} catch (IOException e) {
 			throw new RestException("Failed updating mapping item " + id + " on " + e.getClass().getName() + " exception \"" + e.getLocalizedMessage() + "\"");
@@ -321,7 +313,7 @@ public class MappingWriteAPIs
 	 * @return the UUID of the created map set
 	 * @throws IOException
 	 */
-	private static RestUUID createMappingSet(
+	private static RestWriteResponse createMappingSet(
 			String mappingName,
 			String inverseName,
 			String purpose,
@@ -431,15 +423,20 @@ public class MappingWriteAPIs
 		
 		try
 		{
-			Get.commitService().commit("Committing create of mapping set " + rdud.getDynamicSememeName()).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of mapping set " + rdud.getDynamicSememeName()).get();
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			throw new RuntimeException("Failed during commit", e);
 		}
-		return new RestUUID(Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get());
+		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
+				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
-	private static UUID updateMappingSet(
+	private static RestWriteResponse updateMappingSet(
 			ConceptChronology<?> mappingConcept,
 			String mapName,
 			String mapInverseName,
@@ -447,7 +444,7 @@ public class MappingWriteAPIs
 			String mapPurpose,
 			StampCoordinate stampCoord,
 			EditCoordinate editCoord,
-			State state) throws RuntimeException 
+			State state) throws RuntimeException, RestException 
 	{		
 		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
 			{
@@ -549,8 +546,19 @@ public class MappingWriteAPIs
 			Get.commitService().addUncommitted(latest.getChronology());
 		}
 		
-		Get.commitService().commit("Committing update of mapping set " + mappingConcept.getPrimordialUuid());
-		return mappingConcept.getPrimordialUuid();
+		try
+		{
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of mapping set " + mappingConcept.getPrimordialUuid()).get();
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException("Failed during commit", e);
+		}
+		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingConcept.getPrimordialUuid());
 	}
 
 	/**
@@ -563,12 +571,13 @@ public class MappingWriteAPIs
 	 * @throws RestException 
 	 * @throws IOException
 	 */
-	private static RestUUID createMappingItem(
+	private static RestWriteResponse createMappingItem(
 			ConceptChronology<?> sourceConcept,
 			UUID mappingSetID,
 			UUID targetConcept, 
 			UUID qualifierID,
 			List<RestDynamicSememeData> extendedDataFields,
+			boolean active,
 			StampCoordinate stampCoord,
 			EditCoordinate editCoord) throws RuntimeException, RestException
 	{
@@ -601,22 +610,34 @@ public class MappingWriteAPIs
 		}
 		
 		sb.setPrimordialUuid(mappingItemUUID);
+		
+		if (!active)
+		{
+			sb.setState(State.INACTIVE);
+		}
+		
 		@SuppressWarnings("rawtypes")
 		SememeChronology built = sb.build(editCoord,ChangeCheckerMode.ACTIVE).getNoThrow();
-
+		
 		try
 		{
-			Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() + " for mapping set " + mappingSetID).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() 
+				+ " for mapping set " + mappingSetID).get();
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
+
 		}
 		catch (Exception e)
 		{
-			throw new RestException("Failed committing new mapping item sememe");
+			throw new RestException("Failed committing new mapping item sememe", e);
 		}
 		
-		return new RestUUID(built.getPrimordialUuid());
+		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
 	}
 	
-	private static UUID updateMappingItem(
+	private static RestWriteResponse updateMappingItem(
 			SememeChronology<?> mappingItemSememe,
 			UUID mappingItemTargetConcept,
 			ConceptChronology<?> mappingItemQualifierConcept,
@@ -657,12 +678,16 @@ public class MappingWriteAPIs
 
 		try
 		{
-			Get.commitService().commit("Committing update of mapping item " + mappingItemSememe.getPrimordialUuid()).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of mapping item " + mappingItemSememe.getPrimordialUuid()).get();
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			throw new RuntimeException("Failed during commit", e);
 		}
-		return mappingItemSememe.getPrimordialUuid();
+		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid());
 	}
 }

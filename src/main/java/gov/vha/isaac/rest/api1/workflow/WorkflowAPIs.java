@@ -68,6 +68,7 @@ public class WorkflowAPIs {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.allDefinitions)
+	//TODO change the return type on this method to return more useful data, remove RestUUID when done (As this is the last user)
 	public RestUUID[] getAllDefinitions() {
 		ArrayList<RestUUID> temp = new ArrayList<>();
 		for (UUID uuid : RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet()) {

@@ -20,21 +20,21 @@ package gov.vha.isaac.rest.api1.comment;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.lang3.StringUtils;
-
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
+import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
@@ -42,15 +42,16 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
-import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
-import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -69,14 +70,14 @@ public class CommentWriteAPIs
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
-	 * @return the int Sememe sequence in a {@link RestInteger} wrapper identifying the created sememe which stores the comment data
+	 * @return the {@link RestWriteResponse} wrapper identifying the created sememe which stores the comment data
 	 * @throws RestException
 	 */
 	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
-	public RestInteger createNewComment(
+	public RestWriteResponse createNewComment(
 			RestCommentVersionBaseCreate dataToCreateComment,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -113,17 +114,29 @@ public class CommentWriteAPIs
 				throw new RestException("The parameter 'commentText' is required");
 			}
 
-			SememeChronology<? extends DynamicSememe<?>> built =  Get.sememeBuilderService().getDynamicSememeBuilder(
+			
+			SememeBuilder<? extends SememeChronology<? extends DynamicSememe<?>>> sb = Get.sememeBuilderService().getDynamicSememeBuilder(
 					commentedItemNid,  
 					DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
 					new DynamicSememeData[] {
 							new DynamicSememeStringImpl(dataToCreateComment.getComment()),
 							(StringUtils.isBlank(dataToCreateComment.getCommentContext()) ? null : new DynamicSememeStringImpl(dataToCreateComment.getCommentContext()))}
-					).build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+					);
+			
+			if (dataToCreateComment.active != null && !dataToCreateComment.active)
+			{
+				sb.setState(State.INACTIVE);
+			}
+			
+			SememeChronology<? extends DynamicSememe<?>> built = sb.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 
-			Get.commitService().commit("Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
 
-			return new RestInteger(built.getSememeSequence());
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
 		}
 		catch (RestException e)
 		{
@@ -141,7 +154,6 @@ public class CommentWriteAPIs
 	 * 
 	 * @param dataToUpdateComment - RestCommentVersionBase object containing data for updating a comment
 	 * @param id - The id (nid, sequence or UUID) of the comment to be updated 
-	 * @param state - The state to put the comment into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
@@ -150,16 +162,14 @@ public class CommentWriteAPIs
 	//TODO fix the comments above around editToken 
 	@PUT
 	@Path(RestPaths.updatePathComponent)
-	public void updateComment(
+	public RestWriteResponse updateComment(
 			RestCommentVersionBase dataToUpdateComment,
 			@QueryParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.state) String state,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.state,
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
@@ -167,13 +177,13 @@ public class CommentWriteAPIs
 			throw new RestException(RequestParameters.id, null, "invalid (null) comment id");
 		}
 		
-		RestStateType stateToUse = RestStateType.valueOf(state);
+		State stateToUse = (dataToUpdateComment.active == null || dataToUpdateComment.active) ? State.ACTIVE : State.INACTIVE;
 
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);
 		
 		@SuppressWarnings("unchecked")
-		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse.toState(), RequestInfo.get().getEditCoordinate());
+		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse, RequestInfo.get().getEditCoordinate());
 		
 		editVersion.setData(
 			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.getComment()),
@@ -182,12 +192,17 @@ public class CommentWriteAPIs
 		Get.commitService().addUncommitted(sc);
 		
 		try
-		{		
-			Get.commitService().commit("Update comment").get();
+		{
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Update comment").get();
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
 		}
 		catch (Exception e)
 		{
-			throw new RestException("Failed updating comment id=" + id + ", state=" + state + ", new=" + dataToUpdateComment);
+			throw new RestException("Failed updating comment id=" + id + ", new=" + dataToUpdateComment);
 		}
+		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), sc.getPrimordialUuid());
 	}
 }

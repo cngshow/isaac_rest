@@ -75,7 +75,6 @@ import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
-import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
 import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -237,14 +236,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		{
 			Assert.fail("Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus())
 			+ response.readEntity(String.class));
-		}
-		return response;
-	}
-	private Response checkContentlessFail(Response response)
-	{
-		if (response.getStatus() != Status.NO_CONTENT.getStatusCode())
-		{
-			Assert.fail("Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus()));
 		}
 		return response;
 	}
@@ -773,8 +764,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
-		RestInteger newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptSequenceWrapper.getValue();
+		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
 		
@@ -978,8 +969,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		checkFail(createDescriptionResponse);
 		String descriptionSememeSequenceWrapperXml = createDescriptionResponse.readEntity(String.class);
-		final RestInteger descriptionSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, descriptionSememeSequenceWrapperXml);
-		final int descriptionSememeSequence = descriptionSememeSequenceWrapper.getValue();
+		final RestWriteResponse descriptionSememeSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, descriptionSememeSequenceWrapperXml);
+		final int descriptionSememeSequence = descriptionSememeSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(descriptionSememeSequence != 0);
 		
@@ -1025,7 +1016,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateDescriptionResponse);
+		checkFail(updateDescriptionResponse);
 
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid);
@@ -1053,11 +1044,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response deactivateDescriptionResponse = target(RestPaths.sememeUpdateStatePathComponent.replaceFirst(RestPaths.appPathComponent, "") + descriptionSememeSequence)
+		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
+				+ RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
+				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(deactivateDescriptionResponse);
+		checkFail(deactivateDescriptionResponse);
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject =
 				getDescriptionsForConcept(
@@ -1140,8 +1133,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
-		RestInteger newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptSequenceWrapper.getValue();
+		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
 		
@@ -1261,11 +1254,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response deactivateConceptResponse = target(RestPaths.conceptUpdateStateAppPathComponent + newConceptSequence)
+		Response deactivateConceptResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
+				+ RestPaths.updateStateComponent + newConceptSequenceWrapper.uuid)
+				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(isActive));
-		checkContentlessFail(deactivateConceptResponse);
+		checkFail(deactivateConceptResponse);
 		
 		// Retrieve retired concept and validate
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
@@ -1276,6 +1271,27 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
 		RestConceptVersion deactivatedConceptObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
 		Assert.assertEquals(deactivatedConceptObject.getConVersion().getState(), new RestStateType(State.INACTIVE));
+		
+		//Do it again using the direct concept API
+		
+		Response stateChangeResponse = target(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent + RestPaths.updatePathComponent
+				+ newConceptSequenceWrapper.uuid)
+			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.request()
+			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
+					jsonIze(new String[] {"active"}, 
+							new String[] {"true"})));
+		checkFail(stateChangeResponse).readEntity(String.class);
+		
+		// Retrieve retired concept and validate
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, false)
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		deactivatedConceptObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(deactivatedConceptObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
 	}
 
 	@Test
@@ -1307,8 +1323,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
-		RestUUID newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestUUID.class, newMappingSetSequenceWrapperXml);
-		UUID testMappingSetUUID = newMappingSetSequenceWrapper.getValue();
+		RestWriteResponse newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingSetSequenceWrapperXml);
+		UUID testMappingSetUUID = newMappingSetSequenceWrapper.uuid;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(testMappingSetUUID != null);
 		
@@ -1341,10 +1357,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateMappingSetResponse);
+		checkFail(updateMappingSetResponse);
 		
 		// Retrieve updated mapping set and validate fields
 		getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetUUID)
@@ -1400,8 +1415,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
-		RestUUID newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestUUID.class, newMappingItemSequenceWrapperXml);
-		UUID newMappingItemUUID = newMappingItemSequenceWrapper.getValue();
+		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
+		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newMappingItemUUID != null);
 
@@ -1453,10 +1468,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateMappingtemResponse);
+		checkFail(updateMappingtemResponse);
 
 		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
 				.request()
@@ -1506,8 +1520,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
-		RestInteger newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newCommentSememeSequenceWrapperXml);
-		int newCommentSememeSequence = newCommentSememeSequenceWrapper.getValue();
+		RestWriteResponse newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newCommentSememeSequenceWrapperXml);
+		int newCommentSememeSequence = newCommentSememeSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newCommentSememeSequence > 0);
 		
@@ -1535,10 +1549,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.queryParam(RequestParameters.id, newCommentSememeSequence)
-				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateCommentResponse);
+		checkFail(updateCommentResponse);
 		
 		// Retrieve updated comment and validate fields
 		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
@@ -2881,11 +2894,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Response updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.uuid.toString())
 			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-			.queryParam(RequestParameters.state, "inactive")
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
-					jsonIze(new String[] {"targetNid"}, 
-							new String[] {""})));
+					jsonIze(new String[] {"targetNid", "active"}, 
+							new String[] {"", "false"})));
 	
 		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
 		RestWriteResponse updatedAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
