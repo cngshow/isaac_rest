@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 
 /**
- * {@link RestSememeBase}
+ * {@link RestDynamicSememeBase}
  *
  * This stub class is used for callers to edit {@link RestSememeVersion} objects.  It only contains the fields that may be edited after creation.
  * 
@@ -38,10 +38,10 @@ import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeBase.class)
-public class RestSememeBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestDynamicSememeBase.class)
+public class RestDynamicSememeBase
 {
-	protected RestSememeBase()
+	protected RestDynamicSememeBase()
 	{
 		//for jaxb
 	}

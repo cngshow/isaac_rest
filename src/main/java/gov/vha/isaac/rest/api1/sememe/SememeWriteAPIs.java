@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.sememe;
 
+import java.io.IOException;
 import java.util.Optional;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -66,9 +67,10 @@ import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeBase;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeBaseCreate;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeBase;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeBaseCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreateData;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -86,7 +88,7 @@ import javafx.concurrent.Task;
 public class SememeWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(SememeWriteAPIs.class);
-
+	
 	/**
 	 * Create a new description sememe associated with a specified concept
 	 * 
@@ -224,6 +226,51 @@ public class SememeWriteAPIs
 		}
 	}
 	
+//	/**
+//	 * @param mappingSetCreationData - object containing data used to create new mapping set
+//	 * @param editToken - 
+//	 *            EditToken string returned by previous call to getEditToken()
+//	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
+//	 * @return the UUID identifying the created concept which defines the map set
+//	 * @throws RestException
+//	 */
+//	/**
+//	 * @param mappingSetCreationData
+//	 * @return
+//	 * @throws RestException
+//	 */
+//	@POST
+//	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//	@Path(RestPaths.sememeTypeComponent + RestPaths.createPathComponent)
+//	public RestWriteResponse createSememeType(
+//		RestMappingSetVersionBaseCreate mappingSetCreationData,
+//		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+//	{
+//		RequestParameters.validateParameterNamesAgainstSupportedNames(
+//				RequestInfo.get().getParameters(),
+//				RequestParameters.COORDINATE_PARAM_NAMES,
+//				RequestParameters.editToken);
+//
+//		
+//		try 
+//		{
+//			return createMappingSet(
+//					mappingSetCreationData.name,
+//					mappingSetCreationData.inverseName,
+//					mappingSetCreationData.purpose,
+//					mappingSetCreationData.description,
+//					mappingSetCreationData.mapItemExtendedFieldsDefinition,
+//					mappingSetCreationData.mapSetExtendedFields,
+//					RequestInfo.get().getStampCoordinate(),
+//					RequestInfo.get().getEditCoordinate());
+//		} 
+//		catch (IOException e) 
+//		{
+//			throw new RestException("Failed creating mapping set name=" + mappingSetCreationData.name + ", inverse=" 
+//					+ mappingSetCreationData.inverseName + ", purpose=" + mappingSetCreationData.purpose + ", desc=" + mappingSetCreationData.description);
+//		}
+//	}
+//	
 	
 	/**
 	 * @param sememeCreationData - RestAssociationItemVersionBaseCreate object containing data to create new sememe item
@@ -237,7 +284,7 @@ public class SememeWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
 	public RestWriteResponse createNewSememe(
-		RestSememeBaseCreate sememeCreationData,
+		RestDynamicSememeBaseCreate sememeCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -316,7 +363,7 @@ public class SememeWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public RestWriteResponse updateSememe(
-		RestSememeBase sememeUpdateData,
+		RestDynamicSememeBase sememeUpdateData,
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{

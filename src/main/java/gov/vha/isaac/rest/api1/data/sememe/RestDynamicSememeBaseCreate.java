@@ -27,9 +27,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * {@link RestSememeBaseCreate}
+ * {@link RestDynamicSememeBaseCreate}
  *
- * This stub class is used for callers to create {@link RestSememeVersion} objects.  This class, in combination with {@link RestSememeBase} 
+ * This stub class is used for callers to create {@link RestSememeVersion} objects.  This class, in combination with {@link RestDynamicSememeBase} 
  * contains the fields that can be populated for creation.  
  * 
  * The API never returns this class.
@@ -41,10 +41,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeBaseCreate.class)
-public class RestSememeBaseCreate extends RestSememeBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestDynamicSememeBaseCreate.class)
+public class RestDynamicSememeBaseCreate extends RestDynamicSememeBase
 {
-	protected RestSememeBaseCreate()
+	protected RestDynamicSememeBaseCreate()
 	{
 		//for jaxb
 	}

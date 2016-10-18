@@ -91,7 +91,53 @@ public abstract class RestDynamicSememeData
 	public Integer columnNumber;
 	
 	/**
-	 * The data for a column within a RestDynamicSememeVersion instance
+	 * The data for a column within a RestDynamicSememeVersion instance.  The data type of this field depends on the type of class that extends 
+	 * this abstract class.  The mapping of types is: <ClassType> - <Java Data Type>
+	 * 
+	 * - RestDynamicSememeBoolean - boolean
+	 * - RestDynamicSememeByteArray - byte[]
+	 * - RestDynamicSememeDouble - double
+	 * - RestDynamicSememeFloat - float
+	 * - RestDynamicSememeInteger - int 
+	 * - RestDynamicSememeLong - long
+	 * - RestDynamicSememeString - string
+	 * - RestDynamicSememeNid - int
+	 * - RestDynamicSememeSequence - int
+	 * - RestDynamicSememeUUID - UUID
+	 * - RestDynamicSememeArray - An array of one of the above types
+	 * 
+	 * The data type as returned via the REST interface will be typed however the JSON or XML serializer handles the java types. 
+	 * 
+	 * When using this class in a create or update call, a special annotation must be included to create the proper type of {@link RestDynamicSememeData}
+	 * because {@link RestDynamicSememeData} is an abstract type. 
+	 * 
+	 *  For the server to deserialize the type properly, a field must be included of the form "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.CLASSTYPE"
+	 * 
+	 * where CLASSTYPE is one of:
+	 * - RestDynamicSememeBoolean
+	 * - RestDynamicSememeByteArray
+	 * - RestDynamicSememeDouble
+	 * - RestDynamicSememeFloat
+	 * - RestDynamicSememeInteger,
+	 * - RestDynamicSememeLong,
+	 * - RestDynamicSememeString,
+	 * - RestDynamicSememeNid
+	 * - RestDynamicSememeSequence
+	 * - RestDynamicSememeUUID
+	 * - RestDynamicSememeArray
+	 * 
+	 * Example JSON that provides two columns of differing types:
+	 * 
+	 * ...
+	 *   "restDynamicSememeDataArrayField": [{
+	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString",
+		    "data": "test"
+	 *   }, {
+	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong",
+	 *     "data": 5
+	 *   }]
+	 * }
+
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
