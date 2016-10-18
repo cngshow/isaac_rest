@@ -28,6 +28,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 
@@ -87,6 +88,18 @@ public class ArrayUnwrappers
 		public Object[] getValues()
 		{
 			return restMappingItemVersion;
+		}
+	}
+	
+	@XmlRootElement
+	public static class RestWorkflowDefinitions implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestWorkflowDefinition[] restWorkflowDefinition;
+		
+		public Object[] getValues()
+		{
+			return restWorkflowDefinition;
 		}
 	}
 	

@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.workflow;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -34,14 +35,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.workflow.model.contents.DefinitionDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
@@ -62,18 +64,27 @@ public class WorkflowAPIs {
 	/**
 	 * Return all workflow definitions available on server
 	 * 
-	 * @return RestUUID Collection - Collection of all workflow definitions as
-	 *         IDs
+	 * @return RestWorkflowDefinition Collection - Collection of all workflow definitions 
+	 * 
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.allDefinitions)
-	public RestUUID[] getAllDefinitions() {
-		ArrayList<RestUUID> temp = new ArrayList<>();
-		for (UUID uuid : RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet()) {
-			temp.add(new RestUUID(uuid));
-		}
-		return temp.toArray(new RestUUID[temp.size()]);
+	public RestWorkflowDefinition[] getAllDefinitions() throws RestException {
+		try {
+    		ArrayList<RestWorkflowDefinition> restList = new ArrayList<>();
+    		
+    		Collection<DefinitionDetail> ochreSet = RequestInfo.get().getWorkflow().getDefinitionDetailStore().values();
+    
+    		ochreSet.stream().forEach(a -> restList.add(new RestWorkflowDefinition(a)));
+    		
+    		return restList.toArray(new RestWorkflowDefinition[restList.size()]);
+    	} catch (Exception e) {
+    		String msg = "Failed retrieving the ordered set of process histories by process id";
+    		log.error(msg, e);
+    		throw new RestException(msg + ". " + e.getLocalizedMessage());
+    	}
 	}
 
 	/**

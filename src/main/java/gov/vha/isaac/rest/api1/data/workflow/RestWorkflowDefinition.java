@@ -36,18 +36,17 @@ import gov.vha.isaac.ochre.workflow.model.contents.DefinitionDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestUserRoleType;
 
 /**
- * The metadata defining a given process (or workflow instance). This doesn't
- * include its history, which is available via {@link RestWorkflowProcessHistory}}
+ * The metadata defining a given workflow definition. These are defined based on
+ * BPMN2 Imports.
  * 
- * {@link RestWorkflowDefinitionDetail}
+ * {@link RestWorkflowDefinition}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowDefinitionDetail
-{
+public class RestWorkflowDefinition {
 	/**
 	 * The definition identifier
 	 */
@@ -83,16 +82,16 @@ public class RestWorkflowDefinitionDetail
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowDefinitionDetail()
-	{
-		//for Jaxb
+	protected RestWorkflowDefinition() {
+		// for Jaxb
 		super();
 	}
 
 	/**
-	 * @param processDetail- ISAAC workflow DefinitionDetail
+	 * @param processDetail-
+	 *            ISAAC workflow DefinitionDetail
 	 */
-	public RestWorkflowDefinitionDetail(DefinitionDetail processDetail) {
+	public RestWorkflowDefinition(DefinitionDetail processDetail) {
 		this.id = processDetail.getId();
 		this.bpmn2Id = processDetail.getBpmn2Id();
 		this.name = processDetail.getName();
@@ -151,7 +150,69 @@ public class RestWorkflowDefinitionDetail
 		return Collections.unmodifiableSet(roles);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = prime * +((id == null) ? 0 : id.hashCode()) + bpmn2Id.hashCode() + name.hashCode()
+				+ namespace.hashCode() + version.hashCode() + roles.hashCode();
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestWorkflowDefinition other = (RestWorkflowDefinition) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (bpmn2Id == null) {
+			if (other.bpmn2Id != null)
+				return false;
+		} else if (!bpmn2Id.equals(other.bpmn2Id))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (namespace == null) {
+			if (other.namespace != null)
+				return false;
+		} else if (!namespace.equals(other.namespace))
+			return false;
+		if (version == null) {
+			if (other.version != null)
+				return false;
+		} else if (!version.equals(other.version))
+			return false;
+		if (roles == null) {
+			if (other.roles != null)
+				return false;
+		} else if (!roles.equals(other.roles))
+			return false;
+		return true;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

@@ -19,12 +19,12 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -41,6 +42,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBException;
+
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
@@ -49,13 +51,14 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRole;
-import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
@@ -116,6 +119,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
@@ -123,7 +127,6 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentSpecificationData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -345,20 +348,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return DEFAULT_EDIT_TOKEN_STRING;
 	}
 	
-	private UUID getDefaultWorkflowDefinition() {
+	private RestWorkflowDefinition getDefaultWorkflowDefinition() {
 		Response getDefinitionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.allDefinitions)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getDefinitionsResponseResult = checkFail(getDefinitionsResponse).readEntity(String.class);
-		RestUUID[] availableDefinitions = XMLUtils.unmarshalObjectArray(RestUUID.class, getDefinitionsResponseResult);
+		RestWorkflowDefinition[] availableDefinitions = XMLUtils.unmarshalObjectArray(RestWorkflowDefinition.class, getDefinitionsResponseResult);
 
 		Assert.assertNotNull(availableDefinitions);
 		Assert.assertTrue(availableDefinitions.length > 0);
 		Assert.assertNotNull(availableDefinitions[0]);
 		
-		UUID defaultDefinition = availableDefinitions[0].getValue();
-		
-		return defaultDefinition;
+		return availableDefinitions[0];
 	}
 	
 	private String getCurrentProcessState(UUID processId) {
@@ -470,11 +471,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Optional<UUID> userUuidOptional = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
 		Assert.assertTrue(userUuidOptional.isPresent());
 		UUID userUuid = userUuidOptional.get();
-		UUID defaultDefinition = getDefaultWorkflowDefinition();
-		
+		RestWorkflowDefinition defaultDefinition = getDefaultWorkflowDefinition();
+		Assert.assertNotNull(defaultDefinition.getId());
+		Assert.assertEquals("VetzWorkflow", defaultDefinition.getName());
+		Assert.assertEquals("VetzWorkflow", defaultDefinition.getBpmn2Id());
+		Assert.assertEquals("org.jbpm", defaultDefinition.getNamespace());
+		Assert.assertEquals("1.2", defaultDefinition.getVersion());
+		Assert.assertEquals(4, defaultDefinition.getRoles().size());
+
+		UUID definitionId = defaultDefinition.getId();
+				
 		// Pass new editToken string to available (processes)
 		Response getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
+				.queryParam(RequestParameters.definitionId , definitionId.toString())
 				.queryParam(RequestParameters.editToken, editToken.serialize())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
@@ -489,7 +498,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String wfProcessName = "Test WF Process Name (" + random + ")";
 		String wfProcessDescription = "Test WF Process Description (" + random + ")";
 		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCreate(
-				defaultDefinition,
+				definitionId,
 				wfProcessName,
 				wfProcessDescription);
 		String xml = null;
@@ -554,7 +563,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Check for created process in retrieved available
 		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
+				.queryParam(RequestParameters.definitionId , definitionId.toString())
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
@@ -632,7 +641,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestWorkflowAvailableAction availableAction : availableActions) {
 			Assert.assertNotNull(availableAction.getId());
 			Assert.assertNotNull(availableAction.getDefinitionId());
-			Assert.assertEquals(availableAction.getDefinitionId(), defaultDefinition);
+			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
 			Assert.assertNotNull(availableAction.getInitialState());
 			Assert.assertNotNull(availableAction.getAction());  // "Edit" or "Cancel Workflow" (definition-specific)
 			Assert.assertTrue(availableAction.getAction().equals(editAction) || availableAction.getAction().equals(cancelWorkflowAction)); // definition-specific
@@ -905,7 +914,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestWorkflowAvailableAction availableAction : availableActions) {
 			Assert.assertNotNull(availableAction.getId());
 			Assert.assertNotNull(availableAction.getDefinitionId());
-			Assert.assertEquals(availableAction.getDefinitionId(), defaultDefinition);
+			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
 			Assert.assertNotNull(availableAction.getInitialState()); // "Ready for Review"
 			Assert.assertEquals(availableAction.getInitialState(), "Ready for Review");
 			Assert.assertNotNull(availableAction.getAction()); 		// "QA Fails" or "Cancel Workflow" or "QA Passes"
