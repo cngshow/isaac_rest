@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -83,16 +84,18 @@ public abstract class RestDynamicSememeData
 {
 	/**
 	 * The 0 indexed column number for this data.  Will not be populated for nested RestDynamicSememeData objects where the 'data' field
-	 * is of type RestDynamicSememeArray
+	 * is of type RestDynamicSememeArray.  This field is ignored during a sememe create or update and does not need to be populated.
 	 */
 	@XmlElement
-	Integer columnNumber;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Integer columnNumber;
 	
 	/**
 	 * The data for a column within a RestDynamicSememeVersion instance
 	 */
 	@XmlElement
-	protected Object data;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Object data;
 	
 	protected RestDynamicSememeData(Integer columnNumber, Object data)
 	{
