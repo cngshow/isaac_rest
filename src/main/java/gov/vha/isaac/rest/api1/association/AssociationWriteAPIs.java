@@ -307,7 +307,8 @@ public class AssociationWriteAPIs
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			log.error("Unexpected", e);
+			throw new RuntimeException("error committing", e);
 		}
 		return new RestWriteResponse(
 				EditTokens.renew(RequestInfo.get().getEditToken()),
