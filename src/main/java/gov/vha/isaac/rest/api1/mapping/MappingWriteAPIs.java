@@ -110,12 +110,6 @@ public class MappingWriteAPIs
 	 * @return the UUID identifying the created concept which defines the map set
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
-	/**
-	 * @param mappingSetCreationData
-	 * @return
-	 * @throws RestException
-	 */
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetComponent + RestPaths.createPathComponent)
@@ -349,9 +343,10 @@ public class MappingWriteAPIs
 			int i = 2;
 			for (RestDynamicSememeColumnInfoCreate colInfo : extendedFields)
 			{
-				columns[i] = new DynamicSememeColumnInfo(i++, Get.identifierService().getUuidPrimordialFromConceptSequence(colInfo.columnConceptLabelConcept).get(), 
-						colInfo.columnDataType.translate(), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
-						RestDynamicSememeValidatorType.translate(colInfo.columnValidatorTypes), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
+				columns[i] = new DynamicSememeColumnInfo(i++, 
+						Get.identifierService().getUuidPrimordialFromConceptSequence(colInfo.columnConceptLabelConcept).get(), 
+						DynamicSememeDataType.parse(colInfo.columnDataType), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
+						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
 			}
 		}
 		

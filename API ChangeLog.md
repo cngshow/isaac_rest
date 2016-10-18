@@ -7,6 +7,11 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/18 - 1.6.1:
+    * Changed the field RestDynamicSememeColunInfoCreate.columnDataType from RestDynamicSememeDataType to String for ease of creation / parsing.
+    * Changed the field RestDynamicSememeColunInfoCreate.columnValidatorTypes from RestDynamicSememeValidatorType to String for ease of creation / parsing.
+      * The string values for either of these fields may be populated with the name or enumId from the enum types.  See updated docs on the field.  This
+        vastly simplifies the object that needs to be constructed during writes to the server.  On reads, the full Rest...Type is still returned for each enum.
 * 2016/10/17 - 1.6.0: 
     * Cleaning up return types on /write APIs for consistency (everything now returns a RestWriteResponse)
     * Cleaning up inconsistent ways of changing the status on components (DTO vs parameter on update / create calls)

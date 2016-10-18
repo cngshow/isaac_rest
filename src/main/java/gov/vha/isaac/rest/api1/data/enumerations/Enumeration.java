@@ -104,13 +104,13 @@ public abstract class Enumeration implements Comparable<Enumeration>
 	 * The name of this enumeration type
 	 */
 	@XmlElement
-	String name;
+	public String name;
 	
 	/**
 	 * The identifier of this enumeration.  This would be passed back to a call that requested an enum type.
 	 */
 	@XmlElement
-	int enumId;
+	public int enumId;
 	
 	protected Enumeration(String name, int id)
 	{
