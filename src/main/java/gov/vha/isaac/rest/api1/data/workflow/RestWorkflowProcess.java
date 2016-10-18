@@ -117,6 +117,7 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.id = process.getId();
 		this.creatorId = process.getCreatorId();
 		this.timeCreated = process.getTimeCreated();
+		this.timeLaunched = process.getTimeLaunched();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
 		for (Map.Entry<Integer, Stamp> entry : process.getComponentToInitialEditMap().entrySet()) {

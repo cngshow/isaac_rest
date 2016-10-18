@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,6 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -40,6 +42,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBException;
+
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
@@ -48,8 +51,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
@@ -119,6 +124,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
@@ -339,20 +345,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return DEFAULT_EDIT_TOKEN_STRING;
 	}
 	
-	private UUID getDefaultWorkflowDefinition() {
+	private RestWorkflowDefinition getDefaultWorkflowDefinition() {
 		Response getDefinitionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.allDefinitions)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getDefinitionsResponseResult = checkFail(getDefinitionsResponse).readEntity(String.class);
-		RestUUID[] availableDefinitions = XMLUtils.unmarshalObjectArray(RestUUID.class, getDefinitionsResponseResult);
+		RestWorkflowDefinition[] availableDefinitions = XMLUtils.unmarshalObjectArray(RestWorkflowDefinition.class, getDefinitionsResponseResult);
 
 		Assert.assertNotNull(availableDefinitions);
 		Assert.assertTrue(availableDefinitions.length > 0);
 		Assert.assertNotNull(availableDefinitions[0]);
 		
-		UUID defaultDefinition = availableDefinitions[0].getValue();
-		
-		return defaultDefinition;
+		return availableDefinitions[0];
 	}
 	
 	private String getCurrentProcessState(UUID processId) {
@@ -464,11 +468,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Optional<UUID> userUuidOptional = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
 		Assert.assertTrue(userUuidOptional.isPresent());
 		UUID userUuid = userUuidOptional.get();
-		UUID defaultDefinition = getDefaultWorkflowDefinition();
-		
+		RestWorkflowDefinition defaultDefinition = getDefaultWorkflowDefinition();
+		Assert.assertNotNull(defaultDefinition.getId());
+		Assert.assertEquals("VetzWorkflow", defaultDefinition.getName());
+		Assert.assertEquals("VetzWorkflow", defaultDefinition.getBpmn2Id());
+		Assert.assertEquals("org.jbpm", defaultDefinition.getNamespace());
+		Assert.assertEquals("1.2", defaultDefinition.getVersion());
+		Assert.assertEquals(4, defaultDefinition.getRoles().size());
+
+		UUID definitionId = defaultDefinition.getId();
+				
 		// Pass new editToken string to available (processes)
 		Response getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
+				.queryParam(RequestParameters.definitionId , definitionId.toString())
 				.queryParam(RequestParameters.editToken, editToken.serialize())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
@@ -483,7 +495,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String wfProcessName = "Test WF Process Name (" + random + ")";
 		String wfProcessDescription = "Test WF Process Description (" + random + ")";
 		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCreate(
-				defaultDefinition,
+				definitionId,
 				wfProcessName,
 				wfProcessDescription);
 		String xml = null;
@@ -548,7 +560,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Check for created process in retrieved available
 		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , defaultDefinition.toString())
+				.queryParam(RequestParameters.definitionId , definitionId.toString())
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
@@ -626,7 +638,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestWorkflowAvailableAction availableAction : availableActions) {
 			Assert.assertNotNull(availableAction.getId());
 			Assert.assertNotNull(availableAction.getDefinitionId());
-			Assert.assertEquals(availableAction.getDefinitionId(), defaultDefinition);
+			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
 			Assert.assertNotNull(availableAction.getInitialState());
 			Assert.assertNotNull(availableAction.getAction());  // "Edit" or "Cancel Workflow" (definition-specific)
 			Assert.assertTrue(availableAction.getAction().equals(editAction) || availableAction.getAction().equals(cancelWorkflowAction)); // definition-specific
@@ -780,6 +792,56 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		int newConceptNid = Get.identifierService().getConceptNid(newConceptSequence);
 		
+		// Get process after adding components
+		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+		Assert.assertNotNull(process);
+		
+		// Get list of components in process
+		Set<Integer> componentsInProcessBeforeRemovingComponent = new HashSet<>();
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+			componentsInProcessBeforeRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
+		}
+		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
+	
+		// Remove one of the components in the process
+		RestWorkflowProcessComponentSpecificationData processComponentSpecificationData = new RestWorkflowProcessComponentSpecificationData(
+				componentsInProcessBeforeRemovingComponent.iterator().next());
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(processComponentSpecificationData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
+				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
+		renewedEditToken = writeResponse.editToken;
+		Assert.assertNotNull(renewedEditToken);
+		
+		// Retrieve process after removing component
+		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+		Assert.assertNotNull(process);
+		
+		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
+		}
+		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(processComponentSpecificationData.getComponentNid()));
+		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
+	
 		// Get process to check for added components
 		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
 				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
@@ -825,7 +887,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(process.getCreatorId());
 		Assert.assertEquals(process.getCreatorId(), userUuid);
 		Assert.assertTrue(process.getTimeCreated() > 0);
-		// Assert.assertTrue(process.getTimeLaunched() > 0); // TODO debug this failure. process.getTimeLaunched() should be > 0
+		Assert.assertTrue(process.getTimeLaunched() > 0); // TODO debug this failure. process.getTimeLaunched() should be > 0
 		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
 		Assert.assertNotNull(process.getProcessStatus());
 		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.LAUNCHED));
@@ -849,7 +911,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestWorkflowAvailableAction availableAction : availableActions) {
 			Assert.assertNotNull(availableAction.getId());
 			Assert.assertNotNull(availableAction.getDefinitionId());
-			Assert.assertEquals(availableAction.getDefinitionId(), defaultDefinition);
+			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
 			Assert.assertNotNull(availableAction.getInitialState()); // "Ready for Review"
 			Assert.assertEquals(availableAction.getInitialState(), "Ready for Review");
 			Assert.assertNotNull(availableAction.getAction()); 		// "QA Fails" or "Cancel Workflow" or "QA Passes"
@@ -879,47 +941,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(foundQaFailsAction);
 		Assert.assertTrue(foundCancelWorkflowAction);
 		Assert.assertTrue(foundQaPassesAction);
-		
-		// Get list of components in process
-		Set<Integer> componentsInProcessBeforeRemovingComponent = new HashSet<>();
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
-			componentsInProcessBeforeRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
-		}
-		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
-		
-		// Remove one of the components in the process
-//		RestWorkflowProcessComponentSpecificationData processComponentSpecificationData = new RestWorkflowProcessComponentSpecificationData(
-//				componentsInProcessBeforeRemovingComponent.iterator().next());
-//		xml = null;
-//		try {
-//			xml = XMLUtils.marshallObject(processComponentSpecificationData);
-//		} catch (JAXBException e) {
-//			throw new RuntimeException(e);
-//		}
-//		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
-//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-//		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
-//		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
-//		renewedEditToken = writeResponse.editToken;
-//		Assert.assertNotNull(renewedEditToken);
-//		
-//		// Retrieve process after removing component
-//		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-//				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
-//		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
-//		Assert.assertNotNull(process);
-//		
-//		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
-//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
-//			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
-//		}
-//		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(processComponentSpecificationData.getComponentNid()));
-//		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
 	}
 	
 	@Test
@@ -2827,13 +2848,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
 		
 		//Make one
+		UUID random = UUID.randomUUID();
+		final String description = "Just a test description type (" + random.toString() + ")";
 		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 					+ RestPaths.associationComponent + RestPaths.createPathComponent)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationName", "associationInverseName", "description"}, 
-								new String[] {"test", "inverse Test", "Just a test description type"})));
+								new String[] {"test", "inverse Test", description})));
 		result = checkFail(createAssociationResponse).readEntity(String.class);
 		
 		RestWriteResponse createdAssociationId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
@@ -2847,7 +2870,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestAssociationTypeVersion createdAssociation = XMLUtils.unmarshalObject(RestAssociationTypeVersion.class, result);
 		
 		Assert.assertEquals(createdAssociation.associationName, "test");
-		Assert.assertEquals(createdAssociation.description, "Just a test description type");
+		Assert.assertEquals(createdAssociation.description, description);
 		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
 		
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
@@ -2859,7 +2882,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertEquals(1, createdAssociations.length);
 		Assert.assertEquals(createdAssociations[0].associationName, "test");
-		Assert.assertEquals(createdAssociations[0].description, "Just a test description type");
+		Assert.assertEquals(createdAssociations[0].description, description);
 		Assert.assertEquals(createdAssociations[0].associationInverseName, "inverse Test");
 		Assert.assertEquals(createdAssociations[0].associationConcept.getIdentifiers().getFirst(), createdAssociationId.uuid);
 		
@@ -2929,7 +2952,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 										.queryParam(RequestParameters.editToken, getDefaultEditTokenString()).request()
 										.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
 										.post(Entity.json(jsonIze(new String[] { "associationName", "associationInverseName", "description" },
-												new String[] { "foo", "oof", "another test description type" })))).readEntity(String.class));
+												new String[] { "foo", "oof", description })))).readEntity(String.class));
 	
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
