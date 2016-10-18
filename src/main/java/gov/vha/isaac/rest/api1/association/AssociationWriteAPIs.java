@@ -84,7 +84,6 @@ public class AssociationWriteAPIs
 	 * @return the UUID identifying the created concept which defines the association
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationComponent + RestPaths.createPathComponent)
@@ -115,19 +114,6 @@ public class AssociationWriteAPIs
 				associationCreationData.associationName, associationCreationData.associationName, associationCreationData.description, columns,
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_SEMEME.getConceptSequence(), null, null, RequestInfo.get().getEditCoordinate());
 		
-		Get.workExecutors().getExecutor().execute(() ->
-		{
-			try
-			{
-				//TODO see if I still need to manually do this, I thought I fixed this.
-				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0}, true);
-			}
-			catch (Exception e)
-			{
-				log.error("Unexpected error enabling the index on newly created mapping set!", e);
-			}
-		});
-		
 		//Then, annotate the concept created above as a member of the MappingSet dynamic sememe, and add the inverse name, if present.
 		if (!StringUtils.isBlank(associationCreationData.associationInverseName))
 		{
@@ -155,8 +141,21 @@ public class AssociationWriteAPIs
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			throw new RuntimeException("Unexpected", e);
 		}
+		
+		Get.workExecutors().getExecutor().execute(() ->
+		{
+			try
+			{
+				//TODO see if I still need to manually do this, I thought I fixed this.
+				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0}, true);
+			}
+			catch (Exception e)
+			{
+				log.error("Unexpected error enabling the index on newly created mapping set!", e);
+			}
+		});
 		return new RestWriteResponse(
 				EditTokens.renew(RequestInfo.get().getEditToken()),
 				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
@@ -172,7 +171,6 @@ public class AssociationWriteAPIs
 	 * @return the sememe UUID identifying the sememe which stores the created association item
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.createPathComponent)
