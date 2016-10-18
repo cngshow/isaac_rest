@@ -40,6 +40,7 @@ import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
+import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
@@ -149,37 +150,6 @@ public class WorkflowAPIs {
 			return restList.toArray(new RestWorkflowProcessHistory[restList.size()]);
 		} catch (Exception e) {
 			String msg = "Failed retrieving the ordered set of process histories by process id";
-			log.error(msg, e);
-			throw new RestException(msg + ". " + e.getLocalizedMessage());
-		}
-	}
-
-	/**
-	 * Indicates if a workflow process instance is locked.
-	 * 
-	 * @param processId
-	 *            UUID identifying a given workflow process instance
-	 * 
-	 * @return RestBoolean - Where True means process instance is locked. False
-	 *         means process instance is available (not locked).
-	 * 
-	 * @throws RestException
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.locked)
-	public RestBoolean isProcessLocked(@QueryParam(RequestParameters.processId) String processId) throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.processId);
-
-		try {
-			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
-					.getProcessDetails(RequestInfoUtils.parseUuidParameter(RequestParameters.processId, processId));
-			return new RestBoolean(processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS));
-		} catch (RestException e) {
-			throw e;
-		} catch (Exception e) {
-			String msg = "Failed retrieving the process for the specified process id " + processId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}

@@ -120,11 +120,9 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentSpecificationData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -378,7 +376,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	private RestWriteResponse removeComponentFromProcess(EditToken token, int component) {
-		RestWorkflowProcessComponentSpecificationData processComponentSpecificationData = new RestWorkflowProcessComponentSpecificationData(
+		RestInteger processComponentSpecificationData = new RestInteger(
 				component);
 		String xml = null;
 		try {
@@ -670,12 +668,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		assertFail(getBadAvailableActionsResponse);
 		
 		// Acquire lock on process.  This should Fail because it's automatically locked on create.
-		RestWorkflowLockingData processLockingData = new RestWorkflowLockingData(
-				createdProcessUUID,
-				true);
+		RestBoolean lockingRequestType = new RestBoolean(true);
 		xml = null;
 		try {
-			xml = XMLUtils.marshallObject(processLockingData);
+			xml = XMLUtils.marshallObject(lockingRequestType);
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
@@ -686,12 +682,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		assertFail(lockProcessResponse);
 
 		// Release lock on process
-		processLockingData = new RestWorkflowLockingData(
-				createdProcessUUID,
-				false);
+		lockingRequestType = new RestBoolean(false);
 		xml = null;
 		try {
-			xml = XMLUtils.marshallObject(processLockingData);
+			xml = XMLUtils.marshallObject(lockingRequestType);
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
@@ -705,12 +699,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(renewedEditToken);
 		
 		// Acquire lock on process
-		processLockingData = new RestWorkflowLockingData(
-				createdProcessUUID,
-				true);
+		lockingRequestType = new RestBoolean(true);
 		xml = null;
 		try {
-			xml = XMLUtils.marshallObject(processLockingData);
+			xml = XMLUtils.marshallObject(lockingRequestType);
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
@@ -727,7 +719,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Advance process to Edit.  Should fail because no components added yet.
 		RestWorkflowProcessAdvancementData processAdvancementData = new RestWorkflowProcessAdvancementData(
-				createdProcessUUID,
 				editAction,
 				"An edit action comment");
 		xml = null;
@@ -806,17 +797,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Get list of components in process
 		Set<Integer> componentsInProcessBeforeRemovingComponent = new HashSet<>();
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 			componentsInProcessBeforeRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
 		}
 		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
 	
 		// Remove one of the components in the process
-		RestWorkflowProcessComponentSpecificationData processComponentSpecificationData = new RestWorkflowProcessComponentSpecificationData(
+		RestInteger componentNid = new RestInteger(
 				componentsInProcessBeforeRemovingComponent.iterator().next());
 		xml = null;
 		try {
-			xml = XMLUtils.marshallObject(processComponentSpecificationData);
+			xml = XMLUtils.marshallObject(componentNid);
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
@@ -839,10 +830,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(process);
 		
 		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
 		}
-		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(processComponentSpecificationData.getComponentNid()));
+		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid.getValue()));
 		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
 	
 		// Get process to check for added components
@@ -854,7 +845,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
 		Assert.assertNotNull(process);
 		boolean foundCreatedConceptNidInProcess = false;
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 			if (restWorkflowComponentToStampMapEntry.getKey() == newConceptNid) {
 				foundCreatedConceptNidInProcess = true;
 				break;
