@@ -43,6 +43,7 @@ public class RestDynamicSememeFloat extends RestDynamicSememeData
 		//for jaxb
 	}
 
+	//TODO test other type parsing / handling
 	public float getFloat()
 	{
 		return (float)data;

@@ -45,6 +45,13 @@ public class RestDynamicSememeLong extends RestDynamicSememeData
 
 	public long getLong()
 	{
-		return (long)data;
+		if (data instanceof Integer)
+		{
+			return ((Integer)data).longValue();
+		}
+		else
+		{
+			return (long)data;
+		}
 	}
 }
