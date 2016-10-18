@@ -52,7 +52,7 @@ public class RestMappingItemVersionBaseCreate extends RestMappingItemVersionBase
 	 * The concept sequence that identifies the map set that this entry belongs to
 	 */
 	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_NULL)  //TODO make this more friendly - string instead of int
 	public int mapSetConcept;
 	
 	/**

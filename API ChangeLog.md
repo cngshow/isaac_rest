@@ -7,6 +7,18 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/17 - 1.6.0: 
+    * Cleaning up return types on /write APIs for consistency (everything now returns a RestWriteResponse)
+    * Cleaning up inconsistent ways of changing the status on components (DTO vs parameter on update / create calls)
+    * There is a new method (/write/component/update/state) which can be used toggle the state of any component from active to inactive (concept or sememe).
+    * In parallel, all update methods now include an (optional) active field in the update data, which may  be used to change the state during an update.
+    * Finally, most (but not yet all) create methods also now support specifying the state during the component create.  
+      * The APIs that do not yet support this on create things that create concepts behind the scenes, like mapSet create, or associationCreate.
+    * Numerous confusing API methods for changing state of a concept were removed.
+    * Added initial implementation of the sememe write APIs.  Create is partially tested, update is not yet tested. 
+    * Removed RestWorkflowLockingData as no longer necessary since only 2 fields are ProcessId and Boolean.  Instead, updated WorkflowWriteAPI.setProcessLock to pass in a boolean as type String.
+    * Removed RestWorkflowProcessComponentSpecificationData as no longer necessary since only 2 fields are ProcessId and Integer.  Instead, updated WorkflowWriteAPI.removeComponentFromProcess to pass in an integer as type String.
+    * Remove WorkflowAPI.isProcessLocked() as not needed once RestWorkflowProcess has an OwnerId added.  Now same information that the REST call supplied can be derived from the RestWorkflowProcess object.
 * 2016/10/17 - 1.5.9: Removed processId from RestWorkflowProcessComponentSpecificationData (used with removeComponentFromProcess()) because it should be in EditToken
 * 2016/10/13 - 1.5.8: Changed return type of all write methods in the Associations API to be RestWriteResponse.  Bug fixes in association API
     implementation code.  BUG - getTargetAssociations does not work for newly created association types / associations.  (problem with underlying

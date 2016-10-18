@@ -96,6 +96,8 @@ public class RequestParameters {
 		
 		COORDINATE_PARAM_NAMES = Collections.unmodifiableSet(params);
 	}
+	
+	public final static String active = "active";
 
 	public final static String id = "id";
 	public final static String nid = "nid";
@@ -144,8 +146,6 @@ public class RequestParameters {
 	// IdAPIs
 	public final static String inputType = "inputType";
 	public final static String outputType = "outputType";
-
-	public final static String state = "state";
 
 	// Workflow
 	public final static String definitionId = "definitionId"; // UUID string
@@ -209,7 +209,7 @@ public class RequestParameters {
 			inputType,
 			outputType,
 			
-			state
+			active
 			));
 		ALL_VALID_PARAMETERS = params;
 	}

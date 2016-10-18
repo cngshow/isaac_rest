@@ -41,9 +41,13 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeDescriptionUpdateData.class)
 public class RestSememeDescriptionUpdateData
 {
+	
+	//TODO This class and the CreateDAta class don't follow the existing pattern, and don't inherit from each other... need to redo this and clean it up 
+	//at some point.
+	
 	/**
 	 * The concept sequence of the concept that represents the case significance flag on the description .
 	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
@@ -84,11 +88,12 @@ public class RestSememeDescriptionUpdateData
 //	Integer extendedDescriptionTypeConceptSequence;
 
 	/**
-	 * The boolean indicating whether specified sememe should be saved as ACTIVE
+	 * True to indicate the mapping set should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
 	 */
 	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	boolean active;
+	@JsonInclude(JsonInclude.Include.NON_NULL)  //TODO make this consistent with others
+	Boolean active;
 	
 	protected RestSememeDescriptionUpdateData()
 	{

@@ -42,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeDescriptionCreateData.class)
 public class RestSememeDescriptionCreateData
 {
 	/**
@@ -104,6 +104,14 @@ public class RestSememeDescriptionCreateData
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int referencedComponentNid;
+	
+	/**
+	 * True to indicate the mapping set should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
 	
 	protected RestSememeDescriptionCreateData()
 	{

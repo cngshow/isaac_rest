@@ -61,6 +61,7 @@ import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitService;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
@@ -72,14 +73,14 @@ import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
-import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -115,7 +116,10 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
@@ -238,14 +242,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		{
 			Assert.fail("Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus())
 			+ response.readEntity(String.class));
-		}
-		return response;
-	}
-	private Response checkContentlessFail(Response response)
-	{
-		if (response.getStatus() != Status.NO_CONTENT.getStatusCode())
-		{
-			Assert.fail("Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus()));
 		}
 		return response;
 	}
@@ -376,7 +372,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	private RestWriteResponse removeComponentFromProcess(EditToken token, int component) {
-		RestInteger processComponentSpecificationData = new RestInteger(
+		Integer processComponentSpecificationData = new Integer(
 				component);
 		String xml = null;
 		try {
@@ -668,48 +664,30 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		assertFail(getBadAvailableActionsResponse);
 		
 		// Acquire lock on process.  This should Fail because it's automatically locked on create.
-		RestBoolean lockingRequestType = new RestBoolean(true);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(lockingRequestType);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		String lockingRequestType = Boolean.toString(true);
 		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
 		assertFail(lockProcessResponse);
 
 		// Release lock on process
-		lockingRequestType = new RestBoolean(false);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(lockingRequestType);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		lockingRequestType = Boolean.toString(false);
 		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
 		String unlockProcessResponseResult = checkFail(unlockProcessResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, unlockProcessResponseResult);
 		RestEditToken renewedEditToken = writeResponse.editToken;
 		Assert.assertNotNull(renewedEditToken);
 		
 		// Acquire lock on process
-		lockingRequestType = new RestBoolean(true);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(lockingRequestType);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		lockingRequestType = Boolean.toString(true);
 		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
 		String lockProcessResponseResult = checkFail(lockProcessResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, lockProcessResponseResult);
 		renewedEditToken = writeResponse.editToken;
@@ -773,8 +751,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
-		RestInteger newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptSequenceWrapper.getValue();
+		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
 		
@@ -803,18 +781,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
 	
 		// Remove one of the components in the process
-		RestInteger componentNid = new RestInteger(
-				componentsInProcessBeforeRemovingComponent.iterator().next());
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(componentNid);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		String componentNid = Integer.toString(componentsInProcessBeforeRemovingComponent.iterator().next());
 		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(componentNid));
 		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
 		renewedEditToken = writeResponse.editToken;
@@ -833,7 +804,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
 		}
-		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid.getValue()));
+		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid));
 		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
 	
 		// Get process to check for added components
@@ -987,8 +958,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		checkFail(createDescriptionResponse);
 		String descriptionSememeSequenceWrapperXml = createDescriptionResponse.readEntity(String.class);
-		final RestInteger descriptionSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, descriptionSememeSequenceWrapperXml);
-		final int descriptionSememeSequence = descriptionSememeSequenceWrapper.getValue();
+		final RestWriteResponse descriptionSememeSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, descriptionSememeSequenceWrapperXml);
+		final int descriptionSememeSequence = descriptionSememeSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(descriptionSememeSequence != 0);
 		
@@ -1034,7 +1005,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateDescriptionResponse);
+		checkFail(updateDescriptionResponse);
 
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid);
@@ -1062,11 +1033,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response deactivateDescriptionResponse = target(RestPaths.sememeUpdateStatePathComponent.replaceFirst(RestPaths.appPathComponent, "") + descriptionSememeSequence)
+		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
+				+ RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
+				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(deactivateDescriptionResponse);
+		checkFail(deactivateDescriptionResponse);
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject =
 				getDescriptionsForConcept(
@@ -1149,8 +1122,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
-		RestInteger newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptSequenceWrapper.getValue();
+		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
 		
@@ -1270,11 +1243,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response deactivateConceptResponse = target(RestPaths.conceptUpdateStateAppPathComponent + newConceptSequence)
+		Response deactivateConceptResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
+				+ RestPaths.updateStateComponent + newConceptSequenceWrapper.uuid)
+				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(isActive));
-		checkContentlessFail(deactivateConceptResponse);
+		checkFail(deactivateConceptResponse);
 		
 		// Retrieve retired concept and validate
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
@@ -1285,6 +1260,27 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
 		RestConceptVersion deactivatedConceptObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
 		Assert.assertEquals(deactivatedConceptObject.getConVersion().getState(), new RestStateType(State.INACTIVE));
+		
+		//Do it again using the direct concept API
+		
+		Response stateChangeResponse = target(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent + RestPaths.updatePathComponent
+				+ newConceptSequenceWrapper.uuid)
+			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.request()
+			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
+					jsonIze(new String[] {"active"}, 
+							new String[] {"true"})));
+		checkFail(stateChangeResponse).readEntity(String.class);
+		
+		// Retrieve retired concept and validate
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, false)
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		deactivatedConceptObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(deactivatedConceptObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
 	}
 
 	@Test
@@ -1316,8 +1312,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
-		RestUUID newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestUUID.class, newMappingSetSequenceWrapperXml);
-		UUID testMappingSetUUID = newMappingSetSequenceWrapper.getValue();
+		RestWriteResponse newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingSetSequenceWrapperXml);
+		UUID testMappingSetUUID = newMappingSetSequenceWrapper.uuid;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(testMappingSetUUID != null);
 		
@@ -1350,10 +1346,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateMappingSetResponse);
+		checkFail(updateMappingSetResponse);
 		
 		// Retrieve updated mapping set and validate fields
 		getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetUUID)
@@ -1409,8 +1404,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
-		RestUUID newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestUUID.class, newMappingItemSequenceWrapperXml);
-		UUID newMappingItemUUID = newMappingItemSequenceWrapper.getValue();
+		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
+		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newMappingItemUUID != null);
 
@@ -1462,10 +1457,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateMappingtemResponse);
+		checkFail(updateMappingtemResponse);
 
 		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
 				.request()
@@ -1515,8 +1509,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
-		RestInteger newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestInteger.class, newCommentSememeSequenceWrapperXml);
-		int newCommentSememeSequence = newCommentSememeSequenceWrapper.getValue();
+		RestWriteResponse newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newCommentSememeSequenceWrapperXml);
+		int newCommentSememeSequence = newCommentSememeSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newCommentSememeSequence > 0);
 		
@@ -1544,10 +1538,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.queryParam(RequestParameters.id, newCommentSememeSequence)
-				.queryParam(RequestParameters.state, "ACTIVE")
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkContentlessFail(updateCommentResponse);
+		checkFail(updateCommentResponse);
 		
 		// Retrieve updated comment and validate fields
 		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
@@ -2892,11 +2885,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Response updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.uuid.toString())
 			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-			.queryParam(RequestParameters.state, "inactive")
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
-					jsonIze(new String[] {"targetNid"}, 
-							new String[] {""})));
+					jsonIze(new String[] {"targetNid", "active"}, 
+							new String[] {"", "false"})));
 	
 		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
 		RestWriteResponse updatedAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
@@ -3003,8 +2995,141 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(pagedAssociations.results[0].associationTypeSequence, createdAssociationId.sequence.intValue());
 		
 		Assert.assertNotEquals(r1Source, pagedAssociations.results[0].sourceNid);
-	}	
+	}
 	
+	@Test
+	public void testSememeWrite()
+	{
+		//Make one
+		
+		
+		String dataColumns = jsonIze(new DynamicSememeData[] {new DynamicSememeStringImpl("test"), new DynamicSememeLongImpl(5l)});
+		System.out.println(jsonIze(new String[] {"assemblageConcept", "referencedComponent", "columnData"}, 
+								new String[] {DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getNid() + "", 
+										MetaData.CHINESE_LANGUAGE.getNid() + "", dataColumns}));
+		
+		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+						jsonIze(new String[] {"assemblageConcept", "referencedComponent", "columnData"}, 
+								new String[] {DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getNid() + "", 
+										MetaData.CHINESE_LANGUAGE.getNid() + "", dataColumns})));
+		String result = checkFail(createSememeResponse).readEntity(String.class);
+		
+		RestWriteResponse createdSememeId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		
+		//Read back
+		
+		result = checkFail(target(RestPaths.sememeAPIsPathComponent + RestPaths.versionComponent + createdSememeId.uuid.toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestDynamicSememeVersion createdSememe = XMLUtils.unmarshalObject(RestDynamicSememeVersion.class, result);
+
+		Assert.assertEquals(createdSememe.getDataColumns().get(0).data.toString(), "test");
+		Assert.assertEquals((Long)createdSememe.getDataColumns().get(1).data, new Long(5l));
+
+	}
+	
+
+	private String jsonIze(DynamicSememeData[] dynamicSememeDatas)
+	{
+		String temp = "\n    ";
+		StringBuilder sb = new StringBuilder();
+		sb.append("[").append(temp);
+		for (int i = 0; i < dynamicSememeDatas.length; i++)
+		{
+			sb.append("{").append(temp);
+			sb.append("\"@class\" : \"" + mapClass(dynamicSememeDatas[i]) + "\",");
+			sb.append(temp);
+			sb.append("\"data\" : ");
+			if (quoteWrap(dynamicSememeDatas[i]))
+			{
+				sb.append("\"");
+			}
+			sb.append(dynamicSememeDatas[i] == null ? "null" : dynamicSememeDatas[i].dataToString());
+			if (quoteWrap(dynamicSememeDatas[i]))
+			{
+				sb.append("\"");
+			}
+			sb.append(temp);
+			sb.append("},").append(temp);
+		}
+		sb.setLength(sb.length() - (temp.length() + 1));
+		sb.append("]").append(temp);
+		return sb.toString();
+	}
+	
+	private boolean quoteWrap(DynamicSememeData data)
+	{
+		if (data == null)
+		{
+			return false;
+		}
+		switch(data.getDynamicSememeDataType())
+		{
+			case ARRAY:
+			case BOOLEAN:
+			case DOUBLE:
+			case FLOAT:
+			case INTEGER:
+			case LONG:
+			case NID:
+			case SEQUENCE:
+				return false;
+			case STRING:
+			case UUID:
+				return true;
+			case UNKNOWN:
+			case BYTEARRAY:
+			case POLYMORPHIC:
+			default :
+				throw new RuntimeException("not supported yet");
+		}
+	}
+	
+	public String mapClass(DynamicSememeData data)
+	{
+		if (data == null)
+		{
+			return RestDynamicSememeData.class.getName();
+		}
+		switch(data.getDynamicSememeDataType())
+		{
+			case ARRAY:
+				break;
+			case BOOLEAN:
+				break;
+			case BYTEARRAY:
+				break;
+			case DOUBLE:
+				break;
+			case FLOAT:
+				break;
+			case INTEGER:
+				return RestDynamicSememeInteger.class.getName();
+			case LONG:
+				return RestDynamicSememeLong.class.getName();
+			case NID:
+				break;
+			case POLYMORPHIC:
+				break;
+			case SEQUENCE:
+				break;
+			case STRING:
+				return RestDynamicSememeString.class.getName();
+			case UNKNOWN:
+				break;
+			case UUID:
+				break;
+			default :
+				break;
+			
+		}
+		throw new RuntimeException("Oops");
+	}
+
 	private String jsonIze(String[] names, String[] values)
 	{
 		String temp = "\n    ";
@@ -3014,14 +3139,25 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		{
 			sb.append("\"");
 			sb.append(names[i]);
-			sb.append("\":\"");
-			sb.append(values[i]);
-			sb.append("\",");
+			if (values[i].startsWith("["))
+			{
+				sb.append("\": ");
+				sb.append(values[i]);
+				sb.append(",");
+			}
+			else
+			{
+				sb.append("\":\"");
+				sb.append(values[i]);
+				sb.append("\",");
+			}
 			sb.append(temp);
 		}
 		sb.setLength(sb.length() - (temp.length() + 1));
 		sb.append("}");
 		return sb.toString();
 	}
+	
+	
 
 }

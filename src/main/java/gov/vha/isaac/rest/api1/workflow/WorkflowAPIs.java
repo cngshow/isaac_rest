@@ -74,18 +74,18 @@ public class WorkflowAPIs {
 	@Path(RestPaths.allDefinitions)
 	public RestWorkflowDefinition[] getAllDefinitions() throws RestException {
 		try {
-    		ArrayList<RestWorkflowDefinition> restList = new ArrayList<>();
-    		
-    		Collection<DefinitionDetail> ochreSet = RequestInfo.get().getWorkflow().getDefinitionDetailStore().values();
-    
-    		ochreSet.stream().forEach(a -> restList.add(new RestWorkflowDefinition(a)));
-    		
-    		return restList.toArray(new RestWorkflowDefinition[restList.size()]);
-    	} catch (Exception e) {
-    		String msg = "Failed retrieving the ordered set of process histories by process id";
-    		log.error(msg, e);
-    		throw new RestException(msg + ". " + e.getLocalizedMessage());
-    	}
+			ArrayList<RestWorkflowDefinition> restList = new ArrayList<>();
+			
+			Collection<DefinitionDetail> ochreSet = RequestInfo.get().getWorkflow().getDefinitionDetailStore().values();
+	
+			ochreSet.stream().forEach(a -> restList.add(new RestWorkflowDefinition(a)));
+			
+			return restList.toArray(new RestWorkflowDefinition[restList.size()]);
+		} catch (Exception e) {
+			String msg = "Failed retrieving the ordered set of process histories by process id";
+			log.error(msg, e);
+			throw new RestException(msg + ". " + e.getLocalizedMessage());
+		}
 	}
 
 	/**
@@ -93,7 +93,7 @@ public class WorkflowAPIs {
 	 * history
 	 * 
 	 * @param processId
-	 *            UUID identifying a given workflow process instance
+	 *			UUID identifying a given workflow process instance
 	 * 
 	 * @return RestWorkflowProcess - Workflow process instance information
 	 * 
@@ -124,10 +124,10 @@ public class WorkflowAPIs {
 	 * advancement sequence, with last being most recent advance operation
 	 * 
 	 * @param processId
-	 *            UUID identifying a given workflow process instance
+	 *			UUID identifying a given workflow process instance
 	 * 
 	 * @return RestWorkflowProcessHistory Collection - Sorted collection of the
-	 *         process instance's advancements
+	 *		 process instance's advancements
 	 * 
 	 * @throws RestException
 	 */
@@ -160,13 +160,13 @@ public class WorkflowAPIs {
 	 * instance instance
 	 * 
 	 * @param editToken
-	 *            String serialization of EditToken identifying currently logged
-	 *            in user
+	 *			String serialization of EditToken identifying currently logged
+	 *			in user
 	 * @param processId
-	 *            UUID identifying a given workflow process instance
+	 *			UUID identifying a given workflow process instance
 	 * 
 	 * @return RestWorkflowAvailableAction Collection - Collection of distinct
-	 *         actions a user can perform
+	 *		 actions a user can perform
 	 * 
 	 * @throws RestException
 	 */
@@ -204,13 +204,13 @@ public class WorkflowAPIs {
 	 * history of each process is mapped in the return object.
 	 * 
 	 * @param editToken
-	 *            String serialization of EditToken identifying currently logged
-	 *            in user
+	 *			String serialization of EditToken identifying currently logged
+	 *			in user
 	 * @param definitionId
-	 *            UUID identifying a specific workflow definition
+	 *			UUID identifying a specific workflow definition
 	 * 
 	 * @return RestWorkflowProcessHistoriesMapEntry Collection - Workflow
-	 *         process instances mapped to their sorted history
+	 *		 process instances mapped to their sorted history
 	 * 
 	 * @throws RestException
 	 */

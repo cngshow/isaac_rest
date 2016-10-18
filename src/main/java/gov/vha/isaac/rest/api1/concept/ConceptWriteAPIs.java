@@ -21,13 +21,10 @@ package gov.vha.isaac.rest.api1.concept;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.And;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.ConceptAssertion;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.NecessarySet;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -35,16 +32,13 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptBuilder;
@@ -57,23 +51,22 @@ import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
-import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.SememeUtil;
-import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
-import gov.vha.isaac.rest.api.data.wrappers.RestInteger;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.component.ComponentWriteAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptUpdateData;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
-import javafx.concurrent.Task;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -97,7 +90,7 @@ public class ConceptWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
-	public RestInteger createConcept(
+	public RestWriteResponse createConcept(
 			RestConceptCreateData creationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -145,29 +138,29 @@ public class ConceptWriteAPIs
 		}
 
 		try {
-			int seq = createNewConcept(
+			return createNewConcept(
 					RequestInfo.get().getEditCoordinate(),
 					RequestInfo.get().getLogicCoordinate(),
 					creationData.getParentConceptIds(),
 					creationData.getFsn(),
 					creationData.getDescriptionLanguageConceptId(),
 					creationData.getDescriptionPreferredInDialectAssemblagesConceptIds(),
-					creationData.getDescriptionExtendedTypeConceptId());
-			
-			return new RestInteger(seq);
+					creationData.getDescriptionExtendedTypeConceptId(), 
+					creationData.active == null || creationData.active ? true : false);
 		} catch (Exception e) {
 			throw new RestException("Failed creating concept " + creationData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
 	}
 
-	private static int createNewConcept(
+	private static RestWriteResponse createNewConcept(
 			EditCoordinate editCoordinate,
 			LogicCoordinate lc,
 			Collection<Integer> parentConceptIds,
 			String fsn,
 			int descriptionLanguageConceptId,
 			Collection<Integer> descriptionPreferredInDialectAssemblagesConceptIds,
-			Integer descriptionExtendedTypeConceptId) throws RestException
+			Integer descriptionExtendedTypeConceptId,
+			boolean active) throws RestException
 	{
 		try
 		{
@@ -193,6 +186,8 @@ public class ConceptWriteAPIs
 					fsn,
 					null,
 					parentDef);
+			
+			builder.setState(active ? State.ACTIVE : State.INACTIVE);
 			
 			// Add optional descriptionExtendedTypeConceptId, if exists
 			// TODO confirm that requiredDescriptionsExtendedType is being added to new concept required descriptions
@@ -231,7 +226,7 @@ public class ConceptWriteAPIs
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
 			}
 			
-			return newCon.getConceptSequence();
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), newCon.getPrimordialUuid());
 		}
 		catch (Exception e)
 		{
@@ -247,30 +242,9 @@ public class ConceptWriteAPIs
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.activateComponent + "{" + RequestParameters.id + "}")
-	public void activateConcept(
-			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.id,
-				RequestParameters.COORDINATE_PARAM_NAMES,
-				RequestParameters.editToken);
-
-		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, State.ACTIVE);
-	}
-
-	/**
-	 * @param editToken - 
-	 *            EditToken string returned by previous call to getEditToken()
-	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.deactivateComponent + "{" + RequestParameters.id + "}")
-	public void deactivateConcept(
+	@Path(RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
+	public RestWriteResponse updateConcept(
+			RestConceptUpdateData conceptUpdateData, 
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -279,74 +253,9 @@ public class ConceptWriteAPIs
 				RequestParameters.id,
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-
-		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, State.INACTIVE);
-	}
-	
-
-	/**
-	 * @param editToken - 
-	 *            EditToken string returned by previous call to getEditToken()
-	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
-	 * @throws RestException
-	 */
-	@PUT
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.updateStateComponent + "{" + RequestParameters.id + "}")
-	public void updateConceptState(
-			RestBoolean isActive,
-			@PathParam(RequestParameters.id) String id,
-			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
-	{
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.id,
-				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
-
-		resetConceptState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), id, isActive.isValue() ? State.ACTIVE : State.INACTIVE);
-	}
-
-	private static void resetConceptState(
-			EditCoordinate ec,
-			StampCoordinate sc,
-			String id,
-			State state) throws RestException {
-		int conceptId = RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.id, id);
-
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(conceptId);
-
-		if (! concept.isPresent()) {
-			throw new RestException(RequestParameters.id, id, "no concept exists corresponding to concept id " + conceptId + " parameter value " + id);
-		}
-		try {
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<ConceptVersionImpl>> rawLatestVersion = ((ConceptChronology)concept.get()).getLatestVersion(ConceptVersionImpl.class, sc);
-
-			if (! rawLatestVersion.isPresent()) {
-				throw new RestException("Failed getting latest version of " + concept.get().getOchreObjectType()  + " concept " + concept.get().getConceptSequence());
-			} else if (rawLatestVersion.get().contradictions().isPresent()) {
-				//TODO handle contradictions
-				log.warn("Resetting state of " + concept.get().getOchreObjectType() + " " + concept.get().getConceptSequence() + " with " + rawLatestVersion.get().contradictions().get().size() + " version contradictions from " + rawLatestVersion.get().value().getState() + " to " + state);
-			}
-			
-			if (rawLatestVersion.get().value().getState() == state) {
-				log.warn("Not resetting state of " + concept.get().getOchreObjectType() + " " + concept.get().getConceptSequence() + " from " + rawLatestVersion.get().value().getState() + " to " + state);
-				return;
-			}
-
-			concept.get().createMutableVersion(state, ec);
-
-			Get.commitService().addUncommitted(concept.get()).get();
-			
-			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("committing concept with state=" + state + ": SEQ=" + concept.get().getConceptSequence() + ", UUID=" + concept.get().getPrimordialUuid() + ", DESC=" + concept.get().getConceptDescriptionText());
-			
-			if (RequestInfo.get().getWorkflowProcessId() != null)
-			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord.get());
-			}
-		} catch (Exception e) {
-			throw new RestException("Failed setting to state " + state + " concept " + id + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-		}
+		
+		State stateToUse = (conceptUpdateData.active == null || conceptUpdateData.active) ? State.ACTIVE : State.INACTIVE;
+		
+		return ComponentWriteAPIs.resetState(RequestInfo.get().getEditCoordinate(), StampCoordinates.getDevelopmentLatest(), stateToUse, id);
 	}
 }

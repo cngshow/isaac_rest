@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -83,16 +84,64 @@ public abstract class RestDynamicSememeData
 {
 	/**
 	 * The 0 indexed column number for this data.  Will not be populated for nested RestDynamicSememeData objects where the 'data' field
-	 * is of type RestDynamicSememeArray
+	 * is of type RestDynamicSememeArray.  This field is ignored during a sememe create or update and does not need to be populated.
 	 */
 	@XmlElement
-	Integer columnNumber;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Integer columnNumber;
 	
 	/**
-	 * The data for a column within a RestDynamicSememeVersion instance
+	 * The data for a column within a RestDynamicSememeVersion instance.  The data type of this field depends on the type of class that extends 
+	 * this abstract class.  The mapping of types is: <ClassType> - <Java Data Type>
+	 * 
+	 * - RestDynamicSememeBoolean - boolean
+	 * - RestDynamicSememeByteArray - byte[]
+	 * - RestDynamicSememeDouble - double
+	 * - RestDynamicSememeFloat - float
+	 * - RestDynamicSememeInteger - int 
+	 * - RestDynamicSememeLong - long
+	 * - RestDynamicSememeString - string
+	 * - RestDynamicSememeNid - int
+	 * - RestDynamicSememeSequence - int
+	 * - RestDynamicSememeUUID - UUID
+	 * - RestDynamicSememeArray - An array of one of the above types
+	 * 
+	 * The data type as returned via the REST interface will be typed however the JSON or XML serializer handles the java types. 
+	 * 
+	 * When using this class in a create or update call, a special annotation must be included to create the proper type of {@link RestDynamicSememeData}
+	 * because {@link RestDynamicSememeData} is an abstract type. 
+	 * 
+	 *  For the server to deserialize the type properly, a field must be included of the form "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.CLASSTYPE"
+	 * 
+	 * where CLASSTYPE is one of:
+	 * - RestDynamicSememeBoolean
+	 * - RestDynamicSememeByteArray
+	 * - RestDynamicSememeDouble
+	 * - RestDynamicSememeFloat
+	 * - RestDynamicSememeInteger,
+	 * - RestDynamicSememeLong,
+	 * - RestDynamicSememeString,
+	 * - RestDynamicSememeNid
+	 * - RestDynamicSememeSequence
+	 * - RestDynamicSememeUUID
+	 * - RestDynamicSememeArray
+	 * 
+	 * Example JSON that provides two columns of differing types:
+	 * 
+	 * ...
+	 *   "restDynamicSememeDataArrayField": [{
+	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString",
+		    "data": "test"
+	 *   }, {
+	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong",
+	 *     "data": 5
+	 *   }]
+	 * }
+
 	 */
 	@XmlElement
-	protected Object data;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Object data;
 	
 	protected RestDynamicSememeData(Integer columnNumber, Object data)
 	{

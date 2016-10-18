@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.association;
+package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,8 +27,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * {@link RestAssociationItemVersionBase}
- * This stub class is used by callers to edit {@link RestAssociationItemVersion} objects.  It only contains the fields that may be edited after creation.
+ * {@link RestDynamicSememeBaseCreate}
+ *
+ * This stub class is used for callers to create {@link RestSememeVersion} objects.  This class, in combination with {@link RestDynamicSememeBase} 
+ * contains the fields that can be populated for creation.  
+ * 
+ * The API never returns this class.
+
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
@@ -36,33 +41,26 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersionBase.class)
-public class RestAssociationItemVersionBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestDynamicSememeBaseCreate.class)
+public class RestDynamicSememeBaseCreate extends RestDynamicSememeBase
 {
-	/**
-	 * The nid of the target item in the association.  Typically this is a concept, but it may also be a sequence.  Note that 
-	 * this may be null, in the case where the association intends to represent that no target is available for a particular 
-	 * association type and source component.
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Integer targetNid;
-	
-	/**
-	 * True to indicate the association should be set as active, false for inactive.  
-	 * This field is optional, if not provided, it will be assumed to be active.
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Boolean active;
-	
-	protected RestAssociationItemVersionBase()
+	protected RestDynamicSememeBaseCreate()
 	{
 		//for jaxb
 	}
 	
-	public RestAssociationItemVersionBase(Integer targetNid)
-	{
-		this.targetNid = targetNid;
-	}
+	/**
+	 * The concept sequence, nid or UUID that identifies the concept that defined the assemblage of this sememe.
+	 * This is effectively the type of the sememe being created.
+	 */
+	@XmlElement
+	@JsonInclude
+	public String assemblageConcept;
+	
+	/**
+	 * The nid or UUID (may NOT be a sequence) of desired referenced component of the sememe instance. 
+	 */
+	@XmlElement
+	@JsonInclude
+	public String referencedComponent;
 }
