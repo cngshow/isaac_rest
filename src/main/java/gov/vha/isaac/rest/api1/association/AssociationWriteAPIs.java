@@ -259,8 +259,8 @@ public class AssociationWriteAPIs
 	 * @return the sememe UUID identifying the sememe which was updated
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public RestWriteResponse updateAssociationItem(
 		RestAssociationItemVersionBase associationItemUpdateData,

@@ -161,6 +161,7 @@ public class MappingWriteAPIs
 	 */
 	//TODO fix the comments above around editToken 
 	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
 	public RestWriteResponse updateMapSet(
 		RestMappingSetVersionBase mappingSetUpdateData,
@@ -264,6 +265,7 @@ public class MappingWriteAPIs
 	 */
 	//TODO fix the comments above around editToken 
 	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public RestWriteResponse updateMappingItem(
 		RestMappingItemVersionBase mappingItemUpdateData,

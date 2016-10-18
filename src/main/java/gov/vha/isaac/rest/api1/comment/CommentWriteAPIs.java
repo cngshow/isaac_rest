@@ -159,8 +159,8 @@ public class CommentWriteAPIs
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent)
 	public RestWriteResponse updateComment(
 			RestCommentVersionBase dataToUpdateComment,
