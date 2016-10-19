@@ -35,7 +35,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestDynamicSememeColumnInfoCreate.class)
 public class RestDynamicSememeColumnInfoCreate
 {
 	public RestDynamicSememeColumnInfoCreate()
@@ -60,7 +60,7 @@ public class RestDynamicSememeColumnInfoCreate
 	public RestDynamicSememeColumnInfoCreate(int columnConceptLabelConcept, RestDynamicSememeDataType columnDataType, RestDynamicSememeData columnDefaultData, 
 			boolean columnRequired, RestDynamicSememeValidatorType[] columnValidatorTypes, RestDynamicSememeData[] columnValidatorData)
 	{
-		this.columnConceptLabelConcept = columnConceptLabelConcept;
+		this.columnLabelConcept = columnConceptLabelConcept;
 		this.columnDataType = columnDataType.name;
 		this.columnDefaultData = columnDefaultData;
 		this.columnRequired = columnRequired;
@@ -106,7 +106,7 @@ public class RestDynamicSememeColumnInfoCreate
 	 */
 	@XmlElement
 	@JsonInclude
-	public int columnConceptLabelConcept;
+	public int columnLabelConcept;
 	
 	/**
 	 * The data type of the value to be stored in this column.  
