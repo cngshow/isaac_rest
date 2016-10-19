@@ -221,9 +221,9 @@ public class ConceptWriteAPIs
 			Optional<CommitRecord> commitRecord = Get.commitService().commit(
 					"creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn).get();
 			
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 			
 			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), newCon.getPrimordialUuid());

@@ -435,7 +435,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		
-		Assert.assertNull(retrievedEditToken.getWorkflowProcessId());
+		Assert.assertNull(retrievedEditToken.getActiveWorkflowProcessId());
 		
 		// Test EditToken serialization/deserialization
 		String retrievedEditTokenString = retrievedEditToken.getSerialized();
@@ -450,7 +450,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newEditToken.getAuthorSequence(), retrievedEditToken.getAuthorSequence());
 		Assert.assertEquals(newEditToken.getModuleSequence(), retrievedEditToken.getModuleSequence());
 		Assert.assertEquals(newEditToken.getPathSequence(), retrievedEditToken.getPathSequence());
-		Assert.assertEquals(newEditToken.getWorkflowProcessId(), retrievedEditToken.getWorkflowProcessId());
+		Assert.assertEquals(newEditToken.getActiveWorkflowProcessId(), retrievedEditToken.getActiveWorkflowProcessId());
 		
 		// Test retrieval of an EditToken with a modifying processId parameter
 		UUID testWfProcessUuid = UUID.randomUUID();
@@ -469,7 +469,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		
-		Assert.assertEquals(retrievedEditToken.getWorkflowProcessId(), testWfProcessUuid);
+		Assert.assertEquals(retrievedEditToken.getActiveWorkflowProcessId(), testWfProcessUuid);
 	}
 
 	@Test
@@ -784,12 +784,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
-		
-		try {
-			editToken = EditTokens.renew(editToken);
-		} catch (RestException e) {
-			throw new RuntimeException(e);
-		}
+
+		editToken = EditTokens.renew(editToken);
 		
 		int newConceptNid = Get.identifierService().getConceptNid(newConceptSequence);
 		

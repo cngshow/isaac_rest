@@ -130,7 +130,7 @@ public class WorkflowWriteAPIs {
 		// TODO test advanceWorkflowProcess()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
-			provider.advanceWorkflow(RequestInfo.get().getEditToken().getWorkflowProcessId(), Get.identifierService()
+			provider.advanceWorkflow(RequestInfo.get().getEditToken().getActiveWorkflowProcessId(), Get.identifierService()
 					.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get(),
 					processAdvancementData.getActionRequested(), processAdvancementData.getComment(),
 					RequestInfo.get().getEditCoordinate());
@@ -177,7 +177,7 @@ public class WorkflowWriteAPIs {
 		// TODO test acquireWorkflowLock()
 		try {
 			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
-					.getProcessDetails(RequestInfo.get().getEditToken().getWorkflowProcessId());
+					.getProcessDetails(RequestInfo.get().getEditToken().getActiveWorkflowProcessId());
 
 			// verify that lock is in proper state per request
 			if (acquireLock && !processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
@@ -199,7 +199,7 @@ public class WorkflowWriteAPIs {
 			// Perform acquire or release
 			WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 
-			provider.setProcessOwner(RequestInfo.get().getEditToken().getWorkflowProcessId(), newLockOwner);
+			provider.setProcessOwner(RequestInfo.get().getEditToken().getActiveWorkflowProcessId(), newLockOwner);
 			
 			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
 		} catch (Exception e) {
@@ -209,7 +209,7 @@ public class WorkflowWriteAPIs {
 			} else {
 				actionRequested = "release";
 			}
-			throw new RestException("Failed " + actionRequested + " lock on " + RequestInfo.get().getEditToken().getWorkflowProcessId() + ". Caught " + e.getClass().getName()
+			throw new RestException("Failed " + actionRequested + " lock on " + RequestInfo.get().getEditToken().getActiveWorkflowProcessId() + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());
 		}
 	}
@@ -248,7 +248,7 @@ public class WorkflowWriteAPIs {
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
-			UUID processId = RequestInfo.get().getWorkflowProcessId();
+			UUID processId = RequestInfo.get().getActiveWorkflowProcessId();
 			EditCoordinate ec = RequestInfo.get().getEditCoordinate();
 			provider.removeComponentFromWorkflow(processId,
 					compNid,
