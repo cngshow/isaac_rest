@@ -12,6 +12,7 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Changed the field RestDynamicSememeColunInfoCreate.columnValidatorTypes from RestDynamicSememeValidatorType to String for ease of creation / parsing.
       * The string values for either of these fields may be populated with the name or enumId from the enum types.  See updated docs on the field.  This
         vastly simplifies the object that needs to be constructed during writes to the server.  On reads, the full Rest...Type is still returned for each enum.
+    * renamed the field RestDynamicSememeColumnInfoCreate.columnConceptLabelConcept to columnLabelConcept (which may break a mapping call)
     * Added a sememe write API method for defining a new sememe.  Added much more robust tests, worked outnumerous bugs with different data types and serialization.
     * Removed RestWorkflowLockingData as no longer necessary since only 2 fields are ProcessId and Boolean.  Instead, updated WorkflowWriteAPI.setProcessLock to 
         pass in a boolean as type String.
