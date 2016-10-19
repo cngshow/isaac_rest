@@ -71,10 +71,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 	RestStateType.class,
 	RestSupportedIdType.class,
 	RestTaxonomyType.class,
-//	RestWorkflowDataElementType.class,
-//	RestWorkflowDomainType.class,
 	RestWorkflowProcessStatusType.class,
-//	RestWorkflowTerminologyType.class
 	})
 @JsonSeeAlso ({
 	RestDynamicSememeValidatorType.class,
@@ -91,10 +88,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 	RestStateType.class,
 	RestSupportedIdType.class,
 	RestTaxonomyType.class,
-//	RestWorkflowDataElementType.class,
-//	RestWorkflowDomainType.class,
 	RestWorkflowProcessStatusType.class,
-//	RestWorkflowTerminologyType.class
 	})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
