@@ -45,6 +45,7 @@ public class RestDynamicSememeDouble extends RestDynamicSememeData
 
 	public double getDouble()
 	{
+		//The rest parser sometimes deserializes to broader types
 		if (!(data instanceof Double))
 		{
 			return ((Number)data).doubleValue();
