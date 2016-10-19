@@ -211,7 +211,7 @@ public class SememeWriteAPIs
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			DescriptionSememeImpl mutableVersion =
 					(DescriptionSememeImpl)((SememeChronology)sememeChronology).createMutableVersion(
-							DescriptionSememeImpl.class, (updateData == null || updateData.isActive() ? State.ACTIVE : State.INACTIVE),
+							DescriptionSememeImpl.class, (updateData.active == null || updateData.active ? State.ACTIVE : State.INACTIVE),
 							RequestInfo.get().getEditCoordinate());
 
 			mutableVersion.setCaseSignificanceConceptSequence(updateData.getCaseSignificanceConceptSequence());
@@ -220,12 +220,12 @@ public class SememeWriteAPIs
 			mutableVersion.setDescriptionTypeConceptSequence(updateData.getDescriptionTypeConceptSequence());
 
 			Get.commitService().addUncommitted(sememeChronology);
-			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 
-					+ ", NID=" + sememeChronology.getNid() + " with " + updateData);
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 
+					+ ", NID=" + sememeChronology.getNid() + " with " + updateData).get();
 
 			if (RequestInfo.get().getWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord.get());
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
 			}
 			
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), mutableVersion.getPrimordialUuid());

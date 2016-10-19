@@ -93,7 +93,7 @@ public class RestSememeDescriptionUpdateData
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)  //TODO make this consistent with others
-	Boolean active;
+	public Boolean active;
 	
 	protected RestSememeDescriptionUpdateData()
 	{
@@ -177,13 +177,6 @@ public class RestSememeDescriptionUpdateData
 //		return extendedDescriptionTypeConceptSequence;
 //	}
 
-	/**
-	 * @return whether the description should be active
-	 */
-	@XmlTransient
-	public boolean isActive() {
-		return active;
-	}
 
 	/**
 	 * @param caseSignificanceConceptSequence the caseSignificanceConceptSequence to set
