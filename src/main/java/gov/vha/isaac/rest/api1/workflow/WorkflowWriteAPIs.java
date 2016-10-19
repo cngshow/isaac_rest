@@ -165,6 +165,8 @@ public class WorkflowWriteAPIs {
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.lock)
+	//TODO these API changes aren't proper, acquireLockString is is being submitted as a DTO, instead of a query param.
+	//I also have no understanding of how processId is magically getting here.
 	public RestWriteResponse setProcessLock(
 			String acquireLockString,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
@@ -230,6 +232,8 @@ public class WorkflowWriteAPIs {
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return RestWriteResponse containing renewed RestEditToken
 	 */
+	//TODO these API changes aren't proper, componentNidString is badly named, and is being submitted as a DTO, instead of a query param or path param.
+	//It should really be a path param.
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent)
@@ -253,6 +257,7 @@ public class WorkflowWriteAPIs {
 			
 			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, compNid, null);
 		} catch (Exception e) {
+			log.error("Unexpected error", e);
 			throw new RestException("Failed removing component " + compNid + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());
 		}
