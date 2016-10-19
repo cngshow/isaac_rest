@@ -345,8 +345,8 @@ public class MappingWriteAPIs
 			{
 				columns[i] = new DynamicSememeColumnInfo(i++, 
 						Get.identifierService().getUuidPrimordialFromConceptSequence(colInfo.columnLabelConcept).get(), 
-						DynamicSememeDataType.parse(colInfo.columnDataType), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
-						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
+						DynamicSememeDataType.parse(colInfo.columnDataType, true), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
+						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
 			}
 		}
 		
