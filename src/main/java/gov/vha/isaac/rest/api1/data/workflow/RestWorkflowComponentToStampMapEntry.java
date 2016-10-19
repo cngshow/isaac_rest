@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.commit.Stamp;
+import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 
@@ -95,6 +97,11 @@ public class RestWorkflowComponentToStampMapEntry
 	@XmlTransient
 	public RestStampedVersion getValue() {
 		return value;
+	}
+	
+	public String getInitialEditTimeAsString() {
+		LocalDate date = LocalDate.ofEpochDay(value.time);
+		return BPMNInfo.workflowDateFormatter.format(date);
 	}
 
 	/* (non-Javadoc)

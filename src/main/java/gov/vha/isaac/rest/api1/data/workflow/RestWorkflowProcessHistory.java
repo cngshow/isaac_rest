@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
+import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 
 /**
  * A single advancement (history) of a given workflow {@link RestWorkflowProcess}. A new entry is
@@ -183,6 +185,11 @@ public class RestWorkflowProcessHistory
 	@XmlTransient
 	public String getComment() {
 		return comment;
+	}
+
+	public String getTimeAdvancedAsString() {
+		LocalDate date = LocalDate.ofEpochDay(timeAdvanced);
+		return BPMNInfo.workflowDateFormatter.format(date);
 	}
 
 	/* (non-Javadoc)
