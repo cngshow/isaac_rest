@@ -134,9 +134,9 @@ public class AssociationWriteAPIs
 		try
 		{
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of association type" + rdud.getDynamicSememeName()).get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
 		catch (Exception e)
@@ -233,9 +233,9 @@ public class AssociationWriteAPIs
 		{
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing creation of association item " + built.getPrimordialUuid() 
 				+ " for association type " + associationID.get()).get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
 		catch (Exception e)
@@ -298,9 +298,9 @@ public class AssociationWriteAPIs
 		{
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of association item " 
 					+ associationItemSememeChronology.getPrimordialUuid()).get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
 		catch (Exception e)

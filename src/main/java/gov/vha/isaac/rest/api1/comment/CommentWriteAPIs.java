@@ -131,9 +131,9 @@ public class CommentWriteAPIs
 			SememeChronology<? extends DynamicSememe<?>> built = sb.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 
 			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
@@ -194,9 +194,9 @@ public class CommentWriteAPIs
 		try
 		{
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Update comment").get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
 		catch (Exception e)
