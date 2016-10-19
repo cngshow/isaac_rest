@@ -46,6 +46,11 @@ public class RestDynamicSememeNid extends RestDynamicSememeTypedData
 
 	public int getNid()
 	{
+		//The rest parser sometimes deserializes to broader types
+		if (!(data instanceof Integer))
+		{
+			return ((Number)data).intValue();
+		}
 		return (int)data;
 	}
 }

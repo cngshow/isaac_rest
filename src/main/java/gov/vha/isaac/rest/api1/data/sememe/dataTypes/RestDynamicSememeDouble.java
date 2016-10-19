@@ -45,6 +45,10 @@ public class RestDynamicSememeDouble extends RestDynamicSememeData
 
 	public double getDouble()
 	{
+		if (!(data instanceof Double))
+		{
+			return ((Number)data).doubleValue();
+		}
 		return (double)data;
 	}
 }
