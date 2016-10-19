@@ -151,11 +151,9 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentSpecificationData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -404,7 +402,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	private RestWriteResponse removeComponentFromProcess(EditToken token, int component) {
-		RestWorkflowProcessComponentSpecificationData processComponentSpecificationData = new RestWorkflowProcessComponentSpecificationData(
+		Integer processComponentSpecificationData = new Integer(
 				component);
 		String xml = null;
 		try {
@@ -696,54 +694,30 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		assertFail(getBadAvailableActionsResponse);
 		
 		// Acquire lock on process.  This should Fail because it's automatically locked on create.
-		RestWorkflowLockingData processLockingData = new RestWorkflowLockingData(
-				createdProcessUUID,
-				true);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(processLockingData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		String lockingRequestType = Boolean.toString(true);
 		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
 		assertFail(lockProcessResponse);
 
 		// Release lock on process
-		processLockingData = new RestWorkflowLockingData(
-				createdProcessUUID,
-				false);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(processLockingData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		lockingRequestType = Boolean.toString(false);
 		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
 		String unlockProcessResponseResult = checkFail(unlockProcessResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, unlockProcessResponseResult);
 		RestEditToken renewedEditToken = writeResponse.editToken;
 		Assert.assertNotNull(renewedEditToken);
 		
 		// Acquire lock on process
-		processLockingData = new RestWorkflowLockingData(
-				createdProcessUUID,
-				true);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(processLockingData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		lockingRequestType = Boolean.toString(true);
 		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
 		String lockProcessResponseResult = checkFail(lockProcessResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, lockProcessResponseResult);
 		renewedEditToken = writeResponse.editToken;
@@ -753,7 +727,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Advance process to Edit.  Should fail because no components added yet.
 		RestWorkflowProcessAdvancementData processAdvancementData = new RestWorkflowProcessAdvancementData(
-				createdProcessUUID,
 				editAction,
 				"An edit action comment");
 		xml = null;
@@ -832,24 +805,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Get list of components in process
 		Set<Integer> componentsInProcessBeforeRemovingComponent = new HashSet<>();
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 			componentsInProcessBeforeRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
 		}
 		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
 	
 		// Remove one of the components in the process
-		RestWorkflowProcessComponentSpecificationData processComponentSpecificationData = new RestWorkflowProcessComponentSpecificationData(
-				componentsInProcessBeforeRemovingComponent.iterator().next());
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(processComponentSpecificationData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		String componentNid = Integer.toString(componentsInProcessBeforeRemovingComponent.iterator().next());
 		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(componentNid));
 		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
 		renewedEditToken = writeResponse.editToken;
@@ -865,10 +831,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(process);
 		
 		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
 		}
-		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(processComponentSpecificationData.getComponentNid()));
+		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid));
 		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
 	
 		// Get process to check for added components
@@ -880,7 +846,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
 		Assert.assertNotNull(process);
 		boolean foundCreatedConceptNidInProcess = false;
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToIntitialEditMap()) {
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 			if (restWorkflowComponentToStampMapEntry.getKey() == newConceptNid) {
 				foundCreatedConceptNidInProcess = true;
 				break;
