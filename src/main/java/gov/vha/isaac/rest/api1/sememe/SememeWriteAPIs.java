@@ -18,7 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.sememe;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -27,12 +27,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
@@ -46,11 +48,16 @@ import gov.vha.isaac.ochre.api.component.sememe.version.MutableLongSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.MutableSememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.MutableStringSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeLong;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
@@ -62,15 +69,16 @@ import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
+import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeBase;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeBaseCreate;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypeCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreateData;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -166,6 +174,7 @@ public class SememeWriteAPIs
 
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), newDescription.getPrimordialUuid());
 		} catch (Exception e) {
+			log.error("Unexpected error", e);
 			throw new RestException("Failed creating description " + creationData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
 	}
@@ -226,51 +235,97 @@ public class SememeWriteAPIs
 		}
 	}
 	
-//	/**
-//	 * @param mappingSetCreationData - object containing data used to create new mapping set
-//	 * @param editToken - 
-//	 *            EditToken string returned by previous call to getEditToken()
-//	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
-//	 * @return the UUID identifying the created concept which defines the map set
-//	 * @throws RestException
-//	 */
-//	/**
-//	 * @param mappingSetCreationData
-//	 * @return
-//	 * @throws RestException
-//	 */
-//	@POST
-//	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-//	@Path(RestPaths.sememeTypeComponent + RestPaths.createPathComponent)
-//	public RestWriteResponse createSememeType(
-//		RestMappingSetVersionBaseCreate mappingSetCreationData,
-//		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
-//	{
-//		RequestParameters.validateParameterNamesAgainstSupportedNames(
-//				RequestInfo.get().getParameters(),
-//				RequestParameters.COORDINATE_PARAM_NAMES,
-//				RequestParameters.editToken);
-//
-//		
-//		try 
-//		{
-//			return createMappingSet(
-//					mappingSetCreationData.name,
-//					mappingSetCreationData.inverseName,
-//					mappingSetCreationData.purpose,
-//					mappingSetCreationData.description,
-//					mappingSetCreationData.mapItemExtendedFieldsDefinition,
-//					mappingSetCreationData.mapSetExtendedFields,
-//					RequestInfo.get().getStampCoordinate(),
-//					RequestInfo.get().getEditCoordinate());
-//		} 
-//		catch (IOException e) 
-//		{
-//			throw new RestException("Failed creating mapping set name=" + mappingSetCreationData.name + ", inverse=" 
-//					+ mappingSetCreationData.inverseName + ", purpose=" + mappingSetCreationData.purpose + ", desc=" + mappingSetCreationData.description);
-//		}
-//	}
-//	
+	/**
+	 * @param mappingSetCreationData - object containing data used to create new mapping set
+	 * @param editToken - 
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
+	 * @return the UUID identifying the created concept which defines the map set
+	 * @throws RestException
+	 */
+	/**
+	 * @param mappingSetCreationData
+	 * @return
+	 * @throws RestException
+	 */
+	@POST
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.sememeTypeComponent + RestPaths.createPathComponent)
+	public RestWriteResponse createSememeType(
+		RestDynamicSememeTypeCreate sememeTypeCreationData,
+		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.editToken);
+
+		if (StringUtils.isBlank(sememeTypeCreationData.name))
+		{
+			throw new RestException("The parameter 'sememeTypeCreationData.name' is required");
+		}
+		if (StringUtils.isBlank(sememeTypeCreationData.description))
+		{
+			throw new RestException("The parameter 'sememeTypeCreationData.description' is required");
+		}
+		
+		ObjectChronologyType referencedComponentRestriction = ObjectChronologyType.parse(sememeTypeCreationData.referencedComponentRestriction, true);
+		SememeType referencedComponentSubRestriction = SememeType.parse(sememeTypeCreationData.referencedComponentSubRestriction, true);
+		
+		DynamicSememeColumnInfo[] columns = new DynamicSememeColumnInfo[sememeTypeCreationData.dataColumnsDefinition == null ? 0 
+				: sememeTypeCreationData.dataColumnsDefinition.length];
+		ArrayList<Integer> indexConfig = new ArrayList<>();
+		if (sememeTypeCreationData.dataColumnsDefinition != null)
+		{
+			for (int i = 0; i < sememeTypeCreationData.dataColumnsDefinition.length; i++)
+			{
+				//TODO make index config smarter / easier.  Shouldn't be trying to index unindexable types
+				indexConfig.add(i);
+				columns[i] = new DynamicSememeColumnInfo(i, 
+						Get.identifierService().getUuidPrimordialFromConceptSequence(sememeTypeCreationData.dataColumnsDefinition[i].columnLabelConcept).get(), 
+						DynamicSememeDataType.parse(sememeTypeCreationData.dataColumnsDefinition[i].columnDataType, true), 
+						RestDynamicSememeData.translate(sememeTypeCreationData.dataColumnsDefinition[i].columnDefaultData), 
+						sememeTypeCreationData.dataColumnsDefinition[i].columnRequired, 
+						DynamicSememeValidatorType.parse(sememeTypeCreationData.dataColumnsDefinition[i].columnValidatorTypes, true), 
+						RestDynamicSememeData.translate(sememeTypeCreationData.dataColumnsDefinition[i].columnValidatorData), true);
+			}
+		}
+		
+		DynamicSememeUsageDescription rdud = Frills.createNewDynamicSememeUsageDescriptionConcept(
+				sememeTypeCreationData.name, sememeTypeCreationData.name, sememeTypeCreationData.description, columns,
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSEMBLAGES.getConceptSequence(), referencedComponentRestriction, referencedComponentSubRestriction, 
+				RequestInfo.get().getEditCoordinate());
+		
+		try
+		{
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of mapping set " + rdud.getDynamicSememeName()).get();
+			if (RequestInfo.get().getWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+			}
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException("Failed during commit", e);
+		}
+		
+		Get.workExecutors().getExecutor().execute(() ->
+		{
+			try
+			{
+				//TODO see if I still need to manually do this, I thought I fixed this.
+				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), 
+						indexConfig.toArray(new Integer[indexConfig.size()]), true);
+			}
+			catch (Exception e)
+			{
+				log.error("Unexpected error enabling the index on newly created sememe set!", e);
+			}
+		});
+		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
+				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get());
+	}
+	
 	
 	/**
 	 * @param sememeCreationData - RestAssociationItemVersionBaseCreate object containing data to create new sememe item
@@ -283,7 +338,7 @@ public class SememeWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
-	public RestWriteResponse createNewSememe(
+	public RestWriteResponse createSememe(
 		RestDynamicSememeBaseCreate sememeCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{

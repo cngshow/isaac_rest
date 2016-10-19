@@ -12,6 +12,7 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Changed the field RestDynamicSememeColunInfoCreate.columnValidatorTypes from RestDynamicSememeValidatorType to String for ease of creation / parsing.
       * The string values for either of these fields may be populated with the name or enumId from the enum types.  See updated docs on the field.  This
         vastly simplifies the object that needs to be constructed during writes to the server.  On reads, the full Rest...Type is still returned for each enum.
+    * Added a sememe write API method for defining a new sememe.  Added much more robust tests, worked outnumerous bugs with different data types and serialization.
 * 2016/10/17 - 1.6.0: 
     * Cleaning up return types on /write APIs for consistency (everything now returns a RestWriteResponse)
     * Cleaning up inconsistent ways of changing the status on components (DTO vs parameter on update / create calls)

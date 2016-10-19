@@ -19,10 +19,10 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
-
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -42,8 +41,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBException;
-
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
@@ -51,10 +51,14 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
@@ -62,6 +66,19 @@ import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeArray;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeBoolean;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeByteArray;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeDouble;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeFloat;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeInteger;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeLong;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeSequence;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
@@ -73,7 +90,8 @@ import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
-import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeFloatImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
@@ -81,7 +99,6 @@ import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -99,6 +116,7 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
+import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
@@ -111,16 +129,24 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResultPage;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreateData;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeDouble;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeFloat;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
@@ -147,6 +173,7 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  */
 public class RestTest extends JerseyTestNg.ContainerPerClassTest
 {
+	private static Logger log = LogManager.getLogger(RestTest.class);
 	private static final String BPMN_FILE_PATH = "/gov/vha/isaac/ochre/workflow/provider/StaticRestTestingDefinition.bpmn2";
 
 	private final static String taxonomyCoordinateRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.taxonomyCoordinatePathComponent;
@@ -172,6 +199,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 
 	private static final String TEST_SSO_TOKEN = "Test_User:super_user,editor,read_only,approver,administrator,reviewer,manager";
+	
+	private static JsonNodeFactory jfn = JsonNodeFactory.instance;
 
 	@Override
 	protected Application configure()
@@ -1099,7 +1128,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	@Test
-	public void testConceptAPIs()
+	public void testConceptAPIs() throws JsonProcessingException, IOException
 	{
 		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
 		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
@@ -2838,7 +2867,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	@Test
-	public void testAssociations()
+	public void testAssociations() throws JsonProcessingException, IOException
 	{
 		String result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
@@ -3033,23 +3062,20 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 	
 	@Test
-	public void testSememeWrite()
+	public void testSememeWrite1() throws JsonProcessingException, IOException
 	{
-		//Make one
+		ObjectNode root = jfn.objectNode();
+		root.put("assemblageConcept", DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getNid() + "");
+		root.put("referencedComponent", MetaData.CHINESE_LANGUAGE.getNid() + "");
+		root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeStringImpl("test")}));
 		
+		log.info("Sememe Create Json: " + toJson(root));
 		
-		String dataColumns = jsonIze(new DynamicSememeData[] {new DynamicSememeStringImpl("test"), new DynamicSememeLongImpl(5l)});
-		System.out.println(jsonIze(new String[] {"assemblageConcept", "referencedComponent", "columnData"}, 
-								new String[] {DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getNid() + "", 
-										MetaData.CHINESE_LANGUAGE.getNid() + "", dataColumns}));
-		
+		//make one
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-						jsonIze(new String[] {"assemblageConcept", "referencedComponent", "columnData"}, 
-								new String[] {DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getNid() + "", 
-										MetaData.CHINESE_LANGUAGE.getNid() + "", dataColumns})));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		String result = checkFail(createSememeResponse).readEntity(String.class);
 		
 		RestWriteResponse createdSememeId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
@@ -3063,136 +3089,221 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestDynamicSememeVersion createdSememe = XMLUtils.unmarshalObject(RestDynamicSememeVersion.class, result);
 
 		Assert.assertEquals(createdSememe.getDataColumns().get(0).data.toString(), "test");
-		Assert.assertEquals((Long)createdSememe.getDataColumns().get(1).data, new Long(5l));
-
+		
 	}
-	
-
-	private String jsonIze(DynamicSememeData[] dynamicSememeDatas)
+	@Test
+	public void testSememeWrite2() throws JsonProcessingException, IOException
 	{
-		String temp = "\n    ";
-		StringBuilder sb = new StringBuilder();
-		sb.append("[").append(temp);
-		for (int i = 0; i < dynamicSememeDatas.length; i++)
+		//define a new sememe type which exercises as much as possible
+		ObjectNode root = jfn.objectNode();
+		root.put("name", "testSememe");
+		root.put("description", "A test sememe");
+		
+		ArrayNode columns = jfn.arrayNode();
+		
+		//make a column for each data type for test purposes.
+		int i = 1;
+		for (DynamicSememeDataType t : DynamicSememeDataType.values())
 		{
-			sb.append("{").append(temp);
-			sb.append("\"@class\" : \"" + mapClass(dynamicSememeDatas[i]) + "\",");
-			sb.append(temp);
-			sb.append("\"data\" : ");
-			if (quoteWrap(dynamicSememeDatas[i]))
+			if (t == DynamicSememeDataType.POLYMORPHIC || t == DynamicSememeDataType.UNKNOWN)
 			{
-				sb.append("\"");
+				continue;
 			}
-			sb.append(dynamicSememeDatas[i] == null ? "null" : dynamicSememeDatas[i].dataToString());
-			if (quoteWrap(dynamicSememeDatas[i]))
+			ObjectNode column = jfn.objectNode();
+			column.put("columnLabelConcept", i);  //Just picking arbitrary concepts...
+			column.put("columnDataType", t.name());
+			if (t == DynamicSememeDataType.FLOAT)
 			{
-				sb.append("\"");
-			}
-			sb.append(temp);
-			sb.append("},").append(temp);
-		}
-		sb.setLength(sb.length() - (temp.length() + 1));
-		sb.append("]").append(temp);
-		return sb.toString();
-	}
-	
-	private boolean quoteWrap(DynamicSememeData data)
-	{
-		if (data == null)
-		{
-			return false;
-		}
-		switch(data.getDynamicSememeDataType())
-		{
-			case ARRAY:
-			case BOOLEAN:
-			case DOUBLE:
-			case FLOAT:
-			case INTEGER:
-			case LONG:
-			case NID:
-			case SEQUENCE:
-				return false;
-			case STRING:
-			case UUID:
-				return true;
-			case UNKNOWN:
-			case BYTEARRAY:
-			case POLYMORPHIC:
-			default :
-				throw new RuntimeException("not supported yet");
-		}
-	}
-	
-	public String mapClass(DynamicSememeData data)
-	{
-		if (data == null)
-		{
-			return RestDynamicSememeData.class.getName();
-		}
-		switch(data.getDynamicSememeDataType())
-		{
-			case ARRAY:
-				break;
-			case BOOLEAN:
-				break;
-			case BYTEARRAY:
-				break;
-			case DOUBLE:
-				break;
-			case FLOAT:
-				break;
-			case INTEGER:
-				return RestDynamicSememeInteger.class.getName();
-			case LONG:
-				return RestDynamicSememeLong.class.getName();
-			case NID:
-				break;
-			case POLYMORPHIC:
-				break;
-			case SEQUENCE:
-				break;
-			case STRING:
-				return RestDynamicSememeString.class.getName();
-			case UNKNOWN:
-				break;
-			case UUID:
-				break;
-			default :
-				break;
-			
-		}
-		throw new RuntimeException("Oops");
-	}
-
-	private String jsonIze(String[] names, String[] values)
-	{
-		String temp = "\n    ";
-		StringBuilder sb = new StringBuilder();
-		sb.append("{").append(temp);
-		for (int i = 0; i < names.length; i++)
-		{
-			sb.append("\"");
-			sb.append(names[i]);
-			if (values[i].startsWith("["))
-			{
-				sb.append("\": ");
-				sb.append(values[i]);
-				sb.append(",");
+				column.set("columnDefaultData", toJsonObject(new DynamicSememeFloatImpl(54.3f)));
 			}
 			else
 			{
-				sb.append("\":\"");
-				sb.append(values[i]);
-				sb.append("\",");
+				column.set("columnDefaultData", jfn.nullNode());
 			}
-			sb.append(temp);
+			column.put("columnRequired", (i > 3 ? false : true));
+			if (t == DynamicSememeDataType.INTEGER)
+			{
+				ArrayNode validatorTypes = jfn.arrayNode();
+				validatorTypes.add(DynamicSememeValidatorType.LESS_THAN.name());
+				column.put("columnValidatorTypes", validatorTypes);
+				
+				ArrayNode validatorData = jfn.arrayNode();
+				validatorData.add(toJsonObject(new DynamicSememeIntegerImpl(5)));
+				column.set("columnValidatorData", validatorData);
+			}
+			else
+			{
+				column.set("columnValidatorTypes", jfn.nullNode());
+				//don't even add the validator type column
+			}
+			columns.add(column);
+			i++;
 		}
-		sb.setLength(sb.length() - (temp.length() + 1));
-		sb.append("}");
-		return sb.toString();
+	
+		root.set("dataColumnsDefinition", columns);
+		root.put("parentConcept", MetaData.AMT_MODULE.getNid() + "");
+		root.put("referencedComponentRestriction", "CONCEPt");
+		root.set("referencedComponentSubRestriction", jfn.nullNode());
+		
+		String json = toJson(root);
+		
+		log.info("Sememe Create Json: " + json);
+		
+		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.sememeTypeComponent 
+				+ RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(json));
+		String result = checkFail(createSememeResponse).readEntity(String.class);
+		
+		RestWriteResponse createdSememeTypeId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		
+		//Read back
+		
+		result = checkFail(target(RestPaths.sememeAPIsPathComponent + RestPaths.sememeDefinitionComponent + createdSememeTypeId.uuid.toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestDynamicSememeDefinition createdSememeType = XMLUtils.unmarshalObject(RestDynamicSememeDefinition.class, result);
+		
+		Assert.assertEquals(createdSememeTypeId.sequence.intValue(), createdSememeType.assemblageConceptId);
+		Assert.assertEquals("A test sememe", createdSememeType.sememeUsageDescription);
+		Assert.assertTrue("CONCEPT".equalsIgnoreCase(createdSememeType.referencedComponentTypeRestriction.name));
+		Assert.assertNull(createdSememeType.referencedComponentTypeSubRestriction);
+		
+		i = 0;
+		for (DynamicSememeDataType t : DynamicSememeDataType.values())
+		{
+			if (t == DynamicSememeDataType.POLYMORPHIC || t == DynamicSememeDataType.UNKNOWN)
+			{
+				continue;
+			}
+			Assert.assertEquals(i +1, createdSememeType.columnInfo[i].columnConceptSequence);
+			Assert.assertEquals(i, createdSememeType.columnInfo[i].columnOrder);
+			Assert.assertEquals(t.getDisplayName(), createdSememeType.columnInfo[i].columnDataType.name);
+			Assert.assertEquals(t.ordinal(), createdSememeType.columnInfo[i].columnDataType.enumId);
+			if (t == DynamicSememeDataType.FLOAT)
+			{
+				Assert.assertEquals(54.3f, ((Float)createdSememeType.columnInfo[i].columnDefaultData.data).floatValue());
+			}
+			else
+			{
+				Assert.assertNull(createdSememeType.columnInfo[i].columnDefaultData);
+			}
+			//Assert.assertEquals("", createdSememe.columnInfo[i].columnDescription);  //I think this is read from the preferred description?
+			//Assert.assertEquals(Get.conceptDescriptionText(i + 1), createdSememeType.columnInfo[i].columnName);  //TODO align the way we pick descriptions on these
+			Assert.assertEquals((i + 1 > 3 ? false : true), createdSememeType.columnInfo[i].columnRequired);
+			
+			if (t == DynamicSememeDataType.INTEGER)
+			{
+				Assert.assertEquals(1, createdSememeType.columnInfo[i].columnValidatorTypes.length);
+				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.getDisplayName(), createdSememeType.columnInfo[i].columnValidatorTypes[0].name);
+				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.ordinal(), createdSememeType.columnInfo[i].columnValidatorTypes[0].enumId);
+				Assert.assertEquals(1, createdSememeType.columnInfo[i].columnValidatorData.length);
+				Assert.assertEquals(5, ((Integer)createdSememeType.columnInfo[i].columnValidatorData[0].data).intValue());
+			}
+			else
+			{
+				Assert.assertNull(createdSememeType.columnInfo[i].columnValidatorTypes);
+				Assert.assertNull(createdSememeType.columnInfo[i].columnValidatorData);
+			}
+			i++;
+		}
 	}
 	
-	
+	/**
+	 * @param data
+	 * @return
+	 */
+	private JsonNode toJsonObject(DynamicSememeData[] data)
+	{
+		ArrayNode on = jfn.arrayNode();
+		for (DynamicSememeData x : data)
+		{
+			on.add(toJsonObject(x));
+		}
+		return on;
+	}
+	/**
+	 * @param data
+	 * @return
+	 */
+	private JsonNode toJsonObject(DynamicSememeData data)
+	{
+		ObjectNode on = jfn.objectNode();
+		switch(data.getDynamicSememeDataType())
+		{
+			case ARRAY:
+				on.put("@class", RestDynamicSememeArray.class.getName());
+				ArrayNode nested = jfn.arrayNode();
+				for (DynamicSememeData x : ((DynamicSememeArray)data).getDataArray())
+				{
+					nested.add(toJsonObject(x));
+				}
+				on.set("data", nested);
+				break;
+			case BOOLEAN:
+				on.put("@class", RestDynamicSememeBoolean.class.getName());
+				on.put("data", ((DynamicSememeBoolean)data).getDataBoolean());
+				break;
+			case BYTEARRAY:
+				on.put("@class", RestDynamicSememeByteArray.class.getName());
+				on.put("data", ((DynamicSememeByteArray)data).getDataByteArray());
+				break;
+			case DOUBLE:
+				on.put("@class", RestDynamicSememeDouble.class.getName());
+				on.put("data", ((DynamicSememeDouble)data).getDataDouble());
+				break;
+			case FLOAT:
+				on.put("@class", RestDynamicSememeFloat.class.getName());
+				on.put("data", ((DynamicSememeFloat)data).getDataFloat());
+				break;
+			case INTEGER:
+				on.put("@class", RestDynamicSememeInteger.class.getName());
+				on.put("data", ((DynamicSememeInteger)data).getDataInteger());
+				break;
+			case LONG:
+				on.put("@class", RestDynamicSememeLong.class.getName());
+				on.put("data", ((DynamicSememeLong)data).getDataLong());
+				break;
+			case NID:
+				on.put("@class", RestDynamicSememeNid.class.getName());
+				on.put("data", ((DynamicSememeNid)data).getDataNid());
+				break;
+			case SEQUENCE:
+				on.put("@class", RestDynamicSememeSequence.class.getName());
+				on.put("data", ((DynamicSememeSequence)data).getDataSequence());
+				break;
+			case STRING:
+				on.put("@class", RestDynamicSememeString.class.getName());
+				on.put("data", ((DynamicSememeString)data).getDataString());
+				break;
+			case UUID:
+				on.put("@class", RestDynamicSememeUUID.class.getName());
+				on.put("data", ((DynamicSememeUUID)data).getDataUUID().toString());
+				break;
+			case POLYMORPHIC:
+			case UNKNOWN:
+			default :
+				throw new RuntimeException("Unsupported type");
+		}
+		return on;
+	}
 
+	private String toJson(ObjectNode root) throws JsonProcessingException, IOException
+	{
+		StringWriter ws = new StringWriter();
+		new ObjectMapper().writeTree(new JsonFactory().createGenerator(ws).setPrettyPrinter(new DefaultPrettyPrinter()), root);
+		return ws.toString();
+	}
+
+	private String jsonIze(String[] names, String[] values) throws JsonProcessingException, IOException
+	{
+		ObjectNode root = jfn.objectNode();
+		for (int i = 0; i < names.length; i++)
+		{
+			root.put(names[i], values[i]);
+		}
+		return toJson(root);
+	}
 }
