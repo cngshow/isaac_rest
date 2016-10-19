@@ -98,7 +98,6 @@ import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
-import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -1057,19 +1056,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), newLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
 
-		RestBoolean inactiveState = new RestBoolean(false);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(inactiveState);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
 		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
 				+ RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
 				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));
 		checkFail(deactivateDescriptionResponse);
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject =
@@ -1267,19 +1259,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(foundNewConceptAsChildOfSpecifiedParent);
 
 		// retire concept
-		RestBoolean isActive = new RestBoolean(false);
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(isActive);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+		
 		Response deactivateConceptResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
 				+ RestPaths.updateStateComponent + newConceptSequenceWrapper.uuid)
 				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(isActive));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));  //TODO I don't like this hack for putting nothign... need to see what is proper
 		checkFail(deactivateConceptResponse);
 		
 		// Retrieve retired concept and validate

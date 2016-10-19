@@ -36,7 +36,6 @@ import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
-import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
