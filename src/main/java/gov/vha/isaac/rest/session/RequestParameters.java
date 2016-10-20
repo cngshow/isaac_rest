@@ -238,6 +238,7 @@ public class RequestParameters {
 	 */
 	public final static void validateParameterNamesAgainstSupportedNames(Map<String, List<String>> parameters, Object...supportedParameterNames) throws RestException {
 		Set<String> supportedParameterNamesSet = new HashSet<>();
+		supportedParameterNamesSet.add(returnExpandableLinks);
 		if (supportedParameterNames != null && supportedParameterNames.length > 0) {
 			for (Object parameter : supportedParameterNames) {
 				if (parameter instanceof Iterable) {
