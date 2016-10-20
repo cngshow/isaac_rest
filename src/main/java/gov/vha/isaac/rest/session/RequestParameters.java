@@ -122,6 +122,8 @@ public class RequestParameters {
 	
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
+	public final static String includeAssociations = "includeAssociations";
+	public final static String includeMappings = "includeMappings";
 	public final static String includeAttributes = "includeAttributes";
 	public final static String includeAttributesDefault = "true";
 

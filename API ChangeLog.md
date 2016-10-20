@@ -11,6 +11,8 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Fixed the inconsistent url /write/component to /write/1/component
     * Now requiring / honoring column numbers for sememe create / edit operations
     * Fixed a bug reading DynamicSememeUUID objects
+    * Changed sememe/byReferencedComponent so it no longer returns association or mapping sememes by default - new parameters added to allow it to return
+        those types of sememes.
 * 2016/10/18 - 1.6.1:
     * Changed the field RestDynamicSememeColunInfoCreate.columnDataType from RestDynamicSememeDataType to String for ease of creation / parsing.
     * Changed the field RestDynamicSememeColunInfoCreate.columnValidatorTypes from RestDynamicSememeValidatorType to String for ease of creation / parsing.
