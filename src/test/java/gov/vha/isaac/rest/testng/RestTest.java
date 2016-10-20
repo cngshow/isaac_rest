@@ -3180,7 +3180,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("referencedComponent", descriptions[0].getSememeChronology().getIdentifiers().getFirst().toString());
 		root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeUUIDImpl(MetaData.BOOLEAN_LITERAL.getPrimordialUuid())}));
 		
-		log.info("Sememe Create Json: " + toJson(root));
+		log.info("Extended description type edit Json: " + toJson(root));
 		
 		//make one
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
