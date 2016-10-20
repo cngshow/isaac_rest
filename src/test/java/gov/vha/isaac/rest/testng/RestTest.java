@@ -678,9 +678,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertNotNull(availableAction.getOutcomeState());
 			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().getEnumId()).isPresent());
+			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().getEnumId()).get())
+					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
 					|| editToken.getRoles().contains(UserRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundEditAction); // definition-specific
@@ -925,9 +925,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertNotNull(availableAction.getOutcomeState()); // "Ready for Edit" or "Canceled During Review" or "Ready for Approve"
 			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().getEnumId()).isPresent());
+			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().getEnumId()).get())
+					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
 					|| editToken.getRoles().contains(UserRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundQaFailsAction);
@@ -1849,8 +1849,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		final String rootLogicNodeFieldName = "rootLogicNode";		
 		final String nodeSemanticNodeFieldName = "nodeSemantic";
-		if (rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") == null || ! rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
-			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
+		if (rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("enumName") == null || ! rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("enumName").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("enumName") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
 		}
 	}
 
@@ -2330,7 +2330,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedTaxonomyCoordinate = XMLUtils.unmarshalObject(RestTaxonomyCoordinate.class, result);
-			Assert.assertTrue(retrievedTaxonomyCoordinate.stampCoordinate.precedence.getEnumId() == StampPrecedence.TIME.ordinal());
+			Assert.assertTrue(retrievedTaxonomyCoordinate.stampCoordinate.precedence.enumId == StampPrecedence.TIME.ordinal());
 			Assert.assertTrue(retrievedTaxonomyCoordinate.stated == false);
 		} catch (Throwable error) {
 			System.out.println("Failing target: " + target);
@@ -2621,7 +2621,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			// Test RestObjectChronologyType name
 			Assert.assertTrue(objectChronologyType.toString().equalsIgnoreCase(ObjectChronologyType.SEMEME.name()));
 			// Test RestObjectChronologyType enumId ordinal
-			Assert.assertTrue(objectChronologyType.getEnumId() == ObjectChronologyType.SEMEME.ordinal());
+			Assert.assertTrue(objectChronologyType.enumId == ObjectChronologyType.SEMEME.ordinal());
 
 			// Test objectChronologyType of specified concept UUID
 			result = checkFail(
@@ -2633,7 +2633,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			// Test RestObjectChronologyType name
 			Assert.assertTrue(objectChronologyType.toString().equalsIgnoreCase(ObjectChronologyType.CONCEPT.name()));
 			// Test RestObjectChronologyType enumId ordinal
-			Assert.assertTrue(objectChronologyType.getEnumId() == ObjectChronologyType.CONCEPT.ordinal());
+			Assert.assertTrue(objectChronologyType.enumId == ObjectChronologyType.CONCEPT.ordinal());
 
 			// Test SystemInfo
 			result = checkFail(
@@ -3118,7 +3118,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertEquals(createdSememeTypeId.sequence.intValue(), createdSememeType.assemblageConceptId);
 		Assert.assertEquals("A test sememe", createdSememeType.sememeUsageDescription);
-		Assert.assertTrue("CONCEPT".equalsIgnoreCase(createdSememeType.referencedComponentTypeRestriction.name));
+		Assert.assertTrue("CONCEPT".equalsIgnoreCase(createdSememeType.referencedComponentTypeRestriction.enumName));
 		Assert.assertNull(createdSememeType.referencedComponentTypeSubRestriction);
 		
 		i = 0;
@@ -3130,7 +3130,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertEquals(i +1, createdSememeType.columnInfo[i].columnConceptSequence);
 			Assert.assertEquals(i, createdSememeType.columnInfo[i].columnOrder);
-			Assert.assertEquals(t.getDisplayName(), createdSememeType.columnInfo[i].columnDataType.name);
+			Assert.assertEquals(t.getDisplayName(), createdSememeType.columnInfo[i].columnDataType.friendlyName);
 			Assert.assertEquals(t.ordinal(), createdSememeType.columnInfo[i].columnDataType.enumId);
 			if (t == DynamicSememeDataType.FLOAT)
 			{
@@ -3147,7 +3147,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			if (t == DynamicSememeDataType.INTEGER)
 			{
 				Assert.assertEquals(1, createdSememeType.columnInfo[i].columnValidatorTypes.length);
-				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.getDisplayName(), createdSememeType.columnInfo[i].columnValidatorTypes[0].name);
+				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.getDisplayName(), createdSememeType.columnInfo[i].columnValidatorTypes[0].friendlyName);
 				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.ordinal(), createdSememeType.columnInfo[i].columnValidatorTypes[0].enumId);
 				Assert.assertEquals(1, createdSememeType.columnInfo[i].columnValidatorData.length);
 				Assert.assertEquals(5, ((Integer)createdSememeType.columnInfo[i].columnValidatorData[0].data).intValue());

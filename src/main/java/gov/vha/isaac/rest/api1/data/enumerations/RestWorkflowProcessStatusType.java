@@ -46,7 +46,7 @@ public class RestWorkflowProcessStatusType extends Enumeration
 	
 	public RestWorkflowProcessStatusType(ProcessStatus dt)
 	{
-		super(dt.name(), dt.ordinal());
+		super(dt.name(), null, dt.ordinal());
 		text = dt.toString();
 	}
 	

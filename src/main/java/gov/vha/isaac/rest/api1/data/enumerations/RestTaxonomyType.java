@@ -41,7 +41,7 @@ public class RestTaxonomyType extends Enumeration
 	
 	public RestTaxonomyType(PremiseType st)
 	{
-		super(st.toString(), st.ordinal());
+		super(st.name(), null, st.ordinal());
 	}
 
 	public static RestTaxonomyType[] getAll()
