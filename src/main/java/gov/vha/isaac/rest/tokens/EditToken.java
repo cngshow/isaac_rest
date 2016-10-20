@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -33,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
 import gov.vha.isaac.ochre.api.util.PasswordHasher;
@@ -69,8 +69,8 @@ public class EditToken
 	private final int authorSequence;
 	private final int moduleSequence;
 	private final int pathSequence;
-	private final UUID workflowProcessId;
-	private final Set<String> roles = new TreeSet<>();
+	private final UUID activeWorkflowProcessId;
+	private final Set<UserRole> roles = new TreeSet<>();
 	
 	private transient EditCoordinate editCoordinate = null;
 	
@@ -82,38 +82,38 @@ public class EditToken
 	 * @param authorSequence
 	 * @param moduleSequence
 	 * @param pathSequence
-	 * @param workflowProcessId
+	 * @param activeWorkflowProcessId
 	 */
-	public EditToken(
+	EditToken(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
-			UUID workflowProcessId,
-			String...roles)
+			UUID activeWorkflowProcessId,
+			UserRole...roles)
 	{
 		this.creationTime = System.currentTimeMillis();
 
 		this.authorSequence = authorSequence;
 		this.moduleSequence = moduleSequence;
 		this.pathSequence = pathSequence;
-		this.workflowProcessId = workflowProcessId;
+		this.activeWorkflowProcessId = activeWorkflowProcessId;
 		
 		if (roles != null && roles.length > 0) {
-			for (String role : roles) {
-				this.roles.add(role.trim());
+			for (UserRole role : roles) {
+				this.roles.add(role);
 			}
 		}
 
 		serialization = serialize();
 	}
-	public EditToken(
+	EditToken(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
-			UUID workflowProcessId,
-			Collection<String> roles)
+			UUID activeWorkflowProcessId,
+			Collection<UserRole> roles)
 	{
-		this(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles != null ? roles.toArray(new String[roles.size()]) : null);
+		this(authorSequence, moduleSequence, pathSequence, activeWorkflowProcessId, roles != null ? roles.toArray(new UserRole[roles.size()]) : null);
 	}
 
 	/**
@@ -121,7 +121,7 @@ public class EditToken
 	 * @param encodedData
 	 * @throws Exception
 	 */
-	public EditToken(String encodedData) throws Exception
+	EditToken(String encodedData) throws Exception
 	{
 		long time = System.currentTimeMillis();
 		String readHash = encodedData.substring(0, encodedHashLength);
@@ -149,20 +149,14 @@ public class EditToken
 		
 		UUID tmpUuid = buffer.getUuid();
 		if (tmpUuid.equals(NULL_UUID)) {
-			workflowProcessId = null;
+			activeWorkflowProcessId = null;
 		} else {
-			workflowProcessId = tmpUuid;
+			activeWorkflowProcessId = tmpUuid;
 		}
 
 		byte numRoles = buffer.getByte();
 		for (byte i = 0; i < numRoles; ++i) {
-			byte roleLength = buffer.getByte();
-			StringBuilder role = new StringBuilder();
-			for (short charLoc = 0; charLoc < roleLength; ++charLoc) {
-				role.append(buffer.getChar());
-			}
-			
-			roles.add(role.toString());
+			roles.add(UserRole.safeValueOf(buffer.getInt()).get());
 		}
 		
 		Long temp = validTokens.remove(increment);
@@ -241,10 +235,10 @@ public class EditToken
 	}
 
 	/**
-	 * @return the workflowProcessId
+	 * @return the active workflowProcess UUID id
 	 */
-	public UUID getWorkflowProcessId() {
-		return workflowProcessId;
+	public UUID getActiveWorkflowProcessId() {
+		return activeWorkflowProcessId;
 	}
 
 	/**
@@ -264,7 +258,7 @@ public class EditToken
 	/**
 	 * @return the sorted set of roles
 	 */
-	public Set<String> getRoles() {
+	public Set<UserRole> getRoles() {
 		return Collections.unmodifiableSet(roles);
 	}
 
@@ -276,6 +270,10 @@ public class EditToken
 	public boolean isValidForSubmit()
 	{
 		return validForSubmit;
+	}
+	
+	public void setInvalidForSubmit() {
+		validForSubmit = false;
 	}
 	
 	private byte[] getBytesToWrite()
@@ -290,20 +288,15 @@ public class EditToken
 		buffer.putInt(moduleSequence);
 		buffer.putInt(pathSequence);
 		
-		if (workflowProcessId == null) {
+		if (activeWorkflowProcessId == null) {
 			buffer.putUuid(NULL_UUID);
 		} else {
-			buffer.putUuid(workflowProcessId);
+			buffer.putUuid(activeWorkflowProcessId);
 		}
 		
 		buffer.putByte((byte)roles.size());
-		String[] roleArray = roles.toArray(new String[roles.size()]);
-		for (byte i = 0; i < roleArray.length; ++i) {
-			String role = roleArray[i];
-			buffer.putByte((byte)role.length());
-			for (int charLoc = 0; charLoc < role.length(); ++charLoc) {
-				buffer.putChar(role.charAt(charLoc));
-			}
+		for (UserRole role : roles) {
+			buffer.putInt(role.ordinal());
 		}
 
 		buffer.trimToSize();
@@ -331,6 +324,17 @@ public class EditToken
 		return secret_;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "EditToken [validForSubmit=" + validForSubmit + ", creationTime=" + creationTime + ", authorSequence="
+				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
+				+ ", activeWorkflowProcessId=" + activeWorkflowProcessId + ", roles=" + roles + ", serialization=" + serialization
+				+ "]";
+	}
+
 	public static void main(String[] args) throws Exception
 	{
 		UUID randomUuid = UUID.randomUUID();
@@ -341,7 +345,7 @@ public class EditToken
 				2,
 				3,
 				randomUuid,
-				"role1", "role2", "role3");
+				UserRole.ADMINISTRATOR, UserRole.EDITOR, UserRole.READ_ONLY);
 		String token = t.serialize();
 		System.out.println(token);
 		EditToken t1 = new EditToken(token);
@@ -351,16 +355,5 @@ public class EditToken
 		System.out.println(token1);
 		Thread.sleep(25000);
 		System.out.println(new EditToken(token1).validForSubmit);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "EditToken [validForSubmit=" + validForSubmit + ", creationTime=" + creationTime + ", authorSequence="
-				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
-				+ ", workflowProcessId=" + workflowProcessId + ", roles=" + roles + ", serialization=" + serialization
-				+ "]";
 	}
 }

@@ -32,9 +32,7 @@ public class RestPaths
 	public static final String updatePathComponent = "update/";
 
 	public static final String chronologyComponent = "chronology/";
-	public static final String updateStateComponent = "updateState/";
-	public static final String activateComponent = "activate/";
-	public static final String deactivateComponent = "deactivate/";
+	public static final String updateStateComponent = "state/";
 	public static final String versionsComponent = "versions/";	
 	public static final String versionComponent = "version/";
 	public static final String objectChronologyTypeComponent = "objectChronologyType/";
@@ -53,40 +51,23 @@ public class RestPaths
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
 	
+	// Workflow Based Calls
 	public static final String workflowAPIsPathComponent = apiVersionComponent + "workflow/";
-	// WorkflowAccessor
-	public static final String permissionsForDefinitionAndUserComponent = "permissionsForDefinitionAndUser/";
-	public static final String actionsForProcessAndUserComponent = "actionsForProcessAndUser/";
-	public static final String defaultDefinitionComponent = "defaultDefinition/";
-	public static final String availableDefinitionsComponent = "availableDefinitions/";
-	public static final String workflowLockStateComponent = "workflowLockState/";
-	public static final String allRolesComponent = "allRoles/";
+	public static final String definition = "definition/";
+	public static final String process = "process/";
 
-	public static final String historiesForProcessComponent = "historiesForProcess/";
-	public static final String processComponent = "process/";
-	public static final String definitionComponent = "definition/";
-	public static final String advanceableProcessInformationComponent = "advanceableProcessInformation/";
-//	public static final String isConceptInActiveWorkflowComponent = "isConceptInActiveWorkflow/";
-	public static final String isComponentInActiveWorkflowComponent = "isComponentInActiveWorkflow/";
-	// WorkflowProcessInitializerConcluder
-	public static final String createWorkflowProcessComponent = "createWorkflowProcess/";
-//	public static final String endWorkflowProcessComponent = "finishWorkflowProcess/";
-//	public static final String launchWorkflowProcessComponent = "launchWorkflowProcess/";
-//	public static final String cancelWorkflowProcessComponent = "cancelWorkflowProcess/";
-//	public static final String concludeWorkflowProcessComponent = "concludeWorkflowProcess/";
-	// WorkflowUpdater
-	public static final String advanceWorkflowProcessComponent = "advanceWorkflowProcess/";
-	public static final String addWorkflowUserRoleComponent = "addWorkflowUserRole/";
-	public static final String removeComponentFromWorkflowComponent = "removeComponentFromWorkflow/";
-	public static final String addComponentToWorkflowComponent = "addComponentToWorkflow/";
-	public static final String acquireWorkflowLockComponent = "acquireWorkflowLock/";
-	public static final String releaseWorkflowLockComponent = "releaseWorkflowLock/";
-	
-//	public static final String addStampToExistingWorkflowProcessComponent = "addStampToExistingWorkflowProcess/";
-//	public static final String addConceptsToExistingWorkflowProcessComponent = "addStampsToExistingWorkflowProcess/";
-//	public static final String removeWorkflowUserRoleComponent = "removeWorkflowUserRole/";
+	public static final String allDefinitions = definition + "all/";
 
+	public static final String history = process + "history/";
+	public static final String locked = process + "locked/";
+	public static final String actions = process + "actions/";
+	public static final String available = process + "available/";
+	public static final String createProcess = process + "create/";
+	public static final String advanceProcess = process + "advance/";
+	public static final String removeComponent = process + "component/";
+	public static final String lock = process + "lock/";
 	
+	// Mapping Based Calls
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String mappingSetComponent = "mappingSet/";
 	public static final String mappingSetsComponent = "mappingSets/";
@@ -125,22 +106,16 @@ public class RestPaths
 	public static final String conceptVersionAppPathComponent = appPathComponent + conceptAPIsPathComponent +versionComponent;
 	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptAPIsPathComponent +descriptionsComponent;
 	public static final String conceptCreateAppPathComponent = writePathComponent + conceptAPIsPathComponent + createPathComponent;
-	public static final String conceptActivateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + activateComponent;
-	public static final String conceptDeactivateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + deactivateComponent;
-	public static final String conceptUpdateStateAppPathComponent = writePathComponent + conceptAPIsPathComponent + updatePathComponent + updateStateComponent;
-
+	
 	
 	public static final String sememeAPIsPathComponent = apiVersionComponent + "sememe/";
 	public static final String sememeChronologyAppPathComponent = appPathComponent + sememeAPIsPathComponent + chronologyComponent;
 	public static final String sememeVersionsAppPathComponent = appPathComponent + sememeAPIsPathComponent + versionsComponent;
 	public static final String sememeVersionAppPathComponent = appPathComponent + sememeAPIsPathComponent +versionComponent;
 	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememeAPIsPathComponent +byAssemblageComponent;
-	public static final String sememeUpdateStatePathComponent = writePathComponent + sememeAPIsPathComponent + updatePathComponent + updateStateComponent;
 
 	public static final String descriptionCreatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + createPathComponent;
 	public static final String descriptionUpdatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + updatePathComponent;
-	public static final String descriptionDeactivatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + deactivateComponent;
-	public static final String descriptionActivatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + activateComponent;
 	
 	public static final String searchComponent = "search/";
 	public static final String searchAPIsPathComponent = apiVersionComponent + searchComponent;

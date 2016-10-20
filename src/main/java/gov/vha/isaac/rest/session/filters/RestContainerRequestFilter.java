@@ -30,6 +30,7 @@ import javax.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.rest.ApplicationConfig;
+import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -85,11 +86,8 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
 			
 			if (requestContext.getUriInfo().getPath().contains("/write/")
-					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.ssoToken)
+					|| requestContext.getUriInfo().getPath().contains(RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent)
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
-					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editModule)
-					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editPath)
-					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.wfProcessId)
 					) {
 				try {
 					// TODO Joel find out why first invocation seems to fail and fix

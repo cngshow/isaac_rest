@@ -19,97 +19,82 @@
 
 package gov.vha.isaac.rest.session;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import gov.vha.isaac.ochre.api.UserRole;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-/*
- * {
- * 	"roles":
- * 		[
- * 			{
- * 				"id":10000,
- * 				"name":"read_only",
- * 				"resource_id":null,
- * 				"resource_type":null,
- * 				"created_at":"2016-09-13T14:48:18.000Z",
- * 				"updated_at":"2016-09-13T14:48:18.000Z"
- * 			}
- * 		],
- * 	"token_parsed?":true,
- * 	"user":"VHAISHArmbrD",
- * 	"type":"ssoi",
- * 	"id":10005}
+/**
+ * 
+ * {@link User}
+ *
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ *
  */
-@XmlRootElement
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-//JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")  
 public class User {
-	boolean token_parsed;
-	String userName;
-	String type;
-	int id;
-	Set<Role> roles = new HashSet<>();
+	private final String name;
+	private final UUID id;
+	private final Set<UserRole> roles = new HashSet<>();
 	
-	User() {}
-	
-	/**
-	 * @param token_parsed
-	 * @param userName
-	 * @param type
-	 * @param id
-	 * @param roles
-	 */
-	public User(boolean token_parsed, String userName, String type, int id, Set<Role> roles) {
-		super();
-		this.token_parsed = token_parsed;
-		this.userName = userName;
-		this.type = type;
+	public User(String name, UUID id, Collection<UserRole> roles) {
+		this.name = name;
 		this.id = id;
 		if (roles != null) {
 			this.roles.addAll(roles);
 		}
 	}
-
+	
 	/**
-	 * @return the token_parsed
+	 * @return
 	 */
-	public boolean isToken_parsed() {
-		return token_parsed;
+	public String getName() {
+		return name;
 	}
-
 	/**
-	 * @return the type
+	 * @return
 	 */
-	public String getType() {
-		return type;
-	}
-
-	/**
-	 * @return the user name
-	 */
-	public String getUserame() {
-		return userName;
-	}
-
-	/**
-	 * @return the id
-	 */
-	public int getId() {
+	public UUID getId() {
 		return id;
 	}
-
 	/**
-	 * @return the roles
+	 * @return
 	 */
-	public Set<Role> getRoles() {
+	public Set<UserRole> getRoles() {
 		return Collections.unmodifiableSet(roles);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		User other = (User) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -117,7 +102,6 @@ public class User {
 	 */
 	@Override
 	public String toString() {
-		return "User [token_parsed=" + token_parsed + ", userName=" + userName + ", type=" + type + ", id=" + id
-				+ ", roles=" + roles + "]";
+		return "User [name=" + name + ", id=" + id + ", roles=" + roles + "]";
 	}
 }

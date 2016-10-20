@@ -19,6 +19,9 @@
 
 package gov.vha.isaac.rest.tokens;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,7 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -62,8 +66,8 @@ public class EditTokens {
 						defaultEditCoordinate.getAuthorSequence(),
 						defaultEditCoordinate.getModuleSequence(),
 						defaultEditCoordinate.getPathSequence(),
-						null
-						);
+						null,
+						new HashSet<UserRole>());
 			}
 		}
 	}
@@ -108,7 +112,60 @@ public class EditTokens {
 			return OBJECT_BY_TOKEN_CACHE.get(key);
 		}
 	}
-	
+
+	/**
+	 * 
+	 * This method creates a new token out of the passed token,
+	 * resetting internal validation state and timers
+	 * 
+	 * @param token
+	 * @return
+	 * @throws RestException
+	 */
+	public static EditToken renew(EditToken token) {
+		EditToken existingToken = get(token.getSerialized());
+		
+		if (existingToken == null) {
+			EditToken newToken = new EditToken(
+					token.getAuthorSequence(),
+					token.getModuleSequence(),
+					token.getPathSequence(),
+					token.getActiveWorkflowProcessId(),
+					token.getRoles()
+					);
+			put(newToken);
+			token.setInvalidForSubmit();
+			return newToken;
+		} else {
+			OBJECT_BY_TOKEN_CACHE.remove(token.getSerialized());
+			return renew(token);
+		}
+	}
+
+	public static EditToken renew(String tokenString) throws RestException {
+		EditToken token = get(tokenString);
+		
+		if (token == null) {
+			try {
+				EditToken passedToken = new EditToken(tokenString);
+				EditToken newToken = new EditToken(
+						passedToken.getAuthorSequence(),
+						passedToken.getModuleSequence(),
+						passedToken.getPathSequence(),
+						passedToken.getActiveWorkflowProcessId(),
+						passedToken.getRoles()
+						);
+				put(newToken);
+				return newToken;
+			} catch (Exception e) {
+				throw new RestException("Failed creating EditToken from passed token string \"" + tokenString + "\"", e);
+			}
+		} else {
+			OBJECT_BY_TOKEN_CACHE.remove(tokenString);
+			return renew(tokenString);
+		}
+	}
+
 	public static EditToken getOrCreate(String key) throws RestException {
 		EditToken token = get(key);
 		
@@ -121,29 +178,83 @@ public class EditTokens {
 			put(token);
 		}
 		
-		return get(key);
+		return token;
 	}
 
 	public static EditToken getOrCreate(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
-			UUID workflowProcessId) {
-		EditToken constructedToken =
-				new EditToken(
-						authorSequence,
-						moduleSequence,
-						pathSequence,
-						workflowProcessId);
-		
-		EditToken cachedToken = get(constructedToken.getSerialized());
-		
-		if (cachedToken == null) {
-			cachedToken = constructedToken;
-			put(cachedToken);
+			UUID workflowProcessId,
+			UserRole...roles) {
+		return getOrCreate(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles != null ? Arrays.asList(roles) : null);
+	}
+	public static EditToken getOrCreate(
+			int authorSequence,
+			int moduleSequence,
+			int pathSequence,
+			UUID workflowProcessId,
+			Collection<UserRole> roles) {
+		if (OBJECT_BY_TOKEN_CACHE == null) {
+			init(DEFAULT_MAX_SIZE);
+		}
+		if (roles == null) {
+			roles = new HashSet<>();
+		}
+		for (EditToken token : OBJECT_BY_TOKEN_CACHE.values()) {
+			if (authorSequence == token.getAuthorSequence()
+					&& moduleSequence == token.getModuleSequence()
+					&& pathSequence == token.getPathSequence()
+					&& ((workflowProcessId == null && token.getActiveWorkflowProcessId() == null) || (workflowProcessId != null && token.getActiveWorkflowProcessId() != null && workflowProcessId.equals(token.getActiveWorkflowProcessId())))
+					&& roles.containsAll(token.getRoles())
+					&& token.getRoles().containsAll(roles)) {
+				return token;
+			}
 		}
 		
-		return get(cachedToken.getSerialized());
+		EditToken newToken = new EditToken(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles);
+		
+		put(newToken);
+		
+		return newToken;
+	}
+
+	/**
+	 * 
+	 * Returns (if extant) or creates (if missing) an analog of the passed EditToken with the specified processId
+	 * 
+	 * @param editToken
+	 * @param processId
+	 * @return
+	 */
+	public static EditToken getOrCreateWithSpecifiedProcessId(EditToken editToken, UUID processId) {
+		return getOrCreate(
+				editToken.getAuthorSequence(),
+				editToken.getModuleSequence(),
+				editToken.getPathSequence(),
+				processId,
+				editToken.getRoles()
+				);
+	}
+	/**
+	 * 
+	 * Creates and caches a new analog of the passed EditToken with the specified processId
+	 * 
+	 * @param editToken
+	 * @param processId
+	 * @return
+	 * @throws RestException 
+	 */
+	public static EditToken renewWithSpecifiedProcessId(EditToken editToken, UUID processId) {
+		EditToken token = getOrCreate(
+				editToken.getAuthorSequence(),
+				editToken.getModuleSequence(),
+				editToken.getPathSequence(),
+				processId,
+				editToken.getRoles()
+				);
+		
+		return renew(token);
 	}
 
 	/**
@@ -161,7 +272,17 @@ public class EditTokens {
 		if (! tokenStringOptional.isPresent()) {
 			return Optional.empty();
 		} else {
-			return Optional.of(EditTokens.getOrCreate(tokenStringOptional.get()));
+			if (EditTokens.get(tokenStringOptional.get()) != null) {
+				return Optional.of(EditTokens.get(tokenStringOptional.get()));
+			} else {
+				try {
+					EditToken token = new EditToken(tokenStringOptional.get());
+					EditTokens.put(token);
+					return Optional.of(token);
+				} catch (Exception e) {
+					throw new RestException("Failed creating EditToken from string \"" + tokenStringOptional.get() + "\"", e);
+				}
+			}
 		}
 	}
 	/**

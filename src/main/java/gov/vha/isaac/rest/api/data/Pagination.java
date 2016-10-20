@@ -42,30 +42,30 @@ public class Pagination
 	 * Link to retrieve previous result set page - not provided if no previous page exists.
 	 */
 	@XmlElement
-	String previousUrl;
+	public String previousUrl;
 	/**
 	 * Link to retrieve next result set page
 	 */
 	@XmlElement
-	String nextUrl;
+	public String nextUrl;
 	
 	/**
 	 * The page (of maximum size pageSize) number from beginning of dataset starting at 1
 	 */
 	@XmlElement
-	int pageNum;
+	public int pageNum;
 	
 	/**
 	 * Estimated size of set of all matching values of which the current page is a subset. Value is negative if and only if unknown. May be affected by filtering.
 	 */
 	@XmlElement
-	int approximateTotal;
+	public int approximateTotal;
 	
 	/**
 	 * True if the approximateTotal value is an exact count of results, false if the value is an estimate.
 	 */
 	@XmlElement
-	boolean totalIsExact;
+	public boolean totalIsExact;
 
 	protected Pagination()
 	{

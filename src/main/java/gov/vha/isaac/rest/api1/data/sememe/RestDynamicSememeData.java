@@ -19,12 +19,15 @@
 package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -50,6 +53,7 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeSequenceImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
@@ -83,16 +87,65 @@ public abstract class RestDynamicSememeData
 {
 	/**
 	 * The 0 indexed column number for this data.  Will not be populated for nested RestDynamicSememeData objects where the 'data' field
-	 * is of type RestDynamicSememeArray
+	 * is of type RestDynamicSememeArray.  This field MUST be provided during during a sememe create or update, and it takes priority over 
+	 * the ordering of fields in an array of columns.  Also may be irrelevant in cases where setting DefaultData, or ValidatorData.  
 	 */
 	@XmlElement
-	Integer columnNumber;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Integer columnNumber;
 	
 	/**
-	 * The data for a column within a RestDynamicSememeVersion instance
+	 * The data for a column within a RestDynamicSememeVersion instance.  The data type of this field depends on the type of class that extends 
+	 * this abstract class.  The mapping of types is: <ClassType> - <Java Data Type>
+	 * 
+	 * - RestDynamicSememeBoolean - boolean
+	 * - RestDynamicSememeByteArray - byte[]
+	 * - RestDynamicSememeDouble - double
+	 * - RestDynamicSememeFloat - float
+	 * - RestDynamicSememeInteger - int 
+	 * - RestDynamicSememeLong - long
+	 * - RestDynamicSememeString - string
+	 * - RestDynamicSememeNid - int
+	 * - RestDynamicSememeSequence - int
+	 * - RestDynamicSememeUUID - UUID
+	 * - RestDynamicSememeArray - An array of one of the above types
+	 * 
+	 * The data type as returned via the REST interface will be typed however the JSON or XML serializer handles the java types. 
+	 * 
+	 * When using this class in a create or update call, a special annotation must be included to create the proper type of {@link RestDynamicSememeData}
+	 * because {@link RestDynamicSememeData} is an abstract type. 
+	 * 
+	 *  For the server to deserialize the type properly, a field must be included of the form "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.CLASSTYPE"
+	 * 
+	 * where CLASSTYPE is one of:
+	 * - RestDynamicSememeBoolean
+	 * - RestDynamicSememeByteArray
+	 * - RestDynamicSememeDouble
+	 * - RestDynamicSememeFloat
+	 * - RestDynamicSememeInteger,
+	 * - RestDynamicSememeLong,
+	 * - RestDynamicSememeString,
+	 * - RestDynamicSememeNid
+	 * - RestDynamicSememeSequence
+	 * - RestDynamicSememeUUID
+	 * - RestDynamicSememeArray
+	 * 
+	 * Example JSON that provides two columns of differing types:
+	 * 
+	 * ...
+	 *   "restDynamicSememeDataArrayField": [{
+	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString",
+		    "data": "test"
+	 *   }, {
+	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong",
+	 *     "data": 5
+	 *   }]
+	 * }
+
 	 */
 	@XmlElement
-	protected Object data;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Object data;
 	
 	protected RestDynamicSememeData(Integer columnNumber, Object data)
 	{
@@ -146,16 +199,65 @@ public abstract class RestDynamicSememeData
 		}
 	}
 	
-	public static DynamicSememeData[] translate(RestDynamicSememeData[] values)
+	/**
+	 * This implementation sorts by the column number, and fills gaps as appropriate.
+	 */
+	public static DynamicSememeData[] translate(RestDynamicSememeData[] values) throws RestException
 	{
 		if (values == null)
 		{
 			return null;
 		}
-		DynamicSememeData[] result = new DynamicSememeData[values.length];
-		for (int i = 0; i < values.length; i++)
+		
+		//Sort the values by column number, identify the largest col number in case there are gaps (optional columns left blank)
+		//and fill in the gaps as appropriate.
+		try
 		{
-			result[i] = RestDynamicSememeData.translate(values[i]);
+			Arrays.sort(values, new Comparator<RestDynamicSememeData>()
+			{
+				@Override
+				public int compare(RestDynamicSememeData o1, RestDynamicSememeData o2)
+				{
+					if (o1.columnNumber == null || o2.columnNumber == null)
+					{
+						throw new RuntimeException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
+					}
+					return o1.columnNumber.compareTo(o2.columnNumber);
+				}
+			});
+		}
+		catch (RuntimeException e)
+		{
+			throw new RestException(e.getMessage());
+		}
+		
+		//size 1 isn't caught in the sort check above
+		if (values.length == 1 && values[0].columnNumber == null)
+		{
+			throw new RuntimeException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
+		}
+		
+		int maxColumn = values.length == 0 ? 0 : (values[values.length - 1].columnNumber + 1);
+		
+		//There are some cases where the column number doesn't make sense (dynamicSememeArray type, validator data, etc) where a negative number might be passed
+		if (maxColumn <= 0)
+		{
+			maxColumn = values.length;
+		}
+		
+		DynamicSememeData[] result = new DynamicSememeData[maxColumn];
+		int readPos = 0;
+		for (int translated = 0; translated < maxColumn; translated++)
+		{
+			if (translated == values[readPos].columnNumber.intValue() || values[readPos].columnNumber.intValue() < 0)
+			{
+				result[translated] = RestDynamicSememeData.translate(values[readPos]);
+				readPos++;
+			}
+			else
+			{
+				result[translated] = null;  //fill a gap
+			}
 		}
 		return result;
 	}

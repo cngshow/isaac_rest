@@ -30,13 +30,9 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
-import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
@@ -45,16 +41,10 @@ import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
-import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
-import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.coordinate.EditCoordinateImpl;
-import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.api1.concept.ConceptWriteAPIs;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 import gov.vha.isaac.rest.tokens.EditToken;
@@ -279,15 +269,14 @@ public class RequestInfo
 					log.debug("Applying EditToken " + RequestParameters.editToken + " parameter \"" + passedEditToken.get().getSerialized() + "\"");
 
 					// Set local values to values from passed EditToken
-					editToken = passedEditToken.get();
 					module = passedEditToken.get().getModuleSequence();
 					path = passedEditToken.get().getPathSequence();
-					workflowProcessid = passedEditToken.get().getWorkflowProcessId();
+					workflowProcessid = passedEditToken.get().getActiveWorkflowProcessId();
 
 					// Override values from passed EditToken with values from parameters
-					if (parameters_.containsKey(RequestParameters.wfProcessId)) {
-						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.wfProcessId);
-						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters_.get(RequestParameters.wfProcessId).iterator().next());
+					if (parameters_.containsKey(RequestParameters.processId)) {
+						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.processId);
+						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, parameters_.get(RequestParameters.processId).iterator().next());
 					}
 					if (parameters_.containsKey(RequestParameters.editModule)) {
 						module = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editModule);
@@ -297,20 +286,20 @@ public class RequestInfo
 					}
 					
 					// Create new EditToken based on any passed parameters // TODO joel only recreate if necessary
-					editToken = new EditToken(
-							editToken.getAuthorSequence(),
+					editToken = EditTokens.getOrCreate(
+							passedEditToken.get().getAuthorSequence(),
 							module,
 							path,
 							workflowProcessid,
-							editToken.getRoles()
+							passedEditToken.get().getRoles()
 							);
 				} else {
 					// No valid EditToken passed as parameter
 					log.debug("Retrieving new EditToken with SSO token " + parameters_.get(RequestParameters.ssoToken));
 
-					if (parameters_.containsKey(RequestParameters.wfProcessId)) {
-						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.wfProcessId);
-						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, parameters_.get(RequestParameters.wfProcessId).iterator().next());
+					if (parameters_.containsKey(RequestParameters.processId)) {
+						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.processId);
+						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, parameters_.get(RequestParameters.processId).iterator().next());
 					}
 					if (parameters_.containsKey(RequestParameters.editModule)) {
 						module = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editModule);
@@ -321,7 +310,8 @@ public class RequestInfo
 					
 					// Must have either EditToken or SSO token in order to get author
 					RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
-					User user = PRISMEServices.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next());
+					PrismeIntegratedUserService userService = LookupService.getService(PrismeIntegratedUserService.class);
+					User user = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next()).get();
 					editToken = EditTokenUtil.getUserToken(
 							user,
 							module != null ? module : defaultEditCoordinate.getModuleSequence(),
@@ -363,10 +353,10 @@ public class RequestInfo
 	/**
 	 * @return
 	 */
-	public UUID getWorkflowProcessId()
+	public UUID getActiveWorkflowProcessId()
 	{
 		//TODO implement this properly - need the active workflow in this session
-		return getEditToken().getWorkflowProcessId();
+		return getEditToken().getActiveWorkflowProcessId();
 
 		//		try
 		//		{

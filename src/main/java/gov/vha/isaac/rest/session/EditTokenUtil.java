@@ -22,14 +22,10 @@ package gov.vha.isaac.rest.session;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.And;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.ConceptAssertion;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.NecessarySet;
-
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -40,9 +36,6 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptBuilderService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
-import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
@@ -53,10 +46,9 @@ import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
-import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
-import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.EditToken;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * 
@@ -72,7 +64,7 @@ class EditTokenUtil {
 			User user,
 			int moduleSequence,
 			int pathSequence,
-			UUID wfProcessId) throws RestException {
+			UUID processId) throws RestException {
 		EditCoordinate adminEditCoordinate = EditCoordinates.getDefaultUserMetadata();
 		LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
 		LogicCoordinate logicCoordinate = LogicCoordinates.getStandardElProfile();
@@ -80,7 +72,7 @@ class EditTokenUtil {
 		Integer authorSequence = null;
 		
 		// FSN from userName is SSO primary key
-		final String fsn = user.getUserame();
+		final String fsn = user.getName();
 		
 		// Generate SSO T5 UUID from FSN with MetaData.USER.getPrimordialUuid() as domain
 		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
@@ -152,17 +144,12 @@ class EditTokenUtil {
 			}
 		}
 
-		Set<String> roles = new HashSet<>();
-		for (Role role : user.getRoles()) {
-			roles.add(role.getName());
-		}
-		
-		EditToken editToken = new EditToken(
+		EditToken editToken = EditTokens.getOrCreate(
 				authorSequence,
 				moduleSequence,
 				pathSequence,
-				wfProcessId,
-				roles);
+				processId,
+				user.getRoles());
 		
 		return editToken;
 	}

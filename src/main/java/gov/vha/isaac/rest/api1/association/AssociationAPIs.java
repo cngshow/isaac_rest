@@ -88,7 +88,8 @@ public class AssociationAPIs
 		
 		for (int i : associationConcepts)
 		{
-			results.add(new RestAssociationTypeVersion(AssociationType.read(i, RequestInfo.get().getStampCoordinate())));
+			results.add(new RestAssociationTypeVersion(AssociationType.read(i, RequestInfo.get().getStampCoordinate(), 
+					RequestInfo.get().getLanguageCoordinate())));
 		}
 		
 		Collections.sort(results, new Comparator<RestAssociationTypeVersion>()
@@ -130,7 +131,8 @@ public class AssociationAPIs
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		return new RestAssociationTypeVersion(AssociationType.read(Util.convertToConceptSequence(id), RequestInfo.get().getStampCoordinate()));
+		return new RestAssociationTypeVersion(AssociationType.read(Util.convertToConceptSequence(id), RequestInfo.get().getStampCoordinate(), 
+				RequestInfo.get().getLanguageCoordinate()));
 	}
 	
 	/**
@@ -281,6 +283,38 @@ public class AssociationAPIs
 			finalResult[i] = new RestAssociationItemVersion(results.get(i));
 		}
 		return finalResult;
+		
+	}
+	
+	/**
+	 * Return a particular association item
+	 * @param id - A UUID or nid of a sememe association instance.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
+	 * be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param expand - the optional items to be expanded.  Supports 'source', 'target', 'nestedSememes'
+	 * When 'source' or 'target' is expanded, the following expand options are supported for expanded source and/or target: 'versionsAll', 'versionsLatestOnly'
+	 * When 'nestedSememes' is expanded, the following expand options are supported for the nested sememes: 'referencedDetails', 'chronology'
+	 * @return the latest version of the requested association on the provided coordinate.  May return null, if the association isn't available on 
+	 * the specified coordinate.
+	 * 
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.associationItemComponent + "{" + RequestParameters.id +"}")
+	public RestAssociationItemVersion getAssociation(
+		@PathParam(RequestParameters.id) String id, 
+		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.expand) String expand) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		Optional<AssociationInstance> result = AssociationUtilities.getAssociation(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
+		
+		return result.isPresent() ? new RestAssociationItemVersion(result.get()) : null;
 		
 	}
 }

@@ -50,9 +50,9 @@ public class ContentRequestAPIs
 	@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML , MediaType.TEXT_PLAIN})
 	@Produces({MediaType.TEXT_PLAIN})
 	@Path(RestPaths.termRequestComponent)  
-	public Response putNewTermRequest(@Context ContainerRequest request, String data) throws RestException
+	public Response putNewTermRequest(String data) throws RestException
 	{
-		System.out.println("received media type: " + request.getMediaType());
+		//System.out.println("received media type: " + request.getMediaType());
 		System.out.println("got data '" + data + "'");
 		if (data.contains("BAD"))
 		{

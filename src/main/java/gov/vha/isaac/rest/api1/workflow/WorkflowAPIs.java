@@ -19,29 +19,32 @@
 package gov.vha.isaac.rest.api1.workflow;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.workflow.model.contents.DefinitionDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessHistory;
-import gov.vha.isaac.rest.api.data.wrappers.RestBoolean;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinitionDetail;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.session.PRISMEServices;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -53,60 +56,89 @@ import gov.vha.isaac.rest.session.RequestParameters;
  */
 @Path(RestPaths.workflowAPIsPathComponent)
 public class WorkflowAPIs {
+
 	private static Logger log = LogManager.getLogger(WorkflowAPIs.class);
 
 	/**
-	 * Gets the {@link RestWorkflowProcess} for the specified process key
+	 * Return all workflow definitions available on server
 	 * 
-	 * Used to access all information associated with a given workflow process
-	 * (i.e. an instance of a {@link RestWorkflowDefinitionDetail}).
+	 * @return RestWorkflowDefinition Collection - Collection of all workflow definitions 
 	 * 
-	 * @param wfProcessId
-	 *            - UUID workflow-specific id for process
-	 * @return RestWorkflowProcess
-	 * @throws RestException
+	 * @throws RestException 
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.processComponent)
-	public RestWorkflowProcess getProcess(@QueryParam(RequestParameters.wfProcessId) String wfProcessId)
-			throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.wfProcessId);
-
+	@Path(RestPaths.allDefinitions)
+	public RestWorkflowDefinition[] getAllDefinitions() throws RestException {
 		try {
-			return new RestWorkflowProcess(RequestInfo.get().getWorkflow().getWorkflowAccessor().getProcessDetails(
-					RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId)));
-		} catch (RestException e) {
-			throw e;
+			ArrayList<RestWorkflowDefinition> restList = new ArrayList<>();
+			
+			Collection<DefinitionDetail> ochreSet = RequestInfo.get().getWorkflow().getDefinitionDetailStore().values();
+	
+			ochreSet.stream().forEach(a -> restList.add(new RestWorkflowDefinition(a)));
+			
+			return restList.toArray(new RestWorkflowDefinition[restList.size()]);
 		} catch (Exception e) {
-			String msg = "Failed retrieving the process for the specified process id " + wfProcessId;
+			String msg = "Failed retrieving the definitions stored in the server";
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
 	}
 
 	/**
-	 * Returns all {@link RestWorkflowProcessHistory} entries associated with the {@link RestWorkflowProcess}
-	 * (an instance of a {@link RestWorkflowDefinitionDetail}) specified by the workflow-specific process id.
-	 * This contains all the advancements made during the given process.
-	 * The result is sorted by advancement time, with last being most recent.
+	 * Return workflow process instance information not including the process
+	 * history
 	 * 
-	 * @return {@link RestWorkflowProcessHistory} list which is a sorted set of distinct workflow
-	 *         histories for a specified process
+	 * @param processId
+	 *			UUID identifying a given workflow process instance
+	 * 
+	 * @return RestWorkflowProcess - Workflow process instance information
+	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.historiesForProcessComponent)
-	public RestWorkflowProcessHistory[] getHistoriesForProcess(
-			@QueryParam(RequestParameters.wfProcessId) String wfProcessId) throws RestException {
+	@Path(RestPaths.process)
+	public RestWorkflowProcess getProcess(@QueryParam(RequestParameters.processId) String processId)
+			throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.wfProcessId);
+				RequestParameters.processId);
+
+		try {
+			return new RestWorkflowProcess(RequestInfo.get().getWorkflow().getWorkflowAccessor()
+					.getProcessDetails(RequestInfoUtils.parseUuidParameter(RequestParameters.processId, processId)));
+		} catch (RestException e) {
+			throw e;
+		} catch (Exception e) {
+			String msg = "Failed retrieving the specified process id " + processId;
+			log.error(msg, e);
+			throw new RestException(msg + ". " + e.getLocalizedMessage());
+		}
+	}
+
+	/**
+	 * Return workflow process instance history. The history is sorted by
+	 * advancement sequence, with last being most recent advance operation
+	 * 
+	 * @param processId
+	 *			UUID identifying a given workflow process instance
+	 * 
+	 * @return RestWorkflowProcessHistory Collection - Sorted collection of the
+	 *		 process instance's advancements
+	 * 
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.history)
+	public RestWorkflowProcessHistory[] getProcessHistory(@QueryParam(RequestParameters.processId) String processId)
+			throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+				RequestParameters.processId);
 
 		try {
 			SortedSet<ProcessHistory> ochreSet = RequestInfo.get().getWorkflow().getWorkflowAccessor()
-					.getProcessHistory(RequestInfoUtils.parseUuidParameter(wfProcessId, wfProcessId));
+					.getProcessHistory(RequestInfoUtils.parseUuidParameter(processId, processId));
 
 			List<RestWorkflowProcessHistory> restList = new ArrayList<>();
 
@@ -121,138 +153,93 @@ public class WorkflowAPIs {
 	}
 
 	/**
-	 * Map the list of process history {@link RestWorkflowProcessHistory} by each process {@link RestWorkflowProcess}
-	 * for which the user's permissions/entitlements enable them to advance workflow based on the process' current state.
-	 * Only active processes can be advanced thus only those processes with such
-	 * a status are returned.
+	 * Return the actions that the user may perform on the workflow process
+	 * instance instance
 	 * 
-	 * Used to determine which processes to list when the user selects the
-	 * "Author Workflows" link
+	 * @param editToken
+	 *			String serialization of EditToken identifying currently logged
+	 *			in user
+	 * @param processId
+	 *			UUID identifying a given workflow process instance
 	 * 
-	 * @return a list of RestWorkflowProcessHistoriesMapEntry items that gives the distinct workflow
-	 *         histories ({@link RestWorkflowProcessHistory}) by process ({@link RestWorkflowProcess})
+	 * @return RestWorkflowAvailableAction Collection - Collection of distinct
+	 *		 actions a user can perform
+	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.advanceableProcessInformationComponent)
-	public RestWorkflowProcessHistoriesMapEntry[] getAdvanceableProcessInformation(
-			@QueryParam(RequestParameters.wfDefinitionId) String wfDefinitionId,
-			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException {
+	@Path(RestPaths.actions)
+	public RestWorkflowAvailableAction[] getProcessActions(@QueryParam(RequestParameters.editToken) String editToken,
+			@QueryParam(RequestParameters.processId) String processId) throws RestException {
 		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.wfDefinitionId, RequestParameters.wfUserId);
+				RequestParameters.editToken, RequestParameters.processId);
+
+		UUID userId = null;
 		try {
-			ArrayList<RestWorkflowProcessHistoriesMapEntry> entries = new ArrayList<>();
-			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = RequestInfo.get().getWorkflow().getWorkflowAccessor().getAdvanceableProcessInformation(
-					RequestInfoUtils.parseUuidParameter(RequestParameters.wfDefinitionId, wfDefinitionId),
-					RequestInfoUtils.parseUuidParameter(RequestParameters.wfUserId, wfUserId));
-
-			for (Map.Entry<ProcessDetail, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
-				List<RestWorkflowProcessHistory> restList = new ArrayList<>();
-				ochreMapEntry.getValue().stream().forEachOrdered(a -> restList.add(new RestWorkflowProcessHistory(a)));
-				entries.add(new RestWorkflowProcessHistoriesMapEntry(new RestWorkflowProcess(ochreMapEntry.getKey()), restList.toArray(new RestWorkflowProcessHistory[restList.size()])));
-			}
-			return entries.toArray(entries.toArray(new RestWorkflowProcessHistoriesMapEntry[entries.size()]));
-		} catch (Exception e) {
-			String msg = "Failed retrieving the map of process histories by process for definition id " + wfDefinitionId + " and user id " + wfUserId;
-			log.error(msg, e);
-			throw new RestException(msg + ". " + e.getLocalizedMessage());
-		}
-	}
-
-	/**
-	 * Return the set of available actions for the specified workflow process
-	 * and user
-	 * 
-	 * Used to determine which actions populate the Transition Workflow picklist
-	 * 
-	 * @param wfProcessId
-	 *            - UUID workflow-specific id for workflow process {@link RestWorkflowProcess}
-	 * @param wfUserId
-	 *            - Integer workflow-specific id for a workflow user
-	 * @return RestWorkflowAvailableActions list of distinct actions
-	 * @throws RestException
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.actionsForProcessAndUserComponent)
-	public RestWorkflowAvailableAction[] getActionsForProcessAndUser(
-			@QueryParam(RequestParameters.wfProcessId) String wfProcessId,
-			@QueryParam(RequestParameters.wfUserId) String wfUserId) throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.wfProcessId, RequestParameters.wfUserId);
-
-		try {
+			userId = Get.identifierService()
+					.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get();
 			List<RestWorkflowAvailableAction> actions = new ArrayList<>();
-			RequestInfo.get().getWorkflow().getWorkflowAccessor().getUserPermissibleActionsForProcess(
-							RequestInfoUtils.parseUuidParameter(RequestParameters.wfProcessId, wfProcessId),
-							RequestInfoUtils.parseUuidParameter(RequestParameters.wfUserId, wfUserId))
+			RequestInfo.get().getWorkflow().getWorkflowAccessor()
+					.getUserPermissibleActionsForProcess(
+							RequestInfoUtils.parseUuidParameter(RequestParameters.processId, processId), userId)
 					.stream().forEachOrdered(a -> actions.add(new RestWorkflowAvailableAction(a)));
 			return actions.toArray(new RestWorkflowAvailableAction[actions.size()]);
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
-			String msg = "Failed retrieving list of actions for the specified workflow process " + wfProcessId
-					+ " and user " + wfUserId;
+			String msg = "Failed retrieving list of actions for the specified workflow process " + processId
+					+ " and user " + userId;
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
 	}
-	
-	/**
-	 * Return the default workflow definition UUID
-	 * 
-	 * @return default definition UUID
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.defaultDefinitionComponent)
-	public RestUUID getDefaultDefinition() {
-		return new RestUUID(RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet().iterator().next());
-	}
 
 	/**
-	 * Return the available workflow definition UUIDs
+	 * Return all active workflow process instances for which the user has
+	 * proper permissions to act upon. To minimize REST calls, the sorted
+	 * history of each process is mapped in the return object.
 	 * 
-	 * @return available definition UUIDs
+	 * @param editToken
+	 *			String serialization of EditToken identifying currently logged
+	 *			in user
+	 * @param definitionId
+	 *			UUID identifying a specific workflow definition
+	 * 
+	 * @return RestWorkflowProcessHistoriesMapEntry Collection - Workflow
+	 *		 process instances mapped to their sorted history
+	 * 
+	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.availableDefinitionsComponent)
-	public RestUUID[] getAvailableDefinitions() {
-		ArrayList<RestUUID> temp = new ArrayList<>();
-		for (UUID uuid : RequestInfo.get().getWorkflow().getDefinitionDetailStore().keySet())
-		{
-			temp.add(new RestUUID(uuid));
+	@Path(RestPaths.available)
+	public RestWorkflowProcessHistoriesMapEntry[] getAvailableProcesses(
+			@QueryParam(RequestParameters.definitionId) String definitionId,
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+				RequestParameters.definitionId, RequestParameters.editToken);
+		UUID userId = null;
+		try {
+			userId = Get.identifierService()
+					.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get();
+			ArrayList<RestWorkflowProcessHistoriesMapEntry> entries = new ArrayList<>();
+			Map<ProcessDetail, SortedSet<ProcessHistory>> ochreMap = RequestInfo.get().getWorkflow()
+					.getWorkflowAccessor().getAdvanceableProcessInformation(
+							RequestInfoUtils.parseUuidParameter(RequestParameters.definitionId, definitionId), userId);
+
+			for (Map.Entry<ProcessDetail, SortedSet<ProcessHistory>> ochreMapEntry : ochreMap.entrySet()) {
+				List<RestWorkflowProcessHistory> restList = new ArrayList<>();
+				ochreMapEntry.getValue().stream().forEachOrdered(a -> restList.add(new RestWorkflowProcessHistory(a)));
+				entries.add(new RestWorkflowProcessHistoriesMapEntry(new RestWorkflowProcess(ochreMapEntry.getKey()),
+						restList.toArray(new RestWorkflowProcessHistory[restList.size()])));
+			}
+			return entries.toArray(new RestWorkflowProcessHistoriesMapEntry[entries.size()]);
+		} catch (Exception e) {
+			String msg = "Failed retrieving the process and their history that exist within a definition id "
+					+ definitionId + " and may be acted upon by user id " + userId;
+			log.error(msg, e);
+			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}
-		return temp.toArray(new RestUUID[temp.size()]);
-	}
-
-	/**
-	 * Return the the locked state of the specified process
-	 * 
-	 * @return RestBoolean containing true iff locked, else containing false
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.workflowLockStateComponent)
-	public RestBoolean isWorkflowLocked() {
-		boolean isLocked = false;
-		
-		//isLocked = RequestInfo.get().getWorkflow()
-		return new RestBoolean(isLocked);
-	}
-	
-
-	/**
-	 * Return all potential user roles
-	 * 
-	 * @return array of role names
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.allRolesComponent)
-	public String[] getAllRoles() {
-		return PRISMEServices.getAllRoles();
 	}
 }

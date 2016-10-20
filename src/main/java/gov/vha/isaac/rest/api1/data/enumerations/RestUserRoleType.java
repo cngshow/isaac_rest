@@ -2,7 +2,7 @@
  * Copyright Notice
  *
  * This is a work of the U.S. Government and is not subject to copyright
- * protection in the United States. Foreign copyrights may apply.
+ * protection in the United PremiseTypes. Foreign copyrights may apply.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,39 +20,36 @@
 package gov.vha.isaac.rest.api1.data.enumerations;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import gov.vha.isaac.ochre.api.State;
+
+import gov.vha.isaac.ochre.api.UserRole;
+
 
 /**
  * 
- * {@link RestStateType}
+ * {@link RestUserRoleType}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
 @XmlRootElement
-public class RestStateType extends Enumeration
+public class RestUserRoleType extends Enumeration
 {
-	protected RestStateType()
+	protected RestUserRoleType()
 	{
 		//for jaxb
 	}
 	
-	public RestStateType(State st)
+	public RestUserRoleType(UserRole st)
 	{
 		super(st.toString(), st.ordinal());
 	}
-	
-	public State toState()
+
+	public static RestUserRoleType[] getAll()
 	{
-		return State.values()[this.getEnumId()];
-	}
-	
-	public static RestStateType[] getAll()
-	{
-		RestStateType[] result = new RestStateType[State.values().length];
-		for (int i = 0; i < State.values().length; i++)
+		RestUserRoleType[] result = new RestUserRoleType[UserRole.values().length];
+		for (int i = 0; i < UserRole.values().length; i++)
 		{
-			result[i] = new RestStateType(State.values()[i]);
+			result[i] = new RestUserRoleType(UserRole.values()[i]);
 		}
 		return result;
 	}

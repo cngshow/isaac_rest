@@ -20,11 +20,14 @@ package gov.vha.isaac.rest.jaxbCrutch;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 
@@ -88,7 +91,19 @@ public class ArrayUnwrappers
 	}
 	
 	@XmlRootElement
-	public static class RestWorkflowProcessHistorys implements ArrayUnwrapper
+	public static class RestWorkflowDefinitions implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestWorkflowDefinition[] restWorkflowDefinition;
+		
+		public Object[] getValues()
+		{
+			return restWorkflowDefinition;
+		}
+	}
+	
+	@XmlRootElement
+	public static class RestWorkflowProcessHistories implements ArrayUnwrapper
 	{
 		@XmlElement
 		protected RestWorkflowProcessHistory[] restWorkflowProcessHistory;
@@ -101,7 +116,7 @@ public class ArrayUnwrappers
 	
 
 	@XmlRootElement
-	public static class RestWorkflowProcessHistoriesMapEntrys implements ArrayUnwrapper
+	public static class RestWorkflowProcessHistoriesMapEntries implements ArrayUnwrapper
 	{
 		@XmlElement
 		protected RestWorkflowProcessHistoriesMapEntry[] restWorkflowProcessHistoriesMapEntry;
@@ -123,4 +138,29 @@ public class ArrayUnwrappers
 			return restWorkflowAvailableAction;
 		}
 	}
+	
+	
+	@XmlRootElement
+	public static class RestAssociationTypeVersions implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestAssociationTypeVersion[] restAssociationTypeVersion = new RestAssociationTypeVersion[] {};
+		
+		public Object[] getValues()
+		{
+			return restAssociationTypeVersion;
+		}
+	}
+	
+	@XmlRootElement
+	public static class RestAssociationItemVersions implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestAssociationItemVersion[] restAssociationItemVersion = new RestAssociationItemVersion[] {};
+		
+		public Object[] getValues()
+		{
+			return restAssociationItemVersion;
+		}
+	}	
 }

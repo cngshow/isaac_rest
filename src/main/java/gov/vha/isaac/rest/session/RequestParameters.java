@@ -96,6 +96,8 @@ public class RequestParameters {
 		
 		COORDINATE_PARAM_NAMES = Collections.unmodifiableSet(params);
 	}
+	
+	public final static String active = "active";
 
 	public final static String id = "id";
 	public final static String nid = "nid";
@@ -120,6 +122,8 @@ public class RequestParameters {
 	
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
+	public final static String includeAssociations = "includeAssociations";
+	public final static String includeMappings = "includeMappings";
 	public final static String includeAttributes = "includeAttributes";
 	public final static String includeAttributesDefault = "true";
 
@@ -145,14 +149,11 @@ public class RequestParameters {
 	public final static String inputType = "inputType";
 	public final static String outputType = "outputType";
 
-	public final static String state = "state";
-
 	// Workflow
-	public final static String wfUserId = "wfUser"; // int
-	public final static String wfState = "wfState"; // String i.e. "Reject Review", "Ready for Review", "Reject Edit"...
-	public final static String wfProcessId = "wfProcess";
-	public final static String wfRole = "wfRole"; // String i.e. "Approver", "Reviewer"
-	public final static String wfDefinitionId = "wfDefinition"; // UUID string
+	public final static String definitionId = "definitionId"; // UUID string
+	public final static String processId = "processId"; // UUID string
+	public final static String userId = "userId"; // UUID string
+	public final static String acquireLock = "acquireLock"; // Boolean string
 
 	// Edit Token
 	public final static String editToken = "editToken";
@@ -160,11 +161,11 @@ public class RequestParameters {
 	public final static String editModule = "editModule";
 	public final static Set<String> EDIT_TOKEN_PARAM_NAMES =
 			unmodifiableSet(
-					ssoToken,
+					//ssoToken,
 					editToken,
 					editModule,
 					editPath,
-					wfProcessId);
+					processId);
 	
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
@@ -211,7 +212,7 @@ public class RequestParameters {
 			inputType,
 			outputType,
 			
-			state
+			active
 			));
 		ALL_VALID_PARAMETERS = params;
 	}
@@ -239,6 +240,7 @@ public class RequestParameters {
 	 */
 	public final static void validateParameterNamesAgainstSupportedNames(Map<String, List<String>> parameters, Object...supportedParameterNames) throws RestException {
 		Set<String> supportedParameterNamesSet = new HashSet<>();
+		supportedParameterNamesSet.add(returnExpandableLinks);
 		if (supportedParameterNames != null && supportedParameterNames.length > 0) {
 			for (Object parameter : supportedParameterNames) {
 				if (parameter instanceof Iterable) {

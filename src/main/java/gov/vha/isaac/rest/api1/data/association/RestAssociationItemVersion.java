@@ -53,7 +53,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersion.class)
 public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCreate
 {
 	private static Logger log = LogManager.getLogger();
@@ -62,28 +62,22 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Expandables expandables;
+	public Expandables expandables;
 	
-	/**
-	 * The concept sequence of the association type
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int associationTypeSequence;
 	
 	/**
 	 * The sememe UUID(s) of the sememe that represents this association
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	RestIdentifiedObject identifiers; 
+	public RestIdentifiedObject identifiers; 
 	
 	/**
 	 * The StampedVersion details for this association entry
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	RestStampedVersion associationItemStamp;
+	public RestStampedVersion associationItemStamp;
 	
 	/**
 	 * The Concept Chronology of the concept represented by sourceNid - if the the sourceNid represents a concept.  Blank, unless requested via the expand parameter
@@ -123,7 +117,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	RestSememeVersion[] nestedSememes;
+	public RestSememeVersion[] nestedSememes;
 
 	protected RestAssociationItemVersion()
 	{
@@ -199,7 +193,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 			if (RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable))
 			{
 				nestedSememes = SememeAPIs.get(identifiers.getFirst().toString(), null, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), true, 
-						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true);
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true, true, true);
 			}
 			if (expandables.size() == 0)
 			{
@@ -228,7 +222,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 					expandables.add(new Expandable(ExpandUtil.source, RestPaths.sememeChronologyAppPathComponent + sourceNid));
 				}
 			}
-			if (!RequestInfo.get().shouldExpand(ExpandUtil.target))
+			if (!RequestInfo.get().shouldExpand(ExpandUtil.target) && targetNid != null)
 			{
 				if (Get.identifierService().getChronologyTypeForNid(targetNid) == ObjectChronologyType.CONCEPT)
 				{

@@ -7,6 +7,134 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/19 - 1.6.2: 
+    * Fixed the inconsistent url /write/component to /write/1/component
+    * Now requiring / honoring column numbers for sememe create / edit operations
+    * Fixed a bug reading DynamicSememeUUID objects
+    * Changed sememe/byReferencedComponent so it no longer returns association or mapping sememes by default - new parameters added to allow it to return
+        those types of sememes.
+* 2016/10/18 - 1.6.1:
+    * Changed the field RestDynamicSememeColunInfoCreate.columnDataType from RestDynamicSememeDataType to String for ease of creation / parsing.
+    * Changed the field RestDynamicSememeColunInfoCreate.columnValidatorTypes from RestDynamicSememeValidatorType to String for ease of creation / parsing.
+      * The string values for either of these fields may be populated with the name or enumId from the enum types.  See updated docs on the field.  This
+        vastly simplifies the object that needs to be constructed during writes to the server.  On reads, the full Rest...Type is still returned for each enum.
+    * renamed the field RestDynamicSememeColumnInfoCreate.columnConceptLabelConcept to columnLabelConcept (which may break a mapping call)
+    * Added a sememe write API method for defining a new sememe.  Added much more robust tests, worked outnumerous bugs with different data types and serialization.
+    * Removed RestWorkflowLockingData as no longer necessary since only 2 fields are ProcessId and Boolean.  Instead, updated WorkflowWriteAPI.setProcessLock to 
+        pass in a boolean as type String.
+    * Removed RestWorkflowProcessComponentSpecificationData as no longer necessary since only 2 fields are ProcessId and Integer.  Instead, updated 
+        WorkflowWriteAPI.removeComponentFromProcess to pass in an integer as type String.
+    * Remove WorkflowAPI.isProcessLocked() as not needed once RestWorkflowProcess has an OwnerId added.  Now same information that the REST call supplied 
+        can be derived from the RestWorkflowProcess object.
+
+* 2016/10/17 - 1.6.0: 
+    * Cleaning up return types on /write APIs for consistency (everything now returns a RestWriteResponse)
+    * Cleaning up inconsistent ways of changing the status on components (DTO vs parameter on update / create calls)
+    * There is a new method (/write/component/update/state) which can be used toggle the state of any component from active to inactive (concept or sememe).
+    * In parallel, all update methods now include an (optional) active field in the update data, which may  be used to change the state during an update.
+    * Finally, most (but not yet all) create methods also now support specifying the state during the component create.  
+      * The APIs that do not yet support this on create things that create concepts behind the scenes, like mapSet create, or associationCreate.
+    * Numerous confusing API methods for changing state of a concept were removed.
+    * Added initial implementation of the sememe write APIs.  Create is partially tested, update is not yet tested. 
+* 2016/10/17 - 1.5.9: Removed processId from RestWorkflowProcessComponentSpecificationData (used with removeComponentFromProcess()) because it should be in EditToken
+* 2016/10/13 - 1.5.8: Changed return type of all write methods in the Associations API to be RestWriteResponse.  Bug fixes in association API
+    implementation code.  BUG - getTargetAssociations does not work for newly created association types / associations.  (problem with underlying
+    lucene indexes not updating after the commit)
+* 2016/10/13 - 1.5.7: Changing WorkflowWriteAPIs APIs to return RestWriteResponse object containing renewed EditToken along with optional identifiers
+* 2016/10/13 - 1.5.6:
+    a.) Changing RestWorkflowAvailableAction to contain RestUserRoleType instead of UserRole
+    b.) Changing RestWorkflowComponentToStampMapEntry to contain RestStampedVersion instead of Stamp
+    c.) Changing RestWorkflowDefinitionDetail to contain Set<RestUserRoleType> instead of Set<UserRole>
+* 2016/10/13 - 1.5.5 - Cleaned up all Workflow APIs.  This includes: 
+    a) removal of 4 methods (2 in WorkflowAPI and 2 in WorkflowWriteAPI) 
+    b) renaming of methods and their fields to be more straight forward and consistent
+    c) simplified method and field comments 
+    d) simplified paths to call 
+    e) removed commented out or no longer utilized resources like Workflow Data classes or items in RestPaths
+    API changes are below that will break compatibility...    
+    * Removals
+        * getDefaultDefinition 
+            * workflow/defaultDefinition
+            * RestPaths.defaultDefinitionComponent
+        * getAllRoles()
+            * workflow/allRoles
+            * RestPaths.allRolesComponent
+        * releaseWorkflowLock ()
+            * workflow/update/releaseWorkflowLock 
+            * RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent 
+    * Renames
+        * getAvailableDefinitions()
+            * Now Method Called:  getDefinitions()
+            * New Rest Path:
+                * workflow/definition/all (was workflow/availableDefinitions) 
+                * RestPaths.allDefinitions (was RestPaths. availableDefinitionsComponent)
+        * getProcess()
+            * New Rest Path: 
+                * workflow/definition/all (was workflow/process) 
+                * RestPaths.locked (was RestPaths.workflowLockStateComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId)
+         * getHistoriesForProcess ()
+            * Now Method Called: getProcessHistory ()
+            * New Rest Path: 
+                * workflow/process/history (was workflow/historiesForProcess)
+                * RestPaths.history (was RestPaths.historiesForProcessComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId) 
+        * isWorkflowLocked ()
+            * Now Method Called: isProcessLocked()
+            * New Rest Path: 
+                * workflow/process/locked (was workflow/workflowLockState)
+                * RestPaths.locked (was RestPaths.workflowLockStateComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId) 
+        * getActionsForProcessAndUser ()
+            * Now Method Called: getProcessActions()
+            * New Rest Path: 
+                * workflow/process/actions (was workflow/actionsForProcessAndUser)
+                * RestPaths.actions (was RestPaths.actionsForProcessAndUserComponent)
+            * Renamed Inputs
+                * processId (was wfProcessId) 
+            * Other Note: originally, fields were ordered “wfProcessId, editToken”.  The order was reversed to “editToken, processId”
+        * getActionsForProcessAndUser()
+            * Now Method Called: getAvailableProcesses()
+            * New Rest Path: 
+                * workflow/process/available (was workflow/advanceableProcessInformation)
+                * RestPaths.available (was RestPaths.advanceableProcessInformationComponent)
+            * Renamed Inputs
+                * definitionId (was wfDefinitionId) 
+        * createWorkflowProcess ()
+            * Now Method Called: createInstance ()
+            * New Rest Path: 
+                * workflow/create/process/create (was workflow/create/createWorkflowProcess)
+                * RestPaths.createPathComponent + RestPaths.createProcess (was RestPaths.createPathComponent + RestPaths.createWorkflowProcessComponent)
+            * Renamed Inputs
+                * definitionId (was wfDefinitionId) 
+        * advanceWorkflowProcess ()
+            * Now Method Called: advanceProcess ()
+            * New Rest Path: 
+                * workflow/update/process/advance (was workflow/update/advanceWorkflowProcess)
+                * RestPaths.createPathComponent + RestPaths.advanceProcess (was RestPaths.createPathComponent + RestPaths. advanceWorkflowProcessComponent)
+        * acquireWorkflowLock ()
+            * Now Method Called: setProcessLock ()
+            * New Rest Path: 
+                * workflow/update/process/lock (was workflow/update/acquireWorkflowLock)
+                * RestPaths. updatePathComponent + RestPaths.lock (was RestPaths.updatePathComponent + RestPaths.acquireWorkflowLockComponent)
+            * Changed Inputs
+                * RestUUID processId (was RestWorkflowLockAquisitionData lockAquisitionData) 
+            * New Input
+                * RestUUID ownerId 
+        * removeComponentFromWorkflow ()
+            * Now Method Called: removeComponentFromProcess ()
+            * New Rest Path: 
+                * workflow/update/process/component (was workflow/update/removeComponentFromWorkflow)
+                * RestPaths. updatePathComponent + RestPaths.removeComponent (was RestPaths.updatePathComponent + RestPaths. removeComponentFromWorkflowComponent)
+* 2016/10/13 - 1.5.4 - Replaced all references to String roles with instances of new UserRole enum or corresponding RestUserRoleType Enumeration, 
+    handling specific test String values of ssoToken in getEditToken() ("TEST_JSON1", "TEST_JSON2", "TEST_JSON3").  Changed RestWorkflowAvailableAction 
+    and RestWorkflowDefinitionDetail DTOs, which will break APIs.
+* 2016/10/10 - 1.5.3 - Removing user id from wf parameters and parameter DTO, replacing with calls to RequestInfo.getEditCoordinate().  All relevant edit 
+    and workflow REST APIs now accept only editToken parameter, which can now be created and retrieved only by calling CoordinateAPIs.getEditToken() with 
+    ssoToken and/or editToken parameters, along with additional documented optional parameters
 * 2016/10/10 - 1.5.2 - Add an API for reading a specific association description.  Integrating fortify fixes (shouldn't cause any API / behavior change)  
 * 2016/10/06 - 1.5.1 - Adding Association APIs.  Cleaned up the returned pagination data, so that it stops returning page links that don't make 
     sense when you are at the first or last page.  Added a field to pagination data to indicate if the approximateTotal is an estimate, or exact.

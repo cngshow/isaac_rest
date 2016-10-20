@@ -43,31 +43,29 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestWorkflowProcessBaseCreate.class)
 public class RestWorkflowProcessBaseCreate {
+	// TODO Add comment
+	
 	/**
 	 * The workflow definition id
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID definitionId;
 
-	/** The creator. */
-	@XmlElement
-	@JsonInclude
-	UUID creatorId;
 	/**
 	 * The process name
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String name;
 
 	/**
 	 * The process description
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String description;
 	
 	/**
@@ -79,19 +77,16 @@ public class RestWorkflowProcessBaseCreate {
 
 	/**
 	 * @param definitionId
-	 * @param stampSequences
-	 * @param conceptNids
-	 * @param creatorNid
-	 * @param subjectMatter
+	 * @param creatorId
+	 * @param name
+	 * @param description
 	 */
 	public RestWorkflowProcessBaseCreate(
 			UUID definitionId,
-			UUID creatorId,
 			String name,
 			String description) {
 		super();
 		this.definitionId = definitionId;
-		this.creatorId = creatorId;
 		this.name = name;
 		this.description = description;
 	}
@@ -102,14 +97,6 @@ public class RestWorkflowProcessBaseCreate {
 	@XmlTransient
 	public UUID getDefinitionId() {
 		return definitionId;
-	}
-
-	/**
-	 * @return the creatorNid
-	 */
-	@XmlTransient
-	public UUID getCreatorId() {
-		return creatorId;
 	}
 
 	/**
@@ -135,7 +122,6 @@ public class RestWorkflowProcessBaseCreate {
 	public String toString() {
 		return "RestWorkflowProcessCreate ["
 				+ "definitionId=" + definitionId
-				+ ", creatorNid=" + creatorId
 				+ ", name=" + name
 				+ ", description=" + description
 				+ "]";

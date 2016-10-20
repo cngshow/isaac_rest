@@ -97,7 +97,7 @@ public class RequestInfoUtils {
 			}
 			int id = Integer.parseInt(str);
 			if (id >= 0) {
-				throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+				throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str + ".  Must be a nid or UUID, not a sequence");
 			}
 			if (! Get.conceptService().hasConcept(id) && ! Get.sememeService().hasSememe(id)) {
 				throw new RestException(parameterName, str, "no concept or sememe exists corresponding to NID " + parameterName + " parameter value: " + str);

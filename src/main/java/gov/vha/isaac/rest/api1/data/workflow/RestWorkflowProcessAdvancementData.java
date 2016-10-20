@@ -42,27 +42,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestWorkflowProcessAdvancementData.class )
 public class RestWorkflowProcessAdvancementData {
 
-	/**
-	 * The process id of the process to advance
-	 */
-	@XmlElement
-	@JsonInclude
-	UUID processId;
-
-	/**
-	 * The user performing the advancement
-	 */
-	@XmlElement
-	@JsonInclude
-	UUID userId;	
 	/**
 	 * The advancement action requested
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String actionRequested;
 	
 
@@ -70,7 +57,7 @@ public class RestWorkflowProcessAdvancementData {
 	 * The comment associated with the advancement
 	 */
 	@XmlElement
-	@JsonInclude
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String comment;
 
 	/**
@@ -81,33 +68,14 @@ public class RestWorkflowProcessAdvancementData {
 	}
 
 	/**
-	 * @param processId - workflow process UUID
 	 * @param userId - workflow user id
 	 * @param actionRequested - action requested
 	 * @param comment - comment associated with the workflow advancement
 	 */
-	public RestWorkflowProcessAdvancementData(UUID processId, UUID userId, String actionRequested, String comment) {
+	public RestWorkflowProcessAdvancementData(String actionRequested, String comment) {
 		super();
-		this.processId = processId;
-		this.userId = userId;
 		this.actionRequested = actionRequested;
 		this.comment = comment;
-	}
-
-	/**
-	 * @return the processId
-	 */
-	@XmlTransient
-	public UUID getProcessId() {
-		return processId;
-	}
-
-	/**
-	 * @return the userId
-	 */
-	@XmlTransient
-	public UUID getUserId() {
-		return userId;
 	}
 
 	/**
@@ -131,7 +99,7 @@ public class RestWorkflowProcessAdvancementData {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessAdvancementData [processId=" + processId + ", userId=" + userId + ", action=" + actionRequested + ", comment=" + comment
+		return "RestWorkflowProcessAdvancementData [action=" + actionRequested + ", comment=" + comment
 				+ "]";
 	}
 }

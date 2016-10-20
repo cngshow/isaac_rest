@@ -43,13 +43,13 @@ public class RestAssociationItemVersionPage
 	 * Link to retrieve current page
 	 */
 	@XmlElement
-	Pagination paginationData;
+	public Pagination paginationData;
 
 	/**
 	 * The contained results
 	 */
 	@XmlElement
-	RestAssociationItemVersion[] results;
+	public RestAssociationItemVersion[] results;
 
 	protected RestAssociationItemVersionPage()
 	{
