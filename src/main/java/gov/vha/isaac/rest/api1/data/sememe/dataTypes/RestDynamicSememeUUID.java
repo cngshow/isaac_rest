@@ -52,6 +52,11 @@ public class RestDynamicSememeUUID extends RestDynamicSememeTypedData
 
 	public UUID getUUID()
 	{
+		//the deserializer doesn't always know the right types
+		if (data instanceof String)
+		{
+			return UUID.fromString((String)data);
+		}
 		return (UUID)data;
 	}
 }

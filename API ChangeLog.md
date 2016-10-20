@@ -8,7 +8,9 @@ After an official release, any API change should be done by bumping the major ve
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
 * 2016/10/19 - 1.6.2: 
-    * Fixed the insonsistent url /write/component to /write/1/component
+    * Fixed the inconsistent url /write/component to /write/1/component
+    * Now requiring / honoring column numbers for sememe create / edit operations
+    * Fixed a bug reading DynamicSememeUUID objects
 * 2016/10/18 - 1.6.1:
     * Changed the field RestDynamicSememeColunInfoCreate.columnDataType from RestDynamicSememeDataType to String for ease of creation / parsing.
     * Changed the field RestDynamicSememeColunInfoCreate.columnValidatorTypes from RestDynamicSememeValidatorType to String for ease of creation / parsing.
