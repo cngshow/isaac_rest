@@ -19,6 +19,8 @@
 package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -51,6 +53,7 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeSequenceImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
@@ -84,7 +87,8 @@ public abstract class RestDynamicSememeData
 {
 	/**
 	 * The 0 indexed column number for this data.  Will not be populated for nested RestDynamicSememeData objects where the 'data' field
-	 * is of type RestDynamicSememeArray.  This field is ignored during a sememe create or update and does not need to be populated.
+	 * is of type RestDynamicSememeArray.  This field MUST be provided during during a sememe create or update, and it takes priority over 
+	 * the ordering of fields in an array of columns.  Also may be irrelevant in cases where setting DefaultData, or ValidatorData.  
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -195,16 +199,65 @@ public abstract class RestDynamicSememeData
 		}
 	}
 	
-	public static DynamicSememeData[] translate(RestDynamicSememeData[] values)
+	/**
+	 * This implementation sorts by the column number, and fills gaps as appropriate.
+	 */
+	public static DynamicSememeData[] translate(RestDynamicSememeData[] values) throws RestException
 	{
 		if (values == null)
 		{
 			return null;
 		}
-		DynamicSememeData[] result = new DynamicSememeData[values.length];
-		for (int i = 0; i < values.length; i++)
+		
+		//Sort the values by column number, identify the largest col number in case there are gaps (optional columns left blank)
+		//and fill in the gaps as appropriate.
+		try
 		{
-			result[i] = RestDynamicSememeData.translate(values[i]);
+			Arrays.sort(values, new Comparator<RestDynamicSememeData>()
+			{
+				@Override
+				public int compare(RestDynamicSememeData o1, RestDynamicSememeData o2)
+				{
+					if (o1.columnNumber == null || o2.columnNumber == null)
+					{
+						throw new RuntimeException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
+					}
+					return o1.columnNumber.compareTo(o2.columnNumber);
+				}
+			});
+		}
+		catch (RuntimeException e)
+		{
+			throw new RestException(e.getMessage());
+		}
+		
+		//size 1 isn't caught in the sort check above
+		if (values.length == 1 && values[0].columnNumber == null)
+		{
+			throw new RuntimeException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
+		}
+		
+		int maxColumn = values.length == 0 ? 0 : (values[values.length - 1].columnNumber + 1);
+		
+		//There are some cases where the column number doesn't make sense (dynamicSememeArray type, validator data, etc) where a negative number might be passed
+		if (maxColumn <= 0)
+		{
+			maxColumn = values.length;
+		}
+		
+		DynamicSememeData[] result = new DynamicSememeData[maxColumn];
+		int readPos = 0;
+		for (int translated = 0; translated < maxColumn; translated++)
+		{
+			if (translated == values[readPos].columnNumber.intValue() || values[readPos].columnNumber.intValue() < 0)
+			{
+				result[translated] = RestDynamicSememeData.translate(values[readPos]);
+				readPos++;
+			}
+			else
+			{
+				result[translated] = null;  //fill a gap
+			}
 		}
 		return result;
 	}

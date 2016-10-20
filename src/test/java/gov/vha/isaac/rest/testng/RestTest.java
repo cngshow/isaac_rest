@@ -1056,8 +1056,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.getLanguageConceptSequence(), newLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().getReferencedComponentNid(), referencedConceptNid);
 
-		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
-				+ RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
+		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent +  RestPaths.componentComponent 
+				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
 				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
@@ -1260,8 +1260,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// retire concept
 		
-		Response deactivateConceptResponse = target(RestPaths.writePathComponent +  RestPaths.componentComponent + RestPaths.updatePathComponent 
-				+ RestPaths.updateStateComponent + newConceptSequenceWrapper.uuid)
+		Response deactivateConceptResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent 
+				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + newConceptSequenceWrapper.uuid)
 				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
@@ -3067,7 +3067,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			column.put("columnDataType", t.name());
 			if (t == DynamicSememeDataType.FLOAT)
 			{
-				column.set("columnDefaultData", toJsonObject(new DynamicSememeFloatImpl(54.3f)));
+				column.set("columnDefaultData", toJsonObject(new DynamicSememeFloatImpl(54.3f), -1));
 			}
 			else
 			{
@@ -3078,10 +3078,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			{
 				ArrayNode validatorTypes = jfn.arrayNode();
 				validatorTypes.add(DynamicSememeValidatorType.LESS_THAN.name());
-				column.put("columnValidatorTypes", validatorTypes);
+				column.set("columnValidatorTypes", validatorTypes);
 				
 				ArrayNode validatorData = jfn.arrayNode();
-				validatorData.add(toJsonObject(new DynamicSememeIntegerImpl(5)));
+				validatorData.add(toJsonObject(new DynamicSememeIntegerImpl(5), -1));
 				column.set("columnValidatorData", validatorData);
 			}
 			else
@@ -3171,9 +3171,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	private JsonNode toJsonObject(DynamicSememeData[] data)
 	{
 		ArrayNode on = jfn.arrayNode();
-		for (DynamicSememeData x : data)
+		for (int i = 0; i < data.length; i++)
 		{
-			on.add(toJsonObject(x));
+			on.add(toJsonObject(data[i], i));
 		}
 		return on;
 	}
@@ -3181,7 +3181,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	 * @param data
 	 * @return
 	 */
-	private JsonNode toJsonObject(DynamicSememeData data)
+	private JsonNode toJsonObject(DynamicSememeData data, int columnNumber)
 	{
 		ObjectNode on = jfn.objectNode();
 		switch(data.getDynamicSememeDataType())
@@ -3191,7 +3191,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				ArrayNode nested = jfn.arrayNode();
 				for (DynamicSememeData x : ((DynamicSememeArray)data).getDataArray())
 				{
-					nested.add(toJsonObject(x));
+					nested.add(toJsonObject(x, columnNumber));
 				}
 				on.set("data", nested);
 				break;
@@ -3240,6 +3240,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			default :
 				throw new RuntimeException("Unsupported type");
 		}
+		on.put("columnNumber", columnNumber);
 		return on;
 	}
 
