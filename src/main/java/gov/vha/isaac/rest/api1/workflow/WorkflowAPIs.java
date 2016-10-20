@@ -79,7 +79,7 @@ public class WorkflowAPIs {
 			
 			return restList.toArray(new RestWorkflowDefinition[restList.size()]);
 		} catch (Exception e) {
-			String msg = "Failed retrieving the ordered set of process histories by process id";
+			String msg = "Failed retrieving the definitions stored in the server";
 			log.error(msg, e);
 			throw new RestException(msg + ". " + e.getLocalizedMessage());
 		}

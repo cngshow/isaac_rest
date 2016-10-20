@@ -274,9 +274,9 @@ public class ComponentWriteAPIs
 			{
 				Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating id " + id + " to " + state);
 	
-				if (RequestInfo.get().getWorkflowProcessId() != null)
+				if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 				{
-					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord.get());
+					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord.get());
 				}
 			}
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get());

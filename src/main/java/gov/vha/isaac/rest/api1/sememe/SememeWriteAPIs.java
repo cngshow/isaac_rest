@@ -167,9 +167,9 @@ public class SememeWriteAPIs
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" 
 					+ newDescription.getNid() + ", text=" + creationData.getText()).get();
 
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), newDescription.getPrimordialUuid());
@@ -223,9 +223,9 @@ public class SememeWriteAPIs
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 
 					+ ", NID=" + sememeChronology.getNid() + " with " + updateData).get();
 
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 			
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), mutableVersion.getPrimordialUuid());
@@ -299,9 +299,9 @@ public class SememeWriteAPIs
 		try
 		{
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of mapping set " + rdud.getDynamicSememeName()).get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
 		catch (Exception e)
@@ -390,9 +390,9 @@ public class SememeWriteAPIs
 		try
 		{
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing creation of sememe item " + built.getPrimordialUuid()).get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
 		catch (Exception e)
@@ -491,9 +491,9 @@ public class SememeWriteAPIs
 		try
 		{
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of sememe item " + sememeChronology.getPrimordialUuid()).get();
-			if (RequestInfo.get().getWorkflowProcessId() != null)
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getWorkflowProcessId(), commitRecord);
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
 		catch (Exception e)
