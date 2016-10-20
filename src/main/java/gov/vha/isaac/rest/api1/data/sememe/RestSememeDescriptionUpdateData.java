@@ -79,14 +79,6 @@ public class RestSememeDescriptionUpdateData
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int descriptionTypeConceptSequence;
 
-	// TODO determine if extendedDescriptionTypeConceptSequence should be updatable
-//	/**
-//	 * A concept sequence of an optional concept that represents an extended type of the description.  
-//	 * This may be something like Abbreviation or Vista Name
-//	 */
-//	@XmlElement
-//	Integer extendedDescriptionTypeConceptSequence;
-
 	/**
 	 * True to indicate the mapping set should be set as active, false for inactive.  
 	 * This field is optional, if not provided, it will be assumed to be active.
@@ -169,14 +161,6 @@ public class RestSememeDescriptionUpdateData
 		return descriptionTypeConceptSequence;
 	}
 	
-//	/**
-//	 * @return the extendedDescriptionTypeConceptSequence
-//	 */
-//	@XmlTransient
-//	public Integer getExtendedDescriptionTypeConceptSequence() {
-//		return extendedDescriptionTypeConceptSequence;
-//	}
-
 
 	/**
 	 * @param caseSignificanceConceptSequence the caseSignificanceConceptSequence to set

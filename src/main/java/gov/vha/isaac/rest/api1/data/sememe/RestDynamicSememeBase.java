@@ -67,6 +67,9 @@ public class RestDynamicSememeBase
 	 * - RestDynamicSememeSequence
 	 * - RestDynamicSememeUUID
 	 * 
+	 * The class type strings are also available in the /rest/1/system/enumeration/restDynamicSememeDataType call, which returns all of the available data 
+	 * types, names, ids, and class type information.
+	 * 
 	 * Example JSON that provides two columns of differing types:
 	 * 
 	 * {
@@ -75,9 +78,11 @@ public class RestDynamicSememeBase
 	 *   "columnData": [{
 	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString",
 		    "data": "test"
+		    "columnNumber": "0"
 	 *   }, {
 	 *     "@class": "gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong",
 	 *     "data": 5
+	 *     "columnNumber": "1"
 	 *   }]
 	 * }
 	 * 
