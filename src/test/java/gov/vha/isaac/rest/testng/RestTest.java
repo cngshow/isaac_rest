@@ -614,7 +614,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(historyFromAvailableProcesses.getProcessId(), createdProcessUUID);
 		Assert.assertNotNull(historyFromAvailableProcesses.getUserId());
 		Assert.assertEquals(historyFromAvailableProcesses.getUserId(), userUuid);
-		//Assert.assertTrue(history.getTimeAdvanced() < 0); // Process created, but not advanced // TODO retest after bug fix
+		//Assert.assertTrue(historyFromAvailableProcesses.getTimeAdvanced() < 0); // Process created, but not advanced // TODO retest after bug fix
 		Assert.assertNotNull(historyFromAvailableProcesses.getInitialState()); // i.e. "Assigned"
 		Assert.assertEquals(historyFromAvailableProcesses.getInitialState(), "Assigned"); // Depends on definition
 		Assert.assertNotNull(historyFromAvailableProcesses.getAction()); // i.e. "Create Workflow Process"
@@ -806,33 +806,33 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
 	
 //TODO JESSE dan commented out a broken test (actually, the feature is broken, not the test)
-//		// Remove one of the components in the process
-//		String componentNid = Integer.toString(componentsInProcessBeforeRemovingComponent.iterator().next());
-//		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
-//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(componentNid));
-//		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
-//		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
-//		renewedEditToken = writeResponse.editToken;
-//		Assert.assertNotNull(renewedEditToken);
-//		
-//		// Retrieve process after removing component
-//		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-//				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
-//		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
-//		Assert.assertNotNull(process);
-//		
-//		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
-//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
-//			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
-//		}
-//		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid));
-//		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
-//	
+		// Remove one of the components in the process
+		String componentNid = Integer.toString(componentsInProcessBeforeRemovingComponent.iterator().next());
+		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
+				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(componentNid));
+		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
+		renewedEditToken = writeResponse.editToken;
+		Assert.assertNotNull(renewedEditToken);
+		
+		// Retrieve process after removing component
+		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+		Assert.assertNotNull(process);
+		
+		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
+		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
+			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
+		}
+		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid));
+		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
+	
 		// Get process to check for added components
 		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
 				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
