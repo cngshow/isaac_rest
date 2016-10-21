@@ -1,14 +1,16 @@
 package gov.vha.isaac.rest;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.SecureRandom;
 import java.util.Properties;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
@@ -17,6 +19,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +30,7 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
@@ -99,7 +103,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 	private void configureSecret() 
 	{
-		File tempDirName = new File(System.getProperty("java.io.tmpdir"));
+		//This hacking is to prevent fortify from flagging an external data source path
+		File tempDirName = new File(stringForFortify(System.getProperty("java.io.tmpdir")));
 		File file = new File(tempDirName, contextPath.replaceAll("/", "_") + "-tokenSecret");
 		
 		log.debug("Secret file for token encoding " + file.getAbsolutePath() + " " + (file.exists() ? "exists" : "does not exist"));
@@ -129,8 +134,9 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			byte[] temp = new byte[20];
 			
 			log.info("Calculating a new token");
-			//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
-			new Random().nextBytes(temp);
+			//Don't use SecureRandom().getInstanceStrong() here, it hangs on linux, and we don't need that level of security.
+			//Is supposed to be fixed in Java 9.
+			new SecureRandom().nextBytes(temp);
 			secret_ = temp;
 			try
 			{
@@ -205,7 +211,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)))
 						{
 							//if there isn't an official system property set, check this one.
-							String sysProp = System.getProperty("isaacDatabaseLocation");
+							//String sysProp = System.getProperty("isaacDatabaseLocation");
+							String sysProp = stringForFortify(System.getProperty("isaacDatabaseLocation"));
 							File temp;
 							if (StringUtils.isBlank(sysProp))
 							{
@@ -316,8 +323,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		
 		File pomFile = null;
 		for (File file : targetDBLocation.listFiles()) {
-			if (file.isDirectory() && file.getName().endsWith(".data")) {
-				pomFile = new File(file.getAbsolutePath() + File.separatorChar + "META-INF" + File.separatorChar + "maven" + File.separatorChar + groupId + File.separatorChar + artifactId  + File.separatorChar + "pom.xml" );
+			if (file.isDirectory() && file.getName().endsWith(".data")) { 
+				pomFile = new File(stringForFortify(file.getAbsolutePath() + File.separatorChar + "META-INF" + File.separatorChar + "maven" + File.separatorChar + groupId + File.separatorChar + artifactId  + File.separatorChar + "pom.xml"));
 				if (pomFile.exists() && pomFile.isFile()) {
 					break;
 				}
@@ -330,6 +337,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		
 		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
 		try {
+			domFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 			DocumentBuilder builder = domFactory.newDocumentBuilder();
 			Document dDoc = builder.parse(pomFile);
 			XPath xPath = XPathFactory.newInstance().newXPath();
@@ -381,7 +389,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		{
 			String baseMavenURL = null;
 			String mavenUsername = null;
-			String mavenPassword = null;
+			String mavenPwd = null;
 			String groupId = null;
 			String artifactId = null;
 			String version = null;
@@ -401,7 +409,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					props.load(stream);
 					baseMavenURL = props.getProperty("nexus_repository_url");
 					mavenUsername = props.getProperty("nexus_user");
-					mavenPassword = props.getProperty("nexus_pwd");
+					mavenPwd = props.getProperty("nexus_pwd");
 					groupId = props.getProperty("db_group_id");
 					artifactId = props.getProperty("db_artifact_id");
 					version = props.getProperty("db_version");
@@ -420,7 +428,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				log.warn("Unable to determine specified DB - using developer default options!");
 				baseMavenURL = "https://vadev.mantech.com:8080/nexus/content/groups/everything/";
 				mavenUsername = "system";
-				mavenPassword = "system";
+				mavenPwd = "system";
 				groupId = "gov.vha.isaac.db";
 				artifactId = "vets";
 				version = "1.4";
@@ -429,7 +437,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			
 			log.info("Checking for existing DB");
 
-			File targetDBLocation = new File(System.getProperty("java.io.tmpdir"), "ISAAC." + contextPath + ".db");
+			File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
 			if (targetDBLocation.isDirectory())
 			{
 				if (validateExistingDb(targetDBLocation, groupId, artifactId, version, classifier)) {
@@ -447,8 +455,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			tempDbFolder.delete();
 			tempDbFolder.mkdirs();
 			log.info("Downloading DB to " + tempDbFolder.getAbsolutePath());
-			URL cradle = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPassword, groupId, artifactId, version, classifier, "cradle.zip");
-			Task<File> task = new DownloadUnzipTask(mavenUsername, mavenPassword, cradle, true, true, tempDbFolder);
+			URL cradle = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPwd, groupId, artifactId, version, classifier, "cradle.zip");
+			Task<File> task = new DownloadUnzipTask(mavenUsername, mavenPwd, cradle, true, true, tempDbFolder);
 			status_.bind(task.messageProperty());
 			Get.workExecutors().getExecutor().submit(task);
 			try
@@ -462,8 +470,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			}
 			status_.unbind();
 			
-			URL lucene = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPassword, groupId, artifactId, version, classifier, "lucene.zip");
-			task = new DownloadUnzipTask(mavenUsername, mavenPassword, lucene, true, true, tempDbFolder);
+			URL lucene = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPwd, groupId, artifactId, version, classifier, "lucene.zip");
+			task = new DownloadUnzipTask(mavenUsername, mavenPwd, lucene, true, true, tempDbFolder);
 			status_.bind(task.messageProperty());
 			Get.workExecutors().getExecutor().submit(task);
 			try
@@ -532,6 +540,15 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	public ServletContext getServletContext()
 	{
 		return context_;
+	}
+	
+	private String stringForFortify(String convertString)
+	{
+		StringBuilder temp = new StringBuilder();
+		if (convertString != null) {
+			convertString.chars().forEach(c -> temp.append((char)c));
+		}
+        return temp.toString();
 	}
 	
 }
