@@ -410,7 +410,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
+		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+				+ RestPaths.updatePathComponent + RestPaths.removeComponent + Integer.toString(processComponentSpecificationData))
 				.queryParam(RequestParameters.editToken, token.getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -695,18 +696,24 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Acquire lock on process.  This should Fail because it's automatically locked on create.
 		String lockingRequestType = Boolean.toString(true);
-		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
+		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+				+ RestPaths.updatePathComponent + RestPaths.process + createdProcessUUID.toString() + "/" + RestPaths.lock)				
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+				.put(Entity.xml(lockingRequestType));
 		assertFail(lockProcessResponse);
 
 		// Release lock on process
 		lockingRequestType = Boolean.toString(false);
-		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
+		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+				+ RestPaths.updatePathComponent + RestPaths.process + createdProcessUUID.toString() + "/" + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+				.put(Entity.xml(lockingRequestType));
 		String unlockProcessResponseResult = checkFail(unlockProcessResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, unlockProcessResponseResult);
 		RestEditToken renewedEditToken = writeResponse.editToken;
@@ -714,10 +721,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Acquire lock on process
 		lockingRequestType = Boolean.toString(true);
-		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
+		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent
+				+ RestPaths.updatePathComponent + RestPaths.process + createdProcessUUID.toString() + "/" + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+				.put(Entity.xml(lockingRequestType));
 		String lockProcessResponseResult = checkFail(lockProcessResponse).readEntity(String.class);
 		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, lockProcessResponseResult);
 		renewedEditToken = writeResponse.editToken;
@@ -736,7 +746,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		// This should fail because no components have been added
-		Response advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceProcess)
+		Response advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent)// + RestPaths.updatePathComponent + RestPaths.advanceProcess)
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -808,7 +818,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	
 		// Remove one of the components in the process
 		String componentNid = Integer.toString(componentsInProcessBeforeRemovingComponent.iterator().next());
-		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
+		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+				+ RestPaths.updatePathComponent + RestPaths.removeComponent + componentNid)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(componentNid));

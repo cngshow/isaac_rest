@@ -23,6 +23,7 @@ import java.util.UUID;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -163,22 +164,28 @@ public class WorkflowWriteAPIs {
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.lock)
+	@Path(RestPaths.updatePathComponent + RestPaths.process + "{" + RequestParameters.processId + "}/" + RestPaths.lock)
 	//TODO these API changes aren't proper, acquireLockString is is being submitted as a DTO, instead of a query param.
 	//I also have no understanding of how processId is magically getting here.
 	public RestWriteResponse setProcessLock(
-			String acquireLockString,
-			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.editToken);
+			@PathParam(RequestParameters.processId) String processIdString, 
+			@QueryParam(RequestParameters.editToken) String editToken,
+			@QueryParam(RequestParameters.acquireLock) String acquireLockString
+			) throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(), 
+				RequestParameters.processId,
+				RequestParameters.editToken, 
+				RequestParameters.acquireLock);
 
 		boolean acquireLock = RequestInfoUtils.parseBooleanParameter(RequestParameters.acquireLock, acquireLockString);
+		UUID processId = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, processIdString); 
 
 		// TODO test acquireWorkflowLock()
 		try {
 			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
-					.getProcessDetails(RequestInfo.get().getEditToken().getActiveWorkflowProcessId());
-
+					.getProcessDetails(processId);
+			
 			// verify that lock is in proper state per request
 			if (acquireLock && !processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
 				throw new RestException("Cannot acquire a process that is already locked");
@@ -235,15 +242,17 @@ public class WorkflowWriteAPIs {
 	//It should really be a path param.
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent)
+	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent + "{" + RequestParameters.nid + "}")
 	public RestWriteResponse removeComponentFromProcess(
-			String componentNidString,
+			@PathParam(RequestParameters.nid) String nidString,
 			@QueryParam(RequestParameters.editToken) String editToken)
 			throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.nid,
 				RequestParameters.editToken);
 
-		int compNid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, componentNidString);
+		int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, nidString);
 		
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
@@ -251,13 +260,13 @@ public class WorkflowWriteAPIs {
 			UUID processId = RequestInfo.get().getActiveWorkflowProcessId();
 			EditCoordinate ec = RequestInfo.get().getEditCoordinate();
 			provider.removeComponentFromWorkflow(processId,
-					compNid,
+					nid,
 					ec);
 			
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, compNid, null);
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, nid, null);
 		} catch (Exception e) {
 			log.error("Unexpected error", e);
-			throw new RestException("Failed removing component " + compNid + ". Caught " + e.getClass().getName()
+			throw new RestException("Failed removing component " + nid + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());
 		}
 	}
