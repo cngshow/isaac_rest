@@ -38,6 +38,10 @@ public class RestException extends IOException
 	{
 		super(message);
 	}
+	public RestException(Throwable t)
+	{
+		super(t);
+	}
 	public RestException(String message, Throwable t)
 	{
 		super(message, t);

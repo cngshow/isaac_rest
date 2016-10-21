@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -33,8 +34,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
@@ -44,13 +45,14 @@ import gov.vha.isaac.ochre.associations.AssociationInstance;
 import gov.vha.isaac.ochre.associations.AssociationType;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
 import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
+import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionPage;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -95,25 +97,29 @@ public class AssociationAPIs
 		
 		Set<Integer> associationConcepts = AssociationUtilities.getAssociationConceptSequences();
 		
-		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
 		for (int i : associationConcepts)
 		{
-			StampCoordinate conceptVersionStampCoordinate = null;
-
-			int nid = Get.identifierService().getConceptNid(i);
-			if (processIdOptional.isPresent() && wfAccessor.isComponentInProcess(processIdOptional.get(), nid)) {
-				conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processIdOptional.get(), nid));
-			} else {
-				conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+			StampCoordinate sc = RequestInfo.get().getStampCoordinate();
+			try {
+				Optional<ConceptVersionImpl> conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, i);
+				if (conceptVersion.isPresent()) {
+					sc = Frills.getStampCoordinateFromVersion(conceptVersion.get());
+				}
+			} catch (Exception e) {
+				throw new RestException(e);
 			}
-			results.add(
+			AssociationType associationTypeToAdd = AssociationType.read(
+					i,
+					sc, 
+					RequestInfo.get().getLanguageCoordinate());
+			
+			if (associationTypeToAdd != null) {
+				results.add(
 					new RestAssociationTypeVersion(
-							AssociationType.read(
-									i,
-									conceptVersionStampCoordinate, 
-									RequestInfo.get().getLanguageCoordinate()),
+							associationTypeToAdd,
 							processIdOptional.isPresent() ? processIdOptional.get() : null)
 					);
+			}
 		}
 		
 		Collections.sort(results, new Comparator<RestAssociationTypeVersion>()
@@ -158,17 +164,18 @@ public class AssociationAPIs
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
 		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
-		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
 
 		int sequence = Util.convertToConceptSequence(id);
 		int nid = Get.identifierService().getConceptNid(sequence);
-		StampCoordinate conceptVersionStampCoordinate = null;
-		if (processIdOptional.isPresent() && wfAccessor.isComponentInProcess(processIdOptional.get(), nid)) {
-			conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processIdOptional.get(), nid));
-		} else {
-			conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
-		}	
-		
+		StampCoordinate conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+		try {
+			Optional<ConceptVersionImpl> conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, nid);
+			if (conceptVersion.isPresent()) {
+				conceptVersionStampCoordinate = Frills.getStampCoordinateFromVersion(conceptVersion.get());
+			}
+		} catch (Exception e) {
+			throw new RestException(e);
+		}		
 		return new RestAssociationTypeVersion(AssociationType.read(sequence, conceptVersionStampCoordinate, 
 				RequestInfo.get().getLanguageCoordinate()),
 				processIdOptional.isPresent() ? processIdOptional.get() : null);

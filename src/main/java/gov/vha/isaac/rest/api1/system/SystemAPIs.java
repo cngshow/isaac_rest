@@ -117,7 +117,8 @@ public class SystemAPIs
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+									processIdOptional.isPresent() ? processIdOptional.get() : null);
 					break;
 				case UNKNOWN_NID:
 				default:
@@ -152,7 +153,8 @@ public class SystemAPIs
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+									processIdOptional.isPresent() ? processIdOptional.get() : null);
 				}
 			}
 
@@ -190,7 +192,8 @@ public class SystemAPIs
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+										processIdOptional.isPresent() ? processIdOptional.get() : null);
 						break;
 					case UNKNOWN_NID:
 					default:

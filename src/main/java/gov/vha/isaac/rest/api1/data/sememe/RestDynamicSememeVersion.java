@@ -20,6 +20,8 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -59,33 +61,33 @@ public class RestDynamicSememeVersion extends RestSememeVersion
 		//for Jaxb
 	}
 	
-	public RestDynamicSememeVersion(DynamicSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean populateReferenced) throws RestException
+	public RestDynamicSememeVersion(DynamicSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean populateReferenced, UUID processId) throws RestException
 	{
-		super(dsv, includeChronology, expandNested, populateReferenced, null);
+		super(dsv, includeChronology, expandNested, populateReferenced, null, processId);
 		dataColumns = translateData(dsv.getData());
 	}
 
-	public RestDynamicSememeVersion(StringSememe<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced) throws RestException
+	public RestDynamicSememeVersion(StringSememe<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced, UUID processid) throws RestException
 	{
-		super(sv, includeChronology, expandNested, populateReferenced, null);
+		super(sv, includeChronology, expandNested, populateReferenced, null, processid);
 		dataColumns = translateData(new DynamicSememeData[] {new DynamicSememeStringImpl(sv.getString())});
 	}
 	
-	public RestDynamicSememeVersion(LongSememe<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced) throws RestException
+	public RestDynamicSememeVersion(LongSememe<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced, UUID processId) throws RestException
 	{
-		super(sv, includeChronology, expandNested, populateReferenced, null);
+		super(sv, includeChronology, expandNested, populateReferenced, null, processId);
 		dataColumns = translateData(new DynamicSememeData[] {new DynamicSememeLongImpl(sv.getLongValue())});
 	}
 	
-	public RestDynamicSememeVersion(ComponentNidSememe<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced) throws RestException
+	public RestDynamicSememeVersion(ComponentNidSememe<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced, UUID processId) throws RestException
 	{
-		super(sv, includeChronology, expandNested, populateReferenced, null);
+		super(sv, includeChronology, expandNested, populateReferenced, null, processId);
 		dataColumns = translateData(new DynamicSememeData[] {new DynamicSememeNidImpl(sv.getComponentNid())});
 	}
 	
-	public RestDynamicSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced) throws RestException
+	public RestDynamicSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean populateReferenced, UUID processId) throws RestException
 	{
-		super(sv, includeChronology, expandNested, populateReferenced, null);
+		super(sv, includeChronology, expandNested, populateReferenced, null, processId);
 		//no data
 	}
 

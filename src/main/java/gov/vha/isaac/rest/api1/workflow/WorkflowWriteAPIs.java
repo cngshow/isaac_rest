@@ -87,14 +87,16 @@ public class WorkflowWriteAPIs {
 		WorkflowProcessInitializerConcluder provider = RequestInfo.get().getWorkflow()
 				.getWorkflowProcessInitializerConcluder();
 		try {
+			UUID newProcessId = provider.createWorkflowProcess(
+					workflowProcessCreationData.getDefinitionId(),
+					Get.identifierService().getUuidPrimordialFromConceptSequence(
+							RequestInfo.get().getEditToken().getAuthorSequence()).get(),
+					workflowProcessCreationData.getName(),
+					workflowProcessCreationData.getDescription());
+			
 			return new RestWriteResponse(
 					EditTokens.renew(RequestInfo.get().getEditToken()),
-					provider.createWorkflowProcess(workflowProcessCreationData.getDefinitionId(),
-							Get.identifierService()
-									.getUuidPrimordialFromConceptSequence(
-											RequestInfo.get().getEditToken().getAuthorSequence())
-									.get(),
-							workflowProcessCreationData.getName(), workflowProcessCreationData.getDescription()),
+					null,
 					null,
 					null);
 		} catch (Exception e) {

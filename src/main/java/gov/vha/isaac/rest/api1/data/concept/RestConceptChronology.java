@@ -38,13 +38,16 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.AlphanumComparator;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -117,19 +120,17 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 			}
 			else // if (includeLatestVersion)
 			{
-				StampCoordinate conceptVersionStampCoordinate = null;
-				if (processId != null && wfAccessor.isComponentInProcess(processId, cc.getNid())) {
-					conceptVersionStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processId, cc.getNid()));
-				} else {
-					conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
+				Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
+				try {
+					conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processId, cc.getNid());
+				} catch (Exception e) {
+					throw new RuntimeException(e);
 				}
-				@SuppressWarnings("unchecked")
-				Optional<LatestVersion<ConceptVersion>> latest = 
-						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, conceptVersionStampCoordinate);
-				if (latest.isPresent())
+				
+				if (conceptVersion.isPresent())
 				{
 					//TODO handle contradictions
-					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false, processId));
+					versions.add(new RestConceptVersion(conceptVersion.get(), false, false, false, false, false, false, false, processId));
 				}
 			}
 		}

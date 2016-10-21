@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe;
 
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -94,9 +96,9 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 	 *             Constructor for RestSememeLogicGraphVersion taking a
 	 *             LogicGraphSememe
 	 */
-	public RestSememeLogicGraphVersion(LogicGraphSememe<?> lgs, boolean includeChronology) throws RestException {
+	public RestSememeLogicGraphVersion(LogicGraphSememe<?> lgs, boolean includeChronology, UUID processId) throws RestException {
 		super();
-		setup(lgs, includeChronology, false, false, null);
+		setup(lgs, includeChronology, false, false, null, processId);
 
 		referencedConceptDescription = Get.conceptService()
 				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());

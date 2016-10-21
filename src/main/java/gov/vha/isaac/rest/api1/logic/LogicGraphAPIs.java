@@ -47,7 +47,9 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
@@ -77,13 +79,17 @@ public class LogicGraphAPIs
 	public RestSememeLogicGraphVersion getLogicGraphVersion(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
 
 		@SuppressWarnings("rawtypes")
 		//TODO bug - the methods below findLogicGraphChronology are relying on some default logic graph coordiantes...  Also seems to be a lot 
@@ -94,14 +100,15 @@ public class LogicGraphAPIs
 				RequestInfo.get().getStated(),
 				RequestInfo.get().getStampCoordinate(),
 				RequestInfo.get().getLanguageCoordinate(),
-				RequestInfo.get().getLogicCoordinate());
+				RequestInfo.get().getLogicCoordinate(),
+				processIdOptional.isPresent() ? processIdOptional.get() : null);
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
 		if (lgs.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestSememeLogicGraphVersion(lgs.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable));
+			return new RestSememeLogicGraphVersion(lgs.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), processIdOptional.isPresent() ? processIdOptional.get() : null);
 		}
 		throw new RestException(RequestParameters.id, id, "No concept was found");
 	}
@@ -122,13 +129,17 @@ public class LogicGraphAPIs
 	public RestSememeChronology getLogicGraphChronology(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
 
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology =
 				findLogicGraphChronology(
@@ -136,15 +147,16 @@ public class LogicGraphAPIs
 						RequestInfo.get().getStated(),
 						RequestInfo.get().getStampCoordinate(),
 						RequestInfo.get().getLanguageCoordinate(),
-						RequestInfo.get().getLogicCoordinate());
-		
+						RequestInfo.get().getLogicCoordinate(),
+						processIdOptional.isPresent() ? processIdOptional.get() : null);
+
 		return new RestSememeChronology(
 				logicGraphSememeChronology,
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 				false, // LogicGraphSememe should not support nestedSememesExpandable
-				false
-				);
+				false,
+				processIdOptional.isPresent() ? processIdOptional.get() : null);
 	}
 
 	/**
@@ -159,7 +171,7 @@ public class LogicGraphAPIs
 	 * 
 	 * If the passed String id is a UUID, it will be interpreted as the id of either the LogicGraphSememe or the referenced concept
 	 */
-	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id, boolean stated, StampCoordinate stampCoordinate, LanguageCoordinate languageCoordinate, LogicCoordinate logicCoordinate) throws RestException
+	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id, boolean stated, StampCoordinate stampCoordinate, LanguageCoordinate languageCoordinate, LogicCoordinate logicCoordinate, UUID processId) throws RestException
 	{
 		Optional<Integer> intId = NumericUtils.getInt(id);
 		if (intId.isPresent())
@@ -168,6 +180,16 @@ public class LogicGraphAPIs
 			Optional<SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(intId.get(), stated, stampCoordinate, languageCoordinate, logicCoordinate);
 			if (defChronologyOptional.isPresent())
 			{
+				try {
+					@SuppressWarnings("rawtypes")
+					Optional<LogicGraphSememe> version = WorkflowUtils.getStampedVersion(LogicGraphSememe.class, processId, defChronologyOptional.get().getNid());
+
+					if (! version.isPresent()) {
+						throw new RestException(RequestParameters.id, id, "No LogicGraph chronology is available for the concept with the specified id according to getStampedVersion()");
+					}
+				} catch (Exception e) {
+					throw new RestException(e);
+				}
 				return defChronologyOptional.get();
 			}
 			else

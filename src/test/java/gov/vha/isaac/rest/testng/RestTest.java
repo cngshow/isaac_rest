@@ -427,25 +427,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newEditToken.getModuleSequence(), retrievedEditToken.getModuleSequence());
 		Assert.assertEquals(newEditToken.getPathSequence(), retrievedEditToken.getPathSequence());
 		Assert.assertEquals(newEditToken.getWorkflowProcessId(), retrievedEditToken.getWorkflowProcessId());
-		
-		// Test retrieval of an EditToken with a modifying processId parameter
-		UUID testWfProcessUuid = UUID.randomUUID();
-		getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
-				.queryParam(RequestParameters.processId , testWfProcessUuid.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-		restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-
-		retrievedEditToken = null;
-		try {
-			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
-		} catch (RestException e) {
-			throw new RuntimeException(e);
-		}
-		
-		Assert.assertEquals(retrievedEditToken.getWorkflowProcessId(), testWfProcessUuid);
 	}
 
 	@Test

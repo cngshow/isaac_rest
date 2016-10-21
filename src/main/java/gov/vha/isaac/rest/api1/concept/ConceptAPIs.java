@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,22 +30,19 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
-import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -53,6 +51,7 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -118,27 +117,23 @@ public class ConceptAPIs
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
 
 		@SuppressWarnings("rawtypes")
-		ConceptChronology concept = findConceptChronology(id);
-		
-		WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
+		ConceptChronology concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
-		StampCoordinate conceptStampCoordinate = null;
-		if (processIdOptional.isPresent() && wfAccessor.isComponentInProcess(processIdOptional.get(), concept.getNid())) {
-			conceptStampCoordinate = Frills.getStampCoordinateFromStamp(wfAccessor.getPreWorkflowStampForComponent(processIdOptional.get(), concept.getNid()));
-		} else {
-			conceptStampCoordinate = RequestInfo.get().getStampCoordinate();
+		Optional<ConceptVersionImpl> version = Optional.empty();
+		try {
+			version = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, concept.getNid());
+		} catch (Exception e) {
+			throw new RestException(e);
 		}
-		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(
-				ConceptVersionImpl.class,
-				conceptStampCoordinate);
-		if (cv.isPresent())
+
+		if (version.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestConceptVersion(cv.get().value(), 
+			return new RestConceptVersion(version.get(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					Boolean.parseBoolean(includeParents.trim()),
 					Boolean.parseBoolean(countParents.trim()), 
@@ -176,10 +171,10 @@ public class ConceptAPIs
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
-		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
 
 		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		
+		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
 
 		RestConceptChronology chronology =
 				new RestConceptChronology(
@@ -191,7 +186,13 @@ public class ConceptAPIs
 		return chronology;
 	}
 	
-	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException {
+		return findConceptChronologyConformingToEffectiveStamp(id, (UUID)null);
+	}
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronologyConformingToEffectiveStamp(String id, Optional<UUID> processId) throws RestException {
+		return findConceptChronologyConformingToEffectiveStamp(id, processId.isPresent() ? processId.get() : (UUID)null);
+	}
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronologyConformingToEffectiveStamp(String id, UUID processId) throws RestException
 	{
 		ConceptService conceptService = Get.conceptService();
 		Optional<Integer> intId = NumericUtils.getInt(id);
@@ -200,6 +201,13 @@ public class ConceptAPIs
 			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService.getOptionalConcept(intId.get());
 			if (c.isPresent())
 			{
+				if (processId != null) {
+					try {
+						WorkflowUtils.getStampedVersion(Frills.getVersionType(c.get()), processId, intId.get());
+					} catch (Exception e) {
+						throw new RestException(e);
+					}
+				}
 				return c.get();
 			}
 			else
@@ -264,15 +272,18 @@ public class ConceptAPIs
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		// TODO handle processId
 		RestSememeVersion[] descriptions = SememeAPIs.get(
-				findConceptChronology(id).getNid() + "",
+				findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null).getNid() + "",
 				getAllDescriptionTypes(),
 				true, 
 				Boolean.parseBoolean(includeAttributes.trim()),
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-				true);
+				true,
+				processIdOptional.isPresent() ? processIdOptional.get() : null);
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up
