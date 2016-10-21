@@ -20,17 +20,14 @@ package gov.vha.isaac.rest.api1.logic;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -202,7 +199,7 @@ public class LogicGraphAPIs
 				final Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated, stampCoordinate, languageCoordinate, logicCoordinate);
 				if (defChronologyOptional.isPresent())
 				{
-					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology {}", () -> defChronologyOptional.get());
+					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology {}", Optional.ofNullable(defChronologyOptional.get()));
 					return defChronologyOptional.get();
 				}
 				else
