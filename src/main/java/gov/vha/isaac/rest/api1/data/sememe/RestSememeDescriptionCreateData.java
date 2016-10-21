@@ -131,7 +131,6 @@ public class RestSememeDescriptionCreateData
 			int languageConceptSequence,
 			String text,
 			int descriptionTypeConceptSequence,
-//			Integer extendedDescriptionTypeConceptSequence,
 			Collection<Integer> preferredInDialectAssemblagesIds,
 			Collection<Integer> acceptableInDialectAssemblagesIds,
 			int referencedComponentNid) {
@@ -140,7 +139,6 @@ public class RestSememeDescriptionCreateData
 		this.languageConceptSequence = languageConceptSequence;
 		this.text = text;
 		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
-//		this.extendedDescriptionTypeConceptSequence = extendedDescriptionTypeConceptSequence;
 		if (preferredInDialectAssemblagesIds != null) {
 			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
 		}

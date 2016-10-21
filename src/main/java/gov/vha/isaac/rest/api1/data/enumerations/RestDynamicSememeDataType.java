@@ -18,8 +18,22 @@
  */
 package gov.vha.isaac.rest.api1.data.enumerations;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeDouble;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeFloat;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
+import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 
 /**
  * {@link RestDynamicSememeDataType}
@@ -27,9 +41,20 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
  * 
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public class RestDynamicSememeDataType extends Enumeration
 {
+	
+	/**
+	 * The full value of the "@class" annotation that needs to be passed back in when constructing a RestDynamicSememeData like
+	 * RestDynamicSememeDouble.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String classType;
+	
 	protected RestDynamicSememeDataType()
 	{
 		//for jaxb
@@ -37,7 +62,47 @@ public class RestDynamicSememeDataType extends Enumeration
 	
 	public RestDynamicSememeDataType(DynamicSememeDataType dt)
 	{
-		super(dt.getDisplayName(), dt.ordinal());
+		super(dt.name(), dt.getDisplayName(), dt.ordinal());
+		switch (dt)
+		{
+			case ARRAY:
+				classType = RestDynamicSememeArray.class.getName();
+				break;
+			case BOOLEAN:
+				classType = RestDynamicSememeBoolean.class.getName();
+				break;
+			case BYTEARRAY:
+				classType = RestDynamicSememeByteArray.class.getName();
+				break;
+			case DOUBLE:
+				classType = RestDynamicSememeDouble.class.getName();
+				break;
+			case FLOAT:
+				classType = RestDynamicSememeFloat.class.getName();
+				break;
+			case INTEGER:
+				classType = RestDynamicSememeInteger.class.getName();
+				break;
+			case LONG:
+				classType = RestDynamicSememeLong.class.getName();
+				break;
+			case NID:
+				classType = RestDynamicSememeNid.class.getName();
+				break;
+			case SEQUENCE:
+				classType = RestDynamicSememeSequence.class.getName();
+				break;
+			case STRING:
+				classType = RestDynamicSememeString.class.getName();
+				break;
+			case UUID:
+				classType = RestDynamicSememeUUID.class.getName();
+				break;
+			case UNKNOWN:
+			case POLYMORPHIC:
+			default :
+				break;
+		}
 	}
 	
 	public static RestDynamicSememeDataType[] getAll()

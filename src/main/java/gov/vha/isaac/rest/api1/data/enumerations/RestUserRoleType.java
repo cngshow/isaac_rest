@@ -41,7 +41,7 @@ public class RestUserRoleType extends Enumeration
 	
 	public RestUserRoleType(UserRole st)
 	{
-		super(st.toString(), st.ordinal());
+		super(st.name(), null, st.ordinal());
 	}
 
 	public static RestUserRoleType[] getAll()

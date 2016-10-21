@@ -39,12 +39,12 @@ public class RestStateType extends Enumeration
 	
 	public RestStateType(State st)
 	{
-		super(st.toString(), st.ordinal());
+		super(st.name(), st.toString(), st.ordinal());
 	}
 	
 	public State toState()
 	{
-		return State.values()[this.getEnumId()];
+		return State.values()[this.enumId];
 	}
 	
 	public static RestStateType[] getAll()
