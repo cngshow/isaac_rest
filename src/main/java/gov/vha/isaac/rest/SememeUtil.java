@@ -513,11 +513,15 @@ public class SememeUtil
 				if (data.getDynamicSememeDataType() == DynamicSememeDataType.UUID) {
 					return Optional.of(((DynamicSememeUUIDImpl)data).getDataUUID());
 				}
+				// This isn't supposed to happen, but we have some bad data where it did.
+				else if (data.getDynamicSememeDataType() == DynamicSememeDataType.STRING) {
+					log.warn("Extended description type data found with type string instead of type UUID!");
+					return Optional.of(UUID.fromString(((DynamicSememeStringImpl)data).getDataString()));
+				}
 			}
-			throw new RuntimeException("Failed to find UUID DynamicSememeData type in DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation dynamic sememe");
-		} else {
-			return Optional.empty();
+			log.error("Failed to find UUID DynamicSememeData type in DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE annotation dynamic sememe");
 		}
+		return Optional.empty();
 	}
 	public static Optional<Integer> getDescriptionExtendedTypeConceptSequence(StampCoordinate sc, int descriptionNid) {
 		Optional<UUID> descriptionExtendedTypeConceptUuidOptional = getDescriptionExtendedTypeConceptUuid(sc, descriptionNid);

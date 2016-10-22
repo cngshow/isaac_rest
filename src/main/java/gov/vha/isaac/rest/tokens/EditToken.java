@@ -69,7 +69,7 @@ public class EditToken
 	private final int authorSequence;
 	private final int moduleSequence;
 	private final int pathSequence;
-	private final UUID workflowProcessId;
+	private final UUID activeWorkflowProcessId;
 	private final Set<UserRole> roles = new TreeSet<>();
 	
 	private transient EditCoordinate editCoordinate = null;
@@ -82,13 +82,13 @@ public class EditToken
 	 * @param authorSequence
 	 * @param moduleSequence
 	 * @param pathSequence
-	 * @param workflowProcessId
+	 * @param activeWorkflowProcessId
 	 */
 	EditToken(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
-			UUID workflowProcessId,
+			UUID activeWorkflowProcessId,
 			UserRole...roles)
 	{
 		this.creationTime = System.currentTimeMillis();
@@ -96,7 +96,7 @@ public class EditToken
 		this.authorSequence = authorSequence;
 		this.moduleSequence = moduleSequence;
 		this.pathSequence = pathSequence;
-		this.workflowProcessId = workflowProcessId;
+		this.activeWorkflowProcessId = activeWorkflowProcessId;
 		
 		if (roles != null && roles.length > 0) {
 			for (UserRole role : roles) {
@@ -110,10 +110,10 @@ public class EditToken
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
-			UUID workflowProcessId,
+			UUID activeWorkflowProcessId,
 			Collection<UserRole> roles)
 	{
-		this(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles != null ? roles.toArray(new UserRole[roles.size()]) : null);
+		this(authorSequence, moduleSequence, pathSequence, activeWorkflowProcessId, roles != null ? roles.toArray(new UserRole[roles.size()]) : null);
 	}
 
 	/**
@@ -149,9 +149,9 @@ public class EditToken
 		
 		UUID tmpUuid = buffer.getUuid();
 		if (tmpUuid.equals(NULL_UUID)) {
-			workflowProcessId = null;
+			activeWorkflowProcessId = null;
 		} else {
-			workflowProcessId = tmpUuid;
+			activeWorkflowProcessId = tmpUuid;
 		}
 
 		byte numRoles = buffer.getByte();
@@ -235,10 +235,10 @@ public class EditToken
 	}
 
 	/**
-	 * @return the workflowProcessId
+	 * @return the active workflowProcess UUID id
 	 */
-	public UUID getWorkflowProcessId() {
-		return workflowProcessId;
+	public UUID getActiveWorkflowProcessId() {
+		return activeWorkflowProcessId;
 	}
 
 	/**
@@ -288,10 +288,10 @@ public class EditToken
 		buffer.putInt(moduleSequence);
 		buffer.putInt(pathSequence);
 		
-		if (workflowProcessId == null) {
+		if (activeWorkflowProcessId == null) {
 			buffer.putUuid(NULL_UUID);
 		} else {
-			buffer.putUuid(workflowProcessId);
+			buffer.putUuid(activeWorkflowProcessId);
 		}
 		
 		buffer.putByte((byte)roles.size());
@@ -331,7 +331,7 @@ public class EditToken
 	public String toString() {
 		return "EditToken [validForSubmit=" + validForSubmit + ", creationTime=" + creationTime + ", authorSequence="
 				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
-				+ ", workflowProcessId=" + workflowProcessId + ", roles=" + roles + ", serialization=" + serialization
+				+ ", activeWorkflowProcessId=" + activeWorkflowProcessId + ", roles=" + roles + ", serialization=" + serialization
 				+ "]";
 	}
 

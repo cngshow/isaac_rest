@@ -271,7 +271,7 @@ public class RequestInfo
 					// Set local values to values from passed EditToken
 					module = passedEditToken.get().getModuleSequence();
 					path = passedEditToken.get().getPathSequence();
-					workflowProcessid = passedEditToken.get().getWorkflowProcessId();
+					workflowProcessid = passedEditToken.get().getActiveWorkflowProcessId();
 
 					// Override values from passed EditToken with values from parameters
 					if (parameters_.containsKey(RequestParameters.processId)) {
@@ -353,10 +353,10 @@ public class RequestInfo
 	/**
 	 * @return
 	 */
-	public UUID getWorkflowProcessId()
+	public UUID getActiveWorkflowProcessId()
 	{
 		//TODO implement this properly - need the active workflow in this session
-		return getEditToken().getWorkflowProcessId();
+		return getEditToken().getActiveWorkflowProcessId();
 
 		//		try
 		//		{

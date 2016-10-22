@@ -20,7 +20,6 @@ package gov.vha.isaac.rest.jaxbCrutch;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
@@ -28,6 +27,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 
@@ -91,6 +91,18 @@ public class ArrayUnwrappers
 	}
 	
 	@XmlRootElement
+	public static class RestWorkflowDefinitions implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestWorkflowDefinition[] restWorkflowDefinition;
+		
+		public Object[] getValues()
+		{
+			return restWorkflowDefinition;
+		}
+	}
+	
+	@XmlRootElement
 	public static class RestWorkflowProcessHistories implements ArrayUnwrapper
 	{
 		@XmlElement
@@ -112,18 +124,6 @@ public class ArrayUnwrappers
 		public Object[] getValues()
 		{
 			return restWorkflowProcessHistoriesMapEntry;
-		}
-	}
-
-	@XmlRootElement
-	public static class RestUUIDs implements ArrayUnwrapper
-	{
-		@XmlElement
-		protected RestUUID[] restUUID;
-		
-		public Object[] getValues()
-		{
-			return restUUID;
 		}
 	}
 	

@@ -48,6 +48,14 @@ public class RestAssociationItemVersionBase
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Integer targetNid;
 	
+	/**
+	 * True to indicate the association should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
+	
 	protected RestAssociationItemVersionBase()
 	{
 		//for jaxb
