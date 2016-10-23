@@ -20,17 +20,14 @@ package gov.vha.isaac.rest.api1.logic;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -69,6 +66,10 @@ public class LogicGraphAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'version'
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @return the logic graph version object
 	 * @throws RestException 
@@ -118,6 +119,10 @@ public class LogicGraphAPIs
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
 	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'logicNodeUuids' and/or 'version'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the concept chronology object
@@ -161,7 +166,11 @@ public class LogicGraphAPIs
 
 	/**
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
-	 * @param stated - A boolean specifying whether to use the stated definition of the logic graph 
+	 * @param stated - A boolean specifying whether to use the stated definition of the logic graph
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @return - A LogicGraphSememe SememeChronology corresponding to the concept identified by the passed id
 	 * @throws RestException
 	 * 
@@ -224,7 +233,7 @@ public class LogicGraphAPIs
 				final Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated, stampCoordinate, languageCoordinate, logicCoordinate);
 				if (defChronologyOptional.isPresent())
 				{
-					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology {}", () -> defChronologyOptional.get());
+					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology {}", Optional.ofNullable(defChronologyOptional.get()));
 					return defChronologyOptional.get();
 				}
 				else

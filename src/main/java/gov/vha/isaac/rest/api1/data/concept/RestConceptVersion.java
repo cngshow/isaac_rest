@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.Get;
@@ -69,18 +70,21 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Expandables expandables;
 	
 	/**
 	 * The concept chronology for this concept.  Depending on the expand parameter, may be empty.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestConceptChronology conChronology;
 	
 	/**
 	 * The StampedVersion details for this version of this concept.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestStampedVersion conVersion;
 	
 	/**
@@ -88,18 +92,21 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * This value is not populated / returned if the concept does not contain a logic graph from which to derive the information.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Boolean isConceptDefined;
 
 	/**
 	 * The parent concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	List<RestConceptVersion> parents = new ArrayList<>();
 	
 	/**
 	 * The child concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	List<RestConceptVersion> children = new ArrayList<>();
 	
 	/**
@@ -107,6 +114,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * This will not be returned if the children field is populated.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Integer childCount;
 	
 	/**
@@ -114,6 +122,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * This will not be returned if the parents field is populated.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Integer parentCount;
 	
 	/**
@@ -123,6 +132,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * See more details on {@link TaxonomyAPIs#getConceptVersionTaxonomy(String, String, int, String, int, String, String, String)}
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Set<Integer> sememeMembership = new HashSet<>();
 	
 	protected RestConceptVersion()

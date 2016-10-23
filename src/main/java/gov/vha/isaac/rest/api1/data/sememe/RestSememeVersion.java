@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
@@ -72,12 +73,14 @@ public abstract class RestSememeVersion
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Expandables expandables;
 	
 	/**
 	 * The sememe chronology for this concept.  Depending on the expand parameter, may be empty.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestSememeChronology sememeChronology;
 	
 	
@@ -85,12 +88,14 @@ public abstract class RestSememeVersion
 	 * The StampedVersion details for this version of this sememe.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestStampedVersion sememeVersion;
 	
 	/**
 	 * The nested sememes attached to this sememe.  Not populated by default, include expand=nested to expand these.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	List<RestDynamicSememeVersion> nestedSememes = new ArrayList<>();
 
 	protected RestSememeVersion()

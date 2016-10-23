@@ -21,12 +21,9 @@ package gov.vha.isaac.rest.api1.data.logic;
 
 import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -105,7 +102,7 @@ public class RestConceptNode extends RestLogicNode {
 		Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
 		isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
 	} catch (Exception e) {
-		LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", () -> Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
+		LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", Optional.ofNullable(Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate())));
 		isConceptDefined = false;
 	}
 

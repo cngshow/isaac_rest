@@ -7,6 +7,16 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/20 - 1.6.3: 
+    * Clarifying the 'names' returned for all of the /1/system/enumeration/* calls - now returning an enumName, friendlyName (optional) and enumId.
+    * For 1/system/enumeration/restDynamicSememeDataType, an attribute of 'classType' has been added, which contains the full value that needs to 
+        be included during sememe data column creation of a particular sememe type.
+* 2016/10/19 - 1.6.2: 
+    * Fixed the inconsistent url /write/component to /write/1/component
+    * Now requiring / honoring column numbers for sememe create / edit operations
+    * Fixed a bug reading DynamicSememeUUID objects
+    * Changed sememe/byReferencedComponent so it no longer returns association or mapping sememes by default - new parameters added to allow it to return
+        those types of sememes.
 * 2016/10/18 - 1.6.1:
     * Changed the field RestDynamicSememeColunInfoCreate.columnDataType from RestDynamicSememeDataType to String for ease of creation / parsing.
     * Changed the field RestDynamicSememeColunInfoCreate.columnValidatorTypes from RestDynamicSememeValidatorType to String for ease of creation / parsing.

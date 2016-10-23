@@ -20,6 +20,8 @@ package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -111,7 +113,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	}
 
 	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, int targetColPosition, int qualifierColPosition, 
-			boolean expandDescriptions, boolean expandComments)
+			boolean expandDescriptions, boolean expandComments, UUID processId)
 	{
 		sememeSequence = sememe.getSememeSequence();
 		identifiers = new RestIdentifiedObject(sememe.getUuidList());
@@ -177,7 +179,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		{
 			try
 			{
-				comments = Util.readComments(sememe.getNid() + "");
+				comments = Util.readComments(sememe.getNid() + "", processId);
 			}
 			catch (RestException e)
 			{

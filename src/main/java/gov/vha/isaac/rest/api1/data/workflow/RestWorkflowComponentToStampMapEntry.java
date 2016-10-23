@@ -45,8 +45,9 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.associations.AssociationUtilities;
 import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
+import gov.vha.isaac.ochre.mapping.data.MappingUtils;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
@@ -143,24 +144,8 @@ public class RestWorkflowComponentToStampMapEntry
 				ConceptChronology<? extends ConceptVersion<?>> conChron = Get.conceptService()
 						.getConcept(assemblageSeq);
 
-				boolean isMap = false;
-				boolean isAssociation = false;
-				for (SememeChronology<? extends SememeVersion<?>> assemblageSememe : conChron.getSememeList()) {
-					if (assemblageSememe
-							.getAssemblageSequence() == DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_SEMEME
-									.getSequence()) {
-						isAssociation = true;
-					}
-				}
-
-				if (!isAssociation) {
-					for (SememeChronology<? extends SememeVersion<?>> assemblageSememe : conChron.getSememeList()) {
-						if (assemblageSememe.getAssemblageSequence() == IsaacMappingConstants
-								.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()) {
-							isMap = true;
-						}
-					}
-				}
+				boolean isMap = MappingUtils.isMapping(sememe);
+				boolean isAssociation = AssociationUtilities.isAssociation(sememe);
 
 				String target = null;
 				String value = null;

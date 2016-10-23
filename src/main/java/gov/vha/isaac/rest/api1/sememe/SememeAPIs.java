@@ -48,6 +48,8 @@ import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.associations.AssociationUtilities;
+import gov.vha.isaac.ochre.mapping.data.MappingUtils;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -143,7 +145,11 @@ public class SememeAPIs
 	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
 	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept or a description sememe, the description of that 
-	 * concept - or the description value.  
+	 * concept - or the description value.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
 	 * by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -190,6 +196,10 @@ public class SememeAPIs
 	 * if they represent a concept or a description sememe.
 	 * @return the sememe version object.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -245,6 +255,10 @@ public class SememeAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
 	 * if they represent a concept or a description sememe.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken 
 	 * may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -316,12 +330,20 @@ public class SememeAPIs
 	 * @param assemblage - An optional assemblage UUID, nid or concept sequence to restrict the type of sememes returned.  If ommitted, assemblages
 	 * of all types will be returned.  May be specified multiple times to allow multiple assemblages
 	 * @param includeDescriptions - an optional flag to request that description type sememes are returned.  By default, description type 
-	 * sememes are not returned, as these are typically retreived via a getDescriptions call on the Concept APIs.
+	 * sememes are not returned, as these are typically retrieved via a getDescriptions call on the Concept APIs.
+	 * @param includeAssociations - an optional flag to request that sememes that represent associations are returned.  By default, sememes that represent
+	 * associations are not returned, as these are typically retrieved via a getSourceAssociations call on the Association APIs.
+	 * @param includeMappings- an optional flag to request that sememes that represent mappings are returned.  By default, sememes that represent
+	 * mappings are not returned, as these are typically retrieved via a the Mapping APIs.
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
 	 * if they represent a concept or a description sememe.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
 	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -336,6 +358,8 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
 			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
+			@QueryParam(RequestParameters.includeAssociations) @DefaultValue("false") String includeAssociations,
+			@QueryParam(RequestParameters.includeMappings) @DefaultValue("false") String includeMappings,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) 
@@ -346,6 +370,8 @@ public class SememeAPIs
 				RequestParameters.id,
 				RequestParameters.assemblage,
 				RequestParameters.includeDescriptions,
+				RequestParameters.includeAssociations,
+				RequestParameters.includeMappings,
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -366,6 +392,8 @@ public class SememeAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						Boolean.parseBoolean(includeDescriptions.trim()),
+						Boolean.parseBoolean(includeAssociations.trim()),
+						Boolean.parseBoolean(includeMappings.trim()),
 						processIdOptional.isPresent() ? processIdOptional.get() : null);
 	}
 
@@ -378,6 +406,7 @@ public class SememeAPIs
 	 * @return - the full description
 	 * @throws RestException
 	 */
+	// TODO add processId parameter?
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememeDefinitionComponent + "{" + RequestParameters.id + "}")
@@ -458,6 +487,10 @@ public class SememeAPIs
 	 * @param expandNested
 	 * @param expandReferenced
 	 * @param allowDescriptions true to include description type sememes, false to skip
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @return
 	 * @throws RestException
 	 */
@@ -582,21 +615,22 @@ public class SememeAPIs
 	 * @param expandNested
 	 * @param expandReferenced
 	 * @param allowDescriptions true to include description type sememes, false to skip
+	 * @param allowAssociations true to include sememes that represent associations, false to skip
+	 * @param allowMappings true to include sememes that represent mappings, false to skip
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @return
 	 * @throws RestException
 	 */
-	public static RestSememeVersion[] get(
-			String referencedComponent,
-			Set<Integer> allowedAssemblages,
-			boolean expandChronology,
-			boolean expandNested,
-			boolean expandReferenced,
-			boolean allowDescriptions,
-			UUID processId) throws RestException
+	public static RestSememeVersion[] get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
+		boolean expandReferenced, boolean allowDescriptions, boolean allowAssociations, boolean allowMappings, UUID processId) throws RestException
 	{
 		final ArrayList<RestSememeVersion> results = new ArrayList<>();
 		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
 		{
+			@SuppressWarnings("unchecked")
 			@Override
 			public void accept(@SuppressWarnings("rawtypes") SememeChronology sc)
 			{
@@ -604,6 +638,15 @@ public class SememeAPIs
 						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
 						&& (allowDescriptions || sc.getSememeType() != SememeType.DESCRIPTION))
 				{
+					if (!allowAssociations && AssociationUtilities.isAssociation(sc))
+					{
+						return;
+					}
+					if (!allowMappings && MappingUtils.isMapping(sc))
+					{
+						return;
+					}
+
 					@SuppressWarnings("rawtypes")
 					Optional<SememeVersionImpl> version = Optional.empty();
 					try {

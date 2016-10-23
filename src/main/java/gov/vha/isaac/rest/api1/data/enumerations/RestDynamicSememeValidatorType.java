@@ -39,7 +39,7 @@ public class RestDynamicSememeValidatorType extends Enumeration
 	
 	public RestDynamicSememeValidatorType(DynamicSememeValidatorType vt)
 	{
-		super(vt.getDisplayName(), vt.ordinal());
+		super(vt.name(), vt.getDisplayName(), vt.ordinal());
 	}
 	
 	public static RestDynamicSememeValidatorType[] getAll()

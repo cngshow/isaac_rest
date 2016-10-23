@@ -36,6 +36,7 @@ import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 public class Util
@@ -210,19 +211,24 @@ public class Util
 	 * @return The comment(s)
 	 * @throws RestException
 	 */
-	public static ArrayList<RestCommentVersion> readComments(String id) throws RestException
+	public static ArrayList<RestCommentVersion> readComments(String id, UUID processId) throws RestException
 	{
 		ArrayList<RestCommentVersion> results = new ArrayList<>();
 		
 		Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
 			.forEach(sememeChronology -> 
 			{
-				@SuppressWarnings({ "rawtypes", "unchecked" })
-				Optional<LatestVersion<DynamicSememe<?>>> sv = ((SememeChronology)sememeChronology).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-				if (sv.isPresent())
+				@SuppressWarnings("rawtypes")
+				Optional<DynamicSememe> version = Optional.empty();
+				try {
+					version = WorkflowUtils.getStampedVersion(DynamicSememe.class, processId, sememeChronology.getNid());
+				} catch (Exception e) {
+					// TODO Joel ignore exception thrown by getStampedVersion()?
+				}
+				if (version.isPresent())
 				{
 					//TODO handle contradictions
-					results.add(new RestCommentVersion(sv.get().value()));
+					results.add(new RestCommentVersion(version.get()));
 				}
 			});
 		

@@ -43,7 +43,7 @@ public class RestObjectChronologyType extends Enumeration
 	
 	public RestObjectChronologyType(ObjectChronologyType oct)
 	{
-		super(oct.toString(), oct.ordinal());
+		super(oct.name(), oct.toString(), oct.ordinal());
 	}
 	
 	public static RestObjectChronologyType[] getAll()

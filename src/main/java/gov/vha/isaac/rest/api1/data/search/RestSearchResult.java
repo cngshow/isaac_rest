@@ -22,20 +22,15 @@ import java.util.Optional;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
-import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
@@ -148,7 +143,7 @@ public class RestSearchResult
 		
 		if (RequestInfo.get().shouldExpand(ExpandUtil.referencedConcept))
 		{
-			int conceptSequence = findConcept(matchNid);
+			int conceptSequence = Frills.findConcept(matchNid);
 			if (conceptSequence >= 0)
 			{
 				referencedConcept = new RestConceptChronology(Get.conceptService().getConcept(conceptSequence), 
@@ -191,31 +186,6 @@ public class RestSearchResult
 		{
 			expandables = null;
 		}
-	}
-	
-	/**
-	 * Returns a concept sequence, or -1 if no concept found
-	 */
-	private int findConcept(int nid)
-	{
-		Optional<? extends ObjectChronology<? extends StampedVersion>> c = Get.identifiedObjectService().getIdentifiedObjectChronology(nid);
-		
-		if (c.isPresent())
-		{
-			if (c.get().getOchreObjectType() == OchreExternalizableObjectType.SEMEME)
-			{
-				return findConcept(((SememeChronology<?>)c.get()).getReferencedComponentNid());
-			}
-			else if (c.get().getOchreObjectType() == OchreExternalizableObjectType.CONCEPT)
-			{
-				return ((ConceptChronology<?>)c.get()).getConceptSequence();
-			}
-			else
-			{
-				log.warn("Unexpected object type: " + c.get().getOchreObjectType());
-			}
-		}
-		return -1;
 	}
 
 	/**

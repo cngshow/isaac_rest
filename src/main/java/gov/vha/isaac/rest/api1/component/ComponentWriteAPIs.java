@@ -62,7 +62,7 @@ import javafx.concurrent.Task;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@Path(RestPaths.writePathComponent + RestPaths.componentComponent)
+@Path(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent)
 public class ComponentWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(ComponentWriteAPIs.class);

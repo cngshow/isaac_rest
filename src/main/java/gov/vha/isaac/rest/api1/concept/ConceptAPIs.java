@@ -86,6 +86,10 @@ public class ConceptAPIs
 	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion)
 	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 *
 	 * @return the concept version object
@@ -151,6 +155,10 @@ public class ConceptAPIs
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @return the concept chronology object
 	 * @throws RestException 
@@ -248,7 +256,11 @@ public class ConceptAPIs
 	 * sememes and dialects 
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
-	 * if they represent a concept or a description sememe.  
+	 * if they represent a concept or a description sememe.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return The descriptions associated with the concept
@@ -283,7 +295,10 @@ public class ConceptAPIs
 				Boolean.parseBoolean(includeAttributes.trim()),
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 				true,
+				false,
+				false,
 				processIdOptional.isPresent() ? processIdOptional.get() : null);
+
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up
