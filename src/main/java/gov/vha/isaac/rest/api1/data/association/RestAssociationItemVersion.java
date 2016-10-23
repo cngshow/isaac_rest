@@ -193,7 +193,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 			if (RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable))
 			{
 				nestedSememes = SememeAPIs.get(identifiers.getFirst().toString(), null, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), true, 
-						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true);
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true, true, true);
 			}
 			if (expandables.size() == 0)
 			{

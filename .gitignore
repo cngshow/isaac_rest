@@ -63,6 +63,7 @@ UserPreferences.xml
 workflowDB
 workflowDB/**
 *.eccs
+test-output/**
 
 *.log
 /isaac-workflow/workflowDB/

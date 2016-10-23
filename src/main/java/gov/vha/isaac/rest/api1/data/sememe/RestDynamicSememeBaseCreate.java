@@ -1,14 +1,14 @@
 /**
  * Copyright Notice
  *
- * This is a work of the U.S. Government and is not subject to copyright
+ * This is a work of the U.S. Government and is not subject to copyright 
  * protection in the United States. Foreign copyrights may apply.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,62 +16,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api.data.wrappers;
-
-import java.util.UUID;
+package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * This class is a trivial wrapper for a UUID value which is serializable/deserializable by JAXB
- * 
- * {@link RestUUID}
+ * {@link RestDynamicSememeBaseCreate}
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * This stub class is used for callers to create {@link RestSememeVersion} objects.  This class, in combination with {@link RestDynamicSememeBase} 
+ * contains the fields that can be populated for creation.  
+ * 
+ * The API never returns this class.
+
+ *
+ * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestUUID
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestDynamicSememeBaseCreate.class)
+public class RestDynamicSememeBaseCreate extends RestDynamicSememeBase
 {
+	protected RestDynamicSememeBaseCreate()
+	{
+		//for jaxb
+	}
+	
 	/**
-	 * The UUID value
+	 * The concept sequence, nid or UUID that identifies the concept that defined the assemblage of this sememe.
+	 * This is effectively the type of the sememe being created.
 	 */
 	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	UUID value;
+	@JsonInclude
+	public String assemblageConcept;
 	
-	RestUUID() {
-		// For JAXB
-	}
-	
-	public RestUUID(UUID value)
-	{
-		this.value = value;
-	}
-
 	/**
-	 * @return the value
+	 * The nid or UUID (may NOT be a sequence) of desired referenced component of the sememe instance. 
 	 */
-	@XmlTransient
-	public UUID getValue() {
-		return value;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "RestUUID [value=" + value + "]";
-	}
+	@XmlElement
+	@JsonInclude
+	public String referencedComponent;
 }

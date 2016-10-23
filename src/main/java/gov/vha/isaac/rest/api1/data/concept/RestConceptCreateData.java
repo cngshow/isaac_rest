@@ -44,7 +44,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestConceptCreateData.class)
 public class RestConceptCreateData
 {
 	/**
@@ -82,6 +82,14 @@ public class RestConceptCreateData
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Integer descriptionExtendedTypeConceptId = null;
+	
+	/**
+	 * True to indicate the concept should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
 	
 	protected RestConceptCreateData()
 	{

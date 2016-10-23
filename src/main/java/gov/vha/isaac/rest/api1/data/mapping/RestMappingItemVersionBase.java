@@ -42,7 +42,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemVersionBase.class)
 public class RestMappingItemVersionBase
 {
 	/**
@@ -68,6 +68,14 @@ public class RestMappingItemVersionBase
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestDynamicSememeData> mapItemExtendedFields;
+	
+	/**
+	 * True to indicate the mapping item should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
 	
 	protected RestMappingItemVersionBase()
 	{

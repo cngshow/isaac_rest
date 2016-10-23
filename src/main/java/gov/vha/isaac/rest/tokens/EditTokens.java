@@ -113,15 +113,32 @@ public class EditTokens {
 		}
 	}
 
-	public static EditToken renew(EditToken token) throws RestException {
+	/**
+	 * 
+	 * This method creates a new token out of the passed token,
+	 * resetting internal validation state and timers
+	 * 
+	 * @param token
+	 * @return
+	 * @throws RestException
+	 */
+	public static EditToken renew(EditToken token) {
 		EditToken existingToken = get(token.getSerialized());
 		
 		if (existingToken == null) {
-			return getOrCreate(token.getSerialized());
-		} else {
+			EditToken newToken = new EditToken(
+					token.getAuthorSequence(),
+					token.getModuleSequence(),
+					token.getPathSequence(),
+					token.getActiveWorkflowProcessId(),
+					token.getRoles()
+					);
+			put(newToken);
 			token.setInvalidForSubmit();
+			return newToken;
+		} else {
 			OBJECT_BY_TOKEN_CACHE.remove(token.getSerialized());
-			return getOrCreate(token.getSerialized());
+			return renew(token);
 		}
 	}
 
@@ -129,11 +146,23 @@ public class EditTokens {
 		EditToken token = get(tokenString);
 		
 		if (token == null) {
-			return getOrCreate(tokenString);
+			try {
+				EditToken passedToken = new EditToken(tokenString);
+				EditToken newToken = new EditToken(
+						passedToken.getAuthorSequence(),
+						passedToken.getModuleSequence(),
+						passedToken.getPathSequence(),
+						passedToken.getActiveWorkflowProcessId(),
+						passedToken.getRoles()
+						);
+				put(newToken);
+				return newToken;
+			} catch (Exception e) {
+				throw new RestException("Failed creating EditToken from passed token string \"" + tokenString + "\"", e);
+			}
 		} else {
-			token.setInvalidForSubmit();
 			OBJECT_BY_TOKEN_CACHE.remove(tokenString);
-			return getOrCreate(tokenString);
+			return renew(tokenString);
 		}
 	}
 
@@ -176,7 +205,7 @@ public class EditTokens {
 			if (authorSequence == token.getAuthorSequence()
 					&& moduleSequence == token.getModuleSequence()
 					&& pathSequence == token.getPathSequence()
-					&& ((workflowProcessId == null && token.getWorkflowProcessId() == null) || (workflowProcessId != null && token.getWorkflowProcessId() != null && workflowProcessId.equals(token.getWorkflowProcessId())))
+					&& ((workflowProcessId == null && token.getActiveWorkflowProcessId() == null) || (workflowProcessId != null && token.getActiveWorkflowProcessId() != null && workflowProcessId.equals(token.getActiveWorkflowProcessId())))
 					&& roles.containsAll(token.getRoles())
 					&& token.getRoles().containsAll(roles)) {
 				return token;
@@ -188,6 +217,44 @@ public class EditTokens {
 		put(newToken);
 		
 		return newToken;
+	}
+
+	/**
+	 * 
+	 * Returns (if extant) or creates (if missing) an analog of the passed EditToken with the specified processId
+	 * 
+	 * @param editToken
+	 * @param processId
+	 * @return
+	 */
+	public static EditToken getOrCreateWithSpecifiedProcessId(EditToken editToken, UUID processId) {
+		return getOrCreate(
+				editToken.getAuthorSequence(),
+				editToken.getModuleSequence(),
+				editToken.getPathSequence(),
+				processId,
+				editToken.getRoles()
+				);
+	}
+	/**
+	 * 
+	 * Creates and caches a new analog of the passed EditToken with the specified processId
+	 * 
+	 * @param editToken
+	 * @param processId
+	 * @return
+	 * @throws RestException 
+	 */
+	public static EditToken renewWithSpecifiedProcessId(EditToken editToken, UUID processId) {
+		EditToken token = getOrCreate(
+				editToken.getAuthorSequence(),
+				editToken.getModuleSequence(),
+				editToken.getPathSequence(),
+				processId,
+				editToken.getRoles()
+				);
+		
+		return renew(token);
 	}
 
 	/**

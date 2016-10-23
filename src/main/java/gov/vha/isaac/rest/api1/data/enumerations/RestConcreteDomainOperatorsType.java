@@ -40,7 +40,7 @@ public class RestConcreteDomainOperatorsType extends Enumeration
 	
 	public RestConcreteDomainOperatorsType(ConcreteDomainOperators st)
 	{
-		super(st.toString(), st.ordinal());
+		super(st.name(), null, st.ordinal());
 	}
 	
 	public static RestConcreteDomainOperatorsType[] getAll()

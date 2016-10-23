@@ -92,22 +92,28 @@ public class RequestInfoUtils {
 						}
 					}
 				}
-			} catch (Exception e) {
+				else {
+					throw new RestException(parameterName, str, "no concept or sememe exists corresponding to " + parameterName + " parameter value: " + str);
+				}
+			} catch (RestException ex) {
+				throw ex;
+			}
+			catch (Exception e) {
 				// ignore
 			}
 			int id = Integer.parseInt(str);
 			if (id >= 0) {
-				throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+				throw new RestException(parameterName, str, "invalid " + parameterName + " parameter value: " + str + ".  Must be a nid or UUID, not a sequence");
 			}
 			if (! Get.conceptService().hasConcept(id) && ! Get.sememeService().hasSememe(id)) {
-				throw new RestException(parameterName, str, "no concept or sememe exists corresponding to NID " + parameterName + " parameter value: " + str);
+				throw new RestException(parameterName, str, "no concept or sememe exists corresponding to " + parameterName + " parameter value: " + str);
 			} else {
 				return id;
 			}
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+			throw new RestException(parameterName, str, "invalid " + parameterName + " parameter value: " + str);
 		}
 	}
 	

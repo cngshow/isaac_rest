@@ -39,7 +39,7 @@ public class RestNodeSemanticType extends Enumeration
 	
 	public RestNodeSemanticType(NodeSemantic st)
 	{
-		super(st.toString(), st.ordinal());
+		super(st.name(), null, st.ordinal());
 	}
 
 	public static RestNodeSemanticType[] getAll()

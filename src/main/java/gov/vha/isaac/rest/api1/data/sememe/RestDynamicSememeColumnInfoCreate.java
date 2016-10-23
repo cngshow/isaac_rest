@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
@@ -34,7 +35,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestDynamicSememeColumnInfoCreate.class)
 public class RestDynamicSememeColumnInfoCreate
 {
 	public RestDynamicSememeColumnInfoCreate()
@@ -59,11 +60,22 @@ public class RestDynamicSememeColumnInfoCreate
 	public RestDynamicSememeColumnInfoCreate(int columnConceptLabelConcept, RestDynamicSememeDataType columnDataType, RestDynamicSememeData columnDefaultData, 
 			boolean columnRequired, RestDynamicSememeValidatorType[] columnValidatorTypes, RestDynamicSememeData[] columnValidatorData)
 	{
-		this.columnConceptLabelConcept = columnConceptLabelConcept;
-		this.columnDataType = columnDataType;
+		this.columnLabelConcept = columnConceptLabelConcept;
+		this.columnDataType = columnDataType.enumName;
 		this.columnDefaultData = columnDefaultData;
 		this.columnRequired = columnRequired;
-		this.columnValidatorTypes = columnValidatorTypes;
+		if (columnValidatorTypes != null)
+		{
+			this.columnValidatorTypes = new String[columnValidatorTypes.length];
+			for (int i = 0; i < columnValidatorTypes.length; i++)
+			{
+				this.columnValidatorTypes[i] = columnValidatorTypes[i].enumName;
+			}
+		}
+		else
+		{
+			this.columnValidatorTypes = null;
+		}
 		this.columnValidatorData = columnValidatorData;
 	}
 	
@@ -75,12 +87,7 @@ public class RestDynamicSememeColumnInfoCreate
 	public RestDynamicSememeColumnInfoCreate(int columnConceptLabelConcept, RestDynamicSememeDataType columnDataType, RestDynamicSememeData columnDefaultData, 
 			boolean columnRequired)
 	{
-		this.columnConceptLabelConcept = columnConceptLabelConcept;
-		this.columnDataType = columnDataType;
-		this.columnDefaultData = null;
-		this.columnRequired = columnRequired;
-		this.columnValidatorTypes = null;
-		this.columnValidatorData = null;
+		this(columnConceptLabelConcept, columnDataType, columnDefaultData, columnRequired, null, null);
 	}
 	
 	/**
@@ -90,12 +97,7 @@ public class RestDynamicSememeColumnInfoCreate
 	 */
 	public RestDynamicSememeColumnInfoCreate(int columnConceptLabelConcept, RestDynamicSememeDataType columnDataType, boolean columnRequired)
 	{
-		this.columnConceptLabelConcept = columnConceptLabelConcept;
-		this.columnDataType = columnDataType;
-		this.columnDefaultData = null;
-		this.columnRequired = columnRequired;
-		this.columnValidatorTypes = null;
-		this.columnValidatorData = null;
+		this(columnConceptLabelConcept, columnDataType, null, columnRequired, null, null);
 	}
 
 	/**
@@ -103,34 +105,45 @@ public class RestDynamicSememeColumnInfoCreate
 	 * but for creation purposes, can accept a sequence or a nid.
 	 */
 	@XmlElement
-	public int columnConceptLabelConcept;
+	@JsonInclude
+	public int columnLabelConcept;
 	
 	/**
-	 * The type of data that will be found in this column.  String, Integer, etc.  See 
-	 * rest/1/enumeration/restDynamicSememeDataType for a list of all of the possible data types.
+	 * The data type of the value to be stored in this column.  
+	 * 
+	 * The value passed here can be the value provided by {@link RestDynamicSememeDataType#name} or {@link RestDynamicSememeDataType#enumId}.  
+	 * To retrieve the valid RestDynamicSememeDataType types, call 1/system/enumeration/restDynamicSememeDataType/
+	 * 
+	 * The typical values for this parameter would be "STRING" or "LONG"
 	 */
 	@XmlElement
-	public RestDynamicSememeDataType columnDataType;
+	@JsonInclude
+	public String columnDataType;
 	
 	/**
 	 * The default value to use for this column when creating a new sememe (if no user value is specified).
 	 * This field is optional and may be null.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestDynamicSememeData columnDefaultData;
 	
 	/**
 	 * Does the user have to provide a value for this column in order to create an instance of this sememe.
 	 */
 	@XmlElement
+	@JsonInclude
 	public boolean columnRequired;
 	
 	/**
-	 * The validators types that are attached to this sememe (if any).  Interval, <, etc.  See 
-	 * rest/1/enumeration/restDynamicSememeValidatorType for a list of all possible validator types.
+	 * The validators types that are attached to this sememe (if any).  Interval, <, etc. 
+	 * 
+	 * The value passed here can be the value provided by {@link RestDynamicSememeValidatorType#name} or {@link RestDynamicSememeValidatorType#enumId}.  
+	 * To retrieve the valid RestDynamicSememeValidatorType types, call 1/system/enumeration/restDynamicSememeValidatorType/
 	 */
 	@XmlElement
-	public RestDynamicSememeValidatorType[] columnValidatorTypes;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String[] columnValidatorTypes;
 	
 	/**
 	 * The data required to execute the validator type specified in columnValidatorTypes.  The format and type of this field
@@ -138,5 +151,6 @@ public class RestDynamicSememeColumnInfoCreate
 	 * array.  This optional field should only be populated if the columnValidatorTypes is populated.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestDynamicSememeData[] columnValidatorData;
 }

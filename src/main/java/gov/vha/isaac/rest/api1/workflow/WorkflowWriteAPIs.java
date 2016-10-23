@@ -23,6 +23,7 @@ import java.util.UUID;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -31,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowProcessInitializerConcluder;
@@ -38,11 +40,8 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowLockingData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessComponentSpecificationData;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -70,7 +69,7 @@ public class WorkflowWriteAPIs {
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
-	 * @return RestUUID - Id of newly created process instance
+	 * @return RestWriteResponse containing renewed EditToken and UUID of newly created process instance
 	 * 
 	 * @throws RestException
 	 */
@@ -117,7 +116,7 @@ public class WorkflowWriteAPIs {
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
-	 * @return renewed EditToken
+	 * @return RestWriteResponse containing renewed EditToken
 	 * @throws RestException
 	 */
 	@PUT
@@ -132,7 +131,7 @@ public class WorkflowWriteAPIs {
 		// TODO test advanceWorkflowProcess()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
-			provider.advanceWorkflow(processAdvancementData.getProcessId(), Get.identifierService()
+			provider.advanceWorkflow(RequestInfo.get().getEditToken().getActiveWorkflowProcessId(), Get.identifierService()
 					.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get(),
 					processAdvancementData.getActionRequested(), processAdvancementData.getComment(),
 					RequestInfo.get().getEditCoordinate());
@@ -154,40 +153,49 @@ public class WorkflowWriteAPIs {
 	 * 
 	 * Returns a renewed RestEditToken.
 	 * 
-	 * @param lockingData
-	 *            RestWorkflowLockingData Data containing process being updated
-	 *            and request type (release or acquire).
+	 * @param aquireLock
+	 *            RestBoolean Data Indicates request type (release or acquire).
 	 * @param editToken
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * 
-	 * @return renewed EditToken
+	 * @return RestWriteResponse containing renewed EditToken
 	 * @throws RestException
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.lock)
+	@Path(RestPaths.updatePathComponent + RestPaths.process + "{" + RequestParameters.processId + "}/" + RestPaths.lock)
+	//TODO these API changes aren't proper, acquireLockString is is being submitted as a DTO, instead of a query param.
+	//I also have no understanding of how processId is magically getting here.
 	public RestWriteResponse setProcessLock(
-			RestWorkflowLockingData lockingData,
-			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.editToken);
+			@PathParam(RequestParameters.processId) String processIdString, 
+			@QueryParam(RequestParameters.editToken) String editToken,
+			@QueryParam(RequestParameters.acquireLock) String acquireLockString
+			) throws RestException {
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(), 
+				RequestParameters.processId,
+				RequestParameters.editToken, 
+				RequestParameters.acquireLock);
+
+		boolean acquireLock = RequestInfoUtils.parseBooleanParameter(RequestParameters.acquireLock, acquireLockString);
+		UUID processId = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, processIdString); 
 
 		// TODO test acquireWorkflowLock()
 		try {
 			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
-					.getProcessDetails(lockingData.getProcessId());
-
+					.getProcessDetails(processId);
+			
 			// verify that lock is in proper state per request
-			if (lockingData.isAquireLock() && !processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
+			if (acquireLock && !processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
 				throw new RestException("Cannot acquire a process that is already locked");
-			} else if (!lockingData.isAquireLock() && processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
+			} else if (!acquireLock && processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
 				throw new RestException("Cannot release a process that is not currently locked");
 			}
 
 			// Set owner based on acquire or release request
 			UUID newLockOwner;
-			if (lockingData.isAquireLock()) {
+			if (acquireLock) {
 				newLockOwner = Get.identifierService()
 						.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence())
 						.get();
@@ -198,11 +206,17 @@ public class WorkflowWriteAPIs {
 			// Perform acquire or release
 			WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 
-			provider.setProcessOwner(lockingData.getProcessId(), newLockOwner);
+			provider.setProcessOwner(RequestInfo.get().getEditToken().getActiveWorkflowProcessId(), newLockOwner);
 			
 			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
 		} catch (Exception e) {
-			throw new RestException("Failed aquiring lock on " + lockingData + ". Caught " + e.getClass().getName()
+			String actionRequested;
+			if (acquireLock) {
+				actionRequested = "acquire";
+			} else {
+				actionRequested = "release";
+			}
+			throw new RestException("Failed " + actionRequested + " lock on " + RequestInfo.get().getEditToken().getActiveWorkflowProcessId() + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());
 		}
 	}
@@ -218,27 +232,41 @@ public class WorkflowWriteAPIs {
 	 * the same process.
 	 * 
 	 * @param component
-	 *            RestWorkflowProcessComponentSpecificationData Data containing
-	 *            processId and componentId
-	 * @throws RestException
+	 *            componentNid Integer Nid of component to be removed
+	 * @param editToken
+	 *            EditToken string returned by previous call to getEditToken()
+	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
+	 * @return RestWriteResponse containing renewed RestEditToken
 	 */
+	//TODO these API changes aren't proper, componentNidString is badly named, and is being submitted as a DTO, instead of a query param or path param.
+	//It should really be a path param.
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent)
-	public void removeComponentFromProcess(RestWorkflowProcessComponentSpecificationData component)
+	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent + "{" + RequestParameters.nid + "}")
+	public RestWriteResponse removeComponentFromProcess(
+			@PathParam(RequestParameters.nid) String nidString,
+			@QueryParam(RequestParameters.editToken) String editToken)
 			throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.nid,
 				RequestParameters.editToken);
 
+		int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, nidString);
+		
 		// TODO test removeComponentFromWorkflow()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 		try {
-			provider.removeComponentFromWorkflow(component.getProcessId(),
-					RequestInfoUtils.getNidFromParameter("RestWorkflowComponentSpecificationData.componentNid",
-							component.getComponentNid()),
-					RequestInfo.get().getEditCoordinate());
+			UUID processId = RequestInfo.get().getActiveWorkflowProcessId();
+			EditCoordinate ec = RequestInfo.get().getEditCoordinate();
+			provider.removeComponentFromWorkflow(processId,
+					nid,
+					ec);
+			
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, nid, null);
 		} catch (Exception e) {
-			throw new RestException("Failed removing component " + component + ". Caught " + e.getClass().getName()
+			log.error("Unexpected error", e);
+			throw new RestException("Failed removing component " + nid + ". Caught " + e.getClass().getName()
 					+ " " + e.getLocalizedMessage());
 		}
 	}

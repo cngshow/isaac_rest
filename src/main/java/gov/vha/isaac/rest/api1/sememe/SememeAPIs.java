@@ -48,6 +48,8 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.associations.AssociationUtilities;
+import gov.vha.isaac.ochre.mapping.data.MappingUtils;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -329,7 +331,11 @@ public class SememeAPIs
 	 * @param assemblage - An optional assemblage UUID, nid or concept sequence to restrict the type of sememes returned.  If ommitted, assemblages
 	 * of all types will be returned.  May be specified multiple times to allow multiple assemblages
 	 * @param includeDescriptions - an optional flag to request that description type sememes are returned.  By default, description type 
-	 * sememes are not returned, as these are typically retreived via a getDescriptions call on the Concept APIs.
+	 * sememes are not returned, as these are typically retrieved via a getDescriptions call on the Concept APIs.
+	 * @param includeAssociations - an optional flag to request that sememes that represent associations are returned.  By default, sememes that represent
+	 * associations are not returned, as these are typically retrieved via a getSourceAssociations call on the Association APIs.
+	 * @param includeMappings- an optional flag to request that sememes that represent mappings are returned.  By default, sememes that represent
+	 * mappings are not returned, as these are typically retrieved via a the Mapping APIs.
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
@@ -349,6 +355,8 @@ public class SememeAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
 			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
+			@QueryParam(RequestParameters.includeAssociations) @DefaultValue("false") String includeAssociations,
+			@QueryParam(RequestParameters.includeMappings) @DefaultValue("false") String includeMappings,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) 
 			throws RestException
@@ -358,6 +366,8 @@ public class SememeAPIs
 				RequestParameters.id,
 				RequestParameters.assemblage,
 				RequestParameters.includeDescriptions,
+				RequestParameters.includeAssociations,
+				RequestParameters.includeMappings,
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
@@ -374,7 +384,9 @@ public class SememeAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-						Boolean.parseBoolean(includeDescriptions.trim()));
+						Boolean.parseBoolean(includeDescriptions.trim()),
+						Boolean.parseBoolean(includeAssociations.trim()),
+						Boolean.parseBoolean(includeMappings.trim()));
 	}
 
 	/**
@@ -576,15 +588,18 @@ public class SememeAPIs
 	 * @param expandNested
 	 * @param expandReferenced
 	 * @param allowDescriptions true to include description type sememes, false to skip
+	 * @param allowAssociations true to include sememes that represent associations, false to skip
+	 * @param allowMappings true to include sememes that represent mappings, false to skip
 	 * @return
 	 * @throws RestException
 	 */
 	public static RestSememeVersion[] get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
-		boolean expandReferenced, boolean allowDescriptions) throws RestException
+		boolean expandReferenced, boolean allowDescriptions, boolean allowAssociations, boolean allowMappings) throws RestException
 	{
 		final ArrayList<RestSememeVersion> results = new ArrayList<>();
 		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
 		{
+			@SuppressWarnings("unchecked")
 			@Override
 			public void accept(@SuppressWarnings("rawtypes") SememeChronology sc)
 			{
@@ -592,7 +607,14 @@ public class SememeAPIs
 						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
 						&& (allowDescriptions || sc.getSememeType() != SememeType.DESCRIPTION))
 				{
-					@SuppressWarnings("unchecked")
+					if (!allowAssociations && AssociationUtilities.isAssociation(sc))
+					{
+						return;
+					}
+					if (!allowMappings && MappingUtils.isMapping(sc))
+					{
+						return;
+					}
 					Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
 
 					if (sv.isPresent()) {

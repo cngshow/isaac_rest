@@ -41,7 +41,7 @@ public class RestExternalizableObjectType extends Enumeration
 	
 	public RestExternalizableObjectType(OchreExternalizableObjectType dt)
 	{
-		super(dt.name(), dt.ordinal());
+		super(dt.name(), null, dt.ordinal());
 	}
 	
 	public static RestExternalizableObjectType[] getAll()

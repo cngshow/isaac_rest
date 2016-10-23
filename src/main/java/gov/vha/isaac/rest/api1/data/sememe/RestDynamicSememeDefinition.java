@@ -20,7 +20,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
@@ -64,13 +64,15 @@ public class RestDynamicSememeDefinition
 	 * sememe assemblage (returned in this object) are read from this concept.
 	 */
 	@XmlElement
-	int assemblageConceptId;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public int assemblageConceptId;
 	
 	/**
 	 * the user-friendly description of the overall purpose of this sememe
 	 */
 	@XmlElement
-	String sememeUsageDescription;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String sememeUsageDescription;
 	
 	/**
 	 * The ordered column information which will correspond with the data returned by the dataColumns field of a  {@link RestDynamicSememeVersion}.
@@ -78,7 +80,8 @@ public class RestDynamicSememeDefinition
 	 * @return the column information that describes the data that may be returned as part of a sememe instance.
 	 */
 	@XmlElement
-	RestDynamicSememeColumnInfo[] columnInfo;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestDynamicSememeColumnInfo[] columnInfo;
 	
 	/**
 	 * Return the {@link RestObjectChronologyType} of the restriction on referenced components for this sememe (if any - may return null)
@@ -89,7 +92,8 @@ public class RestDynamicSememeDefinition
 	 * 
 	 */
 	@XmlElement
-	RestObjectChronologyType referencedComponentTypeRestriction;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestObjectChronologyType referencedComponentTypeRestriction;
 	
 	/**
 	 * Return the {@link RestSememeType} of the sub restriction on referenced components for this DynamicSememe (if any - may return null)
@@ -101,5 +105,6 @@ public class RestDynamicSememeDefinition
 	 * See rest/1/enumeration/restSememeType for a list of potential object types returned.
 	 */
 	@XmlElement
-	RestSememeType referencedComponentTypeSubRestriction;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestSememeType referencedComponentTypeSubRestriction;
 }

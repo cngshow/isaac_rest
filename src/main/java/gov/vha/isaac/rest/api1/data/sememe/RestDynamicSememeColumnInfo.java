@@ -20,7 +20,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.Get;
@@ -74,52 +74,60 @@ public class RestDynamicSememeColumnInfo
 	 * The concept sequence number of the concept that represents the column within the dynamic sememe.
 	 */
 	@XmlElement
-	int columnConceptSequence;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public int columnConceptSequence;
 	
 	/**
 	 * The user-friendly name to display for this column.
 	 */
 	@XmlElement
-	String columnName;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String columnName;
 	
 	/**
 	 * The user friendly description for this column.  Suitable for things like tooltip descriptions.
 	 */
 	@XmlElement
-	String columnDescription;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String columnDescription;
 	
 	/**
 	 * The 0 indexed order of this column within the dynamic sememe.
 	 */
 	@XmlElement
-	int columnOrder;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public int columnOrder;
 	
 	/**
 	 * The type of data that will be found in this column.  String, Integer, etc.  See 
 	 * rest/1/enumeration/restDynamicSememeDataType for a list of all of the possible data types.
 	 */
 	@XmlElement
-	RestDynamicSememeDataType columnDataType;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestDynamicSememeDataType columnDataType;
 	
 	/**
 	 * The default value to use for this column when creating a new sememe (if no user value is specified).
 	 * This field is optional and may be null.
 	 */
 	@XmlElement
-	RestDynamicSememeData columnDefaultData;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestDynamicSememeData columnDefaultData;
 	
 	/**
 	 * Does the user have to provide a value for this column in order to create an instance of this sememe.
 	 */
 	@XmlElement
-	boolean columnRequired;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public boolean columnRequired;
 	
 	/**
 	 * The validators types that are attached to this sememe (if any).  Interval, <, etc.  See 
 	 * rest/1/enumeration/restDynamicSememeValidatorType for a list of all possible validator types.
 	 */
 	@XmlElement
-	RestDynamicSememeValidatorType[] columnValidatorTypes;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestDynamicSememeValidatorType[] columnValidatorTypes;
 	
 	/**
 	 * The data required to execute the validator type specified in columnValidatorTypes.  The format and type of this field
@@ -127,5 +135,6 @@ public class RestDynamicSememeColumnInfo
 	 * array.
 	 */
 	@XmlElement
-	RestDynamicSememeData[] columnValidatorData;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestDynamicSememeData[] columnValidatorData;
 }

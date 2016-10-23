@@ -42,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeDescriptionCreateData.class)
 public class RestSememeDescriptionCreateData
 {
 	/**
@@ -105,6 +105,14 @@ public class RestSememeDescriptionCreateData
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	int referencedComponentNid;
 	
+	/**
+	 * True to indicate the mapping set should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
+	
 	protected RestSememeDescriptionCreateData()
 	{
 		//for Jaxb
@@ -123,7 +131,6 @@ public class RestSememeDescriptionCreateData
 			int languageConceptSequence,
 			String text,
 			int descriptionTypeConceptSequence,
-//			Integer extendedDescriptionTypeConceptSequence,
 			Collection<Integer> preferredInDialectAssemblagesIds,
 			Collection<Integer> acceptableInDialectAssemblagesIds,
 			int referencedComponentNid) {
@@ -132,7 +139,6 @@ public class RestSememeDescriptionCreateData
 		this.languageConceptSequence = languageConceptSequence;
 		this.text = text;
 		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
-//		this.extendedDescriptionTypeConceptSequence = extendedDescriptionTypeConceptSequence;
 		if (preferredInDialectAssemblagesIds != null) {
 			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
 		}

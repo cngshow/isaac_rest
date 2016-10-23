@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -28,7 +29,27 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.Stamp;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.associations.AssociationUtilities;
+import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.mapping.data.MappingUtils;
+import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
+import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 
@@ -95,6 +116,90 @@ public class RestWorkflowComponentToStampMapEntry
 	@XmlTransient
 	public RestStampedVersion getValue() {
 		return value;
+	}
+	
+	public String getInitialEditTimeAsString() {
+		LocalDate date = LocalDate.ofEpochDay(value.time);
+		return BPMNInfo.workflowDateFormatter.format(date);
+	}
+
+	public String printComponentValue(int nid, StampCoordinate stampCoord, LanguageCoordinate langCoord)
+			throws Exception {
+		ObjectChronologyType oct = Get.identifierService().getChronologyTypeForNid(nid);
+		if (oct == ObjectChronologyType.CONCEPT) {
+			return printConceptInformation(nid, stampCoord, langCoord);
+		} else if (oct == ObjectChronologyType.SEMEME) {
+			SememeChronology<? extends SememeVersion<?>> sememe = Get.sememeService().getSememe(nid);
+			switch (sememe.getSememeType()) {
+
+			case DESCRIPTION:
+				LatestVersion<DescriptionSememe> descSem = (LatestVersion<DescriptionSememe>) ((SememeChronology) sememe)
+						.getLatestVersion(LogicGraphSememe.class, stampCoord).get();
+				return printDescriptionInformation(descSem);
+
+			case DYNAMIC:
+				LatestVersion<DynamicSememe> dynSem = (LatestVersion<DynamicSememe>) ((SememeChronology) sememe)
+						.getLatestVersion(LogicGraphSememe.class, stampCoord).get();
+				int assemblageSeq = dynSem.value().getAssemblageSequence();
+				ConceptChronology<? extends ConceptVersion<?>> conChron = Get.conceptService()
+						.getConcept(assemblageSeq);
+
+				boolean isMap = MappingUtils.isMapping(sememe);
+				boolean isAssociation = AssociationUtilities.isAssociation(sememe);
+
+				String target = null;
+				String value = null;
+				DynamicSememeUsageDescription sememeDefinition = DynamicSememeUsageDescriptionImpl.read(nid);
+				for (DynamicSememeColumnInfo info : sememeDefinition.getColumnInfo()) {
+					if (info.getColumnDescriptionConcept()
+							.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_VALUE.getUUID())) {
+						value = info.getDefaultColumnValue().dataToString();
+					} else if (info.getColumnDescriptionConcept()
+							.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT
+									.getUUID())) {
+						target = info.getDefaultColumnValue().dataToString();
+					}
+				}
+
+				if (isMap) {
+					return printMapInformation(value, target);
+				} else if (isAssociation) {
+					return printAssociationInformation(value, target);
+				} else {
+					return printValueInformation(value);
+				}
+			default:
+				throw new Exception("Unsupported Sememe Type: " + sememe.getSememeType());
+			}
+		} else {
+			throw new Exception("Unsupported Object Chronology Type: " + oct);
+		}
+	}
+
+	private String printConceptInformation(int nid, StampCoordinate stampCoord, LanguageCoordinate langCoord) {
+		// Concept: <Concept FSN>
+		return "Concept: " + Frills.getConceptSnapshot(nid, stampCoord, langCoord).get().getFullySpecifiedDescription()
+				.get().value().getText();
+	}
+
+	private String printDescriptionInformation(LatestVersion<DescriptionSememe> descSem) {
+		// Description: <Desctipion Text>
+		return "Description: " + descSem.value().getText();
+	}
+
+	private String printMapInformation(String value, String target) {
+		// Map: <MapSet FSN>-<Source Code> : <Target Code>
+		return "Map: " + value + " : " + target;
+	}
+
+	private String printAssociationInformation(String value, String target) {
+		// Association: <Source Component> : <Target Component>
+		return "Association: " + value + " : " + target;
+	}
+
+	private String printValueInformation(String value) {
+		// Value: <Value Text>
+		return "Value: " + value;
 	}
 
 	/* (non-Javadoc)

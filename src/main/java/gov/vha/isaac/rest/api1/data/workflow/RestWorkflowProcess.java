@@ -97,6 +97,14 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Set<RestWorkflowComponentToStampMapEntry> componentToStampMap = new HashSet<>();
+	
+	/**
+	 * The workflow process owner
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	UUID ownerId;
+
 
 	/**
 	 * Constructor for JAXB only
@@ -117,8 +125,10 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		this.id = process.getId();
 		this.creatorId = process.getCreatorId();
 		this.timeCreated = process.getTimeCreated();
+		this.timeLaunched = process.getTimeLaunched();
 		this.timeCancelledOrConcluded = process.getTimeCanceledOrConcluded();
 		this.processStatus = new RestWorkflowProcessStatusType(process.getStatus());
+		this.ownerId = process.getOwnerId();
 		for (Map.Entry<Integer, Stamp> entry : process.getComponentToInitialEditMap().entrySet()) {
 			this.componentToStampMap.add(new RestWorkflowComponentToStampMapEntry(entry));
 		}
@@ -176,8 +186,16 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 * @return the componentNids
 	 */
 	@XmlTransient
-	public Set<RestWorkflowComponentToStampMapEntry> getComponentToIntitialEditMap() {
+	public Set<RestWorkflowComponentToStampMapEntry> getComponentToStampMap() {
 		return Collections.unmodifiableSet(componentToStampMap);
+	}
+
+	/**
+	 * @return the ownerId
+	 */
+	@XmlTransient
+	public UUID getOwnerId() {
+		return ownerId;
 	}
 
 	/* (non-Javadoc)
@@ -220,6 +238,6 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 				+ super.toString()
 				+ "id=" + id + ", creatorId=" + creatorId + ", timeCreated=" + timeCreated + ", timeLaunched=" + timeLaunched
 				+ ", timeCancelledOrConcluded=" + timeCancelledOrConcluded + ", processStatus=" + processStatus
-				+ ", componentToIntitialEditMap=" + componentToStampMap + "]";
+				+ ", componentToIntitialEditMap=" + componentToStampMap + ", ownerId=" + ownerId + "]";
 	}
 }

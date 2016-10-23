@@ -45,6 +45,14 @@ public class RestDynamicSememeLong extends RestDynamicSememeData
 
 	public long getLong()
 	{
-		return (long)data;
+		//The rest parser sometimes deserializes to broader types
+		if (!(data instanceof Long))
+		{
+			return ((Number)data).longValue();
+		}
+		else
+		{
+			return (long)data;
+		}
 	}
 }

@@ -40,7 +40,7 @@ public class RestSememeType extends Enumeration
 	
 	public RestSememeType(SememeType st)
 	{
-		super(st.toString(), st.ordinal());
+		super(st.name(), st.toString(), st.ordinal());
 	}
 	
 	public static RestSememeType[] getAll()

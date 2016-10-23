@@ -245,7 +245,9 @@ public class ConceptAPIs
 				true, 
 				Boolean.parseBoolean(includeAttributes.trim()),
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-				true);
+				true,
+				false,
+				false);
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up

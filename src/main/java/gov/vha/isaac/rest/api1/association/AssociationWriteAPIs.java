@@ -33,8 +33,10 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
+import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -51,14 +53,13 @@ import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
-import gov.vha.isaac.rest.api.data.wrappers.RestUUID;
+import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionBase;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersionBaseCreate;
-import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -83,7 +84,6 @@ public class AssociationWriteAPIs
 	 * @return the UUID identifying the created concept which defines the association
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationComponent + RestPaths.createPathComponent)
@@ -114,19 +114,6 @@ public class AssociationWriteAPIs
 				associationCreationData.associationName, associationCreationData.associationName, associationCreationData.description, columns,
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_SEMEME.getConceptSequence(), null, null, RequestInfo.get().getEditCoordinate());
 		
-		Get.workExecutors().getExecutor().execute(() ->
-		{
-			try
-			{
-				//TODO see if I still need to manually do this, I thought I fixed this.
-				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0}, true);
-			}
-			catch (Exception e)
-			{
-				log.error("Unexpected error enabling the index on newly created mapping set!", e);
-			}
-		});
-		
 		//Then, annotate the concept created above as a member of the MappingSet dynamic sememe, and add the inverse name, if present.
 		if (!StringUtils.isBlank(associationCreationData.associationInverseName))
 		{
@@ -146,12 +133,29 @@ public class AssociationWriteAPIs
 		
 		try
 		{
-			Get.commitService().commit("Committing create of association type" + rdud.getDynamicSememeName()).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of association type" + rdud.getDynamicSememeName()).get();
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
+			}
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			throw new RuntimeException("Unexpected", e);
 		}
+		
+		Get.workExecutors().getExecutor().execute(() ->
+		{
+			try
+			{
+				//TODO see if I still need to manually do this, I thought I fixed this.
+				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0}, true);
+			}
+			catch (Exception e)
+			{
+				log.error("Unexpected error enabling the index on newly created mapping set!", e);
+			}
+		});
 		return new RestWriteResponse(
 				EditTokens.renew(RequestInfo.get().getEditToken()),
 				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
@@ -167,7 +171,6 @@ public class AssociationWriteAPIs
 	 * @return the sememe UUID identifying the sememe which stores the created association item
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.createPathComponent)
@@ -217,21 +220,29 @@ public class AssociationWriteAPIs
 		}
 		
 		sb.setPrimordialUuid(associationItemUUID);
+		
+		if (associationItemCreationData.active != null && !associationItemCreationData.active)
+		{
+			sb.setState(State.INACTIVE);
+		}
+		
 		@SuppressWarnings("rawtypes")
 		SememeChronology built = sb.build(RequestInfo.get().getEditCoordinate(),ChangeCheckerMode.ACTIVE).getNoThrow();
 
 		try
 		{
-			Get.commitService().commit("Committing creation of association item " + built.getPrimordialUuid() + " for association type " + associationID.get()).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing creation of association item " + built.getPrimordialUuid() 
+				+ " for association type " + associationID.get()).get();
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
+			}
 		}
 		catch (Exception e)
 		{
 			throw new RestException("Failed committing new association item sememe");
 		}
-		
-		return new RestWriteResponse(
-				EditTokens.renew(RequestInfo.get().getEditToken()),
-				built.getPrimordialUuid());
+		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
 	}
 	
 	/**
@@ -240,31 +251,27 @@ public class AssociationWriteAPIs
 	 * 
 	 * @param associationItemUpdateData - object containing data used to update existing association item
 	 * @param id - id of association item sememe to update
-	 * @param state - The state to mapping item into.  Valid values are (case insensitive) "INACTIVE"/"I" or "ACTIVE"/"A"
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return the sememe UUID identifying the sememe which was updated
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@PUT
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public RestWriteResponse updateAssociationItem(
 		RestAssociationItemVersionBase associationItemUpdateData,
 		@PathParam(RequestParameters.id) String id,
-		@QueryParam(RequestParameters.state) String state,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.state,
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		RestStateType stateToUse = RestStateType.valueOf(state);
-
+		State stateToUse = (associationItemUpdateData.active == null || associationItemUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> associationItemSememeChronology = SememeAPIs.findSememeChronology(id);
 		
 		Optional<UUID> target = associationItemUpdateData.targetNid == null ? Optional.empty() : 
@@ -278,7 +285,7 @@ public class AssociationWriteAPIs
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)associationItemSememeChronology).createMutableVersion(
 				MutableDynamicSememe.class,
-				stateToUse.toState(),
+				stateToUse,
 				RequestInfo.get().getEditCoordinate());
 		
 		DynamicSememeData[] data = new DynamicSememeData[1];
@@ -289,11 +296,17 @@ public class AssociationWriteAPIs
 
 		try
 		{
-			Get.commitService().commit("Committing update of association item " + associationItemSememeChronology.getPrimordialUuid()).get();
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of association item " 
+					+ associationItemSememeChronology.getPrimordialUuid()).get();
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
+			{
+				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
+			}
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException();
+			log.error("Unexpected", e);
+			throw new RuntimeException("error committing", e);
 		}
 		return new RestWriteResponse(
 				EditTokens.renew(RequestInfo.get().getEditToken()),

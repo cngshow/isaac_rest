@@ -46,13 +46,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestWorkflowProcessAdvancementData {
 
 	/**
-	 * The process id of the process to advance
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	UUID processId;
-
-	/**
 	 * The advancement action requested
 	 */
 	@XmlElement
@@ -75,24 +68,14 @@ public class RestWorkflowProcessAdvancementData {
 	}
 
 	/**
-	 * @param processId - workflow process UUID
 	 * @param userId - workflow user id
 	 * @param actionRequested - action requested
 	 * @param comment - comment associated with the workflow advancement
 	 */
-	public RestWorkflowProcessAdvancementData(UUID processId, String actionRequested, String comment) {
+	public RestWorkflowProcessAdvancementData(String actionRequested, String comment) {
 		super();
-		this.processId = processId;
 		this.actionRequested = actionRequested;
 		this.comment = comment;
-	}
-
-	/**
-	 * @return the processId
-	 */
-	@XmlTransient
-	public UUID getProcessId() {
-		return processId;
 	}
 
 	/**
@@ -116,7 +99,7 @@ public class RestWorkflowProcessAdvancementData {
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowProcessAdvancementData [processId=" + processId + ", action=" + actionRequested + ", comment=" + comment
+		return "RestWorkflowProcessAdvancementData [action=" + actionRequested + ", comment=" + comment
 				+ "]";
 	}
 }

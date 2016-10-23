@@ -37,7 +37,7 @@ public class RestSupportedIdType extends Enumeration
 	
 	public RestSupportedIdType(IdType idType)
 	{
-		super(idType.getDisplayName(), idType.ordinal());
+		super(idType.name(), idType.getDisplayName(), idType.ordinal());
 	}
 	
 	public static RestSupportedIdType[] getAll()
