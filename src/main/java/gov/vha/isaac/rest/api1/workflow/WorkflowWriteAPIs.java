@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.api1.workflow;
 
 import java.util.UUID;
-
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -27,10 +26,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
@@ -45,6 +42,7 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.tokens.EditToken;
 import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
@@ -60,6 +58,10 @@ public class WorkflowWriteAPIs {
 	 * Creates a new workflow process instance which will be processed via the
 	 * rules governing the definition specified in the
 	 * RestWorkflowProcessBaseCreate field.
+	 * 
+ 	 * Returns a renewed RestEditToken with the new process designated as the active process.
+	 * 
+	 * If attempting to create a new process while another process is active, an exception is thrown.
 	 * 
 	 * @param workflowProcessCreationData
 	 *            Structure containing data required when creating a new
@@ -85,18 +87,26 @@ public class WorkflowWriteAPIs {
 		WorkflowProcessInitializerConcluder provider = RequestInfo.get().getWorkflow()
 				.getWorkflowProcessInitializerConcluder();
 		try {
+			EditToken existingToken = RequestInfo.get().getEditToken();
+			
+			if (existingToken.getActiveWorkflowProcessId() == null) {
 			UUID newProcessId = provider.createWorkflowProcess(
 					workflowProcessCreationData.getDefinitionId(),
 					Get.identifierService().getUuidPrimordialFromConceptSequence(
 							RequestInfo.get().getEditToken().getAuthorSequence()).get(),
 					workflowProcessCreationData.getName(),
 					workflowProcessCreationData.getDescription());
-			
-			return new RestWriteResponse(
-					EditTokens.renewWithSpecifiedProcessId(RequestInfo.get().getEditToken(), newProcessId),
-					newProcessId,
-					null,
-					null);
+				
+				EditToken updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, newProcessId);
+				
+				return new RestWriteResponse(
+						updatedToken,
+						newProcessId,
+						null,
+						null);
+			} else {
+				throw new RestException("Cannot create a new process whilst another process is active. Suspend or release the active process and try again.");
+			}
 		} catch (Exception e) {
 			String msg = "Failed creating new workflow process from "
 					+ (workflowProcessCreationData != null ? workflowProcessCreationData : "NULL");
@@ -108,10 +118,12 @@ public class WorkflowWriteAPIs {
 	/**
 	 * Advances an existing workflow process instance with the specified action.
 	 * 
-	 * Returns a renewed RestEditToken.
+ 	 * Returns a renewed RestEditToken without an active process.
+	 * 
+	 * If attempting to advance a process when no process is active, an exception is thrown.
 	 * 
 	 * @param processAdvancementData
-	 *            RestWorkflowProcessAdvancementData Data containing workflow
+	 *            RestWorkflowProcessACurrent process state isn't correctly reflected in the process detailsdvancementData Data containing workflow
 	 *            advancement information includes processId, action selected,
 	 *            and user comment
 	 * @param editToken
@@ -132,13 +144,22 @@ public class WorkflowWriteAPIs {
 
 		// TODO test advanceWorkflowProcess()
 		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
+		
 		try {
-			provider.advanceWorkflow(RequestInfo.get().getEditToken().getActiveWorkflowProcessId(), Get.identifierService()
-					.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get(),
-					processAdvancementData.getActionRequested(), processAdvancementData.getComment(),
-					RequestInfo.get().getEditCoordinate());
+			EditToken existingToken = RequestInfo.get().getEditToken();
+			
+			if (existingToken.getActiveWorkflowProcessId() != null) {
+				provider.advanceWorkflow(existingToken.getActiveWorkflowProcessId(), Get.identifierService()
+						.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get(),
+						processAdvancementData.getActionRequested(), processAdvancementData.getComment(),
+						RequestInfo.get().getEditCoordinate());
+	
+				EditToken updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, null);
 
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
+				return new RestWriteResponse(updatedToken);
+			} else {
+				throw new RestException("Cannot advance a process unless a process is active. Acquire the process active and try again.");
+			}
 		} catch (Exception e) {
 			String msg = "Failed advancing workflow process with "
 					+ (processAdvancementData != null ? processAdvancementData : "NULL");
@@ -153,7 +174,10 @@ public class WorkflowWriteAPIs {
 	 * ownerId is the current userId - Releasing a lock: In this case, the
 	 * ownerId set is BPMNInfo.UNOWNED_PROCESS
 	 * 
-	 * Returns a renewed RestEditToken.
+ 	 * Returns a renewed RestEditToken with the requested process designated as the active process.
+	 * 
+	 * If attempting to acquire a process when the active process is already set, an exception is thrown.
+	 * If attempting to release a process no process is designated as the active process, an exception is thrown.
 	 * 
 	 * @param aquireLock
 	 *            RestBoolean Data Indicates request type (release or acquire).
@@ -167,8 +191,6 @@ public class WorkflowWriteAPIs {
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.process + "{" + RequestParameters.processId + "}/" + RestPaths.lock)
-	//TODO these API changes aren't proper, acquireLockString is is being submitted as a DTO, instead of a query param.
-	//I also have no understanding of how processId is magically getting here.
 	public RestWriteResponse setProcessLock(
 			@PathParam(RequestParameters.processId) String processIdString, 
 			@QueryParam(RequestParameters.editToken) String editToken,
@@ -185,32 +207,44 @@ public class WorkflowWriteAPIs {
 
 		// TODO test acquireWorkflowLock()
 		try {
+			// Verify that active process is in the process state to acquire or release
+			EditToken existingToken = RequestInfo.get().getEditToken();
+			
+			if (!acquireLock && existingToken.getActiveWorkflowProcessId() == null) {
+				throw new RestException("No need to release a process if no process is currently active.");
+			} else if (acquireLock && existingToken.getActiveWorkflowProcessId() != null) {
+				throw new RestException("Cannot acquire a process if another process is already active.  Suspend or release the active process and try again.");
+			}
+			
+			// verify that process attempted to be acquired is not currently locked 
 			ProcessDetail processDetails = RequestInfo.get().getWorkflow().getWorkflowAccessor()
 					.getProcessDetails(processId);
 			
-			// verify that lock is in proper state per request
 			if (acquireLock && !processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
 				throw new RestException("Cannot acquire a process that is already locked");
 			} else if (!acquireLock && processDetails.getOwnerId().equals(BPMNInfo.UNOWNED_PROCESS)) {
-				throw new RestException("Cannot release a process that is not currently locked");
+				throw new RestException("Current process state isn't correctly reflected in the process details");
 			}
 
 			// Set owner based on acquire or release request
 			UUID newLockOwner;
+			EditToken updatedToken;
 			if (acquireLock) {
 				newLockOwner = Get.identifierService()
 						.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence())
 						.get();
+				updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, processId);
 			} else {
 				newLockOwner = BPMNInfo.UNOWNED_PROCESS;
+				updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, null);
 			}
 
 			// Perform acquire or release
 			WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
 
-			provider.setProcessOwner(RequestInfo.get().getEditToken().getActiveWorkflowProcessId(), newLockOwner);
+			provider.setProcessOwner(processId, newLockOwner);
 			
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
+			return new RestWriteResponse(updatedToken);
 		} catch (Exception e) {
 			String actionRequested;
 			if (acquireLock) {
@@ -233,6 +267,11 @@ public class WorkflowWriteAPIs {
 	 * prevents future edits to be performed upon the component associated with
 	 * the same process.
 	 * 
+	 * The current active process remains active.
+	 * 
+	 * If attempting to remove a component from a process when no process is active, an exception is thrown.
+
+	 * 
 	 * @param component
 	 *            componentNid Integer Nid of component to be removed
 	 * @param editToken
@@ -240,8 +279,6 @@ public class WorkflowWriteAPIs {
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return RestWriteResponse containing renewed RestEditToken
 	 */
-	//TODO these API changes aren't proper, componentNidString is badly named, and is being submitted as a DTO, instead of a query param or path param.
-	//It should really be a path param.
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.removeComponent + "{" + RequestParameters.nid + "}")
@@ -253,19 +290,24 @@ public class WorkflowWriteAPIs {
 				RequestInfo.get().getParameters(),
 				RequestParameters.nid,
 				RequestParameters.editToken);
-
 		int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.nid, nidString);
-		
-		// TODO test removeComponentFromWorkflow()
-		WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
+
 		try {
-			UUID processId = RequestInfo.get().getActiveWorkflowProcessId();
-			EditCoordinate ec = RequestInfo.get().getEditCoordinate();
-			provider.removeComponentFromWorkflow(processId,
-					nid,
-					ec);
+			EditToken existingToken = RequestInfo.get().getEditToken();
 			
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, nid, null);
+			if (existingToken.getActiveWorkflowProcessId() != null) {
+				// TODO test removeComponentFromWorkflow()
+				WorkflowUpdater provider = RequestInfo.get().getWorkflow().getWorkflowUpdater();
+				UUID processId = RequestInfo.get().getActiveWorkflowProcessId();
+				EditCoordinate ec = RequestInfo.get().getEditCoordinate();
+				provider.removeComponentFromWorkflow(processId,
+						nid,
+						ec);
+				
+				return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, nid, null);
+			} else {
+				throw new RestException("Cannot remove a component from a process unless the process is active. Acquire the process active and try again.");
+			}
 		} catch (Exception e) {
 			log.error("Unexpected error", e);
 			throw new RestException("Failed removing component " + nid + ". Caught " + e.getClass().getName()
