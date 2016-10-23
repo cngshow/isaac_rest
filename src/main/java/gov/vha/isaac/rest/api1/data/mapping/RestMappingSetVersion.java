@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -124,7 +126,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * @param sememe
 	 * @param stampCoord
 	 */
-	public RestMappingSetVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments)
+	public RestMappingSetVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments, UUID processId)
 	{
 		Optional<ConceptVersion<?>> mappingConcept = MappingSetDAO.getMappingConcept(sememe, stampCoord); 
 		
@@ -244,7 +246,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			{
 				try
 				{
-					comments = Util.readComments(sememe.getNid() + "");
+					comments = Util.readComments(sememe.getNid() + "", processId);
 				}
 				catch (RestException e)
 				{

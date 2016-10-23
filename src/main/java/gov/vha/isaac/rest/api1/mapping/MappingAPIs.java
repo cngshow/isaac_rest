@@ -20,15 +20,17 @@ package gov.vha.isaac.rest.api1.mapping;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
@@ -43,7 +45,9 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -56,6 +60,11 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class MappingAPIs
 {
 	/**
+	 * 
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @param expand - A comma separated list of fields to expand.  Supports 'comments'.  When comments is passed, the latest comment(s) attached to each 
@@ -70,24 +79,32 @@ public class MappingAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetsComponent)
 	public RestMappingSetVersion[] getMappingSets(
-		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+			@QueryParam(RequestParameters.processId) String processId,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		ArrayList<RestMappingSetVersion> results = new ArrayList<>();
 		
 		Get.sememeService().getSememesFromAssemblage(IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).forEach(sememeC -> 
 		{
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-			
-			if (latest.isPresent())
+			@SuppressWarnings("rawtypes")
+			Optional<DynamicSememe> sememeVersion = Optional.empty();
+			try {
+				sememeVersion = WorkflowUtils.getStampedVersion(DynamicSememe.class, processIdOptional, sememeC.getNid());
+			} catch (Exception e) {
+				// TODO Joel ignore exception from getStampedVersion()?
+			}
+			if (sememeVersion.isPresent())
 			{
 				//TODO handle contradictions
-				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments)));
+				results.add(new RestMappingSetVersion(sememeVersion.get(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), processIdOptional.isPresent() ? processIdOptional.get() : null));
 			}
 		});
 		return results.toArray(new RestMappingSetVersion[results.size()]);
@@ -97,6 +114,10 @@ public class MappingAPIs
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param expand - A comma separated list of fields to expand.  Supports 'comments'.  When comments is passed, the latest comment(s) attached to each 
 	 * mapSet are included.
 	 * @return the latest version of the specified mapping set.
@@ -111,13 +132,17 @@ public class MappingAPIs
 	public RestMappingSetVersion getMappingSet(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.coordToken) String coordToken,
+		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
 
 		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(ConceptAPIs.findConceptChronology(id).getNid(), 
 			IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
@@ -126,13 +151,18 @@ public class MappingAPIs
 		{
 			throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
 		}
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememe.get()).getLatestVersion(DynamicSememe.class, 
-				RequestInfo.get().getStampCoordinate());
-		if (latest.isPresent())
+		
+		@SuppressWarnings("rawtypes")
+		Optional<DynamicSememe> sememeVersion = Optional.empty();
+		try {
+			sememeVersion = WorkflowUtils.getStampedVersion(DynamicSememe.class, processIdOptional, sememe.get().getNid());
+		} catch (Exception e) {
+			throw new RestException(e);
+		}
+		if (sememeVersion.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments));
+			return new RestMappingSetVersion(sememeVersion.get(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), processIdOptional.isPresent() ? processIdOptional.get() : null);
 		} 
 		else 
 		{
@@ -146,6 +176,10 @@ public class MappingAPIs
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
 	 * will be included for all referenced concepts which align with your current coordinates.  When comments is passed, all comments attached to each mapItem are 
 	 * included.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @return the mapping items versions object.  
@@ -158,6 +192,7 @@ public class MappingAPIs
 	public RestMappingItemVersion[] getMappingItems(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.expand) String expand,
+		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		//TODO this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
@@ -166,8 +201,11 @@ public class MappingAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		
 		int sememeConceptSequence = Util.convertToConceptSequence(id);
@@ -199,16 +237,21 @@ public class MappingAPIs
 		{
 			Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
 			{
-				@SuppressWarnings({ "unchecked", "rawtypes" })
-				Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-				
-				if (latest.isPresent())
+				@SuppressWarnings("rawtypes")
+				Optional<DynamicSememe> sememeVersion = Optional.empty();
+				try {
+					sememeVersion = WorkflowUtils.getStampedVersion(DynamicSememe.class, processIdOptional, sememeC.getNid());
+				} catch (Exception e) {
+					// TODO Joel ignore exception thrown from getStampedVersion()?
+				}			
+				if (sememeVersion.isPresent())
 				{
 					//TODO handle contradictions
-					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+					results.add(new RestMappingItemVersion((sememeVersion.get()), RequestInfo.get().getStampCoordinate(), 
 						targetPos.get(), qualifierPos.get(),
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-						RequestInfo.get().shouldExpand(ExpandUtil.comments)));
+						RequestInfo.get().shouldExpand(ExpandUtil.comments),
+						processIdOptional.isPresent() ? processIdOptional.get() : null));
 				}
 				if (results.size() >= 1000)
 				{

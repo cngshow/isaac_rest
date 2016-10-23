@@ -302,8 +302,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.ssoToken) String coordToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editToken) String editToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editModule) String editModule, // Applied in RestContainerRequestFilter
-			@QueryParam(RequestParameters.editPath) String editPath, // Applied in RestContainerRequestFilter
-			@QueryParam(RequestParameters.processId) String processId // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
 			) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(

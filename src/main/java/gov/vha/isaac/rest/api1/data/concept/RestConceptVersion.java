@@ -24,8 +24,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -33,8 +35,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -50,6 +52,7 @@ import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -138,13 +141,21 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	}
 	
 	@SuppressWarnings({ "rawtypes" }) 
-	public RestConceptVersion(ConceptVersion cv, boolean includeChronology) {
-		this(cv, includeChronology, false, false, false, false, false, false);
+	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, UUID processId) {
+		this(cv, includeChronology, false, false, false, false, false, false, processId);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
-	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, boolean includeParents, boolean countParents, 
-			boolean includeChildren, boolean countChildren, boolean stated, boolean includeSememeMembership)
+	public RestConceptVersion(
+			ConceptVersion cv, 
+			boolean includeChronology,
+			boolean includeParents,
+			boolean countParents, 
+			boolean includeChildren,
+			boolean countChildren,
+			boolean stated,
+			boolean includeSememeMembership,
+			final UUID processId)
 	{
 		conVersion = new RestStampedVersion(cv);
 		
@@ -155,11 +166,17 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 
 		if (sememe.isPresent())
 		{
-			Optional<LatestVersion<LogicGraphSememe>> sv = ((SememeChronology)sememe.get()).getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
-			if (sv.isPresent())
+			Optional<LogicGraphSememe> sememeVersion = Optional.empty();
+			try {
+				sememeVersion = WorkflowUtils.getStampedVersion(LogicGraphSememe.class, processId, sememe.get().getNid());
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+
+			if (sememeVersion.isPresent())
 			{
 				//TODO handle contradictions
-				isConceptDefined = Frills.isConceptFullyDefined(sv.get().value());
+				isConceptDefined = Frills.isConceptFullyDefined(sememeVersion.get());
 			}
 		}
 		
@@ -173,10 +190,19 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 					if (!sememeMembership.contains(sc.getAssemblageSequence()) 
 						&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
 						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
-						&& sc.getSememeType() != SememeType.DESCRIPTION 
-						&& sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate()).isPresent()) 
-					{
-						sememeMembership.add(sc.getAssemblageSequence());
+						&& sc.getSememeType() != SememeType.DESCRIPTION) {
+
+						Optional<SememeVersionImpl> sememeVersion = Optional.empty();
+						try {
+							sememeVersion = WorkflowUtils.getStampedVersion(SememeVersionImpl.class, processId, sc.getNid());
+						} catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+
+						if (sememeVersion.isPresent()) 
+						{
+							sememeMembership.add(sc.getAssemblageSequence());
+						}
 					}
 				}
 			};
@@ -194,7 +220,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			expandables = new Expandables();
 			if (includeChronology)
 			{
-				conChronology = new RestConceptChronology(cv.getChronology(), false, false);
+				conChronology = new RestConceptChronology(cv.getChronology(), false, false, processId);
 			}
 			else
 			{
@@ -210,23 +236,27 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			{
 				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
 			}
-			
-			if (includeParents)
-			{
-				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, includeSememeMembership, new ConceptSequenceSet());
-			}
-			else if (countParents)
-			{
-				TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree);
-			}
-			
-			if (includeChildren)
-			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, new ConceptSequenceSet());
-			}
-			else if (countChildren)
-			{
-				TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree);
+
+			try {
+				if (includeParents)
+				{
+					TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
+				}
+				else if (countParents)
+				{
+					TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree, processId);
+				}
+
+				if (includeChildren)
+				{
+					TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
+				}
+				else if (countChildren)
+				{
+					TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree, processId);
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
 			
 			if (includeParents || includeChildren)

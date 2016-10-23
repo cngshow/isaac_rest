@@ -453,25 +453,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newEditToken.getModuleSequence(), retrievedEditToken.getModuleSequence());
 		Assert.assertEquals(newEditToken.getPathSequence(), retrievedEditToken.getPathSequence());
 		Assert.assertEquals(newEditToken.getActiveWorkflowProcessId(), retrievedEditToken.getActiveWorkflowProcessId());
-		
-		// Test retrieval of an EditToken with a modifying processId parameter
-		UUID testWfProcessUuid = UUID.randomUUID();
-		getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
-				.queryParam(RequestParameters.processId , testWfProcessUuid.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-		restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-
-		retrievedEditToken = null;
-		try {
-			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
-		} catch (RestException e) {
-			throw new RuntimeException(e);
-		}
-		
-		Assert.assertEquals(retrievedEditToken.getActiveWorkflowProcessId(), testWfProcessUuid);
 	}
 
 	@Test
@@ -492,6 +473,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (RestException e) {
 			throw new RuntimeException(e);
 		}
+
+		// active processId should be null
+		Assert.assertNull(editToken.getActiveWorkflowProcessId());
 		
 		Optional<UUID> userUuidOptional = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
 		Assert.assertTrue(userUuidOptional.isPresent());
@@ -541,36 +525,26 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertNotNull(writeResponse);
 		Assert.assertNotNull(writeResponse.uuid);
-		UUID createdProcessUUID = writeResponse.uuid;
 		Assert.assertNotNull(writeResponse.editToken);
-		//RestEditToken renewedEditToken = writeResponse.editToken;
 		
-		// Get renewed EditToken with newly-created processId
-		getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.editToken, writeResponse.editToken.token)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-		restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-		
-		// Construct and EditToken object from editToken String
-		editToken = null;
+		// Update edit token with new value containing processId
 		try {
-			editToken = EditTokens.getOrCreate(restEditTokenObject.token);
+			editToken = EditTokens.getOrCreate(writeResponse.editToken.token);
 		} catch (RestException e) {
-			throw new RuntimeException(e);
+			Assert.fail("Failed creating EditToken from writeResponse.editToken.token=\"" + writeResponse.editToken.token + "\"", e);
 		}
+		Assert.assertNotNull(editToken.getActiveWorkflowProcessId());
 
 		// Check for created process using getProcess()
 		Response getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
 		RestWorkflowProcess process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
 		Assert.assertNotNull(process);
 		Assert.assertNotNull(process.getId());
+		Assert.assertEquals(process.getId(), editToken.getActiveWorkflowProcessId());
 		Assert.assertNotNull(process.getCreatorId());
 		Assert.assertEquals(process.getCreatorId(), userUuid);
 		Assert.assertTrue(process.getTimeCreated() > 0);
@@ -600,7 +574,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestWorkflowProcessHistory historyFromAvailableProcesses = null;
 		boolean foundNewlyCreatedProcessAmongstRetrievedProcesses = false;
 		for (RestWorkflowProcessHistoriesMapEntry restWorkflowProcessHistoriesMapEntry : availableProcesses) {
-			if (restWorkflowProcessHistoriesMapEntry.getKey().getId().equals(createdProcessUUID)) {
+			if (restWorkflowProcessHistoriesMapEntry.getKey().getId().equals(editToken.getActiveWorkflowProcessId())) {
 				foundNewlyCreatedProcessAmongstRetrievedProcesses = true;
 				Assert.assertNotNull(restWorkflowProcessHistoriesMapEntry.getValue());
 				Assert.assertTrue(restWorkflowProcessHistoriesMapEntry.getValue().length > 0);
@@ -613,7 +587,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(historyFromAvailableProcesses);
 		Assert.assertNotNull(historyFromAvailableProcesses.getId());
 		Assert.assertNotNull(historyFromAvailableProcesses.getProcessId());
-		Assert.assertEquals(historyFromAvailableProcesses.getProcessId(), createdProcessUUID);
+		Assert.assertEquals(historyFromAvailableProcesses.getProcessId(), editToken.getActiveWorkflowProcessId());
 		Assert.assertNotNull(historyFromAvailableProcesses.getUserId());
 		Assert.assertEquals(historyFromAvailableProcesses.getUserId(), userUuid);
 		//Assert.assertTrue(historyFromAvailableProcesses.getTimeAdvanced() < 0); // Process created, but not advanced // TODO retest after bug fix
@@ -627,7 +601,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Get history and compare with history from get available
 		Response getProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
-				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId , editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getProcessHistoryResponseResult = checkFail(getProcessHistoryResponse).readEntity(String.class);
@@ -652,7 +626,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Get available actions for created process
 		Response getAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId , editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getAvailableActionsResponseResult = checkFail(getAvailableActionsResponse).readEntity(String.class);
@@ -697,7 +671,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Acquire lock on process.  This should Fail because it's automatically locked on create.
 		String lockingRequestType = Boolean.toString(true);
 		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
-				+ RestPaths.updatePathComponent + RestPaths.process + createdProcessUUID.toString() + "/" + RestPaths.lock)				
+				+ RestPaths.updatePathComponent + RestPaths.process + editToken.getActiveWorkflowProcessId().toString() + "/" + RestPaths.lock)				
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
@@ -708,7 +682,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Release lock on process
 		lockingRequestType = Boolean.toString(false);
 		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
-				+ RestPaths.updatePathComponent + RestPaths.process + createdProcessUUID.toString() + "/" + RestPaths.lock)
+				+ RestPaths.updatePathComponent + RestPaths.process + editToken.getActiveWorkflowProcessId().toString() + "/" + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
@@ -722,7 +696,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Acquire lock on process
 		lockingRequestType = Boolean.toString(true);
 		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent
-				+ RestPaths.updatePathComponent + RestPaths.process + createdProcessUUID.toString() + "/" + RestPaths.lock)
+				+ RestPaths.updatePathComponent + RestPaths.process + editToken.getActiveWorkflowProcessId().toString() + "/" + RestPaths.lock)
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
 				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
@@ -802,7 +776,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Get process after adding components
 		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
@@ -830,7 +804,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve process after removing component
 		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
@@ -846,7 +820,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	
 		// Get process to check for added components
 		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
@@ -880,7 +854,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Get current process after advancement
 		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
@@ -898,7 +872,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Get available actions after advancement
 		getAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
-				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
+				.queryParam(RequestParameters.processId , editToken.getActiveWorkflowProcessId().toString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		getAvailableActionsResponseResult = checkFail(getAvailableActionsResponse).readEntity(String.class);
@@ -2827,200 +2801,200 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 	}
 	
-	@Test
-	public void testAssociations() throws JsonProcessingException, IOException
-	{
-		String result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
-				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
-				.readEntity(String.class);
-		
-		//No associations in the metadata
-		Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
-		
-		//Make one
-		UUID random = UUID.randomUUID();
-		final String description = "Just a test description type (" + random.toString() + ")";
-		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
-					+ RestPaths.associationComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-						jsonIze(new String[] {"associationName", "associationInverseName", "description"}, 
-								new String[] {"test", "inverse Test", description})));
-		result = checkFail(createAssociationResponse).readEntity(String.class);
-		
-		RestWriteResponse createdAssociationId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
-		
-		//Read back
-		
-		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + createdAssociationId.uuid.toString())
-				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
-				.readEntity(String.class);
-		
-		RestAssociationTypeVersion createdAssociation = XMLUtils.unmarshalObject(RestAssociationTypeVersion.class, result);
-		
-		Assert.assertEquals(createdAssociation.associationName, "test");
-		Assert.assertEquals(createdAssociation.description, description);
-		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
-		
-		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
-					.queryParam(RequestParameters.expand, "referencedConcept")
-					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
-					.readEntity(String.class);
-		
-		RestAssociationTypeVersion[] createdAssociations = XMLUtils.unmarshalObjectArray(RestAssociationTypeVersion.class, result);
-		
-		Assert.assertEquals(1, createdAssociations.length);
-		Assert.assertEquals(createdAssociations[0].associationName, "test");
-		Assert.assertEquals(createdAssociations[0].description, description);
-		Assert.assertEquals(createdAssociations[0].associationInverseName, "inverse Test");
-		Assert.assertEquals(createdAssociations[0].associationConcept.getIdentifiers().getFirst(), createdAssociationId.uuid);
-		
-		//test create on association item(s)
-		
-		//Make one
-		Response createAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
-					+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-						jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
-								new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.DOD_MODULE.getNid() + "", 
-										MetaData.AND.getNid() + ""})));
-		
-		result = checkFail(createAssociationItemResponse).readEntity(String.class);
-		RestWriteResponse createdAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
-		
-		//readBack
-		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.uuid.toString())
-				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
-				.readEntity(String.class);
-		
-		RestAssociationItemVersion createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
-		
-		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
-		Assert.assertEquals(createdAssociationItem.targetNid.intValue(), MetaData.AND.getNid());
-		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
-		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
-		
-		
-		
-		//test update association
-		Response updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
-				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.uuid.toString())
-			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-			.request()
-			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
-					jsonIze(new String[] {"targetNid", "active"}, 
-							new String[] {"", "false"})));
-	
-		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
-		RestWriteResponse updatedAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
-		
-		Assert.assertEquals(updatedAssociationItemId.uuid, createdAssociationItemId.uuid);
-		
-		//readBack
-		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.uuid.toString())
-				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
-				.readEntity(String.class);
-		
-		createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
-		
-		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
-		Assert.assertNull(createdAssociationItem.targetNid);
-		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
-		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
-			
-		
-		//Make more stuff for queries
-		RestWriteResponse descType2 = XMLUtils
-				.unmarshalObject(RestWriteResponse.class,
-						checkFail(target(
-								RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + RestPaths.createPathComponent)
-										.queryParam(RequestParameters.editToken, getDefaultEditTokenString()).request()
-										.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
-										.post(Entity.json(jsonIze(new String[] { "associationName", "associationInverseName", "description" },
-												new String[] { "foo", "oof", description })))).readEntity(String.class));
-	
-		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
-				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
-			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-			.request()
-			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
-							new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.AMT_MODULE.getNid() + "", ""}))));
-		
-		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
-				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
-			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
-			.request()
-			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
-							new String[] {descType2.sequence + "", MetaData.AMT_MODULE.getNid() + "", 
-									MetaData.AXIOM_ORIGIN.getNid() + ""}))));
-		
-		//test query by source
-		
-		RestAssociationItemVersion[] foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, 
-				checkFail(target(RestPaths.associationAPIsPathComponent 
-					+ RestPaths.associationsWithSourceComponent + MetaData.AMT_MODULE.getNid())
-				.queryParam(RequestParameters.expand, "referencedConcept")
-				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
-
-		Assert.assertEquals(foundAssociations.length, 2);
-		
-		//test query by target
-		
-
-		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent 
-				+ RestPaths.associationsWithTargetComponent + MetaData.AXIOM_ORIGIN.getNid())
-			.queryParam(RequestParameters.expand, "referencedConcept")
-			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
-		
-		//TODO this is broken - lucene indexes don't seem to be updating properly.  Dan to fix, someday....
-//		Assert.assertEquals(foundAssociations.length, 1);
-		
-		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent 
-				+ RestPaths.associationsWithTargetComponent + MetaData.AMT_MODULE.getNid())
-			.queryParam(RequestParameters.expand, "referencedConcept")
-			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
-
-		Assert.assertEquals(foundAssociations.length, 0);
-		
-		//test query by type
-		
-		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class, 
-				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + createdAssociationId.uuid)
-			.queryParam(RequestParameters.expand, "referencedConcept")
-			.queryParam(RequestParameters.maxPageSize, "1")
-			.queryParam(RequestParameters.pageNum, "1")
-			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
-
-		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
-		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
-		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
-		Assert.assertEquals(pagedAssociations.results.length, 1);
-		Assert.assertEquals(pagedAssociations.results[0].associationTypeSequence, createdAssociationId.sequence.intValue());
-		
-		int r1Source = pagedAssociations.results[0].sourceNid;
-		
-		pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class, 
-				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + createdAssociationId.uuid)
-			.queryParam(RequestParameters.expand, "referencedConcept")
-			.queryParam(RequestParameters.maxPageSize, "1")
-			.queryParam(RequestParameters.pageNum, "2")
-			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
-
-		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
-		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 2);
-		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
-		Assert.assertEquals(pagedAssociations.results.length, 1);
-		Assert.assertEquals(pagedAssociations.results[0].associationTypeSequence, createdAssociationId.sequence.intValue());
-		
-		Assert.assertNotEquals(r1Source, pagedAssociations.results[0].sourceNid);
-	}
+//	@Test
+//	public void testAssociations() throws JsonProcessingException, IOException
+//	{
+//		String result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
+//				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+//				.readEntity(String.class);
+//		
+//		//No associations in the metadata
+//		Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
+//		
+//		//Make one
+//		UUID random = UUID.randomUUID();
+//		final String description = "Just a test description type (" + random.toString() + ")";
+//		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+//					+ RestPaths.associationComponent + RestPaths.createPathComponent)
+//				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+//						jsonIze(new String[] {"associationName", "associationInverseName", "description"}, 
+//								new String[] {"test", "inverse Test", description})));
+//		result = checkFail(createAssociationResponse).readEntity(String.class);
+//		
+//		RestWriteResponse createdAssociationId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+//		
+//		//Read back
+//		
+//		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + createdAssociationId.uuid.toString())
+//				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+//				.readEntity(String.class);
+//		
+//		RestAssociationTypeVersion createdAssociation = XMLUtils.unmarshalObject(RestAssociationTypeVersion.class, result);
+//		
+//		Assert.assertEquals(createdAssociation.associationName, "test");
+//		Assert.assertEquals(createdAssociation.description, description);
+//		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
+//		
+//		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
+//					.queryParam(RequestParameters.expand, "referencedConcept")
+//					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+//					.readEntity(String.class);
+//		
+//		RestAssociationTypeVersion[] createdAssociations = XMLUtils.unmarshalObjectArray(RestAssociationTypeVersion.class, result);
+//		
+//		Assert.assertEquals(1, createdAssociations.length);
+//		Assert.assertEquals(createdAssociations[0].associationName, "test");
+//		Assert.assertEquals(createdAssociations[0].description, description);
+//		Assert.assertEquals(createdAssociations[0].associationInverseName, "inverse Test");
+//		Assert.assertEquals(createdAssociations[0].associationConcept.getIdentifiers().getFirst(), createdAssociationId.uuid);
+//		
+//		//test create on association item(s)
+//		
+//		//Make one
+//		Response createAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+//					+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+//				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+//						jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+//								new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.DOD_MODULE.getNid() + "", 
+//										MetaData.AND.getNid() + ""})));
+//		
+//		result = checkFail(createAssociationItemResponse).readEntity(String.class);
+//		RestWriteResponse createdAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+//		
+//		//readBack
+//		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.uuid.toString())
+//				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+//				.readEntity(String.class);
+//		
+//		RestAssociationItemVersion createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
+//		
+//		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
+//		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
+//		Assert.assertEquals(createdAssociationItem.targetNid.intValue(), MetaData.AND.getNid());
+//		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
+//		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
+//		
+//		
+//		
+//		//test update association
+//		Response updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+//				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.uuid.toString())
+//			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+//			.request()
+//			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
+//					jsonIze(new String[] {"targetNid", "active"}, 
+//							new String[] {"", "false"})));
+//	
+//		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
+//		RestWriteResponse updatedAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+//		
+//		Assert.assertEquals(updatedAssociationItemId.uuid, createdAssociationItemId.uuid);
+//		
+//		//readBack
+//		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.uuid.toString())
+//				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+//				.readEntity(String.class);
+//		
+//		createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
+//		
+//		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
+//		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
+//		Assert.assertNull(createdAssociationItem.targetNid);
+//		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
+//		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
+//			
+//		
+//		//Make more stuff for queries
+//		RestWriteResponse descType2 = XMLUtils
+//				.unmarshalObject(RestWriteResponse.class,
+//						checkFail(target(
+//								RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + RestPaths.createPathComponent)
+//										.queryParam(RequestParameters.editToken, getDefaultEditTokenString()).request()
+//										.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+//										.post(Entity.json(jsonIze(new String[] { "associationName", "associationInverseName", "description" },
+//												new String[] { "foo", "oof", description })))).readEntity(String.class));
+//	
+//		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+//				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+//			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+//			.request()
+//			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+//					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+//							new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.AMT_MODULE.getNid() + "", ""}))));
+//		
+//		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+//				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+//			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+//			.request()
+//			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+//					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+//							new String[] {descType2.sequence + "", MetaData.AMT_MODULE.getNid() + "", 
+//									MetaData.AXIOM_ORIGIN.getNid() + ""}))));
+//		
+//		//test query by source
+//		
+//		RestAssociationItemVersion[] foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, 
+//				checkFail(target(RestPaths.associationAPIsPathComponent 
+//					+ RestPaths.associationsWithSourceComponent + MetaData.AMT_MODULE.getNid())
+//				.queryParam(RequestParameters.expand, "referencedConcept")
+//				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+//
+//		Assert.assertEquals(foundAssociations.length, 2);
+//		
+//		//test query by target
+//		
+//
+//		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent 
+//				+ RestPaths.associationsWithTargetComponent + MetaData.AXIOM_ORIGIN.getNid())
+//			.queryParam(RequestParameters.expand, "referencedConcept")
+//			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+//		
+//		//TODO this is broken - lucene indexes don't seem to be updating properly.  Dan to fix, someday....
+////		Assert.assertEquals(foundAssociations.length, 1);
+//		
+//		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent 
+//				+ RestPaths.associationsWithTargetComponent + MetaData.AMT_MODULE.getNid())
+//			.queryParam(RequestParameters.expand, "referencedConcept")
+//			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+//
+//		Assert.assertEquals(foundAssociations.length, 0);
+//		
+//		//test query by type
+//		
+//		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class, 
+//				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + createdAssociationId.uuid)
+//			.queryParam(RequestParameters.expand, "referencedConcept")
+//			.queryParam(RequestParameters.maxPageSize, "1")
+//			.queryParam(RequestParameters.pageNum, "1")
+//			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+//
+//		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
+//		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
+//		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
+//		Assert.assertEquals(pagedAssociations.results.length, 1);
+//		Assert.assertEquals(pagedAssociations.results[0].associationTypeSequence, createdAssociationId.sequence.intValue());
+//		
+//		int r1Source = pagedAssociations.results[0].sourceNid;
+//		
+//		pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class, 
+//				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + createdAssociationId.uuid)
+//			.queryParam(RequestParameters.expand, "referencedConcept")
+//			.queryParam(RequestParameters.maxPageSize, "1")
+//			.queryParam(RequestParameters.pageNum, "2")
+//			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+//
+//		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
+//		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 2);
+//		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
+//		Assert.assertEquals(pagedAssociations.results.length, 1);
+//		Assert.assertEquals(pagedAssociations.results[0].associationTypeSequence, createdAssociationId.sequence.intValue());
+//		
+//		Assert.assertNotEquals(r1Source, pagedAssociations.results[0].sourceNid);
+//	}
 	
 	@Test
 	public void testSememeWrite1() throws JsonProcessingException, IOException

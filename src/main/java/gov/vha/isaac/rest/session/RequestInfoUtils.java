@@ -56,6 +56,13 @@ public class RequestInfoUtils {
 			throw new RestException(parameterName, str, "invalid UUID " + parameterName + " parameter value: " + str);
 		}
 	}
+	public static Optional<UUID> safeParseUuidParameter(String str) throws RestException {
+		try {
+			return Optional.of(UUID.fromString(str));
+		} catch (Exception e) {
+			return Optional.empty();
+		}
+	}
 	
 	public static int parseIntegerParameter(String parameterName, String str) throws RestException {
 		try {

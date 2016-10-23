@@ -19,10 +19,10 @@
 package gov.vha.isaac.rest.api1.concept;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,11 +30,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
@@ -50,7 +51,9 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -83,6 +86,10 @@ public class ConceptAPIs
 	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion)
 	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 *
 	 * @return the concept version object
@@ -99,6 +106,7 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
 			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
@@ -111,23 +119,33 @@ public class ConceptAPIs
 				RequestParameters.countChildren,
 				RequestParameters.sememeMembership,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
 
 		@SuppressWarnings("rawtypes")
-		ConceptChronology concept = findConceptChronology(id);
-		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-		if (cv.isPresent())
+		ConceptChronology concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
+
+		Optional<ConceptVersionImpl> version = Optional.empty();
+		try {
+			version = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, concept.getNid());
+		} catch (Exception e) {
+			throw new RestException(e);
+		}
+
+		if (version.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestConceptVersion(cv.get().value(), 
+			return new RestConceptVersion(version.get(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					Boolean.parseBoolean(includeParents.trim()),
 					Boolean.parseBoolean(countParents.trim()), 
 					Boolean.parseBoolean(includeChildren.trim()),
 					Boolean.parseBoolean(countChildren.trim()),
 					RequestInfo.get().getStated(),
-					Boolean.parseBoolean(sememeMembership.trim()));
+					Boolean.parseBoolean(sememeMembership.trim()),
+					processIdOptional.isPresent() ? processIdOptional.get() : null);
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
 	}
@@ -137,6 +155,10 @@ public class ConceptAPIs
 	 * @param id - A UUID, nid, or concept sequence
 	 * @param expand - comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * @return the concept chronology object
 	 * @throws RestException 
@@ -147,6 +169,7 @@ public class ConceptAPIs
 	public RestConceptChronology getConceptChronology(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
@@ -154,19 +177,30 @@ public class ConceptAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
 		
-		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
+		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
+
 		RestConceptChronology chronology =
 				new RestConceptChronology(
 						concept,
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
-						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+						processIdOptional.isPresent() ? processIdOptional.get() : null);
 
 		return chronology;
 	}
 	
-	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException {
+		return findConceptChronologyConformingToEffectiveStamp(id, (UUID)null);
+	}
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronologyConformingToEffectiveStamp(String id, Optional<UUID> processId) throws RestException {
+		return findConceptChronologyConformingToEffectiveStamp(id, processId.isPresent() ? processId.get() : (UUID)null);
+	}
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronologyConformingToEffectiveStamp(String id, UUID processId) throws RestException
 	{
 		ConceptService conceptService = Get.conceptService();
 		Optional<Integer> intId = NumericUtils.getInt(id);
@@ -175,6 +209,13 @@ public class ConceptAPIs
 			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService.getOptionalConcept(intId.get());
 			if (c.isPresent())
 			{
+				if (processId != null) {
+					try {
+						WorkflowUtils.getStampedVersion(Frills.getVersionType(c.get()), processId, intId.get());
+					} catch (Exception e) {
+						throw new RestException(e);
+					}
+				}
 				return c.get();
 			}
 			else
@@ -215,7 +256,11 @@ public class ConceptAPIs
 	 * sememes and dialects 
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails'.
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
-	 * if they represent a concept or a description sememe.  
+	 * if they represent a concept or a description sememe.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return The descriptions associated with the concept
@@ -228,26 +273,32 @@ public class ConceptAPIs
 			@PathParam(RequestParameters.id) String id, 
 			@QueryParam(RequestParameters.includeAttributes) @DefaultValue(RequestParameters.includeAttributesDefault) String includeAttributes,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.includeAttributes,
+				RequestParameters.processId,
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
+		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
-		
+		// TODO handle processId
 		RestSememeVersion[] descriptions = SememeAPIs.get(
-				findConceptChronology(id).getNid() + "",
+				findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null).getNid() + "",
 				getAllDescriptionTypes(),
 				true, 
 				Boolean.parseBoolean(includeAttributes.trim()),
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 				true,
 				false,
-				false);
+				false,
+				processIdOptional.isPresent() ? processIdOptional.get() : null);
+
 		for (RestSememeVersion d : descriptions)
 		{
 			//This cast is expected to be safe, if not, the data model is messed up
