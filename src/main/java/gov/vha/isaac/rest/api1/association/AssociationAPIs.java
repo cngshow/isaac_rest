@@ -97,7 +97,7 @@ public class AssociationAPIs
 		
 		ArrayList<RestAssociationTypeVersion> results = new ArrayList<>();
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 		
 		Set<Integer> associationConcepts = AssociationUtilities.getAssociationConceptSequences();
 		
@@ -171,7 +171,7 @@ public class AssociationAPIs
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		int sequence = Util.convertToConceptSequence(id);
 		int nid = Get.identifierService().getConceptNid(sequence);
@@ -227,7 +227,7 @@ public class AssociationAPIs
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		ArrayList<RestAssociationItemVersion> results;
 		try
@@ -309,7 +309,7 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		List<AssociationInstance> results = AssociationUtilities.getSourceAssociations(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		RestAssociationItemVersion[] finalResult = new RestAssociationItemVersion[results.size()];
@@ -352,7 +352,7 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		//TODO lookup by target performance is not good at the moment, not sure why
 		List<AssociationInstance> results = AssociationUtilities.getTargetAssociations(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
@@ -397,7 +397,7 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		Optional<AssociationInstance> result = AssociationUtilities.getAssociation(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		

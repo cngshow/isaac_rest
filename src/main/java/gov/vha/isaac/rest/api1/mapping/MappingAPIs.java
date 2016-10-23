@@ -88,7 +88,7 @@ public class MappingAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		ArrayList<RestMappingSetVersion> results = new ArrayList<>();
 		
@@ -142,7 +142,7 @@ public class MappingAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(ConceptAPIs.findConceptChronology(id).getNid(), 
 			IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
@@ -204,7 +204,7 @@ public class MappingAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		

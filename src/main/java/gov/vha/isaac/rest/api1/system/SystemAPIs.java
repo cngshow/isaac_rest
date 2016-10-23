@@ -89,7 +89,7 @@ public class SystemAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		RestConceptChronology concept = null;
 		RestSememeChronology sememe = null;

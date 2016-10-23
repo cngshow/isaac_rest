@@ -78,7 +78,7 @@ public class CommentAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronologyConformingToEffectiveStamp(id, processIdOptional);
@@ -127,7 +127,7 @@ public class CommentAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		ArrayList<RestCommentVersion> temp = Util.readComments(id, processIdOptional.isPresent() ? processIdOptional.get() : null); 
 		return temp.toArray(new RestCommentVersion[temp.size()]);

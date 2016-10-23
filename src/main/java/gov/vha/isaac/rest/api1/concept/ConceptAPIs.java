@@ -122,7 +122,7 @@ public class ConceptAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
@@ -180,7 +180,7 @@ public class ConceptAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 		
 		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
 
@@ -284,7 +284,7 @@ public class ConceptAPIs
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
 		// TODO handle processId

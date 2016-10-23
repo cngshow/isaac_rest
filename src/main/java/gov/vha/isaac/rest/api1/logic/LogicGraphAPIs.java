@@ -90,7 +90,7 @@ public class LogicGraphAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		@SuppressWarnings("rawtypes")
 		//TODO bug - the methods below findLogicGraphChronology are relying on some default logic graph coordiantes...  Also seems to be a lot 
@@ -144,7 +144,7 @@ public class LogicGraphAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology =
 				findLogicGraphChronology(

@@ -173,7 +173,7 @@ public class SememeAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		RestSememeChronology chronology =
 				new RestSememeChronology(
@@ -221,7 +221,7 @@ public class SememeAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = findSememeChronologyConformingToEffectiveStamp(id, processIdOptional);
@@ -285,7 +285,7 @@ public class SememeAPIs
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		HashSet<Integer> singleAllowedAssemblage = new HashSet<>();
 		singleAllowedAssemblage.add(Util.convertToConceptSequence(id));
@@ -376,7 +376,7 @@ public class SememeAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
 		for (String a : assemblage)

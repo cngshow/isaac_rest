@@ -115,7 +115,7 @@ public class TaxonomyAPIs
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.safeParseUuidParameter(processId);
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
 		try {
