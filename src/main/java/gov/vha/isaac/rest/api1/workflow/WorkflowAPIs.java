@@ -86,12 +86,9 @@ public class WorkflowAPIs {
 	}
 
 	/**
-	 * Return workflow process instance information not including the process
-	 * history
+	 * Return workflow process instance information not including the process history
 	 * 
-	 * @param processId
-	 *			UUID identifying a given workflow process instance
-	 * 
+	 * @param processId UUID identifying a given workflow process instance
 	 * @return RestWorkflowProcess - Workflow process instance information
 	 * 
 	 * @throws RestException
@@ -99,9 +96,11 @@ public class WorkflowAPIs {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.process)
-	public RestWorkflowProcess getProcess(@QueryParam(RequestParameters.processId) String processId)
-			throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+	public RestWorkflowProcess getProcess(
+			@QueryParam(RequestParameters.processId) String processId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
 				RequestParameters.processId);
 
 		try {
@@ -117,23 +116,23 @@ public class WorkflowAPIs {
 	}
 
 	/**
-	 * Return workflow process instance history. The history is sorted by
-	 * advancement sequence, with last being most recent advance operation
+	 * Return workflow process instance history. The history is sorted by advancement sequence, 
+	 * with last being most recent advance operation
 	 * 
-	 * @param processId
-	 *			UUID identifying a given workflow process instance
-	 * 
-	 * @return RestWorkflowProcessHistory Collection - Sorted collection of the
-	 *		 process instance's advancements
+	 * @param processId UUID identifying a given workflow process instance
+	 * @return RestWorkflowProcessHistory Collection - Sorted collection of the process 
+	 * instance's advancements
 	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.history)
-	public RestWorkflowProcessHistory[] getProcessHistory(@QueryParam(RequestParameters.processId) String processId)
-			throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
+	public RestWorkflowProcessHistory[] getProcessHistory(
+			@QueryParam(RequestParameters.processId) String processId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
 				RequestParameters.processId);
 
 		try {
@@ -156,24 +155,23 @@ public class WorkflowAPIs {
 	 * Return the actions that the user may perform on the workflow process
 	 * instance instance
 	 * 
-	 * @param editToken
-	 *			String serialization of EditToken identifying currently logged
-	 *			in user
-	 * @param processId
-	 *			UUID identifying a given workflow process instance
-	 * 
-	 * @return RestWorkflowAvailableAction Collection - Collection of distinct
-	 *		 actions a user can perform
+	 * @param editToken String serialization of EditToken identifying currently logged in user
+	 * @param processId UUID identifying a given workflow process instance
+	 * @return RestWorkflowAvailableAction Collection - Collection of distinct actions a user can perform
 	 * 
 	 * @throws RestException
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.actions)
-	public RestWorkflowAvailableAction[] getProcessActions(@QueryParam(RequestParameters.editToken) String editToken,
-			@QueryParam(RequestParameters.processId) String processId) throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.editToken, RequestParameters.processId);
+	public RestWorkflowAvailableAction[] getProcessActions(
+			@QueryParam(RequestParameters.editToken) String editToken,
+			@QueryParam(RequestParameters.processId) String processId) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.editToken, 
+				RequestParameters.processId);
 
 		UUID userId = null;
 		try {
@@ -196,18 +194,14 @@ public class WorkflowAPIs {
 	}
 
 	/**
-	 * Return all active workflow process instances for which the user has
-	 * proper permissions to act upon. To minimize REST calls, the sorted
-	 * history of each process is mapped in the return object.
+	 * Return all active workflow process instances for which the user has proper permissions 
+	 * to act upon. To minimize REST calls, the sorted history of each process is mapped in 
+	 * the return object.
 	 * 
-	 * @param editToken
-	 *			String serialization of EditToken identifying currently logged
-	 *			in user
-	 * @param definitionId
-	 *			UUID identifying a specific workflow definition
-	 * 
-	 * @return RestWorkflowProcessHistoriesMapEntry Collection - Workflow
-	 *		 process instances mapped to their sorted history
+	 * @param editToken String serialization of EditToken identifying currently logged in user
+	 * @param definitionId UUID identifying a specific workflow definition
+	 * @return RestWorkflowProcessHistoriesMapEntry Collection - Workflow process instances 
+	 * mapped to their sorted history
 	 * 
 	 * @throws RestException
 	 */
@@ -216,9 +210,13 @@ public class WorkflowAPIs {
 	@Path(RestPaths.available)
 	public RestWorkflowProcessHistoriesMapEntry[] getAvailableProcesses(
 			@QueryParam(RequestParameters.definitionId) String definitionId,
-			@QueryParam(RequestParameters.editToken) String editToken) throws RestException {
-		RequestParameters.validateParameterNamesAgainstSupportedNames(RequestInfo.get().getParameters(),
-				RequestParameters.definitionId, RequestParameters.editToken);
+			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.definitionId, 
+				RequestParameters.editToken);
+		
 		UUID userId = null;
 		try {
 			userId = Get.identifierService()
