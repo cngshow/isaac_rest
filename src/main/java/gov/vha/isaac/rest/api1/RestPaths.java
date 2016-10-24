@@ -65,7 +65,7 @@ public class RestPaths
 	public static final String createProcess = process + "create/";
 	public static final String advanceProcess = process + "advance/";
 	public static final String removeComponent = process + "component/";
-	public static final String lock = process + "lock/";
+	public static final String lock = "lock/";
 	
 	// Mapping Based Calls
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";

@@ -179,6 +179,8 @@ public class WorkflowWriteAPIs {
 	 * If attempting to acquire a process when the active process is already set, an exception is thrown.
 	 * If attempting to release a process no process is designated as the active process, an exception is thrown.
 	 * 
+	 * @param processId
+	 *            The process to lock or unlock
 	 * @param aquireLock
 	 *            RestBoolean Data Indicates request type (release or acquire).
 	 * @param editToken
