@@ -176,7 +176,7 @@ public class WorkflowWriteAPIs {
 	 * If attempting to release a process and no process is designated as the active process, 
 	 * an exception is thrown.
 	 * 
-	 * @param processId UUID identifying a given workflow process instance
+	 * @param processId The process to lock or unlock
 	 * @param editToken EditToken string returned by previous call to getEditToken() or as renewed 
 	 * EditToken returned by previous write API call in a RestWriteResponse
 	 * @param acquireLock String value of true to acquire or false to release a lock.
@@ -305,3 +305,4 @@ public class WorkflowWriteAPIs {
 		}
 	}
 }
+
