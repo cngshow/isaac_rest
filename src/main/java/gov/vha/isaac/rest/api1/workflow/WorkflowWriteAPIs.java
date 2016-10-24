@@ -190,7 +190,7 @@ public class WorkflowWriteAPIs {
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent + RestPaths.process + "{" + RequestParameters.processId + "}/" + RestPaths.lock)
+	@Path(RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + "{" + RequestParameters.processId + "}")
 	public RestWriteResponse setProcessLock(
 			@PathParam(RequestParameters.processId) String processIdString, 
 			@QueryParam(RequestParameters.editToken) String editToken,

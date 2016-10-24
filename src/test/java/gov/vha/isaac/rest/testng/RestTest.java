@@ -671,7 +671,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Acquire lock on process.  This should Fail because it's automatically locked on create.
 		String lockingRequestType = Boolean.toString(true);
 		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
-				+ RestPaths.updatePathComponent + RestPaths.process + editToken.getActiveWorkflowProcessId().toString() + "/" + RestPaths.lock)				
+				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + editToken.getActiveWorkflowProcessId().toString() )				
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
@@ -682,7 +682,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Release lock on process
 		lockingRequestType = Boolean.toString(false);
 		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
-				+ RestPaths.updatePathComponent + RestPaths.process + editToken.getActiveWorkflowProcessId().toString() + "/" + RestPaths.lock)
+				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + editToken.getActiveWorkflowProcessId().toString())
 				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
@@ -696,7 +696,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Acquire lock on process
 		lockingRequestType = Boolean.toString(true);
 		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent
-				+ RestPaths.updatePathComponent + RestPaths.process + editToken.getActiveWorkflowProcessId().toString() + "/" + RestPaths.lock)
+				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + editToken.getActiveWorkflowProcessId().toString())
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
 				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
