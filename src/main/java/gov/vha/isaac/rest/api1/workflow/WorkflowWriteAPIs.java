@@ -149,10 +149,14 @@ public class WorkflowWriteAPIs {
 			EditToken existingToken = RequestInfo.get().getEditToken();
 			
 			if (existingToken.getActiveWorkflowProcessId() != null) {
-				provider.advanceWorkflow(existingToken.getActiveWorkflowProcessId(), Get.identifierService()
+				boolean correctActionRequested = provider.advanceWorkflow(existingToken.getActiveWorkflowProcessId(), Get.identifierService()
 						.getUuidPrimordialFromConceptSequence(RequestInfo.get().getEditToken().getAuthorSequence()).get(),
 						processAdvancementData.getActionRequested(), processAdvancementData.getComment(),
 						RequestInfo.get().getEditCoordinate());
+				
+				if (! correctActionRequested) {
+					throw new RestException("Invalid process advancement for process " + existingToken.getActiveWorkflowProcessId() + ": " + processAdvancementData);
+				}
 	
 				EditToken updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, null);
 
