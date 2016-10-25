@@ -74,6 +74,7 @@ class EditTokenUtil {
 		// FSN from userName is SSO primary key
 		final String fsn = user.getName();
 		
+		//TODO User already has an ID, why are you regenerated here?  Keep the logic in one place. 
 		// Generate SSO T5 UUID from FSN with MetaData.USER.getPrimordialUuid() as domain
 		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
 		
