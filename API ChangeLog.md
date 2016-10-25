@@ -7,6 +7,10 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/25 - 1.6.4: 
+    * Adding a system/user call to hand back the user information about a given user concept.  This will include various SSO information that was 
+        used when the user concept was created.
+
 * 2016/10/20 - 1.6.3: 
     * Clarifying the 'names' returned for all of the /1/system/enumeration/* calls - now returning an enumName, friendlyName (optional) and enumId.
     * For 1/system/enumeration/restDynamicSememeDataType, an attribute of 'classType' has been added, which contains the full value that needs to 

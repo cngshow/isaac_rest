@@ -50,6 +50,7 @@ public class RestPaths
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
+	public static final String userComponent = "user/";
 	
 	// Workflow Based Calls
 	public static final String workflowAPIsPathComponent = apiVersionComponent + "workflow/";
