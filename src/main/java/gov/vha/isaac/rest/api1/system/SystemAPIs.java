@@ -20,23 +20,23 @@ package gov.vha.isaac.rest.api1.system;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
+import gov.vha.isaac.rest.api1.data.RestUserInfo;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
@@ -75,7 +75,7 @@ public class SystemAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")  
+	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")
 	public RestIdentifiedObjectsResult getIdentifiedObjects(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
@@ -424,5 +424,24 @@ public class SystemAPIs
 				RequestParameters.coordToken);
 
 		return ApplicationConfig.getInstance().getSystemInfo();
+	}
+	
+
+	/**
+	 * Return information about a particular user (utilized to tie back session information to what was passed via SSO)
+	 * @param id - a nid, sequence or UUID of a concept that represents a user in the system.
+	 * @throws RestException if no user concept can be identified.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.userComponent + "{" + RequestParameters.id + "}")
+	public RestUserInfo getUserInfo(@PathParam(RequestParameters.id) String id) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.coordToken);
+
+		return new RestUserInfo(Get.identifierService().getConceptNid(Util.convertToConceptSequence(id)));
 	}
 }
