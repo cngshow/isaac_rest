@@ -105,7 +105,7 @@ public class AssociationAPIs
 		{
 			StampCoordinate sc = RequestInfo.get().getStampCoordinate();
 			try {
-				Optional<ConceptVersionImpl> conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, i);
+				Optional<ConceptVersionImpl> conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, Get.identifierService().getConceptNid(i));
 				if (conceptVersion.isPresent()) {
 					sc = Frills.getStampCoordinateFromVersion(conceptVersion.get());
 				}

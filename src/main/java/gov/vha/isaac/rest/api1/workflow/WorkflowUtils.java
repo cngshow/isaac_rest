@@ -45,6 +45,10 @@ public class WorkflowUtils {
 		return getStampedVersion(clazz, processId.isPresent() ? processId.get() : null, componentNid);
 	}
 	public static <T extends StampedVersion> Optional<T> getStampedVersion(Class<T> clazz, UUID processId, int componentNid) throws Exception {
+		if (componentNid >= 0) {
+			throw new Exception("Invalid component NID value: " + componentNid);
+		}
+		
 		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
 
 		T version = null;
