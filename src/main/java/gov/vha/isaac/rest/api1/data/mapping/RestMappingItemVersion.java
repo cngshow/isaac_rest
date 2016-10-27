@@ -28,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -118,6 +119,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		sememeSequence = sememe.getSememeSequence();
 		identifiers = new RestIdentifiedObject(sememe.getUuidList());
 		mappingItemStamp = new RestStampedVersion(sememe);
+		active = sememe.getState() == State.ACTIVE;
 		mapSetConcept = sememe.getAssemblageSequence();
 		if (Get.identifierService().getChronologyTypeForNid(sememe.getReferencedComponentNid()) != ObjectChronologyType.CONCEPT)
 		{
