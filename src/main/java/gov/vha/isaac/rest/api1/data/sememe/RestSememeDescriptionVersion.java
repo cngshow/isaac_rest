@@ -94,7 +94,8 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		//for Jaxb
 	}
 	
-	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean expandReferenced, UUID processId) throws RestException
+	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean expandReferenced, UUID processId) 
+			throws RestException
 	{
 		super();
 		setup(dsv, includeChronology, expandNested, expandReferenced, (restSememeVersion ->

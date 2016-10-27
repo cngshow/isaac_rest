@@ -125,8 +125,8 @@ public abstract class RestSememeVersion
 		}
 	}
 	
-	protected void setup(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean expandReferenced, Function<RestSememeVersion, Boolean> includeInNested, UUID processId) 
-			throws RestException
+	protected void setup(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean expandReferenced, Function<RestSememeVersion, Boolean> includeInNested, 
+			UUID processId) throws RestException
 	{
 		sememeVersion = new RestStampedVersion(sv);
 		expandables = new Expandables();
@@ -183,7 +183,8 @@ public abstract class RestSememeVersion
 		}
 	}
 	
-	public static RestSememeVersion buildRestSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean expandReferenced, UUID processId) throws RestException
+	public static RestSememeVersion buildRestSememeVersion(SememeVersion<?> sv, boolean includeChronology, boolean expandNested, boolean expandReferenced, 
+			UUID processId) throws RestException
 	{
 		switch(sv.getChronology().getSememeType())
 		{
