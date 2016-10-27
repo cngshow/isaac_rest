@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,10 +35,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.lang3.StringUtils;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.SememeSequenceSet;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeService;
@@ -47,7 +47,6 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
-import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
 import gov.vha.isaac.ochre.mapping.data.MappingUtils;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
@@ -62,9 +61,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -76,6 +73,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.sememeAPIsPathComponent)
 public class SememeAPIs
 {
+	private static Logger log = LogManager.getLogger(SememeAPIs.class);
 	/**
 	 * Return the RestSememeType of the sememe corresponding to the passed id
 	 * @param id The id for which to determine RestSememeType
@@ -173,16 +171,14 @@ public class SememeAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		RestSememeChronology chronology =
 				new RestSememeChronology(
-						findSememeChronologyConformingToEffectiveStamp(id, processIdOptional),
+						findSememeChronology(id),
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-						processIdOptional.isPresent() ? processIdOptional.get() : null);
+						Util.validateWorkflowProcess(processId));
 		
 		return chronology;
 	}
@@ -220,32 +216,62 @@ public class SememeAPIs
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		@SuppressWarnings("rawtypes")
-		SememeChronology sc = findSememeChronologyConformingToEffectiveStamp(id, processIdOptional);
-
-		@SuppressWarnings("rawtypes")
-		Optional<SememeVersionImpl> version = Optional.empty();
-		try {
-			version = WorkflowUtils.getStampedVersion(SememeVersionImpl.class, processIdOptional, sc.getNid());
-		} catch (Exception e) {
-			throw new RestException(e);
-		}
-		if (version.isPresent())
+		SememeChronology sc = findSememeChronology(id);
+		@SuppressWarnings("unchecked")
+		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processIdUUID, sc.getNid()));
+		if (sv.isPresent())
 		{
 			//TODO handle contradictions
-			return RestSememeVersion.buildRestSememeVersion(version.get(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-					processIdOptional.isPresent() ? processIdOptional.get() : null);
+			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
+					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), processIdUUID);
 		}
 		else
 		{
 			throw new RestException("id", id, "No sememe was found");
 		}
 	}
-
+	
+	public static SememeChronology<? extends SememeVersion<?>> findSememeChronology(String id) throws RestException
+	{
+		SememeService sememeService = Get.sememeService();
+		
+		Optional<UUID> uuidId = UUIDUtil.getUUID(id);
+		Optional<Integer> intId = Optional.empty();
+		if (uuidId.isPresent())
+		{
+			if (Get.identifierService().hasUuid(uuidId.get()))
+			{
+				intId = Optional.of(Get.identifierService().getNidForUuids(uuidId.get()));
+			}
+			else
+			{
+				throw new RestException("id", id, "Is not known by the system");
+			}
+		}
+		else
+		{
+			intId = NumericUtils.getInt(id);
+		}
+		
+		if (intId.isPresent())
+		{
+			Optional<? extends SememeChronology<? extends SememeVersion<?>>> sc = sememeService.getOptionalSememe(intId.get());
+			if (sc.isPresent())
+			{
+				return sc.get();
+			}
+			else
+			{
+				throw new RestException("id", id, "No Sememe was located with the given identifier");
+			}
+		}
+		throw new RestException("id", id, "Is not a sememe identifier.  Must be a UUID or an integer");
+	}
+	
 	/**
 	 * Returns all sememe instances with the given assemblage
 	 * If no version parameter is specified, returns the latest version.
@@ -285,10 +311,10 @@ public class SememeAPIs
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		HashSet<Integer> singleAllowedAssemblage = new HashSet<>();
 		singleAllowedAssemblage.add(Util.convertToConceptSequence(id));
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
 		//we don't have a referenced component - our id is assemblage
 		SememeVersions versions =
@@ -298,7 +324,7 @@ public class SememeAPIs
 						pageNum,
 						maxPageSize,
 						true,
-						processIdOptional.isPresent() ? processIdOptional.get() : null);
+						processIdUUID);
 
 		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
 		for (SememeVersion<?> sv : versions.getValues()) {
@@ -307,7 +333,7 @@ public class SememeAPIs
 							RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-							processIdOptional.isPresent() ? processIdOptional.get() : null));
+							processIdUUID));
 		}
 		RestSememeVersionPage results =
 				new RestSememeVersionPage(
@@ -376,8 +402,6 @@ public class SememeAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
 		for (String a : assemblage)
 		{
@@ -394,7 +418,7 @@ public class SememeAPIs
 						Boolean.parseBoolean(includeDescriptions.trim()),
 						Boolean.parseBoolean(includeAssociations.trim()),
 						Boolean.parseBoolean(includeMappings.trim()),
-						processIdOptional.isPresent() ? processIdOptional.get() : null);
+						Util.validateWorkflowProcess(processId));
 	}
 
 	/**
@@ -546,17 +570,12 @@ public class SememeAPIs
 					} else {
 						@SuppressWarnings("rawtypes")
 						SememeChronology chronology = it.next();
-						
-						@SuppressWarnings("rawtypes")
-						Optional<SememeVersionImpl> version = Optional.empty();
-						try {
-							version = WorkflowUtils.getStampedVersion(SememeVersionImpl.class, processId, chronology.getNid());
-						} catch (Exception e) {
-							// TODO should exceptions here be ignored?
-							throw new RestException(e);
-						}
-						if (version.isPresent()) {
-							ochreResults.add(version.get());
+						@SuppressWarnings({ "unchecked" })
+						Optional<LatestVersion<SememeVersion<?>>> sv = chronology.getLatestVersion(SememeVersionImpl.class, 
+								Util.getPreWorkflowStampCoordinate(processId, chronology.getNid()));
+						if (sv.isPresent()) {
+							//TODO handle contradictions
+							ochreResults.add(sv.get().value());
 						}
 					}
 
@@ -588,17 +607,11 @@ public class SememeAPIs
 					break;
 				} else {
 					SememeChronology<? extends SememeVersion<?>> chronology = Get.sememeService().getSememe(it.nextInt());
-					@SuppressWarnings("rawtypes")
-					Optional<SememeVersionImpl> version = Optional.empty();
-					try {
-						version = WorkflowUtils.getStampedVersion(SememeVersionImpl.class, processId, chronology.getNid());
-					} catch (Exception e) {
-						// TODO should exceptions here be ignored?
-						throw new RestException(e);
-					}
-
-					if (version.isPresent()) {
-						ochreResults.add(version.get());
+					@SuppressWarnings({ "unchecked", "rawtypes" })
+					Optional<LatestVersion<SememeVersion<?>>> sv = ((SememeChronology)chronology).getLatestVersion(SememeVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, chronology.getNid()));
+					if (sv.isPresent()) {
+						ochreResults.add(sv.get().value());
 					}
 				}
 			}
@@ -646,20 +659,14 @@ public class SememeAPIs
 					{
 						return;
 					}
+					Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, sc.getNid()));
 
-					@SuppressWarnings("rawtypes")
-					Optional<SememeVersionImpl> version = Optional.empty();
-					try {
-						version = WorkflowUtils.getStampedVersion(SememeVersionImpl.class, processId, sc.getNid());
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-
-					if (version.isPresent()) {
+					if (sv.isPresent()) {
 						try
 						{
 							//TODO handle contradictions
-							results.add(RestSememeVersion.buildRestSememeVersion(version.get(), expandChronology, expandNested, expandReferenced, processId));
+							results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested, expandReferenced, processId));
 						}
 						catch (RestException e)
 						{
@@ -712,55 +719,5 @@ public class SememeAPIs
 			}
 		}
 		return results.toArray(new RestSememeVersion[results.size()]);
-	}
-
-	public static SememeChronology<? extends SememeVersion<?>> findSememeChronology(String id) throws RestException {
-		return findSememeChronologyConformingToEffectiveStamp(id, (UUID)null);
-	}
-	public static <T extends SememeVersion<?>> SememeChronology<? extends SememeVersion<?>> findSememeChronologyConformingToEffectiveStamp(String id, Optional<UUID> processId) throws RestException {
-		return findSememeChronologyConformingToEffectiveStamp(id, processId.isPresent() ? processId.get() : null);
-	}
-	public static <T extends SememeVersion<?>> SememeChronology<? extends SememeVersion<?>> findSememeChronologyConformingToEffectiveStamp(String id, UUID processId) throws RestException
-	{
-		SememeService sememeService = Get.sememeService();
-		
-		Optional<UUID> uuidId = UUIDUtil.getUUID(id);
-		Optional<Integer> intId = Optional.empty();
-		if (uuidId.isPresent())
-		{
-			if (Get.identifierService().hasUuid(uuidId.get()))
-			{
-				intId = Optional.of(Get.identifierService().getNidForUuids(uuidId.get()));
-			}
-			else
-			{
-				throw new RestException("id", id, "Is not known by the system");
-			}
-		}
-		else
-		{
-			intId = NumericUtils.getInt(id);
-		}
-		
-		if (intId.isPresent())
-		{
-			Optional<? extends SememeChronology<? extends SememeVersion<?>>> sc = sememeService.getOptionalSememe(intId.get());
-			if (sc.isPresent())
-			{
-				if (processId != null) {
-					try {
-						WorkflowUtils.getStampedVersion(Frills.getVersionType(sc.get()), processId, intId.get());
-					} catch (Exception e) {
-						throw new RestException(e);
-					}
-				}
-				return sc.get();
-			}
-			else
-			{
-				throw new RestException("id", id, "No Sememe was located with the given identifier");
-			}
-		}
-		throw new RestException("id", id, "Is not a sememe identifier.  Must be a UUID or an integer");
 	}
 }

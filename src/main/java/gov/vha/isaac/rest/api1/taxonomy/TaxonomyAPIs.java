@@ -20,30 +20,27 @@ package gov.vha.isaac.rest.api1.taxonomy;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
@@ -112,45 +109,41 @@ public class TaxonomyAPIs
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
 		boolean includeSememeMembership = Boolean.parseBoolean(sememeMembership.trim());
 		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		
 		@SuppressWarnings("rawtypes")
 		ConceptChronology concept = ConceptAPIs.findConceptChronology(id);
-		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
-		Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
-		try {
-			conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, concept.getNid());
-		} catch (Exception e) {
-			throw new RestException(e);
-		}
-
-		if (conceptVersion.isPresent())
+		@SuppressWarnings("unchecked")
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, 
+				Util.getPreWorkflowStampCoordinate(processId, concept.getNid()));
+		if (cv.isPresent())
 		{
 			//parent / child expansion is handled here by providing a depth, not with expandables.
 			//TODO handle contradictions
-			RestConceptVersion rcv = new RestConceptVersion(conceptVersion.get(), 
+			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership,
-					processIdOptional.isPresent() ? processIdOptional.get() : null);  
+					processIdUUID);  
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, includeSememeMembership, new ConceptSequenceSet(), processIdOptional.isPresent() ? processIdOptional.get() : null);
+				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, includeSememeMembership, new ConceptSequenceSet(), processIdUUID);
 			}
 			else if (countParentsBoolean)
 			{
-				countParents(concept.getConceptSequence(), rcv, tree, processIdOptional.isPresent() ? processIdOptional.get() : null);
+				countParents(concept.getConceptSequence(), rcv, tree, processIdUUID);
 			}
 			
 			if (childDepth > 0)
 			{
-				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, new ConceptSequenceSet(), processIdOptional.isPresent() ? processIdOptional.get() : null);
+				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, 
+						new ConceptSequenceSet(), processIdUUID);
 			}
 			else if (countChildrenBoolean)
 			{
-				countChildren(concept.getConceptSequence(), rcv, tree, processIdOptional.isPresent() ? processIdOptional.get() : null);
+				countChildren(concept.getConceptSequence(), rcv, tree, processIdUUID);
 			}
 			rcv.sortParentsAndChildren();
 			return rcv;
@@ -165,9 +158,9 @@ public class TaxonomyAPIs
 			boolean countLeafChildren,
 			boolean countParents,
 			int remainingChildDepth,
-			boolean includeSemmemMembership,
+			boolean includeSememeMembership,
 			ConceptSequenceSet alreadyAddedChildren,
-			UUID processId) throws RestException
+			UUID processId)
 	{
 		if (alreadyAddedChildren.contains(conceptSequence)) {
 			// Avoiding infinite loop
@@ -195,24 +188,19 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-
-			Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
-			try {
-				conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processId, childConcept.getNid());
-			} catch (Exception e) {
-				throw new RestException(e);
-			}
-			
-			if (conceptVersion.isPresent())
+			@SuppressWarnings("unchecked")
+			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
+					Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
+			if (cv.isPresent())
 			{
 				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
 				//TODO handle contradictions
-				RestConceptVersion childVersion = new RestConceptVersion(conceptVersion.get(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
-					includeSemmemMembership, processId);
+				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
+					includeSememeMembership, processId);
 				rcv.addChild(childVersion);
 				if (remainingChildDepth > 0)
 				{
-					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSemmemMembership, 
+					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
 						alreadyAddedChildren, processId);
 				}
 				else if (countLeafChildren)
@@ -223,7 +211,7 @@ public class TaxonomyAPIs
 		}
 	}
 	
-	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId) throws RestException
+	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId)
 	{
 		int count = 0;
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
@@ -238,14 +226,10 @@ public class TaxonomyAPIs
 			{
 				throw new RuntimeException("Internal Error!", e);
 			}
-
-			Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
-			try {
-				conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processId, parentConcept.getNid());
-			} catch (Exception e) {
-				throw new RestException(e);
-			}
-			if (conceptVersion.isPresent())
+			@SuppressWarnings("unchecked")
+			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, 
+					Util.getPreWorkflowStampCoordinate(processId, parentConcept.getNid()));
+			if (cv.isPresent())
 			{
 				count++;
 			}
@@ -254,24 +238,24 @@ public class TaxonomyAPIs
 	}
 	
 	
-	public static void countChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId) throws RestException
+	public static void countChildren(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId)
 	{
 		int count = 0;
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
 			@SuppressWarnings("rawtypes")
 			ConceptChronology childConcept;
-			
-			childConcept = ConceptAPIs.findConceptChronology(childSequence + "");
-
-			Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
-			try {
-				conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processId, childConcept.getNid());
-			} catch (Exception e) {
-				throw new RestException(e);
+			try
+			{
+				childConcept = ConceptAPIs.findConceptChronology(childSequence + "");
 			}
-
-			if (conceptVersion.isPresent())
+			catch (RestException e)
+			{
+				throw new RuntimeException("Internal Error!", e);
+			}
+			@SuppressWarnings("unchecked")
+			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
+			if (cv.isPresent())
 			{
 				count++;
 			}
@@ -287,7 +271,7 @@ public class TaxonomyAPIs
 			int remainingParentDepth, 
 			boolean includeSememeMembership,
 			ConceptSequenceSet handledConcepts,
-			UUID processId) throws RestException
+			UUID processId)
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
@@ -309,19 +293,22 @@ public class TaxonomyAPIs
 
 				@SuppressWarnings("rawtypes")
 				ConceptChronology parentConceptChronlogy;
-				parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
-
-				Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
-				try {
-					conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processId, parentConceptChronlogy.getNid());
-				} catch (Exception e) {
-					throw new RestException(e);
+				try
+				{
+					parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
 				}
-				if (conceptVersion.isPresent())
+				catch (RestException e)
+				{
+					throw new RuntimeException("Internal Error!", e);
+				}
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, 
+						Util.getPreWorkflowStampCoordinate(processId, parentConceptChronlogy.getNid()));
+				if (cv.isPresent())
 				{
 					//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
 					//TODO handle contradictions
-					RestConceptVersion parentVersion = new RestConceptVersion(conceptVersion.get(),true, false, false, false, false, RequestInfo.get().getStated(), 
+					RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated(), 
 							includeSememeMembership, processId);
 					rcv.addParent(parentVersion);
 					if (remainingParentDepth > 0)

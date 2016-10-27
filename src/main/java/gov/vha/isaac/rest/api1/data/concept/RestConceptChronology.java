@@ -23,31 +23,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.AlphanumComparator;
-import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
-import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowAccessor;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
-import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -101,8 +91,6 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	@SuppressWarnings("rawtypes") 
 	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId)
 	{
-		final WorkflowAccessor wfAccessor = LookupService.get().getService(WorkflowAccessor.class);
-
 		conceptSequence = cc.getConceptSequence();
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
 		
@@ -120,17 +108,14 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 			}
 			else // if (includeLatestVersion)
 			{
-				Optional<ConceptVersionImpl> conceptVersion = Optional.empty();
-				try {
-					conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processId, cc.getNid());
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-				
-				if (conceptVersion.isPresent())
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersion>> latest = 
+						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, 
+								Util.getPreWorkflowStampCoordinate(processId, cc.getNid()));
+				if (latest.isPresent())
 				{
 					//TODO handle contradictions
-					versions.add(new RestConceptVersion(conceptVersion.get(), false, false, false, false, false, false, false, processId));
+					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false, processId));
 				}
 			}
 		}

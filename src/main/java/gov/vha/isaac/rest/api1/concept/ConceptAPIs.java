@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,12 +29,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
@@ -44,6 +42,7 @@ import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
@@ -51,9 +50,7 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -122,22 +119,17 @@ public class ConceptAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		
 		@SuppressWarnings("rawtypes")
-		ConceptChronology concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
-
-		Optional<ConceptVersionImpl> version = Optional.empty();
-		try {
-			version = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, concept.getNid());
-		} catch (Exception e) {
-			throw new RestException(e);
-		}
-
-		if (version.isPresent())
+		ConceptChronology concept = findConceptChronology(id);
+		@SuppressWarnings("unchecked")
+		Optional<LatestVersion<ConceptVersionImpl>> cv = concept.getLatestVersion(ConceptVersionImpl.class, 
+				Util.getPreWorkflowStampCoordinate(processIdUUID, concept.getNid()));
+		if (cv.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestConceptVersion(version.get(), 
+			return new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					Boolean.parseBoolean(includeParents.trim()),
 					Boolean.parseBoolean(countParents.trim()), 
@@ -145,7 +137,7 @@ public class ConceptAPIs
 					Boolean.parseBoolean(countChildren.trim()),
 					RequestInfo.get().getStated(),
 					Boolean.parseBoolean(sememeMembership.trim()),
-					processIdOptional.isPresent() ? processIdOptional.get() : null);
+					processIdUUID);
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");
 	}
@@ -179,28 +171,20 @@ public class ConceptAPIs
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 		
-		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null);
+		ConceptChronology<? extends ConceptVersion<?>> concept = findConceptChronology(id);
 
 		RestConceptChronology chronology =
 				new RestConceptChronology(
 						concept,
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-						processIdOptional.isPresent() ? processIdOptional.get() : null);
+						Util.validateWorkflowProcess(processId));
 
 		return chronology;
 	}
 	
-	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException {
-		return findConceptChronologyConformingToEffectiveStamp(id, (UUID)null);
-	}
-	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronologyConformingToEffectiveStamp(String id, Optional<UUID> processId) throws RestException {
-		return findConceptChronologyConformingToEffectiveStamp(id, processId.isPresent() ? processId.get() : (UUID)null);
-	}
-	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronologyConformingToEffectiveStamp(String id, UUID processId) throws RestException
+	public static ConceptChronology<? extends ConceptVersion<?>> findConceptChronology(String id) throws RestException
 	{
 		ConceptService conceptService = Get.conceptService();
 		Optional<Integer> intId = NumericUtils.getInt(id);
@@ -209,13 +193,6 @@ public class ConceptAPIs
 			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService.getOptionalConcept(intId.get());
 			if (c.isPresent())
 			{
-				if (processId != null) {
-					try {
-						WorkflowUtils.getStampedVersion(Frills.getVersionType(c.get()), processId, intId.get());
-					} catch (Exception e) {
-						throw new RestException(e);
-					}
-				}
 				return c.get();
 			}
 			else
@@ -284,12 +261,9 @@ public class ConceptAPIs
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		ArrayList<RestSememeDescriptionVersion> result = new ArrayList<>();
-		// TODO handle processId
 		RestSememeVersion[] descriptions = SememeAPIs.get(
-				findConceptChronologyConformingToEffectiveStamp(id, processIdOptional.isPresent() ? processIdOptional.get() : null).getNid() + "",
+				findConceptChronology(id).getNid() + "",
 				getAllDescriptionTypes(),
 				true, 
 				Boolean.parseBoolean(includeAttributes.trim()),
@@ -297,7 +271,7 @@ public class ConceptAPIs
 				true,
 				false,
 				false,
-				processIdOptional.isPresent() ? processIdOptional.get() : null);
+				Util.validateWorkflowProcess(processId));
 
 		for (RestSememeVersion d : descriptions)
 		{

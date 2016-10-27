@@ -21,7 +21,6 @@ package gov.vha.isaac.rest.api1.data.mapping;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -39,6 +38,7 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.comment.CommentAPIs;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
@@ -179,7 +179,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		{
 			try
 			{
-				comments = Util.readComments(sememe.getNid() + "", processId);
+				comments = CommentAPIs.readComments(sememe.getNid() + "", processId);
 			}
 			catch (RestException e)
 			{

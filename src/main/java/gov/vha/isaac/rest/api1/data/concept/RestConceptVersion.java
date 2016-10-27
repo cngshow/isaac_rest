@@ -27,16 +27,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -47,12 +45,12 @@ import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -166,17 +164,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 
 		if (sememe.isPresent())
 		{
-			Optional<LogicGraphSememe> sememeVersion = Optional.empty();
-			try {
-				sememeVersion = WorkflowUtils.getStampedVersion(LogicGraphSememe.class, processId, sememe.get().getNid());
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-
-			if (sememeVersion.isPresent())
+			Optional<LatestVersion<LogicGraphSememe>> sv = ((SememeChronology)sememe.get()).getLatestVersion(LogicGraphSememe.class, 
+					Util.getPreWorkflowStampCoordinate(processId, sememe.get().getNid()));
+			if (sv.isPresent())
 			{
 				//TODO handle contradictions
-				isConceptDefined = Frills.isConceptFullyDefined(sememeVersion.get());
+				isConceptDefined = Frills.isConceptFullyDefined(sv.get().value());
 			}
 		}
 		
@@ -190,19 +183,10 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 					if (!sememeMembership.contains(sc.getAssemblageSequence()) 
 						&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
 						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
-						&& sc.getSememeType() != SememeType.DESCRIPTION) {
-
-						Optional<SememeVersionImpl> sememeVersion = Optional.empty();
-						try {
-							sememeVersion = WorkflowUtils.getStampedVersion(SememeVersionImpl.class, processId, sc.getNid());
-						} catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-
-						if (sememeVersion.isPresent()) 
-						{
-							sememeMembership.add(sc.getAssemblageSequence());
-						}
+						&& sc.getSememeType() != SememeType.DESCRIPTION 
+						&& sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, sc.getNid())).isPresent()) 
+					{
+						sememeMembership.add(sc.getAssemblageSequence());
 					}
 				}
 			};
@@ -237,26 +221,22 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
 			}
 
-			try {
-				if (includeParents)
-				{
-					TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
-				}
-				else if (countParents)
-				{
-					TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree, processId);
-				}
+			if (includeParents)
+			{
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
+			}
+			else if (countParents)
+			{
+				TaxonomyAPIs.countParents(cv.getChronology().getConceptSequence(), this, tree, processId);
+			}
 
-				if (includeChildren)
-				{
-					TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
-				}
-				else if (countChildren)
-				{
-					TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree, processId);
-				}
-			} catch (Exception e) {
-				throw new RuntimeException(e);
+			if (includeChildren)
+			{
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
+			}
+			else if (countChildren)
+			{
+				TaxonomyAPIs.countChildren(cv.getChronology().getConceptSequence(), this, tree, processId);
 			}
 			
 			if (includeParents || includeChildren)

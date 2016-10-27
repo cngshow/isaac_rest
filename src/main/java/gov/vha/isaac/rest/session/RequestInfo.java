@@ -238,6 +238,9 @@ public class RequestInfo
 	/**
 	 * @return the stamp coordinate as requested by the user.
 	 */
+	//TODO nearly every usage of this call, needs to be redone to utilize the Util.getPreWorkflowStampCoordinate call.
+	//Anything else, leads to an incomplete return based on the requested stamps.
+	//Until we actually put workflow in, however, it won't matter..
 	public StampCoordinate getStampCoordinate()
 	{
 		return getCoordinatesToken().getTaxonomyCoordinate().getStampCoordinate();

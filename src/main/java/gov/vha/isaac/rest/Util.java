@@ -18,8 +18,6 @@
  */
 package gov.vha.isaac.rest;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,14 +27,15 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
+import gov.vha.isaac.rest.session.RequestParameters;
 
 public class Util
 {
@@ -205,40 +204,67 @@ public class Util
 	}
 	
 	/**
-	 * Return the latest version of each unique comment attached to an object, sorted from oldest to newest.
-	 * @param id the nid of UUID of the object to check for comments on
-	 * @return The comment(s)
-	 * @throws RestException
+	 * @param workflowProcessId - The optional workflowProcessId.  If non-blank, this must be a valid process id.
+	 * @return - the validated UUID, or null, if no workflowProcessId is submitted.
+	 * @throws RestException - if the provided non-blank value isn't valid.
 	 */
-	public static ArrayList<RestCommentVersion> readComments(String id, UUID processId) throws RestException
+	public static UUID validateWorkflowProcess(String workflowProcessId) throws RestException
 	{
-		ArrayList<RestCommentVersion> results = new ArrayList<>();
-		
-		Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
-			.forEach(sememeChronology -> 
-			{
-				@SuppressWarnings("rawtypes")
-				Optional<DynamicSememe> version = Optional.empty();
-				try {
-					version = WorkflowUtils.getStampedVersion(DynamicSememe.class, processId, sememeChronology.getNid());
-				} catch (Exception e) {
-					// TODO Joel ignore exception thrown by getStampedVersion()?
-				}
-				if (version.isPresent())
-				{
-					//TODO handle contradictions
-					results.add(new RestCommentVersion(version.get()));
-				}
-			});
-		
-		results.sort(new Comparator<RestCommentVersion>()
+		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, workflowProcessId);
+		if (processIdOptional.isPresent())
 		{
-			@Override
-			public int compare(RestCommentVersion o1, RestCommentVersion o2)
+			UUID temp = processIdOptional.get();
+			if (RequestInfo.get().getWorkflow().getWorkflowAccessor().getProcessDetails(temp) == null)
 			{
-				return Long.compare(o1.getCommentStamp().time, o2.getCommentStamp().time);
+				throw new RestException("processId", "The provided processId of '" + temp.toString() + "' is not a valid workflow process");
 			}
-		});
-		return results;
+			return temp;
+		}
+		else
+		{
+			return null;
+		}
+	}
+	
+	/**
+	 * Calls {@link #getPreWorkflowStampCoordinate(UUID, int)} after calling {@link #validateWorkflowProcess(String)}
+	 * @param workflowProcessId
+	 * @param componentNid
+	 * @return
+	 * @throws RestException 
+	 */
+	public static StampCoordinate getPreWorkflowStampCoordinate(String workflowProcessId, int componentNid) throws RestException
+	{
+		return getPreWorkflowStampCoordinate(validateWorkflowProcess(workflowProcessId), componentNid);
+	}
+	
+	
+	/**
+	 * If a workflowProcessId is passed, and the componentNid is present in the workflow, return the stamp
+	 * that occurred prior to the first change in workflow.  Otherwise, returns the user specified stamp coordinate, from {@link RequestInfo#getStampCoordinate()}
+	 * 
+	 * @param workflowProcessId - the id of the workflow process.  If not provided, this method returns the result of {@link RequestInfo#getStampCoordinate()}
+	 * @param componentNid - the component to check for in the workflow.  The componentNid must be a valid component identifier.
+	 * If the component is not found in the workflow, the result of this method is simply {@link RequestInfo#getStampCoordinate()}
+	 * @throws RestException if the provided processId is invalid
+	 */
+	public static StampCoordinate getPreWorkflowStampCoordinate(UUID workflowProcessId, int componentNid)
+	{
+		if (workflowProcessId == null)
+		{
+			return RequestInfo.get().getStampCoordinate();
+		}
+		else
+		{
+			if (RequestInfo.get().getWorkflow().getWorkflowAccessor().isComponentInProcess(workflowProcessId, componentNid))
+			{
+				StampedVersion version = RequestInfo.get().getWorkflow().getWorkflowAccessor().getVersionPriorToWorkflow(workflowProcessId, componentNid);
+				return Frills.getStampCoordinateFromVersion(version);
+			}
+			else
+			{
+				return RequestInfo.get().getStampCoordinate();
+			}
+		}
 	}
 }

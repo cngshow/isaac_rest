@@ -48,7 +48,6 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -88,8 +87,6 @@ public class SystemAPIs
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		RestConceptChronology concept = null;
 		RestSememeChronology sememe = null;
@@ -107,7 +104,7 @@ public class SystemAPIs
 									Get.conceptService().getConcept(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-									processIdOptional.isPresent() ? processIdOptional.get() : null);
+									Util.validateWorkflowProcess(processId));
 					break;
 				}
 				case SEMEME:
@@ -118,7 +115,7 @@ public class SystemAPIs
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-									processIdOptional.isPresent() ? processIdOptional.get() : null);
+									Util.validateWorkflowProcess(processId));
 					break;
 				case UNKNOWN_NID:
 				default:
@@ -142,7 +139,7 @@ public class SystemAPIs
 									Get.conceptService().getConcept(conceptNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-									processIdOptional.isPresent() ? processIdOptional.get() : null);
+									Util.validateWorkflowProcess(processId));
 				}
 
 				int sememeNid = Get.identifierService().getSememeNid(intId.get());
@@ -154,7 +151,7 @@ public class SystemAPIs
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-									processIdOptional.isPresent() ? processIdOptional.get() : null);
+									Util.validateWorkflowProcess(processId));
 				}
 			}
 
@@ -183,7 +180,7 @@ public class SystemAPIs
 										Get.conceptService().getConcept(nid),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
-										processIdOptional.isPresent() ? processIdOptional.get() : null);
+										Util.validateWorkflowProcess(processId));
 						break;
 					case SEMEME:
 						sememe =
@@ -193,7 +190,7 @@ public class SystemAPIs
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-										processIdOptional.isPresent() ? processIdOptional.get() : null);
+										Util.validateWorkflowProcess(processId));
 						break;
 					case UNKNOWN_NID:
 					default:

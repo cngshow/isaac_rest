@@ -22,11 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
@@ -44,7 +42,6 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -138,18 +135,13 @@ public class RestSememeChronology
 				SememeChronology<? extends SememeVersion> referencedComponentSememe = Get.sememeService().getSememe(referencedComponentNid);
 				if (SememeType.DESCRIPTION == referencedComponentSememe.getSememeType())
 				{
-					@SuppressWarnings("rawtypes")
-					Optional<DescriptionSememe> version = Optional.empty();
-					try {
-						version = WorkflowUtils.getStampedVersion(DescriptionSememe.class, processId, referencedComponentSememe.getNid());
-					} catch (Exception e) {
-						throw new RestException(e);
-					}
-
-					if (version.isPresent())
+					@SuppressWarnings({ "rawtypes", "unchecked" })
+					Optional<LatestVersion<DescriptionSememe>> ds = ((SememeChronology)referencedComponentSememe)
+							.getLatestVersion(DescriptionSememe.class, Util.getPreWorkflowStampCoordinate(processId, referencedComponentSememe.getNid()));
+					if (ds.isPresent())
 					{
 						//TODO handle contradictions
-						referencedComponentNidDescription = version.get().getText();
+						referencedComponentNidDescription = ds.get().value().getText();
 					}
 				}
 				
@@ -173,16 +165,13 @@ public class RestSememeChronology
 			}
 			else if (includeLatestVersion)
 			{
-				@SuppressWarnings("rawtypes")
-				Optional<DescriptionSememe> version;
-				try {
-					version = WorkflowUtils.getStampedVersion(DescriptionSememe.class, processId, sc.getNid());
-				} catch (Exception e) {
-					throw new RestException(e);
-				}
-				if (version.isPresent())
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Optional<LatestVersion<SememeVersion>> latest = 
+						((SememeChronology)sc).getLatestVersion(SememeVersion.class, 
+								Util.getPreWorkflowStampCoordinate(processId, sc.getNid()));
+				if (latest.isPresent())
 				{
-					versions.add(RestSememeVersion.buildRestSememeVersion(version.get(), false, includeNested, populateReferencedDetails, processId));
+					versions.add(RestSememeVersion.buildRestSememeVersion(latest.get().value(), false, includeNested, populateReferencedDetails, processId));
 				}
 			}
 		}

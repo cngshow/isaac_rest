@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -34,7 +33,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -44,17 +42,13 @@ import gov.vha.isaac.ochre.api.util.AlphanumComparator;
 import gov.vha.isaac.ochre.associations.AssociationInstance;
 import gov.vha.isaac.ochre.associations.AssociationType;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
-import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionPage;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -97,32 +91,18 @@ public class AssociationAPIs
 		
 		ArrayList<RestAssociationTypeVersion> results = new ArrayList<>();
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-		
 		Set<Integer> associationConcepts = AssociationUtilities.getAssociationConceptSequences();
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
 		for (int i : associationConcepts)
 		{
-			StampCoordinate sc = RequestInfo.get().getStampCoordinate();
-			try {
-				Optional<ConceptVersionImpl> conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, i);
-				if (conceptVersion.isPresent()) {
-					sc = Frills.getStampCoordinateFromVersion(conceptVersion.get());
-				}
-			} catch (Exception e) {
-				throw new RestException(e);
-			}
-			AssociationType associationTypeToAdd = AssociationType.read(
-					i,
-					sc, 
-					RequestInfo.get().getLanguageCoordinate());
+			StampCoordinate sc = Util.getPreWorkflowStampCoordinate(processId, i);
+			AssociationType associationTypeToAdd = AssociationType.read(i, sc, RequestInfo.get().getLanguageCoordinate());
 			
-			if (associationTypeToAdd != null) {
-				results.add(
-					new RestAssociationTypeVersion(
-							associationTypeToAdd,
-							processIdOptional.isPresent() ? processIdOptional.get() : null)
-					);
+			if (associationTypeToAdd != null) 
+			{
+				results.add(new RestAssociationTypeVersion(associationTypeToAdd, processIdUUID));
 			}
 		}
 		
@@ -170,23 +150,13 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
 
 		int sequence = Util.convertToConceptSequence(id);
 		int nid = Get.identifierService().getConceptNid(sequence);
-		StampCoordinate conceptVersionStampCoordinate = RequestInfo.get().getStampCoordinate();
-		try {
-			Optional<ConceptVersionImpl> conceptVersion = WorkflowUtils.getStampedVersion(ConceptVersionImpl.class, processIdOptional, nid);
-			if (conceptVersion.isPresent()) {
-				conceptVersionStampCoordinate = Frills.getStampCoordinateFromVersion(conceptVersion.get());
-			}
-		} catch (Exception e) {
-			throw new RestException(e);
-		}		
+		StampCoordinate conceptVersionStampCoordinate = Util.getPreWorkflowStampCoordinate(processId, nid);
 		return new RestAssociationTypeVersion(AssociationType.read(sequence, conceptVersionStampCoordinate, 
 				RequestInfo.get().getLanguageCoordinate()),
-				processIdOptional.isPresent() ? processIdOptional.get() : null);
+				Util.validateWorkflowProcess(processId));
 	}
 	
 	/**
@@ -226,8 +196,8 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 
 		ArrayList<RestAssociationItemVersion> results;
 		try
@@ -253,7 +223,7 @@ public class AssociationAPIs
 								else
 								{
 									results.add(new RestAssociationItemVersion(AssociationInstance.read(latest.get().value(), RequestInfo.get().getStampCoordinate()),
-											processIdOptional.isPresent() ? processIdOptional.get() : null));
+											processIdUUID));
 								}
 							}
 						}
@@ -309,13 +279,13 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 
 		List<AssociationInstance> results = AssociationUtilities.getSourceAssociations(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		RestAssociationItemVersion[] finalResult = new RestAssociationItemVersion[results.size()];
 		for (int i = 0; i < results.size(); i++)
 		{
-			finalResult[i] = new RestAssociationItemVersion(results.get(i), processIdOptional.isPresent() ? processIdOptional.get() : null);
+			finalResult[i] = new RestAssociationItemVersion(results.get(i), processIdUUID);
 		}
 		return finalResult;
 		
@@ -352,14 +322,13 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		//TODO lookup by target performance is not good at the moment, not sure why
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		List<AssociationInstance> results = AssociationUtilities.getTargetAssociations(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		RestAssociationItemVersion[] finalResult = new RestAssociationItemVersion[results.size()];
 		for (int i = 0; i < results.size(); i++)
 		{
-			finalResult[i] = new RestAssociationItemVersion(results.get(i), processIdOptional.isPresent() ? processIdOptional.get() : null);
+			finalResult[i] = new RestAssociationItemVersion(results.get(i), processIdUUID);
 		}
 		return finalResult;
 		
@@ -397,11 +366,9 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		Optional<AssociationInstance> result = AssociationUtilities.getAssociation(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		
-		return result.isPresent() ? new RestAssociationItemVersion(result.get(), processIdOptional.isPresent() ? processIdOptional.get() : null) : null;
+		return result.isPresent() ? new RestAssociationItemVersion(result.get(), Util.validateWorkflowProcess(processId)) : null;
 		
 	}
 }

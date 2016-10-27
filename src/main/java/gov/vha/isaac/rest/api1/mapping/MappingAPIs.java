@@ -22,15 +22,16 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
@@ -45,9 +46,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -59,6 +58,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.mappingAPIsPathComponent)
 public class MappingAPIs
 {
+	private static Logger log = LogManager.getLogger(MappingAPIs.class);
+	
 	/**
 	 * 
 	 * @param processId if set, specifies that retrieved components should be checked against the specified active
@@ -88,23 +89,20 @@ public class MappingAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		ArrayList<RestMappingSetVersion> results = new ArrayList<>();
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
 		Get.sememeService().getSememesFromAssemblage(IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).forEach(sememeC -> 
 		{
-			@SuppressWarnings("rawtypes")
-			Optional<DynamicSememe> sememeVersion = Optional.empty();
-			try {
-				sememeVersion = WorkflowUtils.getStampedVersion(DynamicSememe.class, processIdOptional, sememeC.getNid());
-			} catch (Exception e) {
-				// TODO Joel ignore exception from getStampedVersion()?
-			}
-			if (sememeVersion.isPresent())
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
+					Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
+			
+			if (latest.isPresent())
 			{
 				//TODO handle contradictions
-				results.add(new RestMappingSetVersion(sememeVersion.get(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), processIdOptional.isPresent() ? processIdOptional.get() : null));
+				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), 
+						processIdUUID));
 			}
 		});
 		return results.toArray(new RestMappingSetVersion[results.size()]);
@@ -142,27 +140,24 @@ public class MappingAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(ConceptAPIs.findConceptChronology(id).getNid(), 
 			IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
 
 		if (! sememe.isPresent()) 
 		{
-			throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
+			throw new RestException("The map set identified by '" + id + "' is not present");
 		}
 		
-		@SuppressWarnings("rawtypes")
-		Optional<DynamicSememe> sememeVersion = Optional.empty();
-		try {
-			sememeVersion = WorkflowUtils.getStampedVersion(DynamicSememe.class, processIdOptional, sememe.get().getNid());
-		} catch (Exception e) {
-			throw new RestException(e);
-		}
-		if (sememeVersion.isPresent())
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememe.get()).getLatestVersion(DynamicSememe.class, 
+				Util.getPreWorkflowStampCoordinate(processIdUUID, sememe.get().getNid()));
+		if (latest.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestMappingSetVersion(sememeVersion.get(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), processIdOptional.isPresent() ? processIdOptional.get() : null);
+			return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), 
+					processIdUUID);
 		} 
 		else 
 		{
@@ -203,9 +198,7 @@ public class MappingAPIs
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
+		
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		
 		int sememeConceptSequence = Util.convertToConceptSequence(id);
@@ -233,37 +226,29 @@ public class MappingAPIs
 			throw new RuntimeException("Unexpecter error reading mapping sememe - possibly invalidly specified");
 		}
 		
-		try
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		
+		Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
 		{
-			Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
+					Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
+			
+			if (latest.isPresent())
 			{
-				@SuppressWarnings("rawtypes")
-				Optional<DynamicSememe> sememeVersion = Optional.empty();
-				try {
-					sememeVersion = WorkflowUtils.getStampedVersion(DynamicSememe.class, processIdOptional, sememeC.getNid());
-				} catch (Exception e) {
-					// TODO Joel ignore exception thrown from getStampedVersion()?
-				}			
-				if (sememeVersion.isPresent())
-				{
-					//TODO handle contradictions
-					results.add(new RestMappingItemVersion((sememeVersion.get()), RequestInfo.get().getStampCoordinate(), 
-						targetPos.get(), qualifierPos.get(),
-						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-						RequestInfo.get().shouldExpand(ExpandUtil.comments),
-						processIdOptional.isPresent() ? processIdOptional.get() : null));
-				}
-				if (results.size() >= 1000)
-				{
-					throw new RuntimeException("Java 9 will fix this with takeWhile...");
-				}
-				
-			});
-		}
-		catch (RuntimeException e)
-		{
-			// Just the limit / shortcircut from the stream API
-		}
+				//TODO handle contradictions
+				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+					targetPos.get(), qualifierPos.get(),
+					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+					RequestInfo.get().shouldExpand(ExpandUtil.comments),
+					processIdUUID));
+			}
+			if (results.size() >= 1000)
+			{
+				throw new RuntimeException("Java 9 will fix this with takeWhile...");
+			}
+			
+		});
 		return results.toArray(new RestMappingItemVersion[results.size()]);
 	}
 	

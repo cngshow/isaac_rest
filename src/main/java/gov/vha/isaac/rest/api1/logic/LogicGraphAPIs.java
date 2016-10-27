@@ -26,27 +26,20 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
-import gov.vha.isaac.ochre.api.util.NumericUtils;
-import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
@@ -58,13 +51,10 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.logicGraphAPIsPathComponent)
 public class LogicGraphAPIs
 {	
-	private static Logger LOG = LogManager.getLogger();
-
-	
 	/**
 	 * Returns a single version of a logic graph.
 	 * If no version parameter is specified, returns the latest version.
-	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
+	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'logicNodeUuids' and/or 'version'
 	 * @param processId if set, specifies that retrieved components should be checked against the specified active
 	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
@@ -90,8 +80,6 @@ public class LogicGraphAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		@SuppressWarnings("rawtypes")
 		//TODO bug - the methods below findLogicGraphChronology are relying on some default logic graph coordiantes...  Also seems to be a lot 
 		//of optional to not optional to optional stuff going on below this call... look at cleaning up.
@@ -101,15 +89,17 @@ public class LogicGraphAPIs
 				RequestInfo.get().getStated(),
 				RequestInfo.get().getStampCoordinate(),
 				RequestInfo.get().getLanguageCoordinate(),
-				RequestInfo.get().getLogicCoordinate(),
-				processIdOptional.isPresent() ? processIdOptional.get() : null);
+				RequestInfo.get().getLogicCoordinate());
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, RequestInfo.get().getStampCoordinate());
+		Optional<LatestVersion<LogicGraphSememe>> lgs = logicGraphSememeChronology.getLatestVersion(LogicGraphSememe.class, 
+				Util.getPreWorkflowStampCoordinate(processIdUUID, logicGraphSememeChronology.getNid()));
 		if (lgs.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestSememeLogicGraphVersion(lgs.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), processIdOptional.isPresent() ? processIdOptional.get() : null);
+			return new RestSememeLogicGraphVersion(lgs.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), processIdUUID);
 		}
 		throw new RestException(RequestParameters.id, id, "No concept was found");
 	}
@@ -144,16 +134,13 @@ public class LogicGraphAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		SememeChronology<? extends LogicGraphSememe<?>> logicGraphSememeChronology =
 				findLogicGraphChronology(
 						id,
 						RequestInfo.get().getStated(),
 						RequestInfo.get().getStampCoordinate(),
 						RequestInfo.get().getLanguageCoordinate(),
-						RequestInfo.get().getLogicCoordinate(),
-						processIdOptional.isPresent() ? processIdOptional.get() : null);
+						RequestInfo.get().getLogicCoordinate());
 
 		return new RestSememeChronology(
 				logicGraphSememeChronology,
@@ -161,16 +148,12 @@ public class LogicGraphAPIs
 				RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 				false, // LogicGraphSememe should not support nestedSememesExpandable
 				false,
-				processIdOptional.isPresent() ? processIdOptional.get() : null);
+				Util.validateWorkflowProcess(processId));
 	}
 
 	/**
 	 * @param id - A UUID, nid, or concept sequence identifying the concept at the root of the logic graph
 	 * @param stated - A boolean specifying whether to use the stated definition of the logic graph
-	 * @param processId if set, specifies that retrieved components should be checked against the specified active
-	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
-	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
-	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @return - A LogicGraphSememe SememeChronology corresponding to the concept identified by the passed id
 	 * @throws RestException
 	 * 
@@ -180,71 +163,19 @@ public class LogicGraphAPIs
 	 * 
 	 * If the passed String id is a UUID, it will be interpreted as the id of either the LogicGraphSememe or the referenced concept
 	 */
-	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id, boolean stated, StampCoordinate stampCoordinate, LanguageCoordinate languageCoordinate, LogicCoordinate logicCoordinate, UUID processId) throws RestException
+	private static SememeChronology<? extends LogicGraphSememe<?>> findLogicGraphChronology(String id, boolean stated, StampCoordinate stampCoordinate, 
+			LanguageCoordinate languageCoordinate, LogicCoordinate logicCoordinate) throws RestException
 	{
-		Optional<Integer> intId = NumericUtils.getInt(id);
-		if (intId.isPresent())
+		// id interpreted as the id of the referenced concept
+		Optional<SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = 
+				Frills.getLogicGraphChronology(Util.convertToConceptSequence(id), stated, stampCoordinate, languageCoordinate, logicCoordinate);
+		if (defChronologyOptional.isPresent())
 		{
-			// id interpreted as the id of the referenced concept
-			Optional<SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(intId.get(), stated, stampCoordinate, languageCoordinate, logicCoordinate);
-			if (defChronologyOptional.isPresent())
-			{
-				try {
-					@SuppressWarnings("rawtypes")
-					Optional<LogicGraphSememe> version = WorkflowUtils.getStampedVersion(LogicGraphSememe.class, processId, defChronologyOptional.get().getNid());
-
-					if (! version.isPresent()) {
-						throw new RestException(RequestParameters.id, id, "No LogicGraph chronology is available for the concept with the specified id according to getStampedVersion()");
-					}
-				} catch (Exception e) {
-					throw new RestException(e);
-				}
-				return defChronologyOptional.get();
-			}
-			else
-			{
-				throw new RestException(RequestParameters.id, id, "No LogicGraph chronology is available for the concept with the specified id");
-			}
+			return defChronologyOptional.get();
 		}
 		else
 		{
-			Optional<UUID> uuidId = UUIDUtil.getUUID(id);
-			if (uuidId.isPresent())
-			{
-				// id interpreted as the id of either the LogicGraphSememe or the referenced concept
-				int nidForUuid = Get.identifierService().getNidForUuids(uuidId.get());
-				ObjectChronologyType typeOfPassedId = Get.identifierService().getChronologyTypeForNid(nidForUuid);
-				
-				int seqForUuid = 0;
-				switch (typeOfPassedId) {
-				case CONCEPT: {
-					seqForUuid = Get.identifierService().getConceptSequenceForUuids(uuidId.get());
-					break;
-				}
-				case SEMEME: {
-					seqForUuid = Get.identifierService().getSememeSequenceForUuids(uuidId.get());
-					break;
-				}
-				case UNKNOWN_NID:
-				default:
-					throw new RestException(RequestParameters.id, id, "LogicGraph chronology cannot be retrieved by id of unsupported ObjectChronologyType " + typeOfPassedId);
-				}
-
-				final Optional<? extends SememeChronology<? extends LogicGraphSememe<?>>> defChronologyOptional = Frills.getLogicGraphChronology(seqForUuid, stated, stampCoordinate, languageCoordinate, logicCoordinate);
-				if (defChronologyOptional.isPresent())
-				{
-					LOG.debug("Used " + typeOfPassedId + " UUID " + uuidId.get() + " to retrieve LogicGraphSememe SememeChronology {}", Optional.ofNullable(defChronologyOptional.get()));
-					return defChronologyOptional.get();
-				}
-				else
-				{
-					throw new RestException(RequestParameters.id, id, "No LogicGraph chronology is available for the specified " + typeOfPassedId + " UUID");
-				}
-			}
-			else
-			{
-				throw new RestException(RequestParameters.id, id, "Is not a valid concept or sememe identifier.  Must be a UUID identifying a CONCEPT or SEMEME or an integer NID or SEQUENCE identifying a CONCEPT");
-			}
+			throw new RestException(RequestParameters.id, id, "No LogicGraph chronology is available for the concept with the specified id");
 		}
 	}
 }

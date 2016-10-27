@@ -19,26 +19,28 @@
 package gov.vha.isaac.rest.api1.comment;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
-import gov.vha.isaac.rest.api1.workflow.WorkflowUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
-import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -50,6 +52,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.commentAPIsPathComponent)
 public class CommentAPIs
 {
+	private static Logger log = LogManager.getLogger(CommentAPIs.class);
+	
 	/**
 	 * Returns a single version of a comment {@link RestCommentVersion}.
 	 * 
@@ -78,23 +82,17 @@ public class CommentAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
 		@SuppressWarnings("rawtypes")
-		SememeChronology sc = SememeAPIs.findSememeChronologyConformingToEffectiveStamp(id, processIdOptional);
-		
-		@SuppressWarnings("rawtypes")
-		Optional<DynamicSememe> commentVersion = Optional.empty();
-		try {
-			commentVersion = WorkflowUtils.getStampedVersion(DynamicSememe.class, processIdOptional, sc.getNid());
-		} catch (Exception e) {
-			throw new RestException(e);
-		}
-		if (commentVersion.isPresent())
+		SememeChronology sc = SememeAPIs.findSememeChronology(id);
+		@SuppressWarnings("unchecked")
+		Optional<LatestVersion<DynamicSememe<?>>> sv = sc.getLatestVersion(DynamicSememe.class, 
+				Util.getPreWorkflowStampCoordinate(processId, sc.getNid()));
+		if (sv.isPresent())
 		{
-			return new RestCommentVersion(commentVersion.get());
+			//TODO handle contradictions
+			return new RestCommentVersion(sv.get().value());
 		}
-
+		
 		throw new RestException("id", id, "No comment was found on the given coordinate");
 	}
 	
@@ -127,9 +125,43 @@ public class CommentAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		Optional<UUID> processIdOptional = RequestInfoUtils.parseUuidParameterIfNonBlank(RequestParameters.processId, processId);
-
-		ArrayList<RestCommentVersion> temp = Util.readComments(id, processIdOptional.isPresent() ? processIdOptional.get() : null); 
+		ArrayList<RestCommentVersion> temp = readComments(id, Util.validateWorkflowProcess(processId)); 
 		return temp.toArray(new RestCommentVersion[temp.size()]);
+	}
+	
+	/**
+	 * Return the latest version of each unique comment attached to an object, sorted from oldest to newest.
+	 * @param id the nid of UUID of the object to check for comments on
+	 * @return The comment(s)
+	 * @throws RestException
+	 */
+	public static ArrayList<RestCommentVersion> readComments(String id, UUID processId) throws RestException
+	{
+		ArrayList<RestCommentVersion> results = new ArrayList<>();
+		
+		Get.sememeService().getSememesForComponentFromAssemblage(Util.convertToNid(id), DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
+			.forEach(sememeChronology -> 
+		{
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			Optional<LatestVersion<DynamicSememe<?>>> sv = ((SememeChronology)sememeChronology).getLatestVersion(DynamicSememe.class, 
+					Util.getPreWorkflowStampCoordinate(processId, sememeChronology.getNid()));
+			if (sv.isPresent())
+			{
+				//TODO handle contradictions
+				results.add(new RestCommentVersion(sv.get().value()));
+			}
+
+		});
+
+		results.sort(new Comparator<RestCommentVersion>()
+		{
+			@Override
+			public int compare(RestCommentVersion o1, RestCommentVersion o2)
+			{
+				return Long.compare(o1.getCommentStamp().time, o2.getCommentStamp().time);
+			}
+		});
+		return results;
+		
 	}
 }
