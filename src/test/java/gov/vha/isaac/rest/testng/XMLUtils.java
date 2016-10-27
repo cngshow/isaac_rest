@@ -43,6 +43,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
+import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.jaxbCrutch.ArrayUnwrapper;
 import gov.vha.isaac.rest.jaxbCrutch.ArrayUnwrappers;
 
@@ -119,7 +120,8 @@ public class XMLUtils {
 			jaxbContext = JAXBContext.newInstance(ArrayUnwrappers.RestCommentVersions.class, ArrayUnwrappers.RestSememeDescriptionVersions.class, 
 					ArrayUnwrappers.RestMappingSetVersions.class, ArrayUnwrappers.RestMappingItemVersions.class, ArrayUnwrappers.RestWorkflowProcessHistories.class, 
 					ArrayUnwrappers.RestWorkflowProcessHistoriesMapEntries.class, ArrayUnwrappers.RestWorkflowAvailableActions.class, 
-					ArrayUnwrappers.RestAssociationTypeVersions.class, ArrayUnwrappers.RestAssociationItemVersions.class, ArrayUnwrappers.RestWorkflowDefinitions.class);
+					ArrayUnwrappers.RestAssociationTypeVersions.class, ArrayUnwrappers.RestAssociationItemVersions.class, ArrayUnwrappers.RestWorkflowDefinitions.class,
+					ArrayUnwrappers.RestWorkflowProcesses.class);
 
 			Unmarshaller unMarshaller = jaxbContext.createUnmarshaller();
 			ArrayUnwrapper object = (ArrayUnwrapper)unMarshaller.unmarshal(streamSource);
