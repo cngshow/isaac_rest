@@ -157,6 +157,13 @@ public class RequestInfoUtils {
 		}
 	}
 
+	/**
+	 * Handles UUIDs, nids, or sequences.
+	 * @param parameterName
+	 * @param str
+	 * @return
+	 * @throws RestException
+	 */
 	public static int getSememeSequenceFromParameter(String parameterName, String str) throws RestException {
 		try {
 			UUID uuid = null;

@@ -127,6 +127,12 @@ public class Util
 		}
 	}
 	
+	/**
+	 * Handles UUIDs or nids (not sequences)
+	 * @param id
+	 * @return
+	 * @throws RestException
+	 */
 	public static int convertToNid(String id) throws RestException
 	{
 		Optional<UUID> uuidId = UUIDUtil.getUUID(id);
