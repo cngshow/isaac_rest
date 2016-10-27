@@ -1284,7 +1284,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				newMappingSetName,
 				newMappingSetInverseName,
 				newMappingSetDescription,
-				newMappingSetPurpose);
+				newMappingSetPurpose, null);
 
 		String xml = null;
 		try {
@@ -1323,7 +1323,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				updatedMappingSetName,
 				updatedMappingSetInverseName,
 				updatedMappingSetDescription,
-				updatedMappingSetPurpose);
+				updatedMappingSetPurpose, true);
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(updatedMappingSetData);
@@ -1527,6 +1527,219 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		
 		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
+		Assert.assertEquals(createdMapSet.conceptSequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.description, "bla bla");
+		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
+		Assert.assertEquals(createdMapSet.name, name);
+		Assert.assertEquals(createdMapSet.purpose, "just testing");
+		Assert.assertEquals(createdMapSet.active.booleanValue(), true);
+		Assert.assertNull(createdMapSet.comments);
+		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
+		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnConceptSequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, true);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnDataType.enumId, DynamicSememeDataType.BOOLEAN.ordinal());
+		Assert.assertEquals((boolean)createdMapSet.mapItemFieldsDefinition.get(0).columnDefaultData.data , true);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes);
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnConceptSequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, false);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnDataType.enumId, DynamicSememeDataType.LONG.ordinal());
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(1).columnDefaultData);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorData.length, 1);
+		Assert.assertEquals(((Long)createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorData[0].data).longValue(), 40l);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorTypes.length, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorTypes[0].enumId, DynamicSememeValidatorType.LESS_THAN.ordinal());
+		
+		//Create an item
+		
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept", MetaData.OR.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(20)}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
+		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
+		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newMappingItemUUID != null);
+
+		// test createNewMappingItem()
+		// Retrieve mapping item and validate fields
+		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
+		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
+		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
+		Assert.assertTrue(MetaData.OR.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
+		Assert.assertTrue(retrievedMappingItemVersion.active);
+		
+		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
+		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).booleanValue(), true);
+		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).longValue(), 20);
+	}
+	
+	@Test
+	public void testMappingExtendedFieldsAPIs2() throws JsonProcessingException, IOException
+	{
+		//This test reverses the order of the extended columns, to test an edge case with default column handling
+		//Make one
+		UUID random = UUID.randomUUID();
+		
+		String name = "Just a test map set type (" + random.toString() + ")";
+		ObjectNode root = jfn.objectNode();
+		root.put("name", name);
+		root.put("inverseName", "inverse test");
+		root.put("description", "bla bla");
+		root.put("purpose", "just testing");
+		root.put("active", true);
+		
+		ArrayNode extendedFields = jfn.arrayNode();
+		ObjectNode ef1 = jfn.objectNode();
+		ef1.put("extensionNameConcept", MetaData.AMT_MODULE.getNid());
+		ef1.set("extensionValue", toJsonObject(new DynamicSememeStringImpl("test Value extended"), 1));
+		
+		extendedFields.add(ef1);
+		root.set("mapSetExtendedFields", extendedFields);
+		
+		ArrayNode mapItemExtendedFieldsDef = jfn.arrayNode();
+		
+		ObjectNode mapItemEF1 = jfn.objectNode();
+		mapItemEF1.put("columnLabelConcept", MetaData.CONDOR_CLASSIFIER.getNid());
+		mapItemEF1.put("columnDataType", DynamicSememeDataType.LONG.name());
+		mapItemEF1.put("columnRequired", false);
+		ArrayNode stringArray = jfn.arrayNode();
+		stringArray.add(DynamicSememeValidatorType.LESS_THAN.name());
+		mapItemEF1.set("columnValidatorTypes", stringArray);
+		mapItemEF1.set("columnValidatorData", toJsonObject(new DynamicSememeData[] {new DynamicSememeLongImpl(40)}));
+		
+		mapItemExtendedFieldsDef.add(mapItemEF1);
+		
+		ObjectNode mapItemEF2 = jfn.objectNode();
+		mapItemEF2.put("columnLabelConcept", MetaData.BOOLEAN_LITERAL.getNid());
+		mapItemEF2.put("columnDataType", DynamicSememeDataType.BOOLEAN.name());
+		mapItemEF2.set("columnDefaultData", toJsonObject(new DynamicSememeBooleanImpl(true), 1));
+		mapItemEF2.put("columnRequired", true);
+		
+		mapItemExtendedFieldsDef.add(mapItemEF2);
+		
+		root.set("mapItemExtendedFieldsDefinition", mapItemExtendedFieldsDef);
+		
+		log.info("MapSet create json: " + toJson(root));
+		
+		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent
+					+ RestPaths.mappingSetComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String result = checkFail(createAssociationResponse).readEntity(String.class);
+		
+		RestWriteResponse createdMapSetId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		
+		//Read back
+		
+		result = checkFail(target(RestPaths.mappingSetAppPathComponent + createdMapSetId.uuid.toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
+		Assert.assertEquals(createdMapSet.conceptSequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.description, "bla bla");
+		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
+		Assert.assertEquals(createdMapSet.name, name);
+		Assert.assertEquals(createdMapSet.purpose, "just testing");
+		Assert.assertEquals(createdMapSet.active.booleanValue(), true);
+		Assert.assertNull(createdMapSet.comments);
+		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
+		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
+
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnConceptSequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, false);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnDataType.enumId, DynamicSememeDataType.LONG.ordinal());
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnDefaultData);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData.length, 1);
+		Assert.assertEquals(((Long)createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData[0].data).longValue(), 40l);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes.length, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes[0].enumId, DynamicSememeValidatorType.LESS_THAN.ordinal());
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnConceptSequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, true);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnDataType.enumId, DynamicSememeDataType.BOOLEAN.ordinal());
+		Assert.assertEquals((boolean)createdMapSet.mapItemFieldsDefinition.get(1).columnDefaultData.data , true);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorData);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorTypes);
+		
+		//Create an item
+		
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept", MetaData.OR.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {new DynamicSememeLongImpl(-5620), null}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
+		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
+		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newMappingItemUUID != null);
+
+		// test createNewMappingItem()
+		// Retrieve mapping item and validate fields
+		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
+		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
+		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
+		Assert.assertTrue(MetaData.OR.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
+		Assert.assertTrue(retrievedMappingItemVersion.active);
+		
+		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
+		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).longValue(), -5620);
+		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).booleanValue(), true);
 	}
 
 	@Test
@@ -3256,7 +3469,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		ArrayNode on = jfn.arrayNode();
 		for (int i = 0; i < data.length; i++)
 		{
-			on.add(toJsonObject(data[i], i));
+			if (data[i] == null)
+			{
+				on.addNull();
+			}
+			else
+			{
+				on.add(toJsonObject(data[i], i));
+			}
 		}
 		return on;
 	}
