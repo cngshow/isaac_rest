@@ -97,8 +97,8 @@ public class AssociationAPIs
 		
 		for (int seq : associationConcepts)
 		{
-			StampCoordinate sc = Util.getPreWorkflowStampCoordinate(processId, seq);
-			AssociationType associationTypeToAdd = AssociationType.read(Get.identifierService().getConceptNid(seq), sc, RequestInfo.get().getLanguageCoordinate());
+			StampCoordinate sc = Util.getPreWorkflowStampCoordinate(processId, Get.identifierService().getConceptNid(seq));
+			AssociationType associationTypeToAdd = AssociationType.read(seq, sc, RequestInfo.get().getLanguageCoordinate());
 			
 			if (associationTypeToAdd != null) 
 			{
