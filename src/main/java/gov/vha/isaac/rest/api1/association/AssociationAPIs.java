@@ -95,10 +95,10 @@ public class AssociationAPIs
 		
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
-		for (int i : associationConcepts)
+		for (int seq : associationConcepts)
 		{
-			StampCoordinate sc = Util.getPreWorkflowStampCoordinate(processId, i);
-			AssociationType associationTypeToAdd = AssociationType.read(i, sc, RequestInfo.get().getLanguageCoordinate());
+			StampCoordinate sc = Util.getPreWorkflowStampCoordinate(processId, seq);
+			AssociationType associationTypeToAdd = AssociationType.read(Get.identifierService().getConceptNid(seq), sc, RequestInfo.get().getLanguageCoordinate());
 			
 			if (associationTypeToAdd != null) 
 			{
