@@ -527,10 +527,9 @@ public class MappingWriteAPIs
 		//TODO handle contradictions
 		DynamicSememe<?> latest = latestVersion.get().value();
 		
-		if (latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
-				|| latest.getData().length > 0 && latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
-				|| (latest.getData().length > 0 && latest.getData()[0] != null && mapPurpose != null 
-					&& latest.getData()[0] instanceof DynamicSememeString && !((DynamicSememeString)latest.getData()[0]).getDataString().equals(mapPurpose)))
+		String currentMapPurposeValue = (latest.getData().length == 0 || latest.getData()[0] == null ? "" : latest.getData()[0].dataToString());
+
+		if (!currentMapPurposeValue.equals(mapPurpose))
 		{
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingSememe.get()).createMutableVersion(
