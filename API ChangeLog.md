@@ -7,6 +7,10 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+
+* 2016/10/26 - 1.7.0: 
+    * Commented out all of the workflow APIs.  Fixed inadvertent breakages being caused by previously merged workflow code.
+    
 * 2016/10/25 - 1.6.4: 
     * Adding a system/user call to hand back the user information about a given user concept.  This will include various SSO information that was 
         used when the user concept was created.
