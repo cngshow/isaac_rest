@@ -71,13 +71,9 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 * @param description
 	 * @param purpose
 	 */
-	public RestMappingSetVersionBaseCreate(
-			String name,
-			String inverseName,
-			String description,
-			String purpose) 
+	public RestMappingSetVersionBaseCreate(String name, String inverseName, String description, String purpose, Boolean active) 
 	{
-		super(name, inverseName, description, purpose);
+		super(name, inverseName, description, purpose, active);
 	}
 
 	/**
@@ -85,15 +81,10 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 * @param mapSetExtendedFields
 	 * @param mapItemExtendedFieldsType
 	 */
-	public RestMappingSetVersionBaseCreate(
-			String name,
-			String inverseName,
-			String description,
-			String purpose,
-			List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields,
-			List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition) 
+	public RestMappingSetVersionBaseCreate(String name, String inverseName, String description, String purpose, Boolean active,
+			List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields, List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition) 
 	{
-		super(name, inverseName, description, purpose);
+		super(name, inverseName, description, purpose, active);
 
 		this.mapSetExtendedFields = mapSetExtendedFields;
 		this.mapItemExtendedFieldsDefinition = mapItemExtendedFieldsDefinition;

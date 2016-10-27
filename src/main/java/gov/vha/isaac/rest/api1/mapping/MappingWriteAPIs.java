@@ -583,9 +583,9 @@ public class MappingWriteAPIs
 		data[1] = (qualifierID == null ? null : new DynamicSememeUUIDImpl(qualifierID));
 		if (extendedDataFields != null)
 		{
-			for (int i = 2; i < extendedDataFields.size(); i++)
+			for (int i = 0; i < extendedDataFields.size(); i++)
 			{
-				data[i] = RestDynamicSememeData.translate(extendedDataFields.get(i));
+				data[i + 2] = RestDynamicSememeData.translate(extendedDataFields.get(i));
 			}
 		}
 		
