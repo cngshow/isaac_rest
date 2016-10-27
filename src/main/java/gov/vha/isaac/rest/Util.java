@@ -250,6 +250,9 @@ public class Util
 	 */
 	public static StampCoordinate getPreWorkflowStampCoordinate(UUID workflowProcessId, int componentNid)
 	{
+		if (componentNid >= 0) {
+			throw new RuntimeException("Internal error - sequence passed where nid required: " + componentNid);
+		}
 		if (workflowProcessId == null)
 		{
 			return RequestInfo.get().getStampCoordinate();
