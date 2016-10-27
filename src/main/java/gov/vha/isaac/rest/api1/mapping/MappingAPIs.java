@@ -21,7 +21,6 @@ package gov.vha.isaac.rest.api1.mapping;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -47,6 +46,7 @@ import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 
@@ -58,6 +58,19 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.mappingAPIsPathComponent)
 public class MappingAPIs
 {
+	private class Positions
+	{
+
+		protected int targetPos;
+		protected int qualfierPos;
+
+		public Positions(int targetPos, int qualifierPos)
+		{
+			this.targetPos = targetPos;
+			this.qualfierPos = qualifierPos;
+		}
+	}
+
 	private static Logger log = LogManager.getLogger(MappingAPIs.class);
 	
 	/**
@@ -202,29 +215,8 @@ public class MappingAPIs
 		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
 		
 		int sememeConceptSequence = Util.convertToConceptSequence(id);
-		AtomicInteger targetPos = new AtomicInteger(-1);
-		AtomicInteger qualifierPos = new AtomicInteger(-1);
 		
-		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(sememeConceptSequence);
-		for (int i = 0; i < dsud.getColumnInfo().length; i++)
-		{
-			if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid()))
-			{
-				targetPos.set(i);
-			}
-			else if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_QUALIFIER.getPrimordialUuid()))
-			{
-				qualifierPos.set(i);;
-			}
-			if (targetPos.get() >= 0 && qualifierPos.get() >= 0)
-			{
-				break;
-			}
-		}
-		if (targetPos.get() < 0 || qualifierPos.get() < 0)
-		{
-			throw new RuntimeException("Unexpecter error reading mapping sememe - possibly invalidly specified");
-		}
+		Positions positions = getPositions(sememeConceptSequence);
 		
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
@@ -238,7 +230,7 @@ public class MappingAPIs
 			{
 				//TODO handle contradictions
 				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
-					targetPos.get(), qualifierPos.get(),
+					positions.targetPos, positions.qualfierPos,
 					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 					RequestInfo.get().shouldExpand(ExpandUtil.comments),
 					processIdUUID));
@@ -250,6 +242,98 @@ public class MappingAPIs
 			
 		});
 		return results.toArray(new RestMappingItemVersion[results.size()]);
+	}
+	
+	/**
+	 * @param sememeAssemblageConceptSequence
+	 * @return
+	 */
+	private Positions getPositions(int sememeAssemblageConceptSequence)
+	{
+		int targetPos = -1;
+		int qualifierPos = -1;
+		
+		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(sememeAssemblageConceptSequence);
+		for (int i = 0; i < dsud.getColumnInfo().length; i++)
+		{
+			if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid()))
+			{
+				targetPos = i;
+			}
+			else if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_QUALIFIER.getPrimordialUuid()))
+			{
+				qualifierPos = i;
+			}
+			if (targetPos >= 0 && qualifierPos >= 0)
+			{
+				break;
+			}
+		}
+		if (targetPos < 0 || qualifierPos < 0)
+		{
+			throw new RuntimeException("Unexpecter error reading mapping sememe - possibly invalidly specified");
+		}
+		return new Positions(targetPos, qualifierPos);
+	}
+
+	/**
+	 * @param id - A UUID, nid, or sememe sequence that identifies a map item.
+	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
+	 * will be included for all referenced concepts which align with your current coordinates.  When comments is passed, all comments attached to each mapItem are 
+	 * included.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
+	 * be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @return the mapping item version object.  
+	 * 
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingItemComponent + "{" + RequestParameters.id +"}")
+	public RestMappingItemVersion getMappingItem(
+		@PathParam(RequestParameters.id) String id,
+		@QueryParam(RequestParameters.expand) String expand,
+		@QueryParam(RequestParameters.processId) String processId,
+		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.expand,
+				RequestParameters.processId,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
+		
+		int sequence = RequestInfoUtils.getSememeSequenceFromParameter(RequestParameters.id, id);
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		@SuppressWarnings("rawtypes")
+		SememeChronology sememe =  Get.sememeService().getSememe(sequence);
+		
+		Positions positions = getPositions(sememe.getAssemblageSequence());
+		
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Optional<LatestVersion<DynamicSememe<?>>> latest = sememe.getLatestVersion(DynamicSememe.class, 
+				Util.getPreWorkflowStampCoordinate(processIdUUID, sememe.getNid()));
+			
+		if (latest.isPresent())
+		{
+			//TODO handle contradictions
+			return new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+				positions.targetPos, positions.qualfierPos,
+				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+				RequestInfo.get().shouldExpand(ExpandUtil.comments),
+				processIdUUID);
+		}
+		else
+		{
+			throw new RestException("The specified map item is not available on the specified coordinate");
+		}
 	}
 	
 	//TODO will need to add APIs for editing and/or removing extended field information from the map set definition.  Not currently possible

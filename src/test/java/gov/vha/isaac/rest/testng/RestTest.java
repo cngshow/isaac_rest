@@ -1411,16 +1411,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// test createNewMappingItem()
 		// Retrieve mapping item and validate fields
-//TODO do we really have a use case for this?  If yes, implement
-//		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemSequence)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
-//		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
-//		Assert.assertTrue(sourceConceptSeq == retrievedMappingItemVersion.sourceConcept);
-//		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept);
-//		Assert.assertTrue(qualifierConceptSeq == retrievedMappingItemVersion.qualifierConcept);
-//		Assert.assertTrue(newMappingItemSequence == retrievedMappingItemVersion.mapSetConcept);
+		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
+		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		Assert.assertTrue(sourceConceptSeq == retrievedMappingItemVersion.sourceConcept);
+		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept);
+		Assert.assertTrue(qualifierConceptSeq == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertEquals(updatedMappingSetObject.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
 		
 		// test getMappingItems() 
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
