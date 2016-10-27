@@ -26,11 +26,8 @@ import java.io.StringWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -62,7 +59,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -90,11 +86,12 @@ import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeBooleanImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeFloatImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
-import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -116,10 +113,8 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
@@ -148,13 +143,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
@@ -247,13 +236,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testMe()
 	{
-		//TODO write many more interesting tests, using some sort of pattern like this....
 		Response response = target(conceptVersionRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid()).request().get();
 
 		checkFail(response);
-
-		//System.out.println(response.readEntity(String.class));
 	}
 
 	private Response assertFail(Response response)
@@ -591,14 +577,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertEquals(historyFromAvailableProcesses.getProcessId(), editToken.getActiveWorkflowProcessId());
 //		Assert.assertNotNull(historyFromAvailableProcesses.getUserId());
 //		Assert.assertEquals(historyFromAvailableProcesses.getUserId(), userUuid);
-//		//Assert.assertTrue(historyFromAvailableProcesses.getTimeAdvanced() < 0); // Process created, but not advanced // TODO retest after bug fix
+//		//Assert.assertTrue(historyFromAvailableProcesses.getTimeAdvanced() < 0); // Process created, but not advanced // TODO [WF]retest after bug fix
 //		Assert.assertNotNull(historyFromAvailableProcesses.getInitialState()); // i.e. "Assigned"
 //		Assert.assertEquals(historyFromAvailableProcesses.getInitialState(), "Assigned"); // Depends on definition
 //		Assert.assertNotNull(historyFromAvailableProcesses.getAction()); // i.e. "Create Workflow Process"
 //		Assert.assertEquals(historyFromAvailableProcesses.getAction(), "Create Workflow Process"); // Depends on definition
 //		Assert.assertNotNull(historyFromAvailableProcesses.getOutcomeState()); // i.e. "Ready for Edit"
 //		Assert.assertEquals(historyFromAvailableProcesses.getOutcomeState(), "Ready for Edit"); // Depends on definition
-//		Assert.assertTrue(historyFromAvailableProcesses.getComment() == null || StringUtils.isBlank(historyFromAvailableProcesses.getComment())); // TODO apply a content test when comment field added to RestWorkflowProcessBaseCreate
+//		Assert.assertTrue(historyFromAvailableProcesses.getComment() == null || StringUtils.isBlank(historyFromAvailableProcesses.getComment())); // TODO [WF] apply a content test when comment field added to RestWorkflowProcessBaseCreate
 //		
 //		// Get history and compare with history from get available
 //		Response getProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
@@ -834,7 +820,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //				break;
 //			}
 //		}
-////TODO Joel / Nuno - I had to comment out another test that is randomly broken...
+////TODO [WF]- I had to comment out another test that is randomly broken...
 ////		Assert.assertTrue(foundCreatedConceptNidInProcess);
 //
 //		// Attempt to advance process to edit.  Should work now that components have been added.
@@ -865,7 +851,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertNotNull(process.getCreatorId());
 //		Assert.assertEquals(process.getCreatorId(), userUuid);
 //		Assert.assertTrue(process.getTimeCreated() > 0);
-//		Assert.assertTrue(process.getTimeLaunched() > 0); // TODO debug this failure. process.getTimeLaunched() should be > 0
+//		Assert.assertTrue(process.getTimeLaunched() > 0); // TODO [WF]debug this failure. process.getTimeLaunched() should be > 0
 //		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
 //		Assert.assertNotNull(process.getProcessStatus());
 //		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.LAUNCHED));
@@ -1477,6 +1463,70 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 		}
 		Assert.assertNotNull(mappingItemMatchingUpdatedItem);
+	}
+	
+	@Test
+	public void testMappingExtendedFieldsAPIs() throws JsonProcessingException, IOException
+	{
+		//Make one
+		UUID random = UUID.randomUUID();
+		
+		String name = "Just a test map set type (" + random.toString() + ")";
+		ObjectNode root = jfn.objectNode();
+		root.put("name", name);
+		root.put("inverseName", "inverse test");
+		root.put("description", "bla bla");
+		root.put("purpose", "just testing");
+		root.put("active", true);
+		
+		ArrayNode extendedFields = jfn.arrayNode();
+		ObjectNode ef1 = jfn.objectNode();
+		ef1.put("extensionNameConcept", MetaData.AMT_MODULE.getNid());
+		ef1.set("extensionValue", toJsonObject(new DynamicSememeStringImpl("test Value extended"), 1));
+		
+		extendedFields.add(ef1);
+		root.set("mapSetExtendedFields", extendedFields);
+		
+		ArrayNode mapItemExtendedFieldsDef = jfn.arrayNode();
+		ObjectNode mapItemEF1 = jfn.objectNode();
+		mapItemEF1.put("columnLabelConcept", MetaData.BOOLEAN_LITERAL.getNid());
+		mapItemEF1.put("columnDataType", DynamicSememeDataType.BOOLEAN.name());
+		mapItemEF1.set("columnDefaultData", toJsonObject(new DynamicSememeBooleanImpl(true), 1));
+		mapItemEF1.put("columnRequired", true);
+		
+		mapItemExtendedFieldsDef.add(mapItemEF1);
+		
+		ObjectNode mapItemEF2 = jfn.objectNode();
+		mapItemEF2.put("columnLabelConcept", MetaData.CONDOR_CLASSIFIER.getNid());
+		mapItemEF2.put("columnDataType", DynamicSememeDataType.LONG.name());
+		mapItemEF2.put("columnRequired", false);
+		ArrayNode stringArray = jfn.arrayNode();
+		stringArray.add(DynamicSememeValidatorType.LESS_THAN.name());
+		mapItemEF2.set("columnValidatorTypes", stringArray);
+		mapItemEF2.set("columnValidatorData", toJsonObject(new DynamicSememeData[] {new DynamicSememeLongImpl(40)}));
+		
+		mapItemExtendedFieldsDef.add(mapItemEF2);
+		
+		root.set("mapItemExtendedFieldsDefinition", mapItemExtendedFieldsDef);
+		
+		log.info("MapSet create json: " + toJson(root));
+		
+		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent
+					+ RestPaths.mappingSetComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String result = checkFail(createAssociationResponse).readEntity(String.class);
+		
+		RestWriteResponse createdMapSetId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		
+		//Read back
+		
+		result = checkFail(target(RestPaths.mappingSetAppPathComponent + createdMapSetId.uuid.toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
 	}
 
 	@Test
