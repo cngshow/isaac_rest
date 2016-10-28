@@ -9,7 +9,9 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
 
 * 2016/10/27 - 1.7.1: 
     * Fixed a bug where a readback of extended fields on a map set definition was returning two fields it should not.
-    * Fixed a but where the 'active' field wasn't being populated when reading mapsets / map items
+    * Fixed a bug where the 'active' field wasn't being populated when reading mapsets / map items
+    * Fixed bugs with the handling / activation of dynamic sememe column validators
+    * Fixed bugs with 'default' columns of dynamic sememes not being set to their default value appropriately
 
 * 2016/10/26 - 1.7.0: 
     * Commented out all of the workflow APIs.  Fixed inadvertent breakages being caused by previously merged workflow code.
