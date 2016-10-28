@@ -3,7 +3,7 @@
  *
  * This is a work of the U.S. Government and is not subject to copyright
  * protection in the United States. Foreign copyrights may apply.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,7 +52,7 @@ package gov.vha.isaac.rest.api1.workflow;
 //
 ///**
 // * {@link WorkflowAPIs}
-// * 
+// *
 // * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
 // */
 //@Path(RestPaths.workflowAPIsPathComponent)
@@ -62,10 +62,10 @@ package gov.vha.isaac.rest.api1.workflow;
 //
 //	/**
 //	 * Return all workflow definitions available on server
-//	 * 
-//	 * @return RestWorkflowDefinition Collection - Collection of all workflow definitions 
-//	 * 
-//	 * @throws RestException 
+//	 *
+//	 * @return RestWorkflowDefinition Collection - Collection of all workflow definitions
+//	 *
+//	 * @throws RestException
 //	 */
 //	@GET
 //	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -73,11 +73,11 @@ package gov.vha.isaac.rest.api1.workflow;
 //	public RestWorkflowDefinition[] getAllDefinitions() throws RestException {
 //		try {
 //			ArrayList<RestWorkflowDefinition> restList = new ArrayList<>();
-//			
+//
 //			Collection<DefinitionDetail> ochreSet = RequestInfo.get().getWorkflow().getDefinitionDetailStore().values();
-//	
+//
 //			ochreSet.stream().forEach(a -> restList.add(new RestWorkflowDefinition(a)));
-//			
+//
 //			return restList.toArray(new RestWorkflowDefinition[restList.size()]);
 //		} catch (Exception e) {
 //			String msg = "Failed retrieving the definitions stored in the server";
@@ -88,10 +88,10 @@ package gov.vha.isaac.rest.api1.workflow;
 //
 //	/**
 //	 * Return workflow process instance information not including the process history
-//	 * 
+//	 *
 //	 * @param processId UUID identifying a given workflow process instance
 //	 * @return RestWorkflowProcess - Workflow process instance information
-//	 * 
+//	 *
 //	 * @throws RestException
 //	 */
 //	@GET
@@ -117,13 +117,13 @@ package gov.vha.isaac.rest.api1.workflow;
 //	}
 //
 //	/**
-//	 * Return workflow process instance history. The history is sorted by advancement sequence, 
+//	 * Return workflow process instance history. The history is sorted by advancement sequence,
 //	 * with last being most recent advance operation
-//	 * 
+//	 *
 //	 * @param processId UUID identifying a given workflow process instance
-//	 * @return RestWorkflowProcessHistory Collection - Sorted collection of the process 
+//	 * @return RestWorkflowProcessHistory Collection - Sorted collection of the process
 //	 * instance's advancements
-//	 * 
+//	 *
 //	 * @throws RestException
 //	 */
 //	@GET
@@ -155,11 +155,11 @@ package gov.vha.isaac.rest.api1.workflow;
 //	/**
 //	 * Return the actions that the user may perform on the workflow process
 //	 * instance instance
-//	 * 
+//	 *
 //	 * @param editToken String serialization of EditToken identifying currently logged in user
 //	 * @param processId UUID identifying a given workflow process instance
 //	 * @return RestWorkflowAvailableAction Collection - Collection of distinct actions a user can perform
-//	 * 
+//	 *
 //	 * @throws RestException
 //	 */
 //	@GET
@@ -171,7 +171,7 @@ package gov.vha.isaac.rest.api1.workflow;
 //	{
 //		RequestParameters.validateParameterNamesAgainstSupportedNames(
 //				RequestInfo.get().getParameters(),
-//				RequestParameters.editToken, 
+//				RequestParameters.editToken,
 //				RequestParameters.processId);
 //
 //		UUID userId = null;
@@ -195,15 +195,15 @@ package gov.vha.isaac.rest.api1.workflow;
 //	}
 //
 //	/**
-//	 * Return all active workflow process instances for which the user has proper permissions 
-//	 * to act upon. To minimize REST calls, the sorted history of each process is mapped in 
+//	 * Return all active workflow process instances for which the user has proper permissions
+//	 * to act upon. To minimize REST calls, the sorted history of each process is mapped in
 //	 * the return object.
-//	 * 
+//	 *
 //	 * @param editToken String serialization of EditToken identifying currently logged in user
 //	 * @param definitionId UUID identifying a specific workflow definition
-//	 * @return RestWorkflowProcessHistoriesMapEntry Collection - Workflow process instances 
+//	 * @return RestWorkflowProcessHistoriesMapEntry Collection - Workflow process instances
 //	 * mapped to their sorted history
-//	 * 
+//	 *
 //	 * @throws RestException
 //	 */
 //	@GET
@@ -215,9 +215,9 @@ package gov.vha.isaac.rest.api1.workflow;
 //	{
 //		RequestParameters.validateParameterNamesAgainstSupportedNames(
 //				RequestInfo.get().getParameters(),
-//				RequestParameters.definitionId, 
+//				RequestParameters.definitionId,
 //				RequestParameters.editToken);
-//		
+//
 //		UUID userId = null;
 //		try {
 //			userId = Get.identifierService()
@@ -242,3 +242,46 @@ package gov.vha.isaac.rest.api1.workflow;
 //		}
 //	}
 //}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

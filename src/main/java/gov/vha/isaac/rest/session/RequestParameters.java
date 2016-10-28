@@ -153,7 +153,8 @@ public class RequestParameters {
 	public final static String definitionId = "definitionId"; // UUID string
 	public final static String processId = "processId"; // UUID string
 	public final static String userId = "userId"; // UUID string
-	public final static String acquireLock = "acquireLock"; // Boolean string
+	public final static String acquireLock = "acquireLock"; // string, "true" or "false"
+	public final static String status = "status"; //String, workflow status
 
 	// Edit Token
 	public final static String editToken = "editToken";
