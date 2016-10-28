@@ -1370,7 +1370,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(testMappingSetVersion);
 
 		// RestMappingItemVersion
-		// TODO test mapping item extended fields
 		int sourceConceptSeq = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "conceptSequence");
 		int targetConceptSeq = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
 		int qualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_BROADER.getPrimordialUuid(), "conceptSequence");
