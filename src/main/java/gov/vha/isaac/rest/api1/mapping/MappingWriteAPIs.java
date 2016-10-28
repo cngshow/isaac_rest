@@ -589,7 +589,8 @@ public class MappingWriteAPIs
 			}
 		}
 		
-		SememeBuilder<? extends SememeChronology<?>> sb =  Get.sememeBuilderService().getDynamicSememeBuilder(
+		SememeBuilder<? extends SememeChronology<?>> sb;
+		sb = Get.sememeBuilderService().getDynamicSememeBuilder(
 				sourceConcept.getNid(),  
 				Get.identifierService().getConceptSequenceForUuids(mappingSetID), 
 				data);
@@ -611,19 +612,24 @@ public class MappingWriteAPIs
 		{
 			sb.setState(State.INACTIVE);
 		}
-		
+
 		@SuppressWarnings("rawtypes")
-		SememeChronology built = sb.build(editCoord,ChangeCheckerMode.ACTIVE).getNoThrow();
-		
+		SememeChronology built;
 		try
 		{
+			built = sb.build(editCoord,ChangeCheckerMode.ACTIVE).getNoThrow();
+		
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() 
 				+ " for mapping set " + mappingSetID).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
-
+		}
+		catch (IllegalArgumentException e1)
+		{
+			//This happens when validators fail
+			throw new RestException(e1.getMessage());
 		}
 		catch (Exception e)
 		{

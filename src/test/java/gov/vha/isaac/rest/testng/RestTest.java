@@ -82,6 +82,7 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
+import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
@@ -242,16 +243,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		checkFail(response);
 	}
 
-	private Response assertFail(Response response)
+	private String expectFail(Response response)
 	{
+		String temp = response.readEntity(String.class);
 		if (response.getStatus() == Status.OK.getStatusCode())
 		{
-			Assert.fail("Should have failed but did not. Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus())
-			+ response.readEntity(String.class));
+			Assert.fail("Should have failed but did not. Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus()) + temp);
 		}
 		
-		return response;
+		return temp;
 	}
+	
 	private Response checkFail(Response response)
 	{
 		if (response.getStatus() != Status.OK.getStatusCode())
@@ -1371,7 +1373,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// TODO test mapping item extended fields
 		int sourceConceptSeq = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "conceptSequence");
 		int targetConceptSeq = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		int qualifierConceptSeq = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+		int qualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_BROADER.getPrimordialUuid(), "conceptSequence");
 
 		RestMappingItemVersionBaseCreate newMappingSetItemData = new RestMappingItemVersionBaseCreate(
 				targetConceptSeq,
@@ -1427,7 +1429,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(mappingItemMatchingNewItem);
 	
 		int updatedTargetConceptSeq = getIntegerIdForUuid(MetaData.DANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		int updatedQualifierConceptSeq = getIntegerIdForUuid(MetaData.FRENCH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+		int updatedQualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getPrimordialUuid(), "conceptSequence");
 
 		RestMappingItemVersionBase updatedMappingItemData = new RestMappingItemVersionBase(
 				updatedTargetConceptSeq,
@@ -1455,9 +1457,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
 			if (currentMappingItem.getIdentifiers().getUuids().get(0).equals(newMappingItemUUID)
 					&& currentMappingItem.mapSetConcept == retrievedMappingSetVersion.conceptSequence
-					&& currentMappingItem.targetConcept == updatedMappingItemData.targetConcept
+					&& currentMappingItem.targetConcept.intValue() == updatedMappingItemData.targetConcept.intValue()
 					&& currentMappingItem.sourceConcept == newMappingSetItemData.sourceConcept
-					&& currentMappingItem.qualifierConcept == updatedMappingItemData.qualifierConcept) {
+					&& currentMappingItem.qualifierConcept.intValue() == updatedMappingItemData.qualifierConcept.intValue()) {
 				mappingItemMatchingUpdatedItem = currentMappingItem;
 				break;
 			}
@@ -1567,7 +1569,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("mapSetConcept", createdMapSet.conceptSequence);
 		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
-		root.put("qualifierConcept", MetaData.OR.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
 		
 		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(20)}));
 		
@@ -1577,7 +1579,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
-		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
+		String newMappingItemSequenceWrapperXml = checkFail(createNewMappingtemResponse).readEntity(String.class);
 		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
 		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
 		// Confirm returned sequence is valid
@@ -1593,13 +1595,49 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
 		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
 		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
-		Assert.assertTrue(MetaData.OR.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
 		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
 		Assert.assertTrue(retrievedMappingItemVersion.active);
 		
 		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
 		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).booleanValue(), true);
 		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).longValue(), 20);
+		
+		
+		//This should fail, due to being a duplicate entry:
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(20)}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		Assert.assertTrue(expectFail(createNewMappingtemResponse).contains("mapping with the specified source, target and qualifier already exists in this set"));
+		
+		//This should fail, due to failing a validator rule:
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept",  IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(40)}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		Assert.assertTrue(expectFail(createNewMappingtemResponse).contains("does not pass the assigned validator"));
+		
 	}
 	
 	@Test
@@ -1707,7 +1745,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("mapSetConcept", createdMapSet.conceptSequence);
 		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
-		root.put("qualifierConcept", MetaData.OR.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence());
 		
 		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {new DynamicSememeLongImpl(-5620), null}));
 		
@@ -1733,7 +1771,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
 		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
 		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
-		Assert.assertTrue(MetaData.OR.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
 		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
 		Assert.assertTrue(retrievedMappingItemVersion.active);
 		
