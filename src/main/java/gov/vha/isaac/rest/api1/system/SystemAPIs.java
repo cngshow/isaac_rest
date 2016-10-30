@@ -20,6 +20,8 @@ package gov.vha.isaac.rest.api1.system;
 
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,6 +29,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
@@ -57,6 +60,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.systemAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class SystemAPIs
 {
 	/**

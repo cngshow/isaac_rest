@@ -20,6 +20,8 @@ package gov.vha.isaac.rest.api1.comment;
 
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -30,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -62,6 +65,7 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.commentAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class CommentWriteAPIs
 {
 	/**

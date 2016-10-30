@@ -19,6 +19,8 @@
 package gov.vha.isaac.rest.api1.request;
 
 import java.util.UUID;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -28,6 +30,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.server.ContainerRequest;
+
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 
@@ -38,6 +42,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.contentRequestAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class ContentRequestAPIs
 {
 	/**

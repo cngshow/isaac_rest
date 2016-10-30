@@ -20,6 +20,8 @@ package gov.vha.isaac.rest.api1.sememe;
 
 import java.util.ArrayList;
 import java.util.Optional;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -33,6 +35,7 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
@@ -93,6 +96,7 @@ import javafx.concurrent.Task;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class SememeWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(SememeWriteAPIs.class);

@@ -345,7 +345,7 @@ public class EditToken
 				2,
 				3,
 				randomUuid,
-				UserRole.ADMINISTRATOR, UserRole.EDITOR, UserRole.READ_ONLY);
+				UserRole.SUPER_USER, UserRole.EDITOR, UserRole.READ_ONLY);
 		String token = t.serialize();
 		System.out.println(token);
 		EditToken t1 = new EditToken(token);

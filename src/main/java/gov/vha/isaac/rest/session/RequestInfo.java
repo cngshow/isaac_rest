@@ -30,8 +30,11 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -63,12 +66,15 @@ public class RequestInfo
 {
 	private static Logger log = LogManager.getLogger();
 
+	private final static User DEFAULT_READ_ONLY_USER = new User(null, null, UserRole.READ_ONLY);
+	
 	private Map<String, List<String>> parameters_ = new HashMap<>();
 
 	private String coordinatesToken_ = null;
 
+	private User user_ = null;
 	private EditToken editToken_ = null;
-	//private Integer authorSequence;
+
 	private EditCoordinate editCoordinate_ = null;
 
 	//just a cache
@@ -246,6 +252,24 @@ public class RequestInfo
 		return getCoordinatesToken().getTaxonomyCoordinate().getStampCoordinate();
 	}
 
+	public boolean hasUser() {
+		return user_ != null;
+	}
+	public void setDefaultReadOnlyUser() {
+		user_ = DEFAULT_READ_ONLY_USER;
+	}
+	public Optional<User> getUser() {
+		if (user_ == null) {
+			Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(getEditToken().getAuthorSequence());
+			if (userUuid.isPresent()) {
+				Optional<User> userOptional = UserCache.get(userUuid.get());
+				user_ = userOptional.isPresent() ? userOptional.get() : null;
+			}
+		}
+		
+		return user_ != null ? Optional.of(user_) : Optional.empty();
+	}
+	
 	/**
 	 * Lazily create, cache and return an EditCoordinate
 	 *
@@ -293,6 +317,16 @@ public class RequestInfo
 							workflowProcessid,
 							passedEditToken.get().getRoles()
 							);
+					
+					Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
+					if (UserCache.get(userUuid.get()).isPresent()) {
+						user_ = UserCache.get(userUuid.get()).get();
+					} else {
+						String name = Get.conceptDescriptionText(editToken.getAuthorSequence());
+						User user = new User(name, userUuid.get(), editToken.getRoles());
+						UserCache.put(user);
+						user_ = user;
+					}
 				} else {
 					// No valid EditToken passed as parameter
 					log.debug("Retrieving new EditToken with SSO token " + parameters_.get(RequestParameters.ssoToken));
@@ -311,9 +345,10 @@ public class RequestInfo
 					// Must have either EditToken or SSO token in order to get author
 					RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
 					PrismeIntegratedUserService userService = LookupService.getService(PrismeIntegratedUserService.class);
-					User user = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next()).get();
+					Optional<User> userOptional = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next());
+					user_ = userOptional.isPresent() ? userOptional.get() : null;
 					editToken = EditTokenUtil.getUserToken(
-							user,
+							user_,
 							module != null ? module : defaultEditCoordinate.getModuleSequence(),
 							path != null ? path : defaultEditCoordinate.getPathSequence(),
 							workflowProcessid);
@@ -357,21 +392,6 @@ public class RequestInfo
 	{
 		//TODO implement this properly - need the active workflow in this session
 		return getEditToken().getActiveWorkflowProcessId();
-
-		//		try
-		//		{
-		//			if (workflowProcessId == null)
-		//			{
-		//				workflowProcessId =  LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder()
-		//						.createWorkflowProcess(LookupService.getService(WorkflowProvider.class).getBPMNInfo().getDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
-		//			}
-		//		}
-		//		catch (Exception e)
-		//		{
-		//			log.error("Unexpected", e);
-		//		}
-		//		return workflowProcessId;
-		//		return null;
 	}
 
 	/**

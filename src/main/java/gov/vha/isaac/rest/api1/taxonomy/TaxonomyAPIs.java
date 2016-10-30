@@ -20,6 +20,8 @@ package gov.vha.isaac.rest.api1.taxonomy;
 
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -50,6 +53,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
  */
 
 @Path(RestPaths.taxonomyAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class TaxonomyAPIs
 {
 	private static Logger log = LogManager.getLogger(TaxonomyAPIs.class);

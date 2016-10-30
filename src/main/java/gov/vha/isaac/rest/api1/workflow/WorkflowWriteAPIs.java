@@ -18,6 +18,10 @@
  */
 package gov.vha.isaac.rest.api1.workflow;
 
+import javax.annotation.security.RolesAllowed;
+
+import gov.vha.isaac.ochre.api.UserRoleConstants;
+
 //Dan shelved Workflow on 10/26/16
 //import java.util.UUID;
 //import javax.ws.rs.POST;
@@ -52,6 +56,7 @@ package gov.vha.isaac.rest.api1.workflow;
 // * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
 // */
 //@Path(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent)
+//@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 //public class WorkflowWriteAPIs {
 //	private static Logger log = LogManager.getLogger(WorkflowWriteAPIs.class);
 //
