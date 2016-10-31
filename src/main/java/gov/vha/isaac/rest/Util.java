@@ -18,9 +18,16 @@
  */
 package gov.vha.isaac.rest;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -39,6 +46,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
 
 public class Util
 {
+	public static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.systemDefault());
+	
 	public static int convertToConceptSequence(String conceptId) throws RestException
 	{
 		Optional<UUID> uuidId = UUIDUtil.getUUID(conceptId);
@@ -273,6 +282,36 @@ public class Util
 			else
 			{
 				return RequestInfo.get().getStampCoordinate();
+			}
+		}
+	}
+
+	/**
+	 * @param dateString - if null or blank, returns 0.  
+	 * if long, parsed as a java time.  
+	 * If "latest" - set to Long.MAX_VALUE.  
+	 * Otherwise, parsed as {@link DateTimeFormatter#ISO_DATE_TIME}
+	 */
+	public static long parseDate(String dateString) throws DateTimeParseException
+	{
+		Optional<Long> l = NumericUtils.getLong(dateString);
+		if (l.isPresent())
+		{
+			return l.get();
+		}
+		else
+		{
+			if (StringUtils.isBlank(dateString))
+			{
+				return 0;
+			}
+			if (dateString.trim().toLowerCase(Locale.ENGLISH).equals("latest"))
+			{
+				return Long.MAX_VALUE;
+			}
+			else
+			{
+				return Date.from(Instant.from(ISO_DATE_TIME_FORMATTER.parse(dateString))).getTime();
 			}
 		}
 	}
