@@ -19,6 +19,9 @@
 package gov.vha.isaac.rest.api1.component;
 
 import java.util.Optional;
+
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -34,6 +37,7 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
@@ -57,6 +61,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 import javafx.concurrent.Task;
 
 /**
@@ -66,6 +71,8 @@ import javafx.concurrent.Task;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent)
+@DeclareRoles({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class ComponentWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(ComponentWriteAPIs.class);
@@ -96,6 +103,8 @@ public class ComponentWriteAPIs
 			@QueryParam(RequestParameters.active) String active,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
