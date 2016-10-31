@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -214,14 +215,12 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					{
 						log.info("ISAAC Init thread begins");
 
-						//
-						if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY))
-								|| !(Files.isDirectory(new File(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)).toPath())))
+						String databaseRootLocation = stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
+						if (StringUtils.isBlank(databaseRootLocation) || !Files.isDirectory(Paths.get(databaseRootLocation)))
 						{
 							//if there isn't an official system property set, check this one or if the directory does not exist
 							String sysProp = stringForFortify(System.getProperty("isaacDatabaseLocation"));
-							if (StringUtils.isBlank(sysProp)
-									|| !(Files.isDirectory(new File(System.getProperty("isaacDatabaseLocation")).toPath()) ))
+							if (StringUtils.isBlank(sysProp) || !Files.isDirectory(Paths.get(sysProp)))
 							{
 								//No ISAAC default property set, nor the isaacDatabaseLocation property is set.  Download a DB.
 								log.info("Downloading a database for use");
@@ -273,6 +272,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							LookupService.startupIsaac();
 						}
 						catch(Exception e){
+							log.error("Startup failed due to ", e);
 							//rename directory of existing database and restart startup.
 							//if database exists, rename folder
 							if (dbLocation != null && dbLocation.exists())
@@ -282,7 +282,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 								LookupService.getService(MetaContentService.class).close();
 
 								log.info("Something wrong with the existing database.  Renaming the root folder of the database to enable the database to be downloaded again.");
-								File corruptDbLocation = new File(dbLocation.getParent() + File.separator + "CORRUPT" + File.separator + LocalDateTime.now().format(fileDateTimeFormatter));
+								File corruptDbLocation = new File(stringForFortify(dbLocation.getParent() + File.separator + "CORRUPT" + File.separator + LocalDateTime.now().format(fileDateTimeFormatter)));
 								log.info("DB Location: " + dbLocation.getAbsolutePath() + " to " + corruptDbLocation.getAbsolutePath());
 								FileUtils.moveDirectoryToDirectory(dbLocation, corruptDbLocation, true);
 								FileUtils.deleteDirectory(dbLocation);
