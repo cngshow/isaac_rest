@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,6 +37,7 @@ import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.metacontent.MetaContentService;
 import gov.vha.isaac.ochre.api.util.ArtifactUtilities;
 import gov.vha.isaac.ochre.api.util.DBLocator;
 import gov.vha.isaac.ochre.api.util.DownloadUnzipTask;
@@ -50,25 +53,28 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 {
 	private static final AtomicInteger startup = new AtomicInteger(1);
 	private Logger log = LogManager.getLogger();
-	
+
 	private static ApplicationConfig instance_;
-	
+
 	private StringProperty status_ = new SimpleStringProperty("Not Started");
 	private boolean debugMode = true;
 	private boolean shutdown = false;
-	
-	//Note - this injection works fine, when deployed as a war to tomcat.  However, when launched in the localJettyRunner from eclipse, 
+
+	//Note - this injection works fine, when deployed as a war to tomcat.  However, when launched in the localJettyRunner from eclipse,
 	//this remains null.
-	@Context 
+	@Context
 	ServletContext context_;
-	
+
 	private String contextPath;
-	
+
 	private static byte[] secret_;
-	
+
 	private RestSystemInfo systemInfo_;
 	private String warFileVersion_;  //read from prisme.properties
-	
+
+	private File dbLocation;
+	private static final DateTimeFormatter fileDateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
 	//TODO implement convenience methods for 'associations'
 	//TODO we need to deal with contradictions properly whenever we pull things from a LatestVersion object.  See code in RestConceptChonology
 	//for extracting the latest description.
@@ -76,16 +82,16 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	public ApplicationConfig()
 	{
 		//If we leave everything to annotations, is picks up the eclipse moxy gson writer, which doesn't handle abstract classes properly.
-		//The goal here is to force it to use Jackson, but it seems that registering jackson disables scanning, so also have to re-enable 
+		//The goal here is to force it to use Jackson, but it seems that registering jackson disables scanning, so also have to re-enable
 		//scanning.  It also seems ot forget to scan this class... so register itself..
 		super(new ResourceConfig().packages("gov.vha.isaac.rest").register(JacksonFeature.class).register(ApplicationConfig.class));
 	}
-	
+
 	public static ApplicationConfig getInstance()
 	{
 		return instance_;
 	}
-	
+
 	@Override
 	public void onReload(Container arg0)
 	{
@@ -101,17 +107,17 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		log.info("ISAAC stopped");
 	}
 
-	private void configureSecret() 
+	private void configureSecret()
 	{
 		//This hacking is to prevent fortify from flagging an external data source path
 		File tempDirName = new File(stringForFortify(System.getProperty("java.io.tmpdir")));
 		File file = new File(tempDirName, contextPath.replaceAll("/", "_") + "-tokenSecret");
-		
+
 		log.debug("Secret file for token encoding " + file.getAbsolutePath() + " " + (file.exists() ? "exists" : "does not exist"));
-		
-		if (file.exists()) 
+
+		if (file.exists())
 		{
-			try 
+			try
 			{
 				byte[] temp = Files.readAllBytes(file.toPath());
 				if (temp.length == 20)
@@ -123,8 +129,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				{
 					log.warn("Unexpected data in token secret file.  Will calculate a new token. " + file.getCanonicalPath());
 				}
-			} 
-			catch (IOException e1) 
+			}
+			catch (IOException e1)
 			{
 				log.warn("Failed opening token secret file.  Will calculate a new token.", e1);
 			}
@@ -132,7 +138,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		if (secret_ == null)
 		{
 			byte[] temp = new byte[20];
-			
+
 			log.info("Calculating a new token");
 			//Don't use SecureRandom().getInstanceStrong() here, it hangs on linux, and we don't need that level of security.
 			//Is supposed to be fixed in Java 9.
@@ -158,7 +164,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			throw new RuntimeException("Unexpected!");
 		}
 		instance_ = this;
-		
+
 		//context is null when run from eclipse with the local jetty runner.
 		if (context_ == null)
 		{
@@ -170,24 +176,24 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			contextPath = context_.getContextPath().replace("/", "");
 			debugMode = (contextPath.contains("SNAPSHOT") ? true : false);
 		}
-		
+
 		log.info("Context path of this deployment is '" + contextPath + "' and debug mode is " + debugMode);
 
 		configureSecret();
 
 		issacInit();
 	}
-	
+
 	public boolean isIsaacReady()
 	{
 		return LookupService.isIsaacStarted();
 	}
-	
+
 	public String getStatusMessage()
 	{
 		return status_.get();
 	}
-	
+
 	private void issacInit()
 	{
 		log.info("Isaac Init called");
@@ -197,31 +203,32 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			//do startup in this thread
 			LookupService.get();
 			LookupService.startupWorkExecutors();
-			
+
 			Runnable r = new Runnable()
 			{
-				
+
 				@Override
 				public void run()
 				{
 					try
 					{
 						log.info("ISAAC Init thread begins");
-						
-						if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)))
+
+						//
+						if (StringUtils.isBlank(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY))
+								|| !(Files.isDirectory(new File(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY)).toPath())))
 						{
-							//if there isn't an official system property set, check this one.
-							//String sysProp = System.getProperty("isaacDatabaseLocation");
+							//if there isn't an official system property set, check this one or if the directory does not exist
 							String sysProp = stringForFortify(System.getProperty("isaacDatabaseLocation"));
-							File temp;
-							if (StringUtils.isBlank(sysProp))
+							if (StringUtils.isBlank(sysProp)
+									|| !(Files.isDirectory(new File(System.getProperty("isaacDatabaseLocation")).toPath()) ))
 							{
 								//No ISAAC default property set, nor the isaacDatabaseLocation property is set.  Download a DB.
 								log.info("Downloading a database for use");
 								status_.set("Downloading DB");
 								try
 								{
-									temp = downloadDB();
+									dbLocation = downloadDB();
 								}
 								catch (Exception e)
 								{
@@ -232,16 +239,16 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							}
 							else
 							{
-								temp = new File(sysProp);
+								dbLocation = new File(sysProp);
 							}
-							
+
 							if (shutdown)
 							{
 								return;
 							}
-							
-							File dataStoreLocation = DBLocator.findDBFolder(temp);
-							
+
+							File dataStoreLocation = DBLocator.findDBFolder(dbLocation);
+
 							if (!dataStoreLocation.exists())
 							{
 								throw new RuntimeException("Couldn't find a data store from the input of '" + dataStoreLocation.getAbsoluteFile().getAbsolutePath() + "'");
@@ -250,7 +257,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							{
 								throw new RuntimeException("The specified data store: '" + dataStoreLocation.getAbsolutePath() + "' is not a folder");
 							}
-							
+
 							//use the passed in JVM parameter location
 							LookupService.getService(ConfigurationService.class).setDataStoreFolderPath(dataStoreLocation.toPath());
 							System.out.println("  Setup AppContext, data store location = " + dataStoreLocation.getAbsolutePath());
@@ -260,13 +267,38 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						{
 							return;
 						}
-						
-						status_.set("Starting ISAAC");
-						LookupService.startupIsaac();
-						
+
+						try {
+							status_.set("Starting ISAAC");
+							LookupService.startupIsaac();
+						}
+						catch(Exception e){
+							//rename directory of existing database and restart startup.
+							//if database exists, rename folder
+							if (dbLocation != null && dbLocation.exists())
+							{
+								//This service was locking a file and not allowing the directory to moved/renamed.
+								//Based on where the corruption occurs there might be more services that need to be stopped.
+								LookupService.getService(MetaContentService.class).close();
+
+								log.info("Something wrong with the existing database.  Renaming the root folder of the database to enable the database to be downloaded again.");
+								File corruptDbLocation = new File(dbLocation.getParent() + File.separator + "CORRUPT" + File.separator + LocalDateTime.now().format(fileDateTimeFormatter));
+								log.info("DB Location: " + dbLocation.getAbsolutePath() + " to " + corruptDbLocation.getAbsolutePath());
+								FileUtils.moveDirectoryToDirectory(dbLocation, corruptDbLocation, true);
+								FileUtils.deleteDirectory(dbLocation);
+
+								//download a new database and start ISAAC
+								dbLocation = downloadDB();
+								status_.set("Starting ISAAC");
+								LookupService.startupIsaac();
+
+								log.info("Directories containing the corrupt database where renamed.  A new database was downloaded.");
+							}
+						}
+
 						systemInfo_ = new RestSystemInfo();
 						log.info(systemInfo_.toString());
-						
+
 						try
 						{
 							if (StringUtils.isNotBlank(warFileVersion_) && !warFileVersion_.equals(systemInfo_.getApiImplementationVersion()))
@@ -283,12 +315,12 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						{
 							warFileVersion_ = null;  //No longer need this
 						}
-						
+
 						status_.set("Ready");
 						System.out.println("Done setting up ISAAC");
 
-						System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C", 
-							"http://localhost:8180/", RestPaths.conceptVersionAppPathComponent + MetaData.CONCRETE_DOMAIN_OPERATOR.getNid()));
+						System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C",
+								"http://localhost:8180/", RestPaths.conceptVersionAppPathComponent + MetaData.CONCRETE_DOMAIN_OPERATOR.getNid()));
 					}
 					catch (Exception e)
 					{
@@ -298,19 +330,19 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					}
 				}
 			};
-			
+
 			LookupService.get().getService(WorkExecutors.class).getExecutor().execute(r);
 		}
 	}
 
 	private boolean validateExistingDb(File targetDBLocation, String groupId, String artifactId, String version, String classifier) {
-		//We need to read the pom.xml file that we find inside of targetDBLocation - and validate that each and every 
+		//We need to read the pom.xml file that we find inside of targetDBLocation - and validate that each and every
 		//parameter perfectly matches.  If it doesn't match, then the DB must be deleted, and downloaded.
 		//If we don't do this, we won't catch the case where the isaac-rest server was undeployed, then redeployed with a different DB configuration.
 		//The pom file we need to read will be at targetDbLocation\*.data\META-INF\maven\{groupId}\{artifactId}\pom.xml
 		//We need to validate <groupId>, <artifactId>, <version> and <resultArtifactClassifier> keeping in mind that classifer
 		//is optional
-		
+
 		log.info("Checking specified parameters against existing db in folder: " + targetDBLocation.getAbsolutePath() + "...");
 
 		status_.set("Validating existing DB directory");
@@ -320,10 +352,10 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 			return false;
 		}
-		
+
 		File pomFile = null;
 		for (File file : targetDBLocation.listFiles()) {
-			if (file.isDirectory() && file.getName().endsWith(".data")) { 
+			if (file.isDirectory() && file.getName().endsWith(".data")) {
 				pomFile = new File(stringForFortify(file.getAbsolutePath() + File.separatorChar + "META-INF" + File.separatorChar + "maven" + File.separatorChar + groupId + File.separatorChar + artifactId  + File.separatorChar + "pom.xml"));
 				if (pomFile.exists() && pomFile.isFile()) {
 					break;
@@ -334,21 +366,21 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			log.warn("Validation of existing DB failed. Invalid pom file: {}", pomFile != null ? pomFile.getAbsoluteFile() : null);
 			return false;
 		}
-		
+
 		DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
 		try {
 			domFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 			DocumentBuilder builder = domFactory.newDocumentBuilder();
 			Document dDoc = builder.parse(pomFile);
 			XPath xPath = XPathFactory.newInstance().newXPath();
-			
+
 			String existingDbGroupId = ((Node) xPath.evaluate("/project/groupId", dDoc, XPathConstants.NODE)).getTextContent();
 			String existingDbArtifactId = ((Node) xPath.evaluate("/project/artifactId", dDoc, XPathConstants.NODE)).getTextContent();
 			String existingDbVersion = ((Node) xPath.evaluate("/project/version", dDoc, XPathConstants.NODE)).getTextContent();
-			
+
 			Node existingDbClassifierNode = (Node) xPath.evaluate("/project/properties/resultArtifactClassifier", dDoc, XPathConstants.NODE);
 			String existingDbClassifier = existingDbClassifierNode != null ? existingDbClassifierNode.getTextContent() : null;
-			
+
 			if (! existingDbGroupId.trim().equals(groupId.trim())) {
 				log.warn("Validation of existing DB pom file failed. Existing groupId {} != {}", existingDbGroupId, groupId);
 
@@ -362,7 +394,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				log.warn("Validation of existing DB pom file failed. Existing version {} != {}", existingDbVersion, version);
 				return false;
 			}
-			
+
 			if (StringUtils.isBlank(classifier) && StringUtils.isBlank(existingDbClassifier)) {
 				return true;
 			} else if (classifier == null || existingDbClassifier == null) {
@@ -378,7 +410,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		} catch (Exception e) {
 			log.warn("Validation of existing DB pom file failed", e);
 		}
-		
+
 		return false;
 	}
 
@@ -394,7 +426,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			String artifactId = null;
 			String version = null;
 			String classifier = null;
-			
+
 			//First, see if there is a properties file embedded in the war (PRISME places this during deployment)
 			Properties props = new Properties();
 			try (final InputStream stream = this.getClass().getResourceAsStream("/prisme.properties"))
@@ -422,7 +454,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				log.error("Unexpected error trying to read properties from the prisme.properties file", e1);
 				throw new RuntimeException(e1);
 			}
-			
+
 			if (StringUtils.isBlank(version))
 			{
 				log.warn("Unable to determine specified DB - using developer default options!");
@@ -434,7 +466,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				version = "1.4";
 				classifier = "all";
 			}
-			
+
 			log.info("Checking for existing DB");
 
 			File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
@@ -469,7 +501,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				throw e;
 			}
 			status_.unbind();
-			
+
 			URL lucene = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPwd, groupId, artifactId, version, classifier, "lucene.zip");
 			task = new DownloadUnzipTask(mavenUsername, mavenPwd, lucene, true, true, tempDbFolder);
 			status_.bind(task.messageProperty());
@@ -536,19 +568,19 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	{
 		return systemInfo_;
 	}
-	
+
 	public ServletContext getServletContext()
 	{
 		return context_;
 	}
-	
+
 	private String stringForFortify(String convertString)
 	{
 		StringBuilder temp = new StringBuilder();
 		if (convertString != null) {
 			convertString.chars().forEach(c -> temp.append((char)c));
 		}
-        return temp.toString();
+		return temp.toString();
 	}
-	
+
 }
