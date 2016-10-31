@@ -66,7 +66,7 @@ public class RequestInfo
 {
 	private static Logger log = LogManager.getLogger();
 
-	private final static User DEFAULT_READ_ONLY_USER = new User(null, null, UserRole.READ_ONLY);
+	private final static User DEFAULT_READ_ONLY_USER = new User("READ_ONLY_USER", null, UserRole.READ_ONLY);
 	
 	private Map<String, List<String>> parameters_ = new HashMap<>();
 
@@ -390,7 +390,6 @@ public class RequestInfo
 	 */
 	public UUID getActiveWorkflowProcessId()
 	{
-		//TODO implement this properly - need the active workflow in this session
 		return getEditToken().getActiveWorkflowProcessId();
 	}
 

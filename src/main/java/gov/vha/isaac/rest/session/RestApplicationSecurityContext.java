@@ -53,11 +53,12 @@ public class RestApplicationSecurityContext implements SecurityContext {
 
 	@Override
 	public boolean isUserInRole(String s) {
-		if (user != null && user.getRoles() != null) {
-			return user.getRoles().contains(s);
-		} else if (s.equals(UserRole.READ_ONLY.getText())) {
-			return true; // Ok to assume that null user has read_only access?
+		for (UserRole role : user.getRoles()) {
+			if (role.getText().equalsIgnoreCase(s)) {
+				return true;
+			}
 		}
+
 		return false;
 	}
 

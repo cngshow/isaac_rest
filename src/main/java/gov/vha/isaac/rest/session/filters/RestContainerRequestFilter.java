@@ -22,17 +22,18 @@ package gov.vha.isaac.rest.session.filters;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Priorities;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;

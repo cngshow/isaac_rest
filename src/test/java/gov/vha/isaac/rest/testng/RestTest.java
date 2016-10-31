@@ -187,7 +187,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent;
 
 	private static final String TEST_SSO_TOKEN = "Test_User:super_user,editor,read_only,approver,administrator,reviewer,manager";
-	
+	private static final String TEST_READ_ONLY_SSO_TOKEN = "Test_User:read_only";
+
 	private static JsonNodeFactory jfn = JsonNodeFactory.instance;
 
 	@Override
@@ -344,22 +345,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, descriptionVersionsResult);
 	}
 
-	public static String DEFAULT_EDIT_TOKEN_STRING = null;
-	public String getDefaultEditTokenString() {
-		if (DEFAULT_EDIT_TOKEN_STRING == null) {
-			Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-					.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
-					.request()
-					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-			String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-			RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-
-			DEFAULT_EDIT_TOKEN_STRING = restEditTokenObject.token;
-		}
-
-		return DEFAULT_EDIT_TOKEN_STRING;
+	public String getEditTokenString(String ssoTokenString) {
+		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
+				.queryParam(RequestParameters.ssoToken, ssoTokenString)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
+		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
+		return restEditTokenObject.token;
 	}
-	
+
 	private RestWorkflowDefinition getDefaultWorkflowDefinition() {
 		Response getDefinitionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.allDefinitions)
 				.request()
@@ -954,7 +949,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		// POST new description data object
 		Response createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		checkFail(createDescriptionResponse);
@@ -1003,7 +998,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkFail(updateDescriptionResponse);
@@ -1030,7 +1025,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent +  RestPaths.componentComponent 
 				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
 				.queryParam(RequestParameters.active, false)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));
 		checkFail(deactivateDescriptionResponse);
@@ -1110,9 +1105,23 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
+
+		// TODO Uncomment to test TEST_READ_ONLY_SSO_TOKEN
+//		String readOnlyEditTokenStr = getEditTokenString(TEST_READ_ONLY_SSO_TOKEN);
+//		EditToken readOnlyEditToken = null;
+//		try {
+//			readOnlyEditToken = EditTokens.getOrCreate(readOnlyEditTokenStr);
+//		} catch (RestException e1) {
+//			throw new RuntimeException(e1);
+//		}
+//		Response unauthorizedCreateConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+//				.queryParam(RequestParameters.editToken, readOnlyEditToken)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+//		expectFail(unauthorizedCreateConceptResponse);
 		
 		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
@@ -1234,7 +1243,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Response deactivateConceptResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent 
 				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + newConceptSequenceWrapper.uuid)
 				.queryParam(RequestParameters.active, false)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));  //TODO I don't like this hack for putting nothign... need to see what is proper
 		checkFail(deactivateConceptResponse);
@@ -1253,7 +1262,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Response stateChangeResponse = target(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent + RestPaths.updatePathComponent
 				+ newConceptSequenceWrapper.uuid)
-			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
 					jsonIze(new String[] {"active"}, 
@@ -1296,7 +1305,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		Response createNewMappingSetResponse = target(RestPaths.mappingSetCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
@@ -1333,7 +1342,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkFail(updateMappingSetResponse);
@@ -1387,7 +1396,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
@@ -1442,7 +1451,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateMappingtemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkFail(updateMappingtemResponse);
@@ -1514,7 +1523,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent
 					+ RestPaths.mappingSetComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		String result = checkFail(createAssociationResponse).readEntity(String.class);
@@ -1575,7 +1584,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		log.info("Map item create json: " + toJson(root));
 		
 		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		String newMappingItemSequenceWrapperXml = checkFail(createNewMappingtemResponse).readEntity(String.class);
@@ -1615,7 +1624,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		log.info("Map item create json: " + toJson(root));
 		
 		createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		Assert.assertTrue(expectFail(createNewMappingtemResponse).contains("mapping with the specified source, target and qualifier already exists in this set"));
@@ -1632,7 +1641,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		log.info("Map item create json: " + toJson(root));
 		
 		createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		Assert.assertTrue(expectFail(createNewMappingtemResponse).contains("does not pass the assigned validator"));
@@ -1689,7 +1698,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent
 					+ RestPaths.mappingSetComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		String result = checkFail(createAssociationResponse).readEntity(String.class);
@@ -1751,7 +1760,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		log.info("Map item create json: " + toJson(root));
 		
 		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
@@ -1803,8 +1812,22 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		
+		// TODO Uncomment to test TEST_READ_ONLY_SSO_TOKEN
+//		String readOnlyEditTokenStr = getEditTokenString(TEST_READ_ONLY_SSO_TOKEN);
+//		EditToken readOnlyEditToken = null;
+//		try {
+//			readOnlyEditToken = EditTokens.getOrCreate(readOnlyEditTokenStr);
+//		} catch (RestException e1) {
+//			throw new RuntimeException(e1);
+//		}
+//		Response unauthorizedCreateCommentResponse = target(RestPaths.commentCreatePathComponent)
+//				.queryParam(RequestParameters.editToken, readOnlyEditTokenStr)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+//		expectFail(unauthorizedCreateCommentResponse);
+		
 		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
@@ -1835,7 +1858,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -3116,7 +3139,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String description = "Just a test description type (" + random.toString() + ")";
 		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 					+ RestPaths.associationComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationName", "associationInverseName", "description"}, 
@@ -3155,7 +3178,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Make one
 		Response createAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 					+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
@@ -3183,7 +3206,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//test update association
 		Response updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.uuid.toString())
-			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
 					jsonIze(new String[] {"targetNid", "active"}, 
@@ -3213,14 +3236,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.unmarshalObject(RestWriteResponse.class,
 						checkFail(target(
 								RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + RestPaths.createPathComponent)
-										.queryParam(RequestParameters.editToken, getDefaultEditTokenString()).request()
+										.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN)).request()
 										.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
 										.post(Entity.json(jsonIze(new String[] { "associationName", "associationInverseName", "description" },
 												new String[] { "foo", "oof", description })))).readEntity(String.class));
 	
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
-			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
@@ -3228,7 +3251,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
-			.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+			.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
@@ -3308,7 +3331,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//make one
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		String result = checkFail(createSememeResponse).readEntity(String.class);
@@ -3386,7 +3409,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.sememeTypeComponent 
 				+ RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(json));
 		String result = checkFail(createSememeResponse).readEntity(String.class);
@@ -3467,9 +3490,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		log.info("Extended description type edit Json: " + toJson(root));
 		
-		//make one
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		result = checkFail(createSememeResponse).readEntity(String.class);
