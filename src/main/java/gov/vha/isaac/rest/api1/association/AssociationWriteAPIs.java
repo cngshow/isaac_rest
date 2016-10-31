@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.association;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -28,7 +29,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,6 +70,7 @@ import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersionBaseCr
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 import gov.vha.isaac.rest.tokens.EditTokens;
 
 
@@ -75,10 +80,14 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent)
+@DeclareRoles({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 @RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class AssociationWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(AssociationWriteAPIs.class);
+
+	@Context
+	private SecurityContext securityContext;
 
 	/**
 	 * @param associationCreationData - object containing data used to create new association
@@ -95,6 +104,8 @@ public class AssociationWriteAPIs
 		RestAssociationTypeVersionBaseCreate associationCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
@@ -182,6 +193,8 @@ public class AssociationWriteAPIs
 		RestAssociationItemVersionBaseCreate associationItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
@@ -269,6 +282,8 @@ public class AssociationWriteAPIs
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,

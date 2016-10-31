@@ -21,13 +21,17 @@ package gov.vha.isaac.rest.api1.system;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -52,6 +56,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 
 
 /**
@@ -60,9 +65,13 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.systemAPIsPathComponent)
+@DeclareRoles({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 @RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class SystemAPIs
 {
+	@Context
+	private SecurityContext securityContext;
+
 	/**
 	 * @param id The id for which to retrieve objects. May be a UUID, NID or sequence
 	 * @param expand comma separated list of fields to expand.  Support depends on type of object identified by the passed id
@@ -85,6 +94,8 @@ public class SystemAPIs
 			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -236,6 +247,8 @@ public class SystemAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -307,6 +320,8 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestDynamicSememeDataTypeComponent)  
 	public RestDynamicSememeDataType[] getRestDynamicSememeDataTypes() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -323,6 +338,8 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestDynamicSememeValidatorTypeComponent)  
 	public RestDynamicSememeValidatorType[] getRestDynamicSememeValidatorTypes() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -339,6 +356,8 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestObjectChronologyTypeComponent)
 	public RestObjectChronologyType[] getRestObjectChronologyTypes() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -355,6 +374,8 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestSememeTypeComponent)
 	public RestSememeType[] getRestObjectSememeTypes() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -371,6 +392,8 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
 	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -387,6 +410,8 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestNodeSemanticTypes)
 	public RestNodeSemanticType[] getRestNodeSemanticTypes() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -403,6 +428,8 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestSupportedIdTypes)
 	public RestSupportedIdType[] getRestSupportedIdTypes() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -420,6 +447,8 @@ public class SystemAPIs
 	@Path(RestPaths.systemInfoComponent)
 	public RestSystemInfo getSystemInfo() throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
@@ -438,6 +467,8 @@ public class SystemAPIs
 	@Path(RestPaths.userComponent + "{" + RequestParameters.id + "}")
 	public RestUserInfo getUserInfo(@PathParam(RequestParameters.id) String id) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,

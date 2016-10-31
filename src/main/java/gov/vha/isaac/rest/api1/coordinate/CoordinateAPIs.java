@@ -18,12 +18,15 @@
  */
 package gov.vha.isaac.rest.api1.coordinate;
 
+import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +43,7 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestStampCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 
 
 /**
@@ -48,10 +52,14 @@ import gov.vha.isaac.rest.session.RequestParameters;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.coordinateAPIsPathComponent)
+@DeclareRoles({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 @RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class CoordinateAPIs
 {
 	private static Logger log = LogManager.getLogger(CoordinateAPIs.class);
+
+	@Context
+	private SecurityContext securityContext;
 
 	/**
 	 * 
@@ -108,6 +116,8 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.descriptionLogicProfile) String descriptionLogicProfile,
 			@QueryParam(RequestParameters.classifier) String classifier) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -141,6 +151,8 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -183,6 +195,8 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -213,6 +227,8 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -243,6 +259,8 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -273,6 +291,8 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -308,6 +328,8 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
 			) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.ssoToken,

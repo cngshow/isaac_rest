@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.sememe;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -28,7 +29,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,6 +91,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 import gov.vha.isaac.rest.tokens.EditTokens;
 import javafx.concurrent.Task;
 
@@ -96,11 +101,15 @@ import javafx.concurrent.Task;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent)
+@DeclareRoles({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 @RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class SememeWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(SememeWriteAPIs.class);
-	
+
+	@Context
+	private SecurityContext securityContext;
+
 	/**
 	 * Create a new description sememe associated with a specified concept
 	 * 
@@ -116,6 +125,8 @@ public class SememeWriteAPIs
 			RestSememeDescriptionCreateData creationData,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken);
@@ -202,6 +213,8 @@ public class SememeWriteAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -259,6 +272,8 @@ public class SememeWriteAPIs
 		RestDynamicSememeTypeCreate sememeTypeCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES,
@@ -346,6 +361,8 @@ public class SememeWriteAPIs
 		RestDynamicSememeBaseCreate sememeCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
@@ -426,6 +443,8 @@ public class SememeWriteAPIs
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, this);
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,

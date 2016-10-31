@@ -1813,18 +1813,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		
 		// TODO Uncomment to test TEST_READ_ONLY_SSO_TOKEN
-//		String readOnlyEditTokenStr = getEditTokenString(TEST_READ_ONLY_SSO_TOKEN);
-//		EditToken readOnlyEditToken = null;
-//		try {
-//			readOnlyEditToken = EditTokens.getOrCreate(readOnlyEditTokenStr);
-//		} catch (RestException e1) {
-//			throw new RuntimeException(e1);
-//		}
-//		Response unauthorizedCreateCommentResponse = target(RestPaths.commentCreatePathComponent)
-//				.queryParam(RequestParameters.editToken, readOnlyEditTokenStr)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-//		expectFail(unauthorizedCreateCommentResponse);
+		String readOnlyEditTokenStr = getEditTokenString(TEST_READ_ONLY_SSO_TOKEN);
+		EditToken readOnlyEditToken = null;
+		try {
+			readOnlyEditToken = EditTokens.getOrCreate(readOnlyEditTokenStr);
+		} catch (RestException e1) {
+			throw new RuntimeException(e1);
+		}
+		Response unauthorizedCreateCommentResponse = target(RestPaths.commentCreatePathComponent)
+				.queryParam(RequestParameters.editToken, readOnlyEditTokenStr)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		expectFail(unauthorizedCreateCommentResponse);
 		
 		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))

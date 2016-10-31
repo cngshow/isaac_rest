@@ -24,7 +24,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,6 +69,9 @@ import javafx.concurrent.Task;
 public class ComponentWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(ComponentWriteAPIs.class);
+
+	@Context
+	private SecurityContext securityContext;
 
 	/**
 	 * Reset component status to ACTIVE if passed value is true, or INACTIVE if passed value is false

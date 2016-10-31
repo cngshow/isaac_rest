@@ -67,6 +67,6 @@ public class RestApplicationSecurityContext implements SecurityContext {
 
 	@Override
 	public String getAuthenticationScheme() {
-		return SecurityContext.BASIC_AUTH;
+		return "custom"; //SecurityContext.BASIC_AUTH;
 	}
 }

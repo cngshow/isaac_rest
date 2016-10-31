@@ -55,9 +55,10 @@ import gov.vha.isaac.rest.session.User;
  * to ensure that this filter is run before other user filters
  * 
  */
-@Priority(Priorities.USER - 500) // TODO required with @PreMatching?
+//@Priority(Priorities.USER - 500)
+@Priority(Priorities.AUTHORIZATION)
 @Provider
-@PreMatching
+//@PreMatching // TODO should use?
 public class RestContainerRequestFilter implements ContainerRequestFilter {
 	private static Logger LOG = LogManager.getLogger();
 

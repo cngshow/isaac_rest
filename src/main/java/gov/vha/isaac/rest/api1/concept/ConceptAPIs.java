@@ -66,7 +66,10 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class ConceptAPIs
 {
 	private static Logger log = LogManager.getLogger();
-	
+
+	@Context
+	private SecurityContext securityContext;
+
 	private Set<Integer> allDescriptionAssemblageTypes = null;
 	/**
 	 * Returns a single version of a concept.
