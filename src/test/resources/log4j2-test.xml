@@ -3,11 +3,11 @@
 	<Appenders>
 		<!-- the standard-console-appender -->
 		<Console name="appender-Console-all" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] (%location) %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</Console>
 		<!-- the appenders for root -->
 		<File name="appender-root-all" fileName="target/logs/isaac-rest-debug.log" append="false">
-			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] (%location) %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</File>
 	</Appenders>
 
