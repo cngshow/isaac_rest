@@ -133,6 +133,8 @@ public class RequestParameters {
 	public final static String extendedDescriptionTypeId = "extendedDescriptionTypeId";
 	public final static String dynamicSememeColumns = "dynamicSememeColumns";
 	public final static String sememeAssemblageId = "sememeAssemblageId";
+	public final static String restrictTo = "restrictTo";
+	public final static String mergeOnConcept = "mergeOnConcept";
 	
 	// Taxonomy
 	public final static String childDepth = "childDepth";
