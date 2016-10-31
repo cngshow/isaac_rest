@@ -236,7 +236,7 @@ public class SememeWriteAPIs
 			mutableVersion.setText(updateData.getText());
 			mutableVersion.setDescriptionTypeConceptSequence(updateData.getDescriptionTypeConceptSequence());
 
-			Get.commitService().addUncommitted(sememeChronology);
+			Get.commitService().addUncommitted(sememeChronology).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 
 					+ ", NID=" + sememeChronology.getNid() + " with " + updateData).get();
 
@@ -509,10 +509,9 @@ public class SememeWriteAPIs
 			
 		}
 
-		Get.commitService().addUncommitted(sememeChronology);
-
 		try
 		{
+			Get.commitService().addUncommitted(sememeChronology).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of sememe item " + sememeChronology.getPrimordialUuid()).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{

@@ -311,10 +311,10 @@ public class AssociationWriteAPIs
 		data[0] = (target.isPresent() ? new DynamicSememeUUIDImpl(target.get()) : null);
 
 		mutable.setData(data);
-		Get.commitService().addUncommitted(associationItemSememeChronology);
 
 		try
 		{
+			Get.commitService().addUncommitted(associationItemSememeChronology).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of association item " 
 					+ associationItemSememeChronology.getPrimordialUuid()).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)

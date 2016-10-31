@@ -166,6 +166,10 @@ public class RequestParameters {
 					editModule,
 					editPath);
 	
+	//export
+	public final static String changedAfter = "changedAfter";
+	public final static String changedBefore = "changedBefore";
+	
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */

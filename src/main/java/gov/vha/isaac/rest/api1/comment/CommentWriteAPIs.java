@@ -206,10 +206,9 @@ public class CommentWriteAPIs
 			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.getComment()),
 			(StringUtils.isBlank(dataToUpdateComment.getCommentContext()) ? null : new DynamicSememeStringImpl(dataToUpdateComment.getCommentContext()))});
 		
-		Get.commitService().addUncommitted(sc);
-		
 		try
 		{
+			Get.commitService().addUncommitted(sc).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Update comment").get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
