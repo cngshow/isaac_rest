@@ -177,7 +177,7 @@ public class ComponentWriteAPIs
 					else
 					{
 						cc.createMutableVersion(state, ec);
-						Get.commitService().addUncommitted(cc);
+						Get.commitService().addUncommitted(cc).get();
 						commit = true;
 					}
 					
@@ -260,7 +260,7 @@ public class ComponentWriteAPIs
 					}
 					if (commit)
 					{
-						Get.commitService().addUncommitted(sememe);
+						Get.commitService().addUncommitted(sememe).get();
 					}
 					break;
 				}
