@@ -64,6 +64,7 @@ import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
+import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeArrayImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
@@ -75,7 +76,6 @@ import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
-import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueBaseCreate;
@@ -445,70 +445,78 @@ public class MappingWriteAPIs
 	{		
 		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
 			{
-				@SuppressWarnings({ "unchecked", "rawtypes" })
-				Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
-						stampCoord);
-				if (latest.isPresent())
+				try
 				{
-					//TODO handle contradictions
-					DescriptionSememe<?> ds = latest.get().value();
-					if (ds.getDescriptionTypeConceptSequence() == MetaData.SYNONYM.getConceptSequence())
+					@SuppressWarnings({ "unchecked", "rawtypes" })
+					Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
+							stampCoord);
+					if (latest.isPresent())
 					{
-						if (Frills.isDescriptionPreferred(ds.getNid(), null))
+						//TODO handle contradictions
+						DescriptionSememe<?> ds = latest.get().value();
+						if (ds.getDescriptionTypeConceptSequence() == MetaData.SYNONYM.getConceptSequence())
 						{
-							if (!ds.getText().equals(mapName))
+							if (Frills.isDescriptionPreferred(ds.getNid(), null))
 							{
-								@SuppressWarnings({ "unchecked", "rawtypes" })
-								MutableDescriptionSememe<? extends MutableDescriptionSememe<?>> mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
-										.createMutableVersion(MutableDescriptionSememe.class, state, editCoord);
-								mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
-								mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
-								mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
-								mutable.setText(mapName);
-								Get.commitService().addUncommitted(ds.getChronology());
-							}
-						}
-						else
-						//see if it is the inverse name
-						{
-							if (Get.sememeService().getSememesForComponentFromAssemblage(ds.getNid(), 
-									DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).anyMatch(sememeC -> 
-									{
-										return true;  //return if active or inactive
-									}))
-							{
-								if (!ds.getText().equals(mapInverseName))
+								if (!ds.getText().equals(mapName))
 								{
 									@SuppressWarnings({ "unchecked", "rawtypes" })
 									MutableDescriptionSememe<? extends MutableDescriptionSememe<?>> mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
-											.createMutableVersion(MutableDescriptionSememe.class, (StringUtils.isBlank(mapInverseName) ? State.INACTIVE : state), editCoord);
-									mutable.setText(StringUtils.isBlank(mapInverseName) ? ds.getText() : mapInverseName);
+											.createMutableVersion(MutableDescriptionSememe.class, State.ACTIVE, editCoord);
 									mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
 									mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
 									mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
-									
-									Get.commitService().addUncommitted(ds.getChronology());
+									mutable.setText(mapName);
+									Get.commitService().addUncommitted(ds.getChronology()).get();
+								}
+							}
+							else
+							//see if it is the inverse name
+							{
+								if (Get.sememeService().getSememesForComponentFromAssemblage(ds.getNid(), 
+										DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).anyMatch(sememeC -> 
+										{
+											return true;  //return if active or inactive
+										}))
+								{
+									if (!ds.getText().equals(mapInverseName))
+									{
+										@SuppressWarnings({ "unchecked", "rawtypes" })
+										MutableDescriptionSememe<? extends MutableDescriptionSememe<?>> mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
+												.createMutableVersion(MutableDescriptionSememe.class, (StringUtils.isBlank(mapInverseName) ? State.INACTIVE : State.ACTIVE), editCoord);
+										mutable.setText(StringUtils.isBlank(mapInverseName) ? ds.getText() : mapInverseName);
+										mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
+										mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
+										mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
+										
+										Get.commitService().addUncommitted(ds.getChronology()).get();
+									}
+								}
+							}
+						}
+						else if (ds.getDescriptionTypeConceptSequence() == MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence())
+						{
+							if (Frills.isDescriptionPreferred(ds.getNid(), null))
+							{
+								if (!mapDescription.equals(ds.getText()))
+								{
+									@SuppressWarnings({ "unchecked", "rawtypes" })
+									MutableDescriptionSememe mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
+											.createMutableVersion(MutableDescriptionSememe.class, State.ACTIVE, editCoord);
+									mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
+									mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
+									mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
+									mutable.setText(mapDescription);
+									Get.commitService().addUncommitted(ds.getChronology()).get();
 								}
 							}
 						}
 					}
-					else if (ds.getDescriptionTypeConceptSequence() == MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence())
-					{
-						if (Frills.isDescriptionPreferred(ds.getNid(), null))
-						{
-							if (!mapDescription.equals(ds.getText()))
-							{
-								@SuppressWarnings({ "unchecked", "rawtypes" })
-								MutableDescriptionSememe mutable = ((SememeChronology<DescriptionSememe>)ds.getChronology())
-										.createMutableVersion(MutableDescriptionSememe.class, state, editCoord);
-								mutable.setCaseSignificanceConceptSequence(ds.getCaseSignificanceConceptSequence());
-								mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
-								mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
-								mutable.setText(mapDescription);
-								Get.commitService().addUncommitted(ds.getChronology());
-							}
-						}
-					}
+				}
+				catch (Exception e)
+				{
+					log.error("unexpected error updating mapping set", e);
+					throw new RuntimeException("Unexpected error during update");
 				}
 			});
 		
@@ -519,7 +527,7 @@ public class MappingWriteAPIs
 		if (!mappingSememe.isPresent())
 		{
 			log.error("Couldn't find mapping refex?");
-			throw new RuntimeException("internal error");
+			throw new RestException("internal error");
 		}
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<DynamicSememe<?>>> latestVersion = ((SememeChronology)mappingSememe.get()).getLatestVersion(DynamicSememe.class, 
@@ -527,33 +535,51 @@ public class MappingWriteAPIs
 		//TODO handle contradictions
 		DynamicSememe<?> latest = latestVersion.get().value();
 		
-		if (latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
-				|| latest.getData().length > 0 && latest.getData()[0] == null && mapPurpose != null || mapPurpose == null && latest.getData()[0] != null
-				|| (latest.getData().length > 0 && latest.getData()[0] != null && mapPurpose != null 
-					&& latest.getData()[0] instanceof DynamicSememeString && !((DynamicSememeString)latest.getData()[0]).getDataString().equals(mapPurpose)))
-		{
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingSememe.get()).createMutableVersion(
-					MutableDynamicSememe.class,
-					state,
-					editCoord);
+		String currentMapPurposeValue = (latest.getData().length == 0 || latest.getData()[0] == null ? "" : latest.getData()[0].dataToString());
 
-			mutable.setData(new DynamicSememeData[] {
-					(StringUtils.isBlank(mapPurpose) ? null : new DynamicSememeStringImpl(mapPurpose))});
-			Get.commitService().addUncommitted(latest.getChronology());
-		}
-		
 		try
 		{
+			if (!currentMapPurposeValue.equals(mapPurpose))
+			{
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingSememe.get()).createMutableVersion(
+						MutableDynamicSememe.class,
+						State.ACTIVE,
+						editCoord);
+	
+				mutable.setData(new DynamicSememeData[] {
+						(StringUtils.isBlank(mapPurpose) ? null : new DynamicSememeStringImpl(mapPurpose))});
+				Get.commitService().addUncommitted(latest.getChronology()).get();
+			}
+			
+			//Look up the current state of the mapset concept - if it differs, update the concept.
+			Optional<LatestVersion<ConceptVersionImpl>> concept = ((ConceptChronology)mappingConcept).getLatestVersion(ConceptVersionImpl.class, stampCoord);
+			
+			if (!concept.isPresent())
+			{
+				log.error("Couldn't find mapping refex?");
+				throw new RuntimeException("internal error");
+			}
+			else if (concept.get().value().getState() != state) 
+			{
+				mappingConcept.createMutableVersion(state, editCoord);
+				Get.commitService().addUncommitted(mappingConcept).get();
+			}
+
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of mapping set " + mappingConcept.getPrimordialUuid()).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		}
+		catch (RestException e)
+		{
+			throw e;
+		}
 		catch (Exception e)
 		{
-			throw new RuntimeException("Failed during commit", e);
+			log.error("Error during commit", e);
+			throw new RestException("Unexpected internal error");
 		}
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingConcept.getPrimordialUuid());
 	}
@@ -584,13 +610,14 @@ public class MappingWriteAPIs
 		data[1] = (qualifierID == null ? null : new DynamicSememeUUIDImpl(qualifierID));
 		if (extendedDataFields != null)
 		{
-			for (int i = 2; i < extendedDataFields.size(); i++)
+			for (int i = 0; i < extendedDataFields.size(); i++)
 			{
-				data[i] = RestDynamicSememeData.translate(extendedDataFields.get(i));
+				data[i + 2] = RestDynamicSememeData.translate(extendedDataFields.get(i));
 			}
 		}
 		
-		SememeBuilder<? extends SememeChronology<?>> sb =  Get.sememeBuilderService().getDynamicSememeBuilder(
+		SememeBuilder<? extends SememeChronology<?>> sb;
+		sb = Get.sememeBuilderService().getDynamicSememeBuilder(
 				sourceConcept.getNid(),  
 				Get.identifierService().getConceptSequenceForUuids(mappingSetID), 
 				data);
@@ -612,19 +639,24 @@ public class MappingWriteAPIs
 		{
 			sb.setState(State.INACTIVE);
 		}
-		
+
 		@SuppressWarnings("rawtypes")
-		SememeChronology built = sb.build(editCoord,ChangeCheckerMode.ACTIVE).getNoThrow();
-		
+		SememeChronology built;
 		try
 		{
+			built = sb.build(editCoord,ChangeCheckerMode.ACTIVE).getNoThrow();
+		
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() 
 				+ " for mapping set " + mappingSetID).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
-
+		}
+		catch (IllegalArgumentException e1)
+		{
+			//This happens when validators fail
+			throw new RestException(e1.getMessage());
 		}
 		catch (Exception e)
 		{
@@ -671,10 +703,10 @@ public class MappingWriteAPIs
 		}
 
 		mutable.setData(data);
-		Get.commitService().addUncommitted(mappingItemSememe);
 
 		try
 		{
+			Get.commitService().addUncommitted(mappingItemSememe).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of mapping item " + mappingItemSememe.getPrimordialUuid()).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{

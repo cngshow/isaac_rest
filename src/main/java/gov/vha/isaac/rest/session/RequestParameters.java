@@ -133,6 +133,8 @@ public class RequestParameters {
 	public final static String extendedDescriptionTypeId = "extendedDescriptionTypeId";
 	public final static String dynamicSememeColumns = "dynamicSememeColumns";
 	public final static String sememeAssemblageId = "sememeAssemblageId";
+	public final static String restrictTo = "restrictTo";
+	public final static String mergeOnConcept = "mergeOnConcept";
 	
 	// Taxonomy
 	public final static String childDepth = "childDepth";
@@ -153,7 +155,8 @@ public class RequestParameters {
 	public final static String definitionId = "definitionId"; // UUID string
 	public final static String processId = "processId"; // UUID string
 	public final static String userId = "userId"; // UUID string
-	public final static String acquireLock = "acquireLock"; // Boolean string
+	public final static String acquireLock = "acquireLock"; // string, "true" or "false"
+	public final static String status = "status"; //String, workflow status
 
 	// Edit Token
 	public final static String editToken = "editToken";
@@ -161,11 +164,13 @@ public class RequestParameters {
 	public final static String editModule = "editModule";
 	public final static Set<String> EDIT_TOKEN_PARAM_NAMES =
 			unmodifiableSet(
-					//ssoToken,
 					editToken,
 					editModule,
-					editPath,
-					processId);
+					editPath);
+	
+	//export
+	public final static String changedAfter = "changedAfter";
+	public final static String changedBefore = "changedBefore";
 	
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters

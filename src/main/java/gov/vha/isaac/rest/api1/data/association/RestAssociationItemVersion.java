@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.association;
 
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -128,7 +130,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 * @param read
 	 * @throws RestException 
 	 */
-	public RestAssociationItemVersion(AssociationInstance read) throws RestException
+	public RestAssociationItemVersion(AssociationInstance read, UUID processId) throws RestException
 	{
 		associationTypeSequence = read.getAssociationTypeSequenece();
 		identifiers = new RestIdentifiedObject(read.getData().getUuidList());
@@ -152,7 +154,8 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 				{
 					sourceConcept = new RestConceptChronology(Get.conceptService().getConcept(sourceNid), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
-							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+							processId);
 				}
 				else if (Get.identifierService().getChronologyTypeForNid(sourceNid) == ObjectChronologyType.SEMEME)
 				{
@@ -160,7 +163,8 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), 
 							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), 
-							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+							processId);
 				}
 				else
 				{
@@ -174,7 +178,8 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 				{
 					targetConcept = new RestConceptChronology(Get.conceptService().getConcept(targetNid), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
-							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+							processId);
 				}
 				else if (Get.identifierService().getChronologyTypeForNid(targetNid) == ObjectChronologyType.SEMEME)
 				{
@@ -182,7 +187,8 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), 
 							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), 
-							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+							processId);
 				}
 				else
 				{
@@ -193,7 +199,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 			if (RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable))
 			{
 				nestedSememes = SememeAPIs.get(identifiers.getFirst().toString(), null, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), true, 
-						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true, true, true);
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true, true, true, processId);
 			}
 			if (expandables.size() == 0)
 			{

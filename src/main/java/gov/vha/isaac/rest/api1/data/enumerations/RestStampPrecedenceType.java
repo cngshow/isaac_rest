@@ -43,7 +43,7 @@ public class RestStampPrecedenceType extends Enumeration
 	
 	public RestStampPrecedenceType(StampPrecedence st)
 	{
-		super(st.toString(), st.ordinal());
+		super(st.name(), st.toString(), st.ordinal());
 	}
 
 	public static RestStampPrecedenceType valueOf(String str) {

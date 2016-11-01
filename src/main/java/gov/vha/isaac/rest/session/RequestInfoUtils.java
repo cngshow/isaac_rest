@@ -56,6 +56,13 @@ public class RequestInfoUtils {
 			throw new RestException(parameterName, str, "invalid UUID " + parameterName + " parameter value: " + str);
 		}
 	}
+	public static Optional<UUID> parseUuidParameterIfNonBlank(String parameterName, String str) throws RestException {
+		if (StringUtils.isBlank(str)) {
+			return Optional.empty();
+		}
+			
+		return Optional.of(parseUuidParameter(parameterName, str));
+	}
 	
 	public static int parseIntegerParameter(String parameterName, String str) throws RestException {
 		try {
@@ -92,22 +99,28 @@ public class RequestInfoUtils {
 						}
 					}
 				}
-			} catch (Exception e) {
+				else {
+					throw new RestException(parameterName, str, "no concept or sememe exists corresponding to " + parameterName + " parameter value: " + str);
+				}
+			} catch (RestException ex) {
+				throw ex;
+			}
+			catch (Exception e) {
 				// ignore
 			}
 			int id = Integer.parseInt(str);
 			if (id >= 0) {
-				throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str + ".  Must be a nid or UUID, not a sequence");
+				throw new RestException(parameterName, str, "invalid " + parameterName + " parameter value: " + str + ".  Must be a nid or UUID, not a sequence");
 			}
 			if (! Get.conceptService().hasConcept(id) && ! Get.sememeService().hasSememe(id)) {
-				throw new RestException(parameterName, str, "no concept or sememe exists corresponding to NID " + parameterName + " parameter value: " + str);
+				throw new RestException(parameterName, str, "no concept or sememe exists corresponding to " + parameterName + " parameter value: " + str);
 			} else {
 				return id;
 			}
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new RestException(parameterName, str, "invalid " + parameterName + " NID parameter value: " + str);
+			throw new RestException(parameterName, str, "invalid " + parameterName + " parameter value: " + str);
 		}
 	}
 	
@@ -144,6 +157,13 @@ public class RequestInfoUtils {
 		}
 	}
 
+	/**
+	 * Handles UUIDs, nids, or sequences.
+	 * @param parameterName
+	 * @param str
+	 * @return
+	 * @throws RestException
+	 */
 	public static int getSememeSequenceFromParameter(String parameterName, String str) throws RestException {
 		try {
 			UUID uuid = null;

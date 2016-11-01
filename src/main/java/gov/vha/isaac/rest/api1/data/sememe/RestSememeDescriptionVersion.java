@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -93,19 +94,21 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		//for Jaxb
 	}
 	
-	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean expandReferenced) throws RestException
+	public RestSememeDescriptionVersion(DescriptionSememe<?> dsv, boolean includeChronology, boolean expandNested, boolean expandReferenced, UUID processId) 
+			throws RestException
 	{
 		super();
 		setup(dsv, includeChronology, expandNested, expandReferenced, (restSememeVersion ->
-		{
-			//If the assemblage is a dialect, put it in our list.
-			if (Get.taxonomyService().wasEverKindOf(restSememeVersion.sememeChronology.assemblageSequence, MetaData.DIALECT_ASSEMBLAGE.getConceptSequence()))
 			{
-				dialects.add((RestDynamicSememeVersion) restSememeVersion);
-				return false;
-			}
-			return true;
-		}));
+				//If the assemblage is a dialect, put it in our list.
+				if (Get.taxonomyService().wasEverKindOf(restSememeVersion.sememeChronology.assemblageSequence, MetaData.DIALECT_ASSEMBLAGE.getConceptSequence()))
+				{
+					dialects.add((RestDynamicSememeVersion) restSememeVersion);
+					return false;
+				}
+				return true;
+			}),
+			processId);
 		caseSignificanceConceptSequence = dsv.getCaseSignificanceConceptSequence();
 		languageConceptSequence = dsv.getLanguageConceptSequence();
 		text = dsv.getText();

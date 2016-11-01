@@ -3,7 +3,7 @@
  *
  * This is a work of the U.S. Government and is not subject to copyright
  * protection in the United States. Foreign copyrights may apply.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,13 +53,13 @@ import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 
 
-/** 
+/**
  * A tuple containing the key/value pair constituting a map entry
  * in a map of component nids to stamps
  * A set of these constitutes a map contained in {@link RestWorkflowProcess}
- * 
+ *
  * {@link RestWorkflowComponentToStampMapEntry}
- * 
+ *
  * This class carries back result map
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
@@ -117,29 +117,32 @@ public class RestWorkflowComponentToStampMapEntry
 	public RestStampedVersion getValue() {
 		return value;
 	}
-	
+
 	public String getInitialEditTimeAsString() {
 		LocalDate date = LocalDate.ofEpochDay(value.time);
 		return BPMNInfo.workflowDateFormatter.format(date);
 	}
 
+
+	//
+	//pull out into separate into workflow provider & workflow accessor
 	public String printComponentValue(int nid, StampCoordinate stampCoord, LanguageCoordinate langCoord)
 			throws Exception {
 		ObjectChronologyType oct = Get.identifierService().getChronologyTypeForNid(nid);
-		if (oct == ObjectChronologyType.CONCEPT) {
+		if (oct == ObjectChronologyType.CONCEPT)
 			return printConceptInformation(nid, stampCoord, langCoord);
-		} else if (oct == ObjectChronologyType.SEMEME) {
+		else if (oct == ObjectChronologyType.SEMEME) {
 			SememeChronology<? extends SememeVersion<?>> sememe = Get.sememeService().getSememe(nid);
 			switch (sememe.getSememeType()) {
 
 			case DESCRIPTION:
 				LatestVersion<DescriptionSememe> descSem = (LatestVersion<DescriptionSememe>) ((SememeChronology) sememe)
-						.getLatestVersion(LogicGraphSememe.class, stampCoord).get();
+				.getLatestVersion(LogicGraphSememe.class, stampCoord).get();
 				return printDescriptionInformation(descSem);
 
 			case DYNAMIC:
 				LatestVersion<DynamicSememe> dynSem = (LatestVersion<DynamicSememe>) ((SememeChronology) sememe)
-						.getLatestVersion(LogicGraphSememe.class, stampCoord).get();
+				.getLatestVersion(LogicGraphSememe.class, stampCoord).get();
 				int assemblageSeq = dynSem.value().getAssemblageSequence();
 				ConceptChronology<? extends ConceptVersion<?>> conChron = Get.conceptService()
 						.getConcept(assemblageSeq);
@@ -150,30 +153,26 @@ public class RestWorkflowComponentToStampMapEntry
 				String target = null;
 				String value = null;
 				DynamicSememeUsageDescription sememeDefinition = DynamicSememeUsageDescriptionImpl.read(nid);
-				for (DynamicSememeColumnInfo info : sememeDefinition.getColumnInfo()) {
+				for (DynamicSememeColumnInfo info : sememeDefinition.getColumnInfo())
 					if (info.getColumnDescriptionConcept()
-							.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_VALUE.getUUID())) {
+							.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_VALUE.getUUID()))
 						value = info.getDefaultColumnValue().dataToString();
-					} else if (info.getColumnDescriptionConcept()
+					else if (info.getColumnDescriptionConcept()
 							.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT
-									.getUUID())) {
+									.getUUID()))
 						target = info.getDefaultColumnValue().dataToString();
-					}
-				}
 
-				if (isMap) {
+				if (isMap)
 					return printMapInformation(value, target);
-				} else if (isAssociation) {
+				else if (isAssociation)
 					return printAssociationInformation(value, target);
-				} else {
+				else
 					return printValueInformation(value);
-				}
 			default:
 				throw new Exception("Unsupported Sememe Type: " + sememe.getSememeType());
 			}
-		} else {
+		} else
 			throw new Exception("Unsupported Object Chronology Type: " + oct);
-		}
 	}
 
 	private String printConceptInformation(int nid, StampCoordinate stampCoord, LanguageCoordinate langCoord) {
@@ -201,6 +200,7 @@ public class RestWorkflowComponentToStampMapEntry
 		// Value: <Value Text>
 		return "Value: " + value;
 	}
+	//************************************************************
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()

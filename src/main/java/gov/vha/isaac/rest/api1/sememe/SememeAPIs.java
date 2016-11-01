@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,9 +35,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.lang3.StringUtils;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.SememeSequenceSet;
@@ -59,9 +58,9 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -74,6 +73,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @Path(RestPaths.sememeAPIsPathComponent)
 public class SememeAPIs
 {
+	private static Logger log = LogManager.getLogger(SememeAPIs.class);
 	/**
 	 * Return the RestSememeType of the sememe corresponding to the passed id
 	 * @param id The id for which to determine RestSememeType
@@ -143,7 +143,11 @@ public class SememeAPIs
 	 * @param expand - A comma separated list of fields to expand.  Supports 'versionsAll', 'versionsLatestOnly', 'nestedSememes', 'referencedDetails'
 	 * If latest only is specified in combination with versionsAll, it is ignored (all versions are returned)
 	 * 'referencedDetails' causes it to include the type for the referencedComponent, and, if it is a concept or a description sememe, the description of that 
-	 * concept - or the description value.  
+	 * concept - or the description value.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
 	 * by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -156,6 +160,7 @@ public class SememeAPIs
 	public RestSememeChronology getSememeChronology(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
@@ -163,6 +168,7 @@ public class SememeAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		RestSememeChronology chronology =
@@ -171,7 +177,8 @@ public class SememeAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 						RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+						Util.validateWorkflowProcess(processId));
 		
 		return chronology;
 	}
@@ -185,6 +192,10 @@ public class SememeAPIs
 	 * if they represent a concept or a description sememe.
 	 * @return the sememe version object.  Note that the returned type here - RestSememeVersion is actually an abstract base class, 
 	 * the actual return type will be either a RestDynamicSememeVersion or a RestSememeDescriptionVersion.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -196,23 +207,27 @@ public class SememeAPIs
 	public RestSememeVersion getSememeVersion(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = findSememeChronology(id);
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+		Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processIdUUID, sc.getNid()));
 		if (sv.isPresent())
 		{
 			//TODO handle contradictions
 			return RestSememeVersion.buildRestSememeVersion(sv.get().value(), RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+					RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), processIdUUID);
 		}
 		else
 		{
@@ -266,6 +281,10 @@ public class SememeAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nested', 'referencedDetails'
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
 	 * if they represent a concept or a description sememe.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken 
 	 * may be obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -281,26 +300,31 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.PAGINATION_PARAM_NAMES,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		HashSet<Integer> temp = new HashSet<>();
-		temp.add(Util.convertToConceptSequence(id));
+		HashSet<Integer> singleAllowedAssemblage = new HashSet<>();
+		singleAllowedAssemblage.add(Util.convertToConceptSequence(id));
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
 		//we don't have a referenced component - our id is assemblage
 		SememeVersions versions =
 				get(
 						null,
-						temp,
+						singleAllowedAssemblage,
 						pageNum,
 						maxPageSize,
-						true);
+						true,
+						processIdUUID);
 
 		List<RestSememeVersion> restSememeVersions = new ArrayList<>();
 		for (SememeVersion<?> sv : versions.getValues()) {
@@ -308,7 +332,8 @@ public class SememeAPIs
 					RestSememeVersion.buildRestSememeVersion(sv,
 							RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails)));
+							RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+							processIdUUID));
 		}
 		RestSememeVersionPage results =
 				new RestSememeVersionPage(
@@ -341,6 +366,10 @@ public class SememeAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology', 'nestedSememes', 'referencedDetails'
 	 * When referencedDetails is passed, nids will include type information, and certain nids will also include their descriptions,
 	 * if they represent a concept or a description sememe.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
 	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
@@ -358,6 +387,7 @@ public class SememeAPIs
 			@QueryParam(RequestParameters.includeAssociations) @DefaultValue("false") String includeAssociations,
 			@QueryParam(RequestParameters.includeMappings) @DefaultValue("false") String includeMappings,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) 
 			throws RestException
 	{
@@ -369,6 +399,7 @@ public class SememeAPIs
 				RequestParameters.includeAssociations,
 				RequestParameters.includeMappings,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		HashSet<Integer> allowedAssemblages = new HashSet<>();
@@ -386,7 +417,8 @@ public class SememeAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						Boolean.parseBoolean(includeDescriptions.trim()),
 						Boolean.parseBoolean(includeAssociations.trim()),
-						Boolean.parseBoolean(includeMappings.trim()));
+						Boolean.parseBoolean(includeMappings.trim()),
+						Util.validateWorkflowProcess(processId));
 	}
 
 	/**
@@ -398,6 +430,7 @@ public class SememeAPIs
 	 * @return - the full description
 	 * @throws RestException
 	 */
+	// TODO add processId parameter?
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememeDefinitionComponent + "{" + RequestParameters.id + "}")
@@ -478,6 +511,10 @@ public class SememeAPIs
 	 * @param expandNested
 	 * @param expandReferenced
 	 * @param allowDescriptions true to include description type sememes, false to skip
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @return
 	 * @throws RestException
 	 */
@@ -486,7 +523,8 @@ public class SememeAPIs
 			Set<Integer> allowedAssemblages,
 			final int pageNum,
 			final int maxPageSize,
-			boolean allowDescriptions) throws RestException
+			boolean allowDescriptions,
+			UUID processId) throws RestException
 	{
 		PaginationUtils.validateParameters(pageNum, maxPageSize);
 
@@ -533,7 +571,8 @@ public class SememeAPIs
 						@SuppressWarnings("rawtypes")
 						SememeChronology chronology = it.next();
 						@SuppressWarnings({ "unchecked" })
-						Optional<LatestVersion<SememeVersion<?>>> sv = chronology.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+						Optional<LatestVersion<SememeVersion<?>>> sv = chronology.getLatestVersion(SememeVersionImpl.class, 
+								Util.getPreWorkflowStampCoordinate(processId, chronology.getNid()));
 						if (sv.isPresent()) {
 							//TODO handle contradictions
 							ochreResults.add(sv.get().value());
@@ -569,7 +608,8 @@ public class SememeAPIs
 				} else {
 					SememeChronology<? extends SememeVersion<?>> chronology = Get.sememeService().getSememe(it.nextInt());
 					@SuppressWarnings({ "unchecked", "rawtypes" })
-					Optional<LatestVersion<SememeVersion<?>>> sv = ((SememeChronology)chronology).getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+					Optional<LatestVersion<SememeVersion<?>>> sv = ((SememeChronology)chronology).getLatestVersion(SememeVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, chronology.getNid()));
 					if (sv.isPresent()) {
 						ochreResults.add(sv.get().value());
 					}
@@ -590,11 +630,15 @@ public class SememeAPIs
 	 * @param allowDescriptions true to include description type sememes, false to skip
 	 * @param allowAssociations true to include sememes that represent associations, false to skip
 	 * @param allowMappings true to include sememes that represent mappings, false to skip
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @return
 	 * @throws RestException
 	 */
 	public static RestSememeVersion[] get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
-		boolean expandReferenced, boolean allowDescriptions, boolean allowAssociations, boolean allowMappings) throws RestException
+		boolean expandReferenced, boolean allowDescriptions, boolean allowAssociations, boolean allowMappings, UUID processId) throws RestException
 	{
 		final ArrayList<RestSememeVersion> results = new ArrayList<>();
 		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
@@ -615,13 +659,14 @@ public class SememeAPIs
 					{
 						return;
 					}
-					Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+					Optional<LatestVersion<SememeVersion<?>>> sv = sc.getLatestVersion(SememeVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, sc.getNid()));
 
 					if (sv.isPresent()) {
 						try
 						{
 							//TODO handle contradictions
-							results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested, expandReferenced));
+							results.add(RestSememeVersion.buildRestSememeVersion(sv.get().value(), expandChronology, expandNested, expandReferenced, processId));
 						}
 						catch (RestException e)
 						{

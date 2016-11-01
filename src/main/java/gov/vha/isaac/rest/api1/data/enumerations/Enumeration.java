@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.enumerations;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeVersion;
@@ -95,20 +96,30 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 public abstract class Enumeration implements Comparable<Enumeration>
 {
 	/**
-	 * The name of this enumeration type
+	 * The enum name of this enumeration type
 	 */
 	@XmlElement
-	public String name;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String enumName;
+	
+	/**
+	 * The user-friendly name of this enumeration type - if available.  May be null
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String friendlyName;
 	
 	/**
 	 * The identifier of this enumeration.  This would be passed back to a call that requested an enum type.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public int enumId;
 	
-	protected Enumeration(String name, int id)
+	protected Enumeration(String enumName, String friendlyName, int id)
 	{
-		this.name = name;
+		this.enumName = enumName;
+		this.friendlyName = friendlyName;
 		this.enumId = id;
 	}
 	
@@ -127,14 +138,9 @@ public abstract class Enumeration implements Comparable<Enumeration>
 	
 	@Override
 	public String toString() {
-		return name;
+		return enumName;
 	}
 	
-	public int getEnumId()
-	{
-		return enumId;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -143,7 +149,7 @@ public abstract class Enumeration implements Comparable<Enumeration>
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + enumId;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((enumName == null) ? 0 : enumName.hashCode());
 		return result;
 	}
 
@@ -161,10 +167,10 @@ public abstract class Enumeration implements Comparable<Enumeration>
 		Enumeration other = (Enumeration) obj;
 		if (enumId != other.enumId)
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		if (enumName == null) {
+			if (other.enumName != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!enumName.equals(other.enumName))
 			return false;
 		return true;
 	}

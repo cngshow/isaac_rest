@@ -19,24 +19,23 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
@@ -48,10 +47,10 @@ import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.mapping.data.MappingSetDAO;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.comment.CommentAPIs;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
@@ -75,7 +74,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * TODO populate expandables
 	 */
 	@XmlElement
-	Expandables expandables;
+	public Expandables expandables;
 	
 	/**
 	 * The concept sequence of the concept that represents this mapping set
@@ -87,31 +86,33 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * The identifier data of the concept that represents this mapping set
 	 */
 	@XmlElement
-	RestIdentifiedObject identifiers;
+	public RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this map set definition
 	 */
 	@XmlElement
-	RestStampedVersion mappingSetStamp;
+	public RestStampedVersion mappingSetStamp;
 	
 	/**
 	 * The (optional) extended fields which carry additional information about this map set definition. 
 	 */
 	@XmlElement
-	List<RestMappingSetExtensionValue> mapSetExtendedFields = new ArrayList<>();
+	public List<RestMappingSetExtensionValue> mapSetExtendedFields = new ArrayList<>();
 	
 	/**
 	 * The fields that are declared for each map item instance that is created using this map set definition.  
 	 */
 	@XmlElement
-	List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = new ArrayList<>();
+	public List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = new ArrayList<>();
 	
 	/**
 	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
 	 */
 	@XmlElement
-	List<RestCommentVersion> comments;
+	public List<RestCommentVersion> comments;
+	
+	//TODO Dan needs an option to return other sememes here...
 
 	protected RestMappingSetVersion()
 	{
@@ -124,13 +125,15 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * @param sememe
 	 * @param stampCoord
 	 */
-	public RestMappingSetVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments)
+	public RestMappingSetVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments, UUID processId)
 	{
+		super();
 		Optional<ConceptVersion<?>> mappingConcept = MappingSetDAO.getMappingConcept(sememe, stampCoord); 
 		
 		if (mappingConcept.isPresent())
 		{
 			conceptSequence = mappingConcept.get().getChronology().getConceptSequence();
+			active = mappingConcept.get().getState() == State.ACTIVE;
 			identifiers = new RestIdentifiedObject(mappingConcept.get().getUuidList());
 			//TODO whenever we make an edit to any component of the map set, we will also need to commit the concept, so that this stamp
 			//always updates with any other stamp that is updated
@@ -143,9 +146,11 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			
 			//read the extended field definition information
 			DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.get().getNid());
-			for (DynamicSememeColumnInfo dsci : dsud.getColumnInfo())
+			//Columns 0 and 1 are used to store the target concept and qualifier, we shouldn't return them here.
+			for (int i = 2; i < dsud.getColumnInfo().length; i++)
 			{
-				mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsci));
+				mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsud.getColumnInfo()[i]));
+				mapItemFieldsDefinition.get(i - 2).columnOrder = mapItemFieldsDefinition.get(i - 2).columnOrder - 2; 
 			}
 
 			//Read the extended fields off of the map set concept.
@@ -244,7 +249,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			{
 				try
 				{
-					comments = Util.readComments(sememe.getNid() + "");
+					comments = CommentAPIs.readComments(sememe.getNid() + "", processId);
 				}
 				catch (RestException e)
 				{
@@ -275,26 +280,6 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	public int compareTo(RestMappingSetVersion o)
 	{
 		return name.compareTo(o.name);
-	}
-
-	@XmlTransient
-	public RestIdentifiedObject getIdentifiers() {
-		return identifiers;
-	}
-
-	@XmlTransient
-	public RestStampedVersion getMappingSetStamp() {
-		return mappingSetStamp;
-	}
-
-	@XmlTransient
-	public List<RestMappingSetExtensionValue> getMapSetExtendedFields() {
-		return Collections.unmodifiableList(mapSetExtendedFields);
-	}
-
-	@XmlTransient
-	public List<RestDynamicSememeColumnInfo> getMapItemFieldsDefinition() {
-		return Collections.unmodifiableList(mapItemFieldsDefinition);
 	}
 
 	/* (non-Javadoc)

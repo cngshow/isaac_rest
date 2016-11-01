@@ -91,8 +91,9 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			//TODO handle contradictions
-			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
+			// TODO handle contradictions
+			// TODO handle processId?
+			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true, null);
 		} else {
 			connectorTypeConceptVersion = null;
 		}
@@ -112,8 +113,9 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
-			//TODO handle contradictions
-			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true);
+			// TODO handle contradictions
+			// TODO handle processId?
+			connectorTypeConceptVersion = new RestConceptVersion(olcv.get().value(), true, null);
 		} else {
 			connectorTypeConceptVersion = null;
 		}

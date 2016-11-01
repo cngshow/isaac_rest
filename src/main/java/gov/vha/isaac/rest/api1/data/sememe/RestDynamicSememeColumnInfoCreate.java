@@ -61,7 +61,7 @@ public class RestDynamicSememeColumnInfoCreate
 			boolean columnRequired, RestDynamicSememeValidatorType[] columnValidatorTypes, RestDynamicSememeData[] columnValidatorData)
 	{
 		this.columnLabelConcept = columnConceptLabelConcept;
-		this.columnDataType = columnDataType.name;
+		this.columnDataType = columnDataType.enumName;
 		this.columnDefaultData = columnDefaultData;
 		this.columnRequired = columnRequired;
 		if (columnValidatorTypes != null)
@@ -69,7 +69,7 @@ public class RestDynamicSememeColumnInfoCreate
 			this.columnValidatorTypes = new String[columnValidatorTypes.length];
 			for (int i = 0; i < columnValidatorTypes.length; i++)
 			{
-				this.columnValidatorTypes[i] = columnValidatorTypes[i].name;
+				this.columnValidatorTypes[i] = columnValidatorTypes[i].enumName;
 			}
 		}
 		else

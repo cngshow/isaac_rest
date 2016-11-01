@@ -72,10 +72,7 @@ public class RequestInfo
 	private EditCoordinate editCoordinate_ = null;
 
 	//just a cache
-	private WorkflowProvider wfp_;
-
-	//TODO hack that needs to go away.
-	static UUID workflowProcessId_;
+	private static WorkflowProvider wfp_;
 
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	//Default to this, users may override by specifying expandables=true
@@ -239,8 +236,11 @@ public class RequestInfo
 	}
 
 	/**
-	 * @return
+	 * @return the stamp coordinate as requested by the user.
 	 */
+	//TODO nearly every usage of this call, needs to be redone to utilize the Util.getPreWorkflowStampCoordinate call.
+	//Anything else, leads to an incomplete return based on the requested stamps.
+	//Until we actually put workflow in, however, it won't matter..
 	public StampCoordinate getStampCoordinate()
 	{
 		return getCoordinatesToken().getTaxonomyCoordinate().getStampCoordinate();

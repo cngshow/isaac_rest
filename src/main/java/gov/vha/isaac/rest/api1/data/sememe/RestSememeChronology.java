@@ -21,10 +21,10 @@ package gov.vha.isaac.rest.api1.data.sememe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
@@ -115,7 +115,7 @@ public class RestSememeChronology
 	}
 
 	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeNested,
-			boolean populateReferencedDetails) throws RestException
+			boolean populateReferencedDetails, UUID processId) throws RestException
 	{
 		identifiers = new RestIdentifiedObject(sc.getUuidList());
 		sememeSequence = sc.getSememeSequence();
@@ -137,7 +137,7 @@ public class RestSememeChronology
 				{
 					@SuppressWarnings({ "rawtypes", "unchecked" })
 					Optional<LatestVersion<DescriptionSememe>> ds = ((SememeChronology)referencedComponentSememe)
-							.getLatestVersion(DescriptionSememe.class, RequestInfo.get().getStampCoordinate());
+							.getLatestVersion(DescriptionSememe.class, Util.getPreWorkflowStampCoordinate(processId, referencedComponentSememe.getNid()));
 					if (ds.isPresent())
 					{
 						//TODO handle contradictions
@@ -160,17 +160,18 @@ public class RestSememeChronology
 			{
 				for (SememeVersion<?> sv : sc.getVersionList())
 				{
-					versions.add(RestSememeVersion.buildRestSememeVersion(sv, false, includeNested, populateReferencedDetails));
+					versions.add(RestSememeVersion.buildRestSememeVersion(sv, false, includeNested, populateReferencedDetails, processId));
 				}
 			}
 			else if (includeLatestVersion)
 			{
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				Optional<LatestVersion<SememeVersion>> latest = 
-						((SememeChronology)sc).getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
+						((SememeChronology)sc).getLatestVersion(SememeVersion.class, 
+								Util.getPreWorkflowStampCoordinate(processId, sc.getNid()));
 				if (latest.isPresent())
 				{
-					versions.add(RestSememeVersion.buildRestSememeVersion(latest.get().value(), false, includeNested, populateReferencedDetails));
+					versions.add(RestSememeVersion.buildRestSememeVersion(latest.get().value(), false, includeNested, populateReferencedDetails, processId));
 				}
 			}
 		}

@@ -3,17 +3,17 @@
 	<Appenders>
 		<!-- the standard-console-appender -->
 		<Console name="appender-Console-all" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] (%location) %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</Console>
- 		<!-- the appenders for root -->
+		<!-- the appenders for root -->
 		<File name="appender-root-all" fileName="${sys:catalina.base}/logs/${web:contextPath}.log" append="false">
-			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] (%location) %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</File>
 		<File name="appender-root-error" fileName="${sys:catalina.base}/logs${web:contextPath}-err.log" append="false">
-			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] (%location) %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</File>
 	</Appenders>
- 
+
 	<Loggers>
 		<!-- Every configuration must have a root logger. If one is not configured the default root LoggerConfig is ERROR with Console appender attached. -->
 		<Root level="DEBUG">

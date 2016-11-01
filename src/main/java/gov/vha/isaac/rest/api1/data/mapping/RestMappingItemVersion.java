@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -27,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -37,6 +39,7 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.comment.CommentAPIs;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
@@ -111,11 +114,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	}
 
 	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, int targetColPosition, int qualifierColPosition, 
-			boolean expandDescriptions, boolean expandComments)
+			boolean expandDescriptions, boolean expandComments, UUID processId)
 	{
 		sememeSequence = sememe.getSememeSequence();
 		identifiers = new RestIdentifiedObject(sememe.getUuidList());
 		mappingItemStamp = new RestStampedVersion(sememe);
+		active = sememe.getState() == State.ACTIVE;
 		mapSetConcept = sememe.getAssemblageSequence();
 		if (Get.identifierService().getChronologyTypeForNid(sememe.getReferencedComponentNid()) != ObjectChronologyType.CONCEPT)
 		{
@@ -177,7 +181,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		{
 			try
 			{
-				comments = Util.readComments(sememe.getNid() + "");
+				comments = CommentAPIs.readComments(sememe.getNid() + "", processId);
 			}
 			catch (RestException e)
 			{

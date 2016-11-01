@@ -32,9 +32,11 @@ import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
+import gov.vha.isaac.rest.api1.data.RestUserInfo;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
@@ -72,18 +74,20 @@ public class SystemAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")  
+	@Path(RestPaths.identifiedObjectsComponent + "{" + RequestParameters.id + "}")
 	public RestIdentifiedObjectsResult getIdentifiedObjects(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.expand,
+				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
-		
+
 		RestConceptChronology concept = null;
 		RestSememeChronology sememe = null;
 		Optional<Integer> intId = NumericUtils.getInt(id);
@@ -94,13 +98,15 @@ public class SystemAPIs
 				// id is NID
 				ObjectChronologyType objectChronologyType = Get.identifierService().getChronologyTypeForNid(intId.get());
 				switch(objectChronologyType) {
-				case CONCEPT:
+				case CONCEPT: {
 					concept =
 							new RestConceptChronology(
 									Get.conceptService().getConcept(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									Util.validateWorkflowProcess(processId));
 					break;
+				}
 				case SEMEME:
 					sememe =
 							new RestSememeChronology(
@@ -108,7 +114,8 @@ public class SystemAPIs
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+									Util.validateWorkflowProcess(processId));
 					break;
 				case UNKNOWN_NID:
 				default:
@@ -131,7 +138,8 @@ public class SystemAPIs
 							new RestConceptChronology(
 									Get.conceptService().getConcept(conceptNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									Util.validateWorkflowProcess(processId));
 				}
 
 				int sememeNid = Get.identifierService().getSememeNid(intId.get());
@@ -142,7 +150,8 @@ public class SystemAPIs
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 									RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+									RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+									Util.validateWorkflowProcess(processId));
 				}
 			}
 
@@ -170,7 +179,8 @@ public class SystemAPIs
 								new RestConceptChronology(
 										Get.conceptService().getConcept(nid),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable));
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+										Util.validateWorkflowProcess(processId));
 						break;
 					case SEMEME:
 						sememe =
@@ -179,7 +189,8 @@ public class SystemAPIs
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
-										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails));
+										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+										Util.validateWorkflowProcess(processId));
 						break;
 					case UNKNOWN_NID:
 					default:
@@ -410,5 +421,24 @@ public class SystemAPIs
 				RequestParameters.coordToken);
 
 		return ApplicationConfig.getInstance().getSystemInfo();
+	}
+	
+
+	/**
+	 * Return information about a particular user (utilized to tie back session information to what was passed via SSO)
+	 * @param id - a nid, sequence or UUID of a concept that represents a user in the system.
+	 * @throws RestException if no user concept can be identified.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.userComponent + "{" + RequestParameters.id + "}")
+	public RestUserInfo getUserInfo(@PathParam(RequestParameters.id) String id) throws RestException
+	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.coordToken);
+
+		return new RestUserInfo(Get.identifierService().getConceptNid(Util.convertToConceptSequence(id)));
 	}
 }

@@ -50,6 +50,8 @@ public class RestPaths
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
+	public static final String userComponent = "user/";
+	public static final String vetsXMLComponent = "vetsXML/";
 	
 	// Workflow Based Calls
 	public static final String workflowAPIsPathComponent = apiVersionComponent + "workflow/";
@@ -65,7 +67,8 @@ public class RestPaths
 	public static final String createProcess = process + "create/";
 	public static final String advanceProcess = process + "advance/";
 	public static final String removeComponent = process + "component/";
-	public static final String lock = process + "lock/";
+	public static final String componentSummary = process + "component/summary/" ;
+	public static final String lock = "lock/";
 	
 	// Mapping Based Calls
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
@@ -130,6 +133,7 @@ public class RestPaths
 	public static final String systemAPIsPathComponent = apiVersionComponent + "system/";
 	public static final String commentAPIsPathComponent = apiVersionComponent + "comment/";
 	public static final String contentRequestAPIsPathComponent = apiVersionComponent + "request/";
+	public static final String exportAPIsPathComponent = apiVersionComponent + "export/";
 
 	public static final String coordinateAPIsPathComponent = apiVersionComponent + "coordinate/";
 	public static final String coordinatesComponent = "coordinates/";

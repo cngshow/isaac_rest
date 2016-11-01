@@ -7,6 +7,28 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/27 - 1.7.2: 
+    * Added the optional parameter 'restrictTo'to the search/prefix API.  Supports "association, mapset, sememe, metadata" - see docs for more details.
+    * Added the optional parameter 'mergeOnConcept' to the search/prefix API.  When true, returned search results will be merged, such that there is only 
+        one result per concept (even if the concept has multiple descriptions that matched the query)
+
+* 2016/10/27 - 1.7.1: 
+    * Fixed a bug where a readback of extended fields on a map set definition was returning two fields it should not.
+    * Fixed a bug where the 'active' field wasn't being populated when reading mapsets / map items
+    * Fixed bugs with the handling / activation of dynamic sememe column validators
+    * Fixed bugs with 'default' columns of dynamic sememes not being set to their default value appropriately
+
+* 2016/10/26 - 1.7.0: 
+    * Commented out all of the workflow APIs.  Fixed inadvertent breakages being caused by previously merged workflow code.
+    
+* 2016/10/25 - 1.6.4: 
+    * Adding a system/user call to hand back the user information about a given user concept.  This will include various SSO information that was 
+        used when the user concept was created.
+
+* 2016/10/20 - 1.6.3: 
+    * Clarifying the 'names' returned for all of the /1/system/enumeration/* calls - now returning an enumName, friendlyName (optional) and enumId.
+    * For 1/system/enumeration/restDynamicSememeDataType, an attribute of 'classType' has been added, which contains the full value that needs to 
+        be included during sememe data column creation of a particular sememe type.
 * 2016/10/19 - 1.6.2: 
     * Fixed the inconsistent url /write/component to /write/1/component
     * Now requiring / honoring column numbers for sememe create / edit operations

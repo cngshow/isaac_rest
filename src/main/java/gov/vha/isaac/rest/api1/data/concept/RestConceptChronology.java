@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -89,7 +89,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	}
 	
 	@SuppressWarnings("rawtypes") 
-	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion)
+	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId)
 	{
 		conceptSequence = cc.getConceptSequence();
 		identifiers = new RestIdentifiedObject(cc.getUuidList());
@@ -103,18 +103,19 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 			{
 				for (ConceptVersion cv : cc.getVersionList())
 				{
-					versions.add(new RestConceptVersion(cv, false, false, false, false, false, false, false));
+					versions.add(new RestConceptVersion(cv, false, false, false, false, false, false, false, processId));
 				}
 			}
 			else // if (includeLatestVersion)
 			{
 				@SuppressWarnings("unchecked")
 				Optional<LatestVersion<ConceptVersion>> latest = 
-						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
+						((ConceptChronology)cc).getLatestVersion(ConceptVersion.class, 
+								Util.getPreWorkflowStampCoordinate(processId, cc.getNid()));
 				if (latest.isPresent())
 				{
 					//TODO handle contradictions
-					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false));
+					versions.add(new RestConceptVersion(latest.get().value(), false, false, false, false, false, false, false, processId));
 				}
 			}
 		}

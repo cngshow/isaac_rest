@@ -73,7 +73,7 @@ public abstract class RestDynamicSememeTypedData extends RestDynamicSememeData
 	protected void setTypedData(ObjectChronologyType dataType)
 	{
 		dataObjectType = new RestObjectChronologyType(dataType);
-		if (dataObjectType.getEnumId() == ObjectChronologyType.CONCEPT.ordinal())
+		if (dataObjectType.enumId == ObjectChronologyType.CONCEPT.ordinal())
 		{
 			int nid;
 			if (data instanceof Integer)

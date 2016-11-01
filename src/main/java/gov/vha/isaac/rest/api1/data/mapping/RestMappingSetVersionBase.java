@@ -73,7 +73,8 @@ public class RestMappingSetVersionBase
 	
 	/**
 	 * True to indicate the mapping set should be set as active, false for inactive.  
-	 * This field is optional, if not provided, it will be assumed to be active.
+	 * This field is optional, if not provided, it will be assumed to be active.  On return, 
+	 * this field duplicates information provided in the stamp.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -91,12 +92,13 @@ public class RestMappingSetVersionBase
 	 * @param description
 	 * @param purpose
 	 */
-	public RestMappingSetVersionBase(String name, String inverseName, String description, String purpose) {
+	public RestMappingSetVersionBase(String name, String inverseName, String description, String purpose, Boolean active) {
 		super();
 		this.name = name;
 		this.inverseName = inverseName;
 		this.description = description;
 		this.purpose = purpose;
+		this.active = active;
 	}
 
 	/* (non-Javadoc)

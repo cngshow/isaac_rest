@@ -26,11 +26,8 @@ import java.io.StringWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -62,7 +59,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -86,15 +82,17 @@ import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
+import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeBooleanImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeFloatImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
-import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
@@ -116,10 +114,8 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
-import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
@@ -148,13 +144,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowComponentToStampMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
-import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistoriesMapEntry;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
@@ -247,25 +237,23 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testMe()
 	{
-		//TODO write many more interesting tests, using some sort of pattern like this....
 		Response response = target(conceptVersionRequestPath +
 				DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid()).request().get();
 
 		checkFail(response);
-
-		//System.out.println(response.readEntity(String.class));
 	}
 
-	private Response assertFail(Response response)
+	private String expectFail(Response response)
 	{
+		String temp = response.readEntity(String.class);
 		if (response.getStatus() == Status.OK.getStatusCode())
 		{
-			Assert.fail("Should have failed but did not. Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus())
-			+ response.readEntity(String.class));
+			Assert.fail("Should have failed but did not. Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus()) + temp);
 		}
 		
-		return response;
+		return temp;
 	}
+	
 	private Response checkFail(Response response)
 	{
 		if (response.getStatus() != Status.OK.getStatusCode())
@@ -410,7 +398,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
+		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+				+ RestPaths.updatePathComponent + RestPaths.removeComponent + Integer.toString(processComponentSpecificationData))
 				.queryParam(RequestParameters.editToken, token.getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
@@ -452,488 +441,473 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newEditToken.getModuleSequence(), retrievedEditToken.getModuleSequence());
 		Assert.assertEquals(newEditToken.getPathSequence(), retrievedEditToken.getPathSequence());
 		Assert.assertEquals(newEditToken.getActiveWorkflowProcessId(), retrievedEditToken.getActiveWorkflowProcessId());
-		
-		// Test retrieval of an EditToken with a modifying processId parameter
-		UUID testWfProcessUuid = UUID.randomUUID();
-		getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
-				.queryParam(RequestParameters.processId , testWfProcessUuid.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-		restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-
-		retrievedEditToken = null;
-		try {
-			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
-		} catch (RestException e) {
-			throw new RuntimeException(e);
-		}
-		
-		Assert.assertEquals(retrievedEditToken.getActiveWorkflowProcessId(), testWfProcessUuid);
 	}
 
-	@Test
-	public void testWorkflowAPIs()
-	{
-		// Get an editToken string
-		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-		
-		// Construct and EditToken object from editToken String
-		EditToken editToken = null;
-		try {
-			editToken = EditTokens.getOrCreate(restEditTokenObject.token);
-		} catch (RestException e) {
-			throw new RuntimeException(e);
-		}
-		
-		Optional<UUID> userUuidOptional = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
-		Assert.assertTrue(userUuidOptional.isPresent());
-		UUID userUuid = userUuidOptional.get();
-		RestWorkflowDefinition defaultDefinition = getDefaultWorkflowDefinition();
-		Assert.assertNotNull(defaultDefinition.getId());
-		Assert.assertEquals("VetzWorkflow", defaultDefinition.getName());
-		Assert.assertEquals("VetzWorkflow", defaultDefinition.getBpmn2Id());
-		Assert.assertEquals("org.jbpm", defaultDefinition.getNamespace());
-		Assert.assertEquals("1.2", defaultDefinition.getVersion());
-		Assert.assertEquals(4, defaultDefinition.getRoles().size());
-
-		UUID definitionId = defaultDefinition.getId();
-				
-		// Pass new editToken string to available (processes)
-		Response getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , definitionId.toString())
-				.queryParam(RequestParameters.editToken, editToken.serialize())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
-		RestWorkflowProcessHistoriesMapEntry[] availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
-		// We may have not created any processes, so there may be no available processes returned unless the DB has not been cleaned prior to testing
-		// Deactivating this test because restarting test without a mvn clean may otherwise fail
-		//Assert.assertTrue(availableProcesses == null || availableProcesses.length == 0);
-		
-		// Test process creation
-		UUID random = UUID.randomUUID();
-		String wfProcessName = "Test WF Process Name (" + random + ")";
-		String wfProcessDescription = "Test WF Process Description (" + random + ")";
-		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCreate(
-				definitionId,
-				wfProcessName,
-				wfProcessDescription);
-		String xml = null;
-		try {
-			xml = XMLUtils.marshallObject(newProcessData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-		Response createProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.createPathComponent + RestPaths.createProcess)
-				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		String createProcessResponseResult = checkFail(createProcessResponse).readEntity(String.class);
-		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, createProcessResponseResult);
-		
-		Assert.assertNotNull(writeResponse);
-		Assert.assertNotNull(writeResponse.uuid);
-		UUID createdProcessUUID = writeResponse.uuid;
-		Assert.assertNotNull(writeResponse.editToken);
-		//RestEditToken renewedEditToken = writeResponse.editToken;
-		
-		// Get renewed EditToken with newly-created processId
-		getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.editToken, writeResponse.editToken.token)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
-		restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
-		
-		// Construct and EditToken object from editToken String
-		editToken = null;
-		try {
-			editToken = EditTokens.getOrCreate(restEditTokenObject.token);
-		} catch (RestException e) {
-			throw new RuntimeException(e);
-		}
-
-		// Check for created process using getProcess()
-		Response getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
-		RestWorkflowProcess process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
-		Assert.assertNotNull(process);
-		Assert.assertNotNull(process.getId());
-		Assert.assertNotNull(process.getCreatorId());
-		Assert.assertEquals(process.getCreatorId(), userUuid);
-		Assert.assertTrue(process.getTimeCreated() > 0);
-		Assert.assertTrue(process.getTimeLaunched() < 0); // Process should be DEFINED but not LAUNCHED
-		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
-		Assert.assertNotNull(process.getProcessStatus());
-		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.DEFINED));
-		
-		// Confirm that request for non-existent process should fail
-		Response getBadProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, UUID.randomUUID().toString()) // Garbage processId
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		assertFail(getBadProcessResponse);
-		
-		// Check for created process in retrieved available
-		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
-				.queryParam(RequestParameters.definitionId , definitionId.toString())
-				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
-		availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
-		// We have created a process, so at least that process should be returned
-		Assert.assertNotNull(availableProcesses);
-		Assert.assertTrue(availableProcesses.length > 0);
-		RestWorkflowProcessHistory historyFromAvailableProcesses = null;
-		boolean foundNewlyCreatedProcessAmongstRetrievedProcesses = false;
-		for (RestWorkflowProcessHistoriesMapEntry restWorkflowProcessHistoriesMapEntry : availableProcesses) {
-			if (restWorkflowProcessHistoriesMapEntry.getKey().getId().equals(createdProcessUUID)) {
-				foundNewlyCreatedProcessAmongstRetrievedProcesses = true;
-				Assert.assertNotNull(restWorkflowProcessHistoriesMapEntry.getValue());
-				Assert.assertTrue(restWorkflowProcessHistoriesMapEntry.getValue().length > 0);
-				historyFromAvailableProcesses = restWorkflowProcessHistoriesMapEntry.getValue()[0];
-				Assert.assertNotNull(historyFromAvailableProcesses);
-				break;
-			}
-		}
-		Assert.assertTrue(foundNewlyCreatedProcessAmongstRetrievedProcesses);
-		Assert.assertNotNull(historyFromAvailableProcesses);
-		Assert.assertNotNull(historyFromAvailableProcesses.getId());
-		Assert.assertNotNull(historyFromAvailableProcesses.getProcessId());
-		Assert.assertEquals(historyFromAvailableProcesses.getProcessId(), createdProcessUUID);
-		Assert.assertNotNull(historyFromAvailableProcesses.getUserId());
-		Assert.assertEquals(historyFromAvailableProcesses.getUserId(), userUuid);
-		//Assert.assertTrue(historyFromAvailableProcesses.getTimeAdvanced() < 0); // Process created, but not advanced // TODO retest after bug fix
-		Assert.assertNotNull(historyFromAvailableProcesses.getInitialState()); // i.e. "Assigned"
-		Assert.assertEquals(historyFromAvailableProcesses.getInitialState(), "Assigned"); // Depends on definition
-		Assert.assertNotNull(historyFromAvailableProcesses.getAction()); // i.e. "Create Workflow Process"
-		Assert.assertEquals(historyFromAvailableProcesses.getAction(), "Create Workflow Process"); // Depends on definition
-		Assert.assertNotNull(historyFromAvailableProcesses.getOutcomeState()); // i.e. "Ready for Edit"
-		Assert.assertEquals(historyFromAvailableProcesses.getOutcomeState(), "Ready for Edit"); // Depends on definition
-		Assert.assertTrue(historyFromAvailableProcesses.getComment() == null || StringUtils.isBlank(historyFromAvailableProcesses.getComment())); // TODO apply a content test when comment field added to RestWorkflowProcessBaseCreate
-		
-		// Get history and compare with history from get available
-		Response getProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
-				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getProcessHistoryResponseResult = checkFail(getProcessHistoryResponse).readEntity(String.class);
-		RestWorkflowProcessHistory[] processHistories = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistory.class, getProcessHistoryResponseResult);
-		// We have created process, so at least one history entry should exist
-		Assert.assertNotNull(processHistories);
-		Assert.assertTrue(processHistories.length > 0);
-		RestWorkflowProcessHistory historyFromHistories = processHistories[0];
-		Assert.assertNotNull(historyFromHistories);
-		Assert.assertTrue(historyFromAvailableProcesses.equals(historyFromHistories));
-		
-		// Confirm that get history returns no histories for bogus processId
-		Response getBadProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
-				.queryParam(RequestParameters.processId , UUID.randomUUID().toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getBadProcessHistoryResponseResult = checkFail(getBadProcessHistoryResponse).readEntity(String.class);
-		RestWorkflowProcessHistory[] badProcessHistories = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistory.class, getBadProcessHistoryResponseResult);
-		Assert.assertTrue(badProcessHistories == null || badProcessHistories.length == 0);
-		
-
-		// Get available actions for created process
-		Response getAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
-				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String getAvailableActionsResponseResult = checkFail(getAvailableActionsResponse).readEntity(String.class);
-		RestWorkflowAvailableAction[] availableActions = XMLUtils.unmarshalObjectArray(RestWorkflowAvailableAction.class, getAvailableActionsResponseResult);
-		Assert.assertNotNull(availableActions);
-		Assert.assertTrue(availableActions.length > 0);
-		final String editAction = "Edit"; // definition-specific
-		final String cancelWorkflowAction = "Cancel Workflow"; // definition-specific
-		boolean foundEditAction = false; // definition-specific
-		boolean foundCancelWorkflowAction = false; // definition-specific
-		for (RestWorkflowAvailableAction availableAction : availableActions) {
-			Assert.assertNotNull(availableAction.getId());
-			Assert.assertNotNull(availableAction.getDefinitionId());
-			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
-			Assert.assertNotNull(availableAction.getInitialState());
-			Assert.assertNotNull(availableAction.getAction());  // "Edit" or "Cancel Workflow" (definition-specific)
-			Assert.assertTrue(availableAction.getAction().equals(editAction) || availableAction.getAction().equals(cancelWorkflowAction)); // definition-specific
-			if (availableAction.getAction().equals(editAction)) { // definition-specific
-				foundEditAction = true;
-			} else if (availableAction.getAction().equals(cancelWorkflowAction)) { // definition-specific
-				foundCancelWorkflowAction = true;
-			} else {
-				Assert.fail("Unexpected available action \"" +  availableAction.getAction() + "\"");
-			}
-			Assert.assertNotNull(availableAction.getOutcomeState());
-			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().getEnumId()).isPresent());
-			Assert.assertTrue(
-					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().getEnumId()).get())
-					|| editToken.getRoles().contains(UserRole.SUPER_USER));
-		}
-		Assert.assertTrue(foundEditAction); // definition-specific
-		Assert.assertTrue(foundCancelWorkflowAction); // definition-specific
-
-		// Confirm that call fails for bogus processId
-		Response getBadAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
-				.queryParam(RequestParameters.processId , UUID.randomUUID().toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		assertFail(getBadAvailableActionsResponse);
-		
-		// Acquire lock on process.  This should Fail because it's automatically locked on create.
-		String lockingRequestType = Boolean.toString(true);
-		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
-				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
-		assertFail(lockProcessResponse);
-
-		// Release lock on process
-		lockingRequestType = Boolean.toString(false);
-		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
-				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
-		String unlockProcessResponseResult = checkFail(unlockProcessResponse).readEntity(String.class);
-		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, unlockProcessResponseResult);
-		RestEditToken renewedEditToken = writeResponse.editToken;
-		Assert.assertNotNull(renewedEditToken);
-		
-		// Acquire lock on process
-		lockingRequestType = Boolean.toString(true);
-		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.lock)
-				.queryParam(RequestParameters.editToken, renewedEditToken.token)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(lockingRequestType));
-		String lockProcessResponseResult = checkFail(lockProcessResponse).readEntity(String.class);
-		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, lockProcessResponseResult);
-		renewedEditToken = writeResponse.editToken;
-		Assert.assertNotNull(renewedEditToken);
-		
-		// The following tests are definition-specific
-		
-		// Advance process to Edit.  Should fail because no components added yet.
-		RestWorkflowProcessAdvancementData processAdvancementData = new RestWorkflowProcessAdvancementData(
-				editAction,
-				"An edit action comment");
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(processAdvancementData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-		// This should fail because no components have been added
-		Response advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceProcess)
-				.queryParam(RequestParameters.editToken, renewedEditToken.token)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		assertFail(advanceProcessResponse);
-		
-		// Create a concept in this workflow process
-		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-		
-		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
-		
-		final UUID randomUuid = UUID.randomUUID();
-
-		final String fsn = "fsn for test concept " + randomUuid.toString();
-		final String pt = "preferred term for test concept " + randomUuid.toString();
-		
-		final List<Integer> parentIds = new ArrayList<>();
-		parentIds.add(parent1Sequence);
-		parentIds.add(parent2Sequence);
-		
-		List<Integer> preferredDialects = new ArrayList<>();
-		preferredDialects.add(Get.identifierService().getConceptSequenceForUuids(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid()));
-		preferredDialects.add(Get.identifierService().getConceptSequenceForUuids(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid()));
-
-		RestConceptCreateData newConceptData = new RestConceptCreateData(
-				parentIds,
-				fsn,
-				requiredDescriptionsLanguageSequence,
-				requiredDescriptionsExtendedTypeSequence,
-				preferredDialects);
-
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(newConceptData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-		
-		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, renewedEditToken.token)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
-		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptSequenceWrapper.sequence;
-		// Confirm returned sequence is valid
-		Assert.assertTrue(newConceptSequence > 0);
-
-		editToken = EditTokens.renew(editToken);
-		
-		int newConceptNid = Get.identifierService().getConceptNid(newConceptSequence);
-		
-		// Get process after adding components
-		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
-		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
-		Assert.assertNotNull(process);
-		
-		// Get list of components in process
-		Set<Integer> componentsInProcessBeforeRemovingComponent = new HashSet<>();
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
-			componentsInProcessBeforeRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
-		}
-		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
-	
-		// Remove one of the components in the process
-		String componentNid = Integer.toString(componentsInProcessBeforeRemovingComponent.iterator().next());
-		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.removeComponent)
-				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(componentNid));
-		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
-		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
-		renewedEditToken = writeResponse.editToken;
-		Assert.assertNotNull(renewedEditToken);
-		
-		// Retrieve process after removing component
-		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
-		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
-		Assert.assertNotNull(process);
-		
-		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
-			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
-		}
-		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid));
-		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
-	
-		// Get process to check for added components
-		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
-		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
-		Assert.assertNotNull(process);
-		boolean foundCreatedConceptNidInProcess = false;
-		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
-			if (restWorkflowComponentToStampMapEntry.getKey() == newConceptNid) {
-				foundCreatedConceptNidInProcess = true;
-				break;
-			}
-		}
-//TODO Joel / Nuno - I had to comment out another test that is randomly broken...
-//		Assert.assertTrue(foundCreatedConceptNidInProcess);
-
-		// Attempt to advance process to edit.  Should work now that components have been added.
-		xml = null;
-		try {
-			xml = XMLUtils.marshallObject(processAdvancementData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-		advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceProcess)
-				.queryParam(RequestParameters.editToken, editToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		String advanceProcessResponseResult = checkFail(advanceProcessResponse).readEntity(String.class);
-		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, advanceProcessResponseResult);
-		renewedEditToken = writeResponse.editToken;
-		Assert.assertNotNull(renewedEditToken);
-		
-		// Get current process after advancement
-		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
-				.queryParam(RequestParameters.processId, createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
-		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
-		Assert.assertNotNull(process);
-		Assert.assertNotNull(process.getId());
-		Assert.assertNotNull(process.getCreatorId());
-		Assert.assertEquals(process.getCreatorId(), userUuid);
-		Assert.assertTrue(process.getTimeCreated() > 0);
-		Assert.assertTrue(process.getTimeLaunched() > 0); // TODO debug this failure. process.getTimeLaunched() should be > 0
-		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
-		Assert.assertNotNull(process.getProcessStatus());
-		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.LAUNCHED));
-		
-		// Get available actions after advancement
-		getAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
-				.queryParam(RequestParameters.editToken, renewedEditToken.token)
-				.queryParam(RequestParameters.processId , createdProcessUUID.toString())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		getAvailableActionsResponseResult = checkFail(getAvailableActionsResponse).readEntity(String.class);
-		availableActions = XMLUtils.unmarshalObjectArray(RestWorkflowAvailableAction.class, getAvailableActionsResponseResult);
-		Assert.assertNotNull(availableActions);
-		Assert.assertTrue(availableActions.length > 0);
-		final String qaFailsAction = "QA Fails";
-		boolean foundQaFailsAction = false;
-		//final String cancelWorkflowAction = "cancelWorkflowAction";
-		foundCancelWorkflowAction = false;
-		final String qaPassesAction = "QA Passes";
-		boolean foundQaPassesAction = false;
-		for (RestWorkflowAvailableAction availableAction : availableActions) {
-			Assert.assertNotNull(availableAction.getId());
-			Assert.assertNotNull(availableAction.getDefinitionId());
-			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
-			Assert.assertNotNull(availableAction.getInitialState()); // "Ready for Review"
-			Assert.assertEquals(availableAction.getInitialState(), "Ready for Review");
-			Assert.assertNotNull(availableAction.getAction()); 		// "QA Fails" or "Cancel Workflow" or "QA Passes"
-			Assert.assertTrue(
-					availableAction.getAction().equals(qaFailsAction)
-					|| availableAction.getAction().equals(cancelWorkflowAction)
-					|| availableAction.getAction().equals(qaPassesAction));
-			if (availableAction.getAction().equals(qaFailsAction)) {
-				foundQaFailsAction = true;
-				Assert.assertEquals(availableAction.getOutcomeState(), "Ready for Edit");
-			} else if (availableAction.getAction().equals(cancelWorkflowAction)) {
-				foundCancelWorkflowAction = true;
-				Assert.assertEquals(availableAction.getOutcomeState(), "Canceled During Review");
-			} else if (availableAction.getAction().equals(qaPassesAction)) {
-				foundQaPassesAction = true;
-				Assert.assertEquals(availableAction.getOutcomeState(), "Ready for Approve");
-			} else {
-				Assert.fail("Unexpected available action \"" +  availableAction.getAction() + "\"");
-			}
-			Assert.assertNotNull(availableAction.getOutcomeState()); // "Ready for Edit" or "Canceled During Review" or "Ready for Approve"
-			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().getEnumId()).isPresent());
-			Assert.assertTrue(
-					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().getEnumId()).get())
-					|| editToken.getRoles().contains(UserRole.SUPER_USER));
-		}
-		Assert.assertTrue(foundQaFailsAction);
-		Assert.assertTrue(foundCancelWorkflowAction);
-		Assert.assertTrue(foundQaPassesAction);
-	}
+	// Dan shelved Workflow on 10/26/16
+//	@Test
+//	public void testWorkflowAPIs()
+//	{
+//		// Get an editToken string
+//		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
+//				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
+//		RestEditToken restEditTokenObject = XMLUtils.unmarshalObject(RestEditToken.class, getEditTokenResponseResult);
+//		
+//		// Construct and EditToken object from editToken String
+//		EditToken editToken = null;
+//		try {
+//			editToken = EditTokens.getOrCreate(restEditTokenObject.token);
+//		} catch (RestException e) {
+//			throw new RuntimeException(e);
+//		}
+//
+//		// active processId should be null
+//		Assert.assertNull(editToken.getActiveWorkflowProcessId());
+//		
+//		Optional<UUID> userUuidOptional = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
+//		Assert.assertTrue(userUuidOptional.isPresent());
+//		UUID userUuid = userUuidOptional.get();
+//		RestWorkflowDefinition defaultDefinition = getDefaultWorkflowDefinition();
+//		Assert.assertNotNull(defaultDefinition.getId());
+//		Assert.assertEquals("VetzWorkflow", defaultDefinition.getName());
+//		Assert.assertEquals("VetzWorkflow", defaultDefinition.getBpmn2Id());
+//		Assert.assertEquals("org.jbpm", defaultDefinition.getNamespace());
+//		Assert.assertEquals("1.2", defaultDefinition.getVersion());
+//		Assert.assertEquals(4, defaultDefinition.getRoles().size());
+//
+//		UUID definitionId = defaultDefinition.getId();
+//				
+//		// Pass new editToken string to available (processes)
+//		Response getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
+//				.queryParam(RequestParameters.definitionId , definitionId.toString())
+//				.queryParam(RequestParameters.editToken, editToken.serialize())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
+//		RestWorkflowProcessHistoriesMapEntry[] availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
+//		// We may have not created any processes, so there may be no available processes returned unless the DB has not been cleaned prior to testing
+//		// Deactivating this test because restarting test without a mvn clean may otherwise fail
+//		//Assert.assertTrue(availableProcesses == null || availableProcesses.length == 0);
+//		
+//		// Test process creation
+//		UUID random = UUID.randomUUID();
+//		String wfProcessName = "Test WF Process Name (" + random + ")";
+//		String wfProcessDescription = "Test WF Process Description (" + random + ")";
+//		RestWorkflowProcessBaseCreate newProcessData = new RestWorkflowProcessBaseCreate(
+//				definitionId,
+//				wfProcessName,
+//				wfProcessDescription);
+//		String xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(newProcessData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		Response createProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.createPathComponent + RestPaths.createProcess)
+//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+//		String createProcessResponseResult = checkFail(createProcessResponse).readEntity(String.class);
+//		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, createProcessResponseResult);
+//		
+//		Assert.assertNotNull(writeResponse);
+//		Assert.assertNotNull(writeResponse.uuid);
+//		Assert.assertNotNull(writeResponse.editToken);
+//		
+//		// Update edit token with new value containing processId
+//		try {
+//			editToken = EditTokens.getOrCreate(writeResponse.editToken.token);
+//		} catch (RestException e) {
+//			Assert.fail("Failed creating EditToken from writeResponse.editToken.token=\"" + writeResponse.editToken.token + "\"", e);
+//		}
+//		Assert.assertNotNull(editToken.getActiveWorkflowProcessId());
+//
+//		// Check for created process using getProcess()
+//		Response getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+//				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+//		RestWorkflowProcess process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+//		Assert.assertNotNull(process);
+//		Assert.assertNotNull(process.getId());
+//		Assert.assertEquals(process.getId(), editToken.getActiveWorkflowProcessId());
+//		Assert.assertNotNull(process.getCreatorId());
+//		Assert.assertEquals(process.getCreatorId(), userUuid);
+//		Assert.assertTrue(process.getTimeCreated() > 0);
+//		Assert.assertTrue(process.getTimeLaunched() < 0); // Process should be DEFINED but not LAUNCHED
+//		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
+//		Assert.assertNotNull(process.getProcessStatus());
+//		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.DEFINED));
+//		
+//		// Confirm that request for non-existent process should fail
+//		Response getBadProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+//				.queryParam(RequestParameters.processId, UUID.randomUUID().toString()) // Garbage processId
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		assertFail(getBadProcessResponse);
+//		
+//		// Check for created process in retrieved available
+//		getAvailableProcessesResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.available)
+//				.queryParam(RequestParameters.definitionId , definitionId.toString())
+//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		getAvailableProcessesResponseResult = checkFail(getAvailableProcessesResponse).readEntity(String.class);
+//		availableProcesses = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistoriesMapEntry.class, getAvailableProcessesResponseResult);
+//		// We have created a process, so at least that process should be returned
+//		Assert.assertNotNull(availableProcesses);
+//		Assert.assertTrue(availableProcesses.length > 0);
+//		RestWorkflowProcessHistory historyFromAvailableProcesses = null;
+//		boolean foundNewlyCreatedProcessAmongstRetrievedProcesses = false;
+//		for (RestWorkflowProcessHistoriesMapEntry restWorkflowProcessHistoriesMapEntry : availableProcesses) {
+//			if (restWorkflowProcessHistoriesMapEntry.getKey().getId().equals(editToken.getActiveWorkflowProcessId())) {
+//				foundNewlyCreatedProcessAmongstRetrievedProcesses = true;
+//				Assert.assertNotNull(restWorkflowProcessHistoriesMapEntry.getValue());
+//				Assert.assertTrue(restWorkflowProcessHistoriesMapEntry.getValue().length > 0);
+//				historyFromAvailableProcesses = restWorkflowProcessHistoriesMapEntry.getValue()[0];
+//				Assert.assertNotNull(historyFromAvailableProcesses);
+//				break;
+//			}
+//		}
+//		Assert.assertTrue(foundNewlyCreatedProcessAmongstRetrievedProcesses);
+//		Assert.assertNotNull(historyFromAvailableProcesses);
+//		Assert.assertNotNull(historyFromAvailableProcesses.getId());
+//		Assert.assertNotNull(historyFromAvailableProcesses.getProcessId());
+//		Assert.assertEquals(historyFromAvailableProcesses.getProcessId(), editToken.getActiveWorkflowProcessId());
+//		Assert.assertNotNull(historyFromAvailableProcesses.getUserId());
+//		Assert.assertEquals(historyFromAvailableProcesses.getUserId(), userUuid);
+//		//Assert.assertTrue(historyFromAvailableProcesses.getTimeAdvanced() < 0); // Process created, but not advanced // TODO [WF]retest after bug fix
+//		Assert.assertNotNull(historyFromAvailableProcesses.getInitialState()); // i.e. "Assigned"
+//		Assert.assertEquals(historyFromAvailableProcesses.getInitialState(), "Assigned"); // Depends on definition
+//		Assert.assertNotNull(historyFromAvailableProcesses.getAction()); // i.e. "Create Workflow Process"
+//		Assert.assertEquals(historyFromAvailableProcesses.getAction(), "Create Workflow Process"); // Depends on definition
+//		Assert.assertNotNull(historyFromAvailableProcesses.getOutcomeState()); // i.e. "Ready for Edit"
+//		Assert.assertEquals(historyFromAvailableProcesses.getOutcomeState(), "Ready for Edit"); // Depends on definition
+//		Assert.assertTrue(historyFromAvailableProcesses.getComment() == null || StringUtils.isBlank(historyFromAvailableProcesses.getComment())); // TODO [WF] apply a content test when comment field added to RestWorkflowProcessBaseCreate
+//		
+//		// Get history and compare with history from get available
+//		Response getProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
+//				.queryParam(RequestParameters.processId , editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String getProcessHistoryResponseResult = checkFail(getProcessHistoryResponse).readEntity(String.class);
+//		RestWorkflowProcessHistory[] processHistories = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistory.class, getProcessHistoryResponseResult);
+//		// We have created process, so at least one history entry should exist
+//		Assert.assertNotNull(processHistories);
+//		Assert.assertTrue(processHistories.length > 0);
+//		RestWorkflowProcessHistory historyFromHistories = processHistories[0];
+//		Assert.assertNotNull(historyFromHistories);
+//		Assert.assertTrue(historyFromAvailableProcesses.equals(historyFromHistories));
+//		
+//		// Confirm that get history returns no histories for bogus processId
+//		Response getBadProcessHistoryResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.history)
+//				.queryParam(RequestParameters.processId , UUID.randomUUID().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String getBadProcessHistoryResponseResult = checkFail(getBadProcessHistoryResponse).readEntity(String.class);
+//		RestWorkflowProcessHistory[] badProcessHistories = XMLUtils.unmarshalObjectArray(RestWorkflowProcessHistory.class, getBadProcessHistoryResponseResult);
+//		Assert.assertTrue(badProcessHistories == null || badProcessHistories.length == 0);
+//		
+//
+//		// Get available actions for created process
+//		Response getAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
+//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+//				.queryParam(RequestParameters.processId , editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String getAvailableActionsResponseResult = checkFail(getAvailableActionsResponse).readEntity(String.class);
+//		RestWorkflowAvailableAction[] availableActions = XMLUtils.unmarshalObjectArray(RestWorkflowAvailableAction.class, getAvailableActionsResponseResult);
+//		Assert.assertNotNull(availableActions);
+//		Assert.assertTrue(availableActions.length > 0);
+//		final String editAction = "Edit"; // definition-specific
+//		final String cancelWorkflowAction = "Cancel Workflow"; // definition-specific
+//		boolean foundEditAction = false; // definition-specific
+//		boolean foundCancelWorkflowAction = false; // definition-specific
+//		for (RestWorkflowAvailableAction availableAction : availableActions) {
+//			Assert.assertNotNull(availableAction.getId());
+//			Assert.assertNotNull(availableAction.getDefinitionId());
+//			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
+//			Assert.assertNotNull(availableAction.getInitialState());
+//			Assert.assertNotNull(availableAction.getAction());  // "Edit" or "Cancel Workflow" (definition-specific)
+//			Assert.assertTrue(availableAction.getAction().equals(editAction) || availableAction.getAction().equals(cancelWorkflowAction)); // definition-specific
+//			if (availableAction.getAction().equals(editAction)) { // definition-specific
+//				foundEditAction = true;
+//			} else if (availableAction.getAction().equals(cancelWorkflowAction)) { // definition-specific
+//				foundCancelWorkflowAction = true;
+//			} else {
+//				Assert.fail("Unexpected available action \"" +  availableAction.getAction() + "\"");
+//			}
+//			Assert.assertNotNull(availableAction.getOutcomeState());
+//			Assert.assertNotNull(availableAction.getRole());
+//			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
+//			Assert.assertTrue(
+//					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
+//					|| editToken.getRoles().contains(UserRole.SUPER_USER));
+//		}
+//		Assert.assertTrue(foundEditAction); // definition-specific
+//		Assert.assertTrue(foundCancelWorkflowAction); // definition-specific
+//
+//		// Confirm that call fails for bogus processId
+//		Response getBadAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
+//				.queryParam(RequestParameters.processId , UUID.randomUUID().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		assertFail(getBadAvailableActionsResponse);
+//		
+//		// Acquire lock on process.  This should Fail because it's automatically locked on create.
+//		String lockingRequestType = Boolean.toString(true);
+//		Response lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+//				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + editToken.getActiveWorkflowProcessId().toString() )				
+//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+//				.queryParam(RequestParameters.acquireLock, lockingRequestType)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+//				.put(Entity.xml(lockingRequestType));
+//		assertFail(lockProcessResponse);
+//
+//		// Release lock on process
+//		lockingRequestType = Boolean.toString(false);
+//		Response unlockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+//				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + editToken.getActiveWorkflowProcessId().toString())
+//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+//				.queryParam(RequestParameters.acquireLock, lockingRequestType)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+//				.put(Entity.xml(lockingRequestType));
+//		String unlockProcessResponseResult = checkFail(unlockProcessResponse).readEntity(String.class);
+//		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, unlockProcessResponseResult);
+//		RestEditToken renewedEditToken = writeResponse.editToken;
+//		Assert.assertNotNull(renewedEditToken);
+//		
+//		// Acquire lock on process
+//		lockingRequestType = Boolean.toString(true);
+//		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent
+//				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + editToken.getActiveWorkflowProcessId().toString())
+//				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+//				.queryParam(RequestParameters.acquireLock, lockingRequestType)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML)
+//				.put(Entity.xml(lockingRequestType));
+//		String lockProcessResponseResult = checkFail(lockProcessResponse).readEntity(String.class);
+//		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, lockProcessResponseResult);
+//		renewedEditToken = writeResponse.editToken;
+//		Assert.assertNotNull(renewedEditToken);
+//		
+//		// The following tests are definition-specific
+//		
+//		// Advance process to Edit.  Should fail because no components added yet.
+//		RestWorkflowProcessAdvancementData processAdvancementData = new RestWorkflowProcessAdvancementData(
+//				editAction,
+//				"An edit action comment");
+//		xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(processAdvancementData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		// This should fail because no components have been added
+//		Response advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent)// + RestPaths.updatePathComponent + RestPaths.advanceProcess)
+//				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+//		assertFail(advanceProcessResponse);
+//		
+//		// Create a concept in this workflow process
+//		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+//		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+//		
+//		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+//		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
+//		
+//		final UUID randomUuid = UUID.randomUUID();
+//
+//		final String fsn = "fsn for test concept " + randomUuid.toString();
+//		final String pt = "preferred term for test concept " + randomUuid.toString();
+//		
+//		final List<Integer> parentIds = new ArrayList<>();
+//		parentIds.add(parent1Sequence);
+//		parentIds.add(parent2Sequence);
+//		
+//		List<Integer> preferredDialects = new ArrayList<>();
+//		preferredDialects.add(Get.identifierService().getConceptSequenceForUuids(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid()));
+//		preferredDialects.add(Get.identifierService().getConceptSequenceForUuids(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid()));
+//
+//		RestConceptCreateData newConceptData = new RestConceptCreateData(
+//				parentIds,
+//				fsn,
+//				requiredDescriptionsLanguageSequence,
+//				requiredDescriptionsExtendedTypeSequence,
+//				preferredDialects);
+//
+//		xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(newConceptData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		
+//		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+//				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+//		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
+//		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
+//		int newConceptSequence = newConceptSequenceWrapper.sequence;
+//		// Confirm returned sequence is valid
+//		Assert.assertTrue(newConceptSequence > 0);
+//
+//		editToken = EditTokens.renew(editToken);
+//		
+//		int newConceptNid = Get.identifierService().getConceptNid(newConceptSequence);
+//		
+//		// Get process after adding components
+//		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+//				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+//		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+//		Assert.assertNotNull(process);
+//		
+//		// Get list of components in process
+//		Set<Integer> componentsInProcessBeforeRemovingComponent = new HashSet<>();
+//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
+//			componentsInProcessBeforeRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
+//		}
+//		Assert.assertTrue(componentsInProcessBeforeRemovingComponent.size() > 0);
+//	
+//		// Remove one of the components in the process
+//		String componentNid = Integer.toString(componentsInProcessBeforeRemovingComponent.iterator().next());
+//		Response removeComponentResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent 
+//				+ RestPaths.updatePathComponent + RestPaths.removeComponent + componentNid)
+//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(componentNid));
+//		String removeComponentResponseResult = checkFail(removeComponentResponse).readEntity(String.class);
+//		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, removeComponentResponseResult);
+//		renewedEditToken = writeResponse.editToken;
+//		Assert.assertNotNull(renewedEditToken);
+//		
+//		// Retrieve process after removing component
+//		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+//				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+//		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+//		Assert.assertNotNull(process);
+//		
+//		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
+//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
+//			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
+//		}
+//		Assert.assertTrue(! componentsInProcessAfterRemovingComponent.contains(componentNid));
+//		Assert.assertTrue(componentsInProcessAfterRemovingComponent.size() == (componentsInProcessBeforeRemovingComponent.size() - 1));
+//	
+//		// Get process to check for added components
+//		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+//				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+//		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+//		Assert.assertNotNull(process);
+//		boolean foundCreatedConceptNidInProcess = false;
+//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
+//			if (restWorkflowComponentToStampMapEntry.getKey() == newConceptNid) {
+//				foundCreatedConceptNidInProcess = true;
+//				break;
+//			}
+//		}
+////TODO [WF]- I had to comment out another test that is randomly broken...
+////		Assert.assertTrue(foundCreatedConceptNidInProcess);
+//
+//		// Attempt to advance process to edit.  Should work now that components have been added.
+//		xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(processAdvancementData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		advanceProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent + RestPaths.updatePathComponent + RestPaths.advanceProcess)
+//				.queryParam(RequestParameters.editToken, editToken.getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+//		String advanceProcessResponseResult = checkFail(advanceProcessResponse).readEntity(String.class);
+//		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, advanceProcessResponseResult);
+//		renewedEditToken = writeResponse.editToken;
+//		Assert.assertNotNull(renewedEditToken);
+//		
+//		// Get current process after advancement
+//		getProcessResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.process)
+//				.queryParam(RequestParameters.processId, editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
+//		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
+//		Assert.assertNotNull(process);
+//		Assert.assertNotNull(process.getId());
+//		Assert.assertNotNull(process.getCreatorId());
+//		Assert.assertEquals(process.getCreatorId(), userUuid);
+//		Assert.assertTrue(process.getTimeCreated() > 0);
+//		Assert.assertTrue(process.getTimeLaunched() > 0); // TODO [WF]debug this failure. process.getTimeLaunched() should be > 0
+//		Assert.assertTrue(process.getTimeCancelledOrConcluded() < 0);
+//		Assert.assertNotNull(process.getProcessStatus());
+//		Assert.assertEquals(process.getProcessStatus(), new RestWorkflowProcessStatusType(ProcessStatus.LAUNCHED));
+//		
+//		// Get available actions after advancement
+//		getAvailableActionsResponse = target(RestPaths.workflowAPIsPathComponent + RestPaths.actions)
+//				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+//				.queryParam(RequestParameters.processId , editToken.getActiveWorkflowProcessId().toString())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		getAvailableActionsResponseResult = checkFail(getAvailableActionsResponse).readEntity(String.class);
+//		availableActions = XMLUtils.unmarshalObjectArray(RestWorkflowAvailableAction.class, getAvailableActionsResponseResult);
+//		Assert.assertNotNull(availableActions);
+//		Assert.assertTrue(availableActions.length > 0);
+//		final String qaFailsAction = "QA Fails";
+//		boolean foundQaFailsAction = false;
+//		//final String cancelWorkflowAction = "cancelWorkflowAction";
+//		foundCancelWorkflowAction = false;
+//		final String qaPassesAction = "QA Passes";
+//		boolean foundQaPassesAction = false;
+//		for (RestWorkflowAvailableAction availableAction : availableActions) {
+//			Assert.assertNotNull(availableAction.getId());
+//			Assert.assertNotNull(availableAction.getDefinitionId());
+//			Assert.assertEquals(availableAction.getDefinitionId(), definitionId);
+//			Assert.assertNotNull(availableAction.getInitialState()); // "Ready for Review"
+//			Assert.assertEquals(availableAction.getInitialState(), "Ready for Review");
+//			Assert.assertNotNull(availableAction.getAction()); 		// "QA Fails" or "Cancel Workflow" or "QA Passes"
+//			Assert.assertTrue(
+//					availableAction.getAction().equals(qaFailsAction)
+//					|| availableAction.getAction().equals(cancelWorkflowAction)
+//					|| availableAction.getAction().equals(qaPassesAction));
+//			if (availableAction.getAction().equals(qaFailsAction)) {
+//				foundQaFailsAction = true;
+//				Assert.assertEquals(availableAction.getOutcomeState(), "Ready for Edit");
+//			} else if (availableAction.getAction().equals(cancelWorkflowAction)) {
+//				foundCancelWorkflowAction = true;
+//				Assert.assertEquals(availableAction.getOutcomeState(), "Canceled During Review");
+//			} else if (availableAction.getAction().equals(qaPassesAction)) {
+//				foundQaPassesAction = true;
+//				Assert.assertEquals(availableAction.getOutcomeState(), "Ready for Approve");
+//			} else {
+//				Assert.fail("Unexpected available action \"" +  availableAction.getAction() + "\"");
+//			}
+//			Assert.assertNotNull(availableAction.getOutcomeState()); // "Ready for Edit" or "Canceled During Review" or "Ready for Approve"
+//			Assert.assertNotNull(availableAction.getRole());
+//			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
+//			Assert.assertTrue(
+//					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
+//					|| editToken.getRoles().contains(UserRole.SUPER_USER));
+//		}
+//		Assert.assertTrue(foundQaFailsAction);
+//		Assert.assertTrue(foundCancelWorkflowAction);
+//		Assert.assertTrue(foundQaPassesAction);
+//	}
 	
 	@Test
 	public void testSememeAPIs()
@@ -1312,7 +1286,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				newMappingSetName,
 				newMappingSetInverseName,
 				newMappingSetDescription,
-				newMappingSetPurpose);
+				newMappingSetPurpose, null);
 
 		String xml = null;
 		try {
@@ -1351,7 +1325,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				updatedMappingSetName,
 				updatedMappingSetInverseName,
 				updatedMappingSetDescription,
-				updatedMappingSetPurpose);
+				updatedMappingSetPurpose, true);
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(updatedMappingSetData);
@@ -1396,10 +1370,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(testMappingSetVersion);
 
 		// RestMappingItemVersion
-		// TODO test mapping item extended fields
 		int sourceConceptSeq = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "conceptSequence");
 		int targetConceptSeq = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		int qualifierConceptSeq = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+		int qualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_BROADER.getPrimordialUuid(), "conceptSequence");
 
 		RestMappingItemVersionBaseCreate newMappingSetItemData = new RestMappingItemVersionBaseCreate(
 				targetConceptSeq,
@@ -1425,16 +1398,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// test createNewMappingItem()
 		// Retrieve mapping item and validate fields
-//TODO do we really have a use case for this?  If yes, implement
-//		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemSequence)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
-//		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
-//		Assert.assertTrue(sourceConceptSeq == retrievedMappingItemVersion.sourceConcept);
-//		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept);
-//		Assert.assertTrue(qualifierConceptSeq == retrievedMappingItemVersion.qualifierConcept);
-//		Assert.assertTrue(newMappingItemSequence == retrievedMappingItemVersion.mapSetConcept);
+		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
+		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		Assert.assertTrue(sourceConceptSeq == retrievedMappingItemVersion.sourceConcept);
+		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept);
+		Assert.assertTrue(qualifierConceptSeq == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertEquals(updatedMappingSetObject.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
 		
 		// test getMappingItems() 
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
@@ -1456,7 +1428,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(mappingItemMatchingNewItem);
 	
 		int updatedTargetConceptSeq = getIntegerIdForUuid(MetaData.DANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		int updatedQualifierConceptSeq = getIntegerIdForUuid(MetaData.FRENCH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+		int updatedQualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getPrimordialUuid(), "conceptSequence");
 
 		RestMappingItemVersionBase updatedMappingItemData = new RestMappingItemVersionBase(
 				updatedTargetConceptSeq,
@@ -1484,14 +1456,327 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
 			if (currentMappingItem.getIdentifiers().getUuids().get(0).equals(newMappingItemUUID)
 					&& currentMappingItem.mapSetConcept == retrievedMappingSetVersion.conceptSequence
-					&& currentMappingItem.targetConcept == updatedMappingItemData.targetConcept
+					&& currentMappingItem.targetConcept.intValue() == updatedMappingItemData.targetConcept.intValue()
 					&& currentMappingItem.sourceConcept == newMappingSetItemData.sourceConcept
-					&& currentMappingItem.qualifierConcept == updatedMappingItemData.qualifierConcept) {
+					&& currentMappingItem.qualifierConcept.intValue() == updatedMappingItemData.qualifierConcept.intValue()) {
 				mappingItemMatchingUpdatedItem = currentMappingItem;
 				break;
 			}
 		}
 		Assert.assertNotNull(mappingItemMatchingUpdatedItem);
+	}
+	
+	@Test
+	public void testMappingExtendedFieldsAPIs() throws JsonProcessingException, IOException
+	{
+		//Make one
+		UUID random = UUID.randomUUID();
+		
+		String name = "Just a test map set type (" + random.toString() + ")";
+		ObjectNode root = jfn.objectNode();
+		root.put("name", name);
+		root.put("inverseName", "inverse test");
+		root.put("description", "bla bla");
+		root.put("purpose", "just testing");
+		root.put("active", true);
+		
+		ArrayNode extendedFields = jfn.arrayNode();
+		ObjectNode ef1 = jfn.objectNode();
+		ef1.put("extensionNameConcept", MetaData.AMT_MODULE.getNid());
+		ef1.set("extensionValue", toJsonObject(new DynamicSememeStringImpl("test Value extended"), 1));
+		
+		extendedFields.add(ef1);
+		root.set("mapSetExtendedFields", extendedFields);
+		
+		ArrayNode mapItemExtendedFieldsDef = jfn.arrayNode();
+		ObjectNode mapItemEF1 = jfn.objectNode();
+		mapItemEF1.put("columnLabelConcept", MetaData.BOOLEAN_LITERAL.getNid());
+		mapItemEF1.put("columnDataType", DynamicSememeDataType.BOOLEAN.name());
+		mapItemEF1.set("columnDefaultData", toJsonObject(new DynamicSememeBooleanImpl(true), 1));
+		mapItemEF1.put("columnRequired", true);
+		
+		mapItemExtendedFieldsDef.add(mapItemEF1);
+		
+		ObjectNode mapItemEF2 = jfn.objectNode();
+		mapItemEF2.put("columnLabelConcept", MetaData.CONDOR_CLASSIFIER.getNid());
+		mapItemEF2.put("columnDataType", DynamicSememeDataType.LONG.name());
+		mapItemEF2.put("columnRequired", false);
+		ArrayNode stringArray = jfn.arrayNode();
+		stringArray.add(DynamicSememeValidatorType.LESS_THAN.name());
+		mapItemEF2.set("columnValidatorTypes", stringArray);
+		mapItemEF2.set("columnValidatorData", toJsonObject(new DynamicSememeData[] {new DynamicSememeLongImpl(40)}));
+		
+		mapItemExtendedFieldsDef.add(mapItemEF2);
+		
+		root.set("mapItemExtendedFieldsDefinition", mapItemExtendedFieldsDef);
+		
+		log.info("MapSet create json: " + toJson(root));
+		
+		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent
+					+ RestPaths.mappingSetComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String result = checkFail(createAssociationResponse).readEntity(String.class);
+		
+		RestWriteResponse createdMapSetId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		
+		//Read back
+		
+		result = checkFail(target(RestPaths.mappingSetAppPathComponent + createdMapSetId.uuid.toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
+		Assert.assertEquals(createdMapSet.conceptSequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.description, "bla bla");
+		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
+		Assert.assertEquals(createdMapSet.name, name);
+		Assert.assertEquals(createdMapSet.purpose, "just testing");
+		Assert.assertEquals(createdMapSet.active.booleanValue(), true);
+		Assert.assertNull(createdMapSet.comments);
+		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
+		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnConceptSequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, true);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnDataType.enumId, DynamicSememeDataType.BOOLEAN.ordinal());
+		Assert.assertEquals((boolean)createdMapSet.mapItemFieldsDefinition.get(0).columnDefaultData.data , true);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes);
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnConceptSequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, false);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnDataType.enumId, DynamicSememeDataType.LONG.ordinal());
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(1).columnDefaultData);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorData.length, 1);
+		Assert.assertEquals(((Long)createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorData[0].data).longValue(), 40l);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorTypes.length, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorTypes[0].enumId, DynamicSememeValidatorType.LESS_THAN.ordinal());
+		
+		//Create an item
+		
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(20)}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String newMappingItemSequenceWrapperXml = checkFail(createNewMappingtemResponse).readEntity(String.class);
+		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
+		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newMappingItemUUID != null);
+
+		// test createNewMappingItem()
+		// Retrieve mapping item and validate fields
+		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
+		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
+		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
+		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
+		Assert.assertTrue(retrievedMappingItemVersion.active);
+		
+		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
+		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).booleanValue(), true);
+		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).longValue(), 20);
+		
+		
+		//This should fail, due to being a duplicate entry:
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(20)}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		Assert.assertTrue(expectFail(createNewMappingtemResponse).contains("mapping with the specified source, target and qualifier already exists in this set"));
+		
+		//This should fail, due to failing a validator rule:
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept",  IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(40)}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		Assert.assertTrue(expectFail(createNewMappingtemResponse).contains("does not pass the assigned validator"));
+		
+	}
+	
+	@Test
+	public void testMappingExtendedFieldsAPIs2() throws JsonProcessingException, IOException
+	{
+		//This test reverses the order of the extended columns, to test an edge case with default column handling
+		//Make one
+		UUID random = UUID.randomUUID();
+		
+		String name = "Just a test map set type (" + random.toString() + ")";
+		ObjectNode root = jfn.objectNode();
+		root.put("name", name);
+		root.put("inverseName", "inverse test");
+		root.put("description", "bla bla");
+		root.put("purpose", "just testing");
+		root.put("active", true);
+		
+		ArrayNode extendedFields = jfn.arrayNode();
+		ObjectNode ef1 = jfn.objectNode();
+		ef1.put("extensionNameConcept", MetaData.AMT_MODULE.getNid());
+		ef1.set("extensionValue", toJsonObject(new DynamicSememeStringImpl("test Value extended"), 1));
+		
+		extendedFields.add(ef1);
+		root.set("mapSetExtendedFields", extendedFields);
+		
+		ArrayNode mapItemExtendedFieldsDef = jfn.arrayNode();
+		
+		ObjectNode mapItemEF1 = jfn.objectNode();
+		mapItemEF1.put("columnLabelConcept", MetaData.CONDOR_CLASSIFIER.getNid());
+		mapItemEF1.put("columnDataType", DynamicSememeDataType.LONG.name());
+		mapItemEF1.put("columnRequired", false);
+		ArrayNode stringArray = jfn.arrayNode();
+		stringArray.add(DynamicSememeValidatorType.LESS_THAN.name());
+		mapItemEF1.set("columnValidatorTypes", stringArray);
+		mapItemEF1.set("columnValidatorData", toJsonObject(new DynamicSememeData[] {new DynamicSememeLongImpl(40)}));
+		
+		mapItemExtendedFieldsDef.add(mapItemEF1);
+		
+		ObjectNode mapItemEF2 = jfn.objectNode();
+		mapItemEF2.put("columnLabelConcept", MetaData.BOOLEAN_LITERAL.getNid());
+		mapItemEF2.put("columnDataType", DynamicSememeDataType.BOOLEAN.name());
+		mapItemEF2.set("columnDefaultData", toJsonObject(new DynamicSememeBooleanImpl(true), 1));
+		mapItemEF2.put("columnRequired", true);
+		
+		mapItemExtendedFieldsDef.add(mapItemEF2);
+		
+		root.set("mapItemExtendedFieldsDefinition", mapItemExtendedFieldsDef);
+		
+		log.info("MapSet create json: " + toJson(root));
+		
+		Response createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent
+					+ RestPaths.mappingSetComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String result = checkFail(createAssociationResponse).readEntity(String.class);
+		
+		RestWriteResponse createdMapSetId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		
+		//Read back
+		
+		result = checkFail(target(RestPaths.mappingSetAppPathComponent + createdMapSetId.uuid.toString())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		
+		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
+		Assert.assertEquals(createdMapSet.conceptSequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.description, "bla bla");
+		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
+		Assert.assertEquals(createdMapSet.name, name);
+		Assert.assertEquals(createdMapSet.purpose, "just testing");
+		Assert.assertEquals(createdMapSet.active.booleanValue(), true);
+		Assert.assertNull(createdMapSet.comments);
+		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
+		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
+
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnConceptSequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, false);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnDataType.enumId, DynamicSememeDataType.LONG.ordinal());
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnDefaultData);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData.length, 1);
+		Assert.assertEquals(((Long)createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData[0].data).longValue(), 40l);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes.length, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes[0].enumId, DynamicSememeValidatorType.LESS_THAN.ordinal());
+		
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnConceptSequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, true);
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnDataType.enumId, DynamicSememeDataType.BOOLEAN.ordinal());
+		Assert.assertEquals((boolean)createdMapSet.mapItemFieldsDefinition.get(1).columnDefaultData.data , true);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorData);
+		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(1).columnValidatorTypes);
+		
+		//Create an item
+		
+		root = jfn.objectNode();
+		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
+		root.put("targetConcept", MetaData.AND.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence());
+		
+		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {new DynamicSememeLongImpl(-5620), null}));
+		
+		log.info("Map item create json: " + toJson(root));
+		
+		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
+		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
+		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newMappingItemUUID != null);
+
+		// test createNewMappingItem()
+		// Retrieve mapping item and validate fields
+		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
+		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
+		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
+		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
+		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
+		Assert.assertTrue(retrievedMappingItemVersion.active);
+		
+		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
+		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).longValue(), -5620);
+		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).booleanValue(), true);
 	}
 
 	@Test
@@ -1849,8 +2134,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		final String rootLogicNodeFieldName = "rootLogicNode";		
 		final String nodeSemanticNodeFieldName = "nodeSemantic";
-		if (rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") == null || ! rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
-			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("name") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
+		if (rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("enumName") == null || ! rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("enumName").asText().equals(NodeSemantic.DEFINITION_ROOT.name())) {
+			Assert.fail("testRestSememeLogicGraphVersionReturn() parsed RestSememeLogicGraphVersion with missing or invalid " + rootLogicNodeFieldName + ": \"" + rootNode.with(rootLogicNodeFieldName).with(nodeSemanticNodeFieldName).get("enumName") + "\"!=\"" + NodeSemantic.DEFINITION_ROOT.name() + "\"");
 		}
 	}
 
@@ -2330,7 +2615,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
 			retrievedTaxonomyCoordinate = XMLUtils.unmarshalObject(RestTaxonomyCoordinate.class, result);
-			Assert.assertTrue(retrievedTaxonomyCoordinate.stampCoordinate.precedence.getEnumId() == StampPrecedence.TIME.ordinal());
+			Assert.assertTrue(retrievedTaxonomyCoordinate.stampCoordinate.precedence.enumId == StampPrecedence.TIME.ordinal());
 			Assert.assertTrue(retrievedTaxonomyCoordinate.stated == false);
 		} catch (Throwable error) {
 			System.out.println("Failing target: " + target);
@@ -2621,7 +2906,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			// Test RestObjectChronologyType name
 			Assert.assertTrue(objectChronologyType.toString().equalsIgnoreCase(ObjectChronologyType.SEMEME.name()));
 			// Test RestObjectChronologyType enumId ordinal
-			Assert.assertTrue(objectChronologyType.getEnumId() == ObjectChronologyType.SEMEME.ordinal());
+			Assert.assertTrue(objectChronologyType.enumId == ObjectChronologyType.SEMEME.ordinal());
 
 			// Test objectChronologyType of specified concept UUID
 			result = checkFail(
@@ -2633,7 +2918,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			// Test RestObjectChronologyType name
 			Assert.assertTrue(objectChronologyType.toString().equalsIgnoreCase(ObjectChronologyType.CONCEPT.name()));
 			// Test RestObjectChronologyType enumId ordinal
-			Assert.assertTrue(objectChronologyType.getEnumId() == ObjectChronologyType.CONCEPT.ordinal());
+			Assert.assertTrue(objectChronologyType.enumId == ObjectChronologyType.CONCEPT.ordinal());
 
 			// Test SystemInfo
 			result = checkFail(
@@ -3118,7 +3403,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertEquals(createdSememeTypeId.sequence.intValue(), createdSememeType.assemblageConceptId);
 		Assert.assertEquals("A test sememe", createdSememeType.sememeUsageDescription);
-		Assert.assertTrue("CONCEPT".equalsIgnoreCase(createdSememeType.referencedComponentTypeRestriction.name));
+		Assert.assertTrue("CONCEPT".equalsIgnoreCase(createdSememeType.referencedComponentTypeRestriction.enumName));
 		Assert.assertNull(createdSememeType.referencedComponentTypeSubRestriction);
 		
 		i = 0;
@@ -3130,7 +3415,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertEquals(i +1, createdSememeType.columnInfo[i].columnConceptSequence);
 			Assert.assertEquals(i, createdSememeType.columnInfo[i].columnOrder);
-			Assert.assertEquals(t.getDisplayName(), createdSememeType.columnInfo[i].columnDataType.name);
+			Assert.assertEquals(t.getDisplayName(), createdSememeType.columnInfo[i].columnDataType.friendlyName);
 			Assert.assertEquals(t.ordinal(), createdSememeType.columnInfo[i].columnDataType.enumId);
 			if (t == DynamicSememeDataType.FLOAT)
 			{
@@ -3147,7 +3432,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			if (t == DynamicSememeDataType.INTEGER)
 			{
 				Assert.assertEquals(1, createdSememeType.columnInfo[i].columnValidatorTypes.length);
-				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.getDisplayName(), createdSememeType.columnInfo[i].columnValidatorTypes[0].name);
+				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.getDisplayName(), createdSememeType.columnInfo[i].columnValidatorTypes[0].friendlyName);
 				Assert.assertEquals(DynamicSememeValidatorType.LESS_THAN.ordinal(), createdSememeType.columnInfo[i].columnValidatorTypes[0].enumId);
 				Assert.assertEquals(1, createdSememeType.columnInfo[i].columnValidatorData.length);
 				Assert.assertEquals(5, ((Integer)createdSememeType.columnInfo[i].columnValidatorData[0].data).intValue());
@@ -3180,7 +3465,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("referencedComponent", descriptions[0].getSememeChronology().getIdentifiers().getFirst().toString());
 		root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeUUIDImpl(MetaData.BOOLEAN_LITERAL.getPrimordialUuid())}));
 		
-		log.info("Sememe Create Json: " + toJson(root));
+		log.info("Extended description type edit Json: " + toJson(root));
 		
 		//make one
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
@@ -3221,7 +3506,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		ArrayNode on = jfn.arrayNode();
 		for (int i = 0; i < data.length; i++)
 		{
-			on.add(toJsonObject(data[i], i));
+			if (data[i] == null)
+			{
+				on.addNull();
+			}
+			else
+			{
+				on.add(toJsonObject(data[i], i));
+			}
 		}
 		return on;
 	}

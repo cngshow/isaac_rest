@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.data.sememe;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api.data.Pagination;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -41,12 +42,14 @@ public class RestSememeVersionPage
 	 * Link to retrieve current page
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Pagination paginationData;
 
 	/**
 	 * The contained results
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestSememeVersion[] results;
 
 	protected RestSememeVersionPage()
