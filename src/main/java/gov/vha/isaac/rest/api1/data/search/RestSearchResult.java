@@ -110,7 +110,15 @@ public class RestSearchResult
 		//for Jaxb
 	}
 
-	public RestSearchResult(int matchNid, String matchText, float score, State state)
+	/**
+	 * 
+	 * @param matchNid
+	 * @param matchText
+	 * @param score
+	 * @param state
+	 * @param conceptSequence - optional
+	 */
+	public RestSearchResult(int matchNid, String matchText, float score, State state, Integer conceptSequence)
 	{
 		this.matchNid = matchNid;
 		this.matchText = matchText;
@@ -143,7 +151,10 @@ public class RestSearchResult
 		
 		if (RequestInfo.get().shouldExpand(ExpandUtil.referencedConcept))
 		{
-			int conceptSequence = Frills.findConcept(matchNid);
+			if (conceptSequence == null)
+			{
+				conceptSequence = Frills.findConcept(matchNid);
+			}
 			if (conceptSequence >= 0)
 			{
 				referencedConcept = new RestConceptChronology(Get.conceptService().getConcept(conceptSequence), 

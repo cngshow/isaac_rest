@@ -184,8 +184,6 @@ public class UserServiceUtils {
 		final String ssoToken = "%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC0%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx85%5CxA7%5Cx13k%5CxB3%5CxBD%5CxB8%5CxB8%5CxD2%5CxBDr%5CxB2%5Cx02K%22%2C+%22%2CS%5CxE8%5CxDBt%5Cx16%5CxFD%5CxD0%5CxC4%5CxDF%5CxAF%5Cx9D%5Cx1F%5CxD3aD%22%5D";
 		//final String urlStr = "https://vadev.mantech.com:4848/rails_prisme/roles/get_roles_by_token.json?id=cris@cris.com&password=cris@cris.com&token=" + ssoToken;
 		//final String url = "https://vadev.mantech.com:4848/rails_prisme/roles/get_roles_by_token.json?token=" + ssoToken;
-		//final String username_ = "cris@cris.com";
-		//final String password_ = "cris@cris.com";
 		PrismeIntegratedUserService service = LookupService.getService(PrismeIntegratedUserService.class);
 
 		service.getPrismeProperties().setProperty(
@@ -213,8 +211,6 @@ public class UserServiceUtils {
 			Client client = ClientBuilder.newClient();
 			Response response = client.target(getTargetFromUrl(url))
 					.path(url.getPath())
-					.queryParam("id", "cris@cris.com")
-					.queryParam("password", "cris@cris.com")
 					.queryParam("token", ssoToken)
 					.request().get();
 //			Response response = client.target("https://vadev.mantech.com:4848/rails_prisme/roles/get_roles_by_token.json")

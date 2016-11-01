@@ -7,6 +7,11 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/10/27 - 1.7.2: 
+    * Added the optional parameter 'restrictTo'to the search/prefix API.  Supports "association, mapset, sememe, metadata" - see docs for more details.
+    * Added the optional parameter 'mergeOnConcept' to the search/prefix API.  When true, returned search results will be merged, such that there is only 
+        one result per concept (even if the concept has multiple descriptions that matched the query)
+
 * 2016/10/27 - 1.7.1: 
     * Fixed a bug where a readback of extended fields on a map set definition was returning two fields it should not.
     * Fixed a bug where the 'active' field wasn't being populated when reading mapsets / map items

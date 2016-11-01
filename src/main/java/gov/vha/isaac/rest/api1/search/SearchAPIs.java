@@ -21,12 +21,13 @@ package gov.vha.isaac.rest.api1.search;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
+import java.util.function.Predicate;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -35,11 +36,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
@@ -50,9 +50,10 @@ import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.LongSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
-import gov.vha.isaac.ochre.api.index.IndexServiceBI;
+import gov.vha.isaac.ochre.api.index.ConceptSearchResult;
 import gov.vha.isaac.ochre.api.index.SearchResult;
 import gov.vha.isaac.ochre.api.util.Interval;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.impl.utility.NumberUtilities;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
@@ -65,6 +66,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResultPage;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
 
@@ -92,9 +94,9 @@ public class SearchAPIs
 	 */
 	private static int calculateQueryLimit(int maxPageSize, int pageNum) {
 		int requestedBatch = maxPageSize * pageNum;
-		int calculatedLimit = (int) Math.round(requestedBatch * 1.5);
-		int truncationThreshold = 1000;
-		return 	requestedBatch < truncationThreshold ? truncationThreshold : calculatedLimit;
+		int calculatedLimit = (int) Math.round(requestedBatch * 3);
+		int truncationThreshold = 100;
+		return requestedBatch < truncationThreshold ? truncationThreshold : calculatedLimit;
 	}
 	
 	private RestSearchResultPage getRestSearchResultsFromOchreSearchResults(
@@ -225,6 +227,17 @@ public class SearchAPIs
 	 * @param query The query to be evaluated. 
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
+	 * @param restrictTo Optional a feature that will restrict the results descriptions attached to a concept that meet one of the specified
+	 *   criteria.  Currently, this can be set to 
+	 *   - "association" - to only return concepts that define association types
+	 *   - "mapset" - to only return concepts that define mapsets
+	 *   - "sememe" - to only return concepts that define sememes
+	 *   - "metadata" - to only return concepts that are defined in the metadata hierarchy.
+	 *  This option can only be set to a single value per call - no combinations are allowed.  
+	 *  It is HIGHLY recommended that if you utilize this feature, you only submit queries that are at LEAST 3 letters long, to get reasonable performance.
+	 * @param mergeOnConcept - Optional - if set to true - only one result will be returned per concept - even if that concept had 2 or more descriptions 
+	 *   that matched the query.  When false, you will get a search result for EACH matching description.  When true, you will only get one search result, 
+	 *   which is the search result with the best score for that concept (compared to the other search results for that concept)
 	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
 	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
 	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
@@ -235,7 +248,7 @@ public class SearchAPIs
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
-	 *  	 
+	 *
 	 * @return the list of descriptions that matched, along with their score. Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
 	 * @throws RestException 
@@ -247,6 +260,8 @@ public class SearchAPIs
 			@QueryParam(RequestParameters.query) String query,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
+			@QueryParam(RequestParameters.restrictTo) String restrictTo,
+			@QueryParam(RequestParameters.mergeOnConcept) String mergeOnConcept,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
@@ -256,6 +271,8 @@ public class SearchAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.query,
 				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.restrictTo,
+				RequestParameters.mergeOnConcept,
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
@@ -265,8 +282,78 @@ public class SearchAPIs
 		}
 		log.debug("Performing prefix search for '" + query + "'");
 		
+		boolean mergeOnConcepts = StringUtils.isBlank(mergeOnConcept) ? false : RequestInfoUtils.parseBooleanParameter(RequestParameters.mergeOnConcept, mergeOnConcept);
+		
+		Predicate<Integer> filter = null;
+		if (StringUtils.isNotBlank(restrictTo))
+		{
+			String temp = restrictTo.toLowerCase(Locale.ENGLISH).trim();
+			switch (temp)
+			{
+				case "association" :
+					filter = (nid -> 
+					{
+						int conSequence = Frills.findConcept(nid);
+						if (conSequence >= 0)
+						{
+							return Frills.definesAssociation(conSequence);
+						}
+						return false;
+					});
+					break;
+				case "mapset" :
+					filter = (nid -> 
+					{
+						int conSequence = Frills.findConcept(nid);
+						if (conSequence >= 0)
+						{
+							return Frills.definesMapping(conSequence);
+						}
+						return false;
+					});
+					break;
+				case "sememe" :
+					filter = (nid -> 
+					{
+						int conSequence = Frills.findConcept(nid);
+						if (conSequence >= 0)
+						{
+							return Frills.definesDynamicSememe(conSequence);
+						}
+						return false;
+					});
+					break;
+				case "metadata" :
+					filter = (nid -> 
+					{
+						int conSequence = Frills.findConcept(nid);
+						if (conSequence >= 0)
+						{
+							return Get.taxonomyService().wasEverKindOf(conSequence, MetaData.ISAAC_METADATA.getConceptSequence());
+						}
+						return false;
+					});
+					break;
+				default :
+					throw new RestException("restrictTo", "Invalid restriction.  Must be 'association', 'mapset', 'sememe' or 'metadata'");
+			}
+		}
+
+		DescriptionIndexer indexer = LookupService.get().getService(DescriptionIndexer.class);
+		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
-		List<SearchResult> ochreSearchResults = LookupService.get().getService(IndexServiceBI.class, "description indexer").query(query, true, null, limit, null);
+		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, null, filter);
+		
+		if (mergeOnConcepts)
+		{
+			List<ConceptSearchResult> temp = indexer.mergeResultsOnConcept(ochreSearchResults);
+			ochreSearchResults = new ArrayList<>(temp.size());
+			for (ConceptSearchResult csr : temp)
+			{
+				ochreSearchResults.add((SearchResult) csr);
+			}
+		}
+		
 		String restPath = RestPaths.searchAppPathComponent + RestPaths.prefixComponent + "?" + RequestParameters.query + "=" + query;
 		return getRestSearchResultsFromOchreSearchResults(
 				ochreSearchResults,
@@ -280,6 +367,11 @@ public class SearchAPIs
 	private Optional<RestSearchResult> createRestSearchResult(SearchResult sr, String query)
 	{
 		SememeChronology sc = ((SememeChronology) Get.sememeService().getSememe(sr.getNid()));
+		Integer conceptSequence = null;
+		if (sr instanceof ConceptSearchResult)
+		{
+			conceptSequence = ((ConceptSearchResult)sr).getConceptSequence();
+		}
 
 		switch(sc.getSememeType())
 		{
@@ -289,7 +381,7 @@ public class SearchAPIs
 			if (text.isPresent())
 			{
 				//TODO handle contradictions
-				return Optional.of(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState()));
+				return Optional.of(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState(), conceptSequence));
 			}
 			break;
 		case LONG:
@@ -299,7 +391,7 @@ public class SearchAPIs
 			{
 				//TODO handle contradictions
 				return Optional.of(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore(), 
-						longSememe.get().value().getState()));
+						longSememe.get().value().getState(), conceptSequence));
 			}
 			break;
 		case STRING:
@@ -308,7 +400,7 @@ public class SearchAPIs
 			if (stringSememe.isPresent())
 			{
 				return Optional.of(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore(),
-						stringSememe.get().value().getState()));
+						stringSememe.get().value().getState(), conceptSequence));
 			}
 			break;
 		case DYNAMIC:
@@ -316,7 +408,7 @@ public class SearchAPIs
 			if (ds.isPresent())
 			{
 				return Optional.of(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore(),
-						ds.get().value().getState()));
+						ds.get().value().getState(), conceptSequence));
 			}
 			break;
 			//No point in reading back details on these, they will be exactly what was searched for
@@ -328,7 +420,7 @@ public class SearchAPIs
 			if (sv.isPresent())
 			{
 				return Optional.of(new RestSearchResult(sr.getNid(), query.trim(), sr.getScore(),
-						sv.get().value().getState()));
+						sv.get().value().getState(), conceptSequence));
 			}
 			break;
 

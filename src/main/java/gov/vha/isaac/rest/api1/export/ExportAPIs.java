@@ -121,7 +121,7 @@ public class ExportAPIs
 			public void write(OutputStream output) throws IOException, WebApplicationException
 			{
 				VetsExporter ve = new VetsExporter();
-				ve.export(output);
+				ve.export(output, changedAfterL, changedBeforeL);
 			}
 		};
 		

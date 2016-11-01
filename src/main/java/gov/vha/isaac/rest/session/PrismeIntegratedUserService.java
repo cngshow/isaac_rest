@@ -51,7 +51,7 @@ import gov.vha.isaac.ochre.api.UserRoleService;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 
 /**
- * The Class MockUserService.
+ * The Class PrismeIntegratedUserService.
  *
  * {@link PrismeIntegratedUserService}
  * 
@@ -65,12 +65,6 @@ public class PrismeIntegratedUserService implements UserRoleService {
 	//private static Logger log = LogManager.getLogger(PrismeIntegratedUserService.class);
 
 	private Properties prismeProperties_ = null;
-
-	private final static String PRISME_USER_NAME_PARAM = "id";
-	private final static String PRISME_USER_PASSWORD_PARAM = "password";
-
-	private final static String PRISME_ADMIN_USER_NAME = "cris@cris.com"; // TODO Joel get this from config?
-	private final static String PRISME_ADMIN_USER_PASSWORD = "cris@cris.com"; // TODO Joel get this encrypted from config?
 
 	private PrismeIntegratedUserService() {
 		//for HK2
@@ -89,8 +83,6 @@ public class PrismeIntegratedUserService implements UserRoleService {
 
 		URL url = new URL(getPrismeRolesByTokenUrl());
 		Map<String, String> params = new HashMap<>();
-		params.put(PRISME_USER_NAME_PARAM, PRISME_ADMIN_USER_NAME);
-		params.put(PRISME_USER_PASSWORD_PARAM, PRISME_ADMIN_USER_PASSWORD);
 		params.put("token", ssoToken);
 		String jsonResultString = getResultJsonFromPrisme(UserServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
@@ -186,9 +178,9 @@ public class PrismeIntegratedUserService implements UserRoleService {
 	@Override
 	public Set<UserRole> getAllUserRoles()
 	{
-		if (this.usePrismeForAllRoles()) {
+		if (usePrismeForAllRoles()) {
 			try {
-				return this.getAllRolesFromPrisme();
+				return getAllRolesFromPrisme();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
