@@ -38,48 +38,44 @@ import javax.ws.rs.core.SecurityContext;
 public class SecurityUtils {
 	private SecurityUtils() {}
 
-	private static void failIfMethodsHaveRoleBasedSecurityAnnotation(Class<?> apiClass, Method...methods) {
-		if (methods != null) {
-			for (Method method : methods) {
-				for (Annotation annotation : method.getAnnotations()) {
-					if (annotation.annotationType() == RolesAllowed.class
-							|| annotation.annotationType() == PermitAll.class
-							|| annotation.annotationType() == DenyAll.class
-							|| annotation.annotationType() == DeclareRoles.class) {
-						throw new RuntimeException("Cannot properly apply annotation-based role-related security constraints to " + apiClass.getName() + " when any of its methods, such as " + method.getName() + ", have a method-level annotation, such as " + annotation);
-					}
+	public static void validateRole(SecurityContext securityContext, Object apiClassInstance) {
+		// Confirm that no method-level role-related security annotations are declared
+		// Only class-level role-related security annotations supported
+		for (Method method : apiClassInstance.getClass().getMethods()) {
+			for (Annotation annotation : method.getAnnotations()) {
+				if (annotation.annotationType() == RolesAllowed.class
+						|| annotation.annotationType() == PermitAll.class
+						|| annotation.annotationType() == DenyAll.class
+						|| annotation.annotationType() == DeclareRoles.class) {
+					throw new RuntimeException("Cannot properly apply annotation-based role-related security constraints to " + apiClassInstance.getClass().getName() + " when any of its methods have method-level annotation " + annotation);
 				}
 			}
 		}
-	}
-	
-	public static void validateRole(SecurityContext securityContext, Object apiClassInstance) {
-		validateRole(securityContext, apiClassInstance.getClass());
-	}
-	public static void validateRole(SecurityContext securityContext, Class<?> apiClass) {
-		// Confirm that no method-level role-related security annotations are declared
-		// Only class-level role-related security annotations supported
-		failIfMethodsHaveRoleBasedSecurityAnnotation(apiClass, apiClass.getMethods());
 
-		validateRole(securityContext, apiClass, null);
+		validateRole(securityContext, apiClassInstance, null);
 	}
 	public static void validateRole(SecurityContext securityContext, Object apiClassInstance, Method method) {
-		validateRole(securityContext, apiClassInstance.getClass(), method);
-	}
-	public static void validateRole(SecurityContext securityContext, Class<?> apiClass, Method method) {
 		// Confirm that no method-level role-related security annotations are declared
 		// Only class-level role-related security annotations supported
-		failIfMethodsHaveRoleBasedSecurityAnnotation(apiClass, method);
-
+		if (method != null) {
+			for (Annotation annotation : method.getAnnotations()) {
+				if (annotation.annotationType() == RolesAllowed.class
+						|| annotation.annotationType() == PermitAll.class
+						|| annotation.annotationType() == DenyAll.class
+						|| annotation.annotationType() == DeclareRoles.class) {
+					throw new RuntimeException("Cannot properly apply annotation-based role-related security constraints to " + apiClassInstance.getClass().getName() + " when method " + method.getName() + " has method-level annotation " + annotation);
+				}
+			}
+		}
 		boolean userAuthorized = false;
-		DenyAll denyAll = apiClass.getAnnotation(DenyAll.class);
+		DenyAll denyAll = apiClassInstance.getClass().getAnnotation(DenyAll.class);
 		// If @DenyAll exists then fail
 		if (denyAll != null) {
-			throw new SecurityException("User not authorized: " + securityContext.getUserPrincipal() + " to access methods of class " + apiClass.getName() + ". @DenyAll is set.");
+			throw new SecurityException("User not authorized: " + securityContext.getUserPrincipal() + " to access methods of class " + apiClassInstance.getClass().getName() + ". @DenyAll is set.");
 		}
 		// If @RolesAllowed exists then check each of @RolesAllowed against securityContext.isUserInRole(),
 		// failing if no match found
-		RolesAllowed ra = apiClass.getAnnotation(RolesAllowed.class);
+		RolesAllowed ra = apiClassInstance.getClass().getAnnotation(RolesAllowed.class);
 		if (ra != null) {
 			for (String role : ra.value()) {
 				if (securityContext.isUserInRole(role)) {
@@ -89,13 +85,13 @@ public class SecurityUtils {
 			}
 		} else {
 			// If @RolesAllowed is not set and @PermitAll is, then succeed, else fail
-			PermitAll permitAll = apiClass.getAnnotation(PermitAll.class);
+			PermitAll permitAll = apiClassInstance.getClass().getAnnotation(PermitAll.class);
 			if (permitAll != null) {
 				userAuthorized = true;
 			}
 		}
 		if ( !userAuthorized) {
-			throw new SecurityException("User not authorized: " + securityContext.getUserPrincipal().getName() + " to access methods of class " + apiClass.getName() + ". Must have one of following role(s): " + (ra != null ? ra.value() : null));
+			throw new SecurityException("User not authorized: " + securityContext.getUserPrincipal().getName() + " to access methods of class " + apiClassInstance.getClass().getName() + ". Must have one of following role(s): " + (ra != null ? ra.value() : null));
 		}
 	}
 }
