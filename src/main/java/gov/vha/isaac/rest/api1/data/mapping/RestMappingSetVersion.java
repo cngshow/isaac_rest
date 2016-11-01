@@ -111,6 +111,8 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 */
 	@XmlElement
 	public List<RestCommentVersion> comments;
+	
+	//TODO Dan needs an option to return other sememes here...
 
 	protected RestMappingSetVersion()
 	{
