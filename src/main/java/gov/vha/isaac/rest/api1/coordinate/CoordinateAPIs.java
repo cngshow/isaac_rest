@@ -283,23 +283,30 @@ public class CoordinateAPIs
 	 * It takes an explicit serialized SSO string parameter <code>ssoToken</code>
 	 * specifying authenticated user identification.
 	 * Also accepts an optional editToken string parameter specifying all component values
-	 * as well as optional individual editModule, editPath and wfProcessId parameters.
+	 * as well as optional individual editModule, editPath parameters.
 	 * If no optional parameters are specified,
 	 * then the editToken corresponding to the passed <code>ssoToken</code> token will be returned.
 	 * If any additional optional parameters are passed, then their values will be applied to the token specified by the
 	 * explicit serialized ssoToken string, and the resulting RestEditToken will be returned.
 	 * 
+	 *
 	 * @param ssoToken specifies an explicit serialized SSO token string
+	 * @param editToken - optional  Joel
+	 * @param editModule - optional Joel
+	 * @param editPath - optional Joel
+	 * 
 	 * 
 	 * @return RestEditToken
 	 * 
 	 * @throws RestException
 	 */
+	
+	//TODO JOEL, fix this documentation
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.editTokenComponent)  
 	public RestEditToken getEditToken(
-			@QueryParam(RequestParameters.ssoToken) String coordToken, // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.ssoToken) String ssoToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editToken) String editToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editModule) String editModule, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
