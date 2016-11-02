@@ -209,6 +209,15 @@ public abstract class RestDynamicSememeData
 			return null;
 		}
 		
+		for (int i = 0; i < values.length; i++)
+		{
+			if (values[i] == null)
+			{
+				//Put in an arbitrary filler, so we don't null pointer below.  Assume the null was in the correct position.
+				values[i] = new RestDynamicSememeString(i, null);
+			}
+		}
+		
 		//Sort the values by column number, identify the largest col number in case there are gaps (optional columns left blank)
 		//and fill in the gaps as appropriate.
 		try
@@ -222,13 +231,17 @@ public abstract class RestDynamicSememeData
 					{
 						throw new RuntimeException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
 					}
+					if (o1.columnNumber == o2.columnNumber)
+					{
+						throw new RuntimeException("The field 'columnNumber' contained a duplicate");
+					}
 					return o1.columnNumber.compareTo(o2.columnNumber);
 				}
 			});
 		}
 		catch (RuntimeException e)
 		{
-			throw new RestException(e.getMessage());
+			throw new RestException(e);
 		}
 		
 		//size 1 isn't caught in the sort check above
@@ -262,9 +275,20 @@ public abstract class RestDynamicSememeData
 		return result;
 	}
 	
+	
+	/**
+	 * If you are translating an array of data, you should use the {@link #translate(RestDynamicSememeData[])} method instead, as that handles 
+	 * honoring column number and gaps properly.
+	 * @param data
+	 * @return
+	 */
 	public static DynamicSememeData translate(RestDynamicSememeData data)
 	{
 		if (data == null)
+		{
+			return null;
+		}
+		else if (data.data == null)
 		{
 			return null;
 		}
@@ -289,7 +313,6 @@ public abstract class RestDynamicSememeData
 		{
 			return new DynamicSememeDoubleImpl(((RestDynamicSememeDouble)data).getDouble());
 		}
-		
 		else if (data instanceof RestDynamicSememeFloat)
 		{
 			return new DynamicSememeFloatImpl(((RestDynamicSememeFloat)data).getFloat());

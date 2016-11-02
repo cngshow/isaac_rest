@@ -1750,10 +1750,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		log.info("Map item create json: " + toJson(root));
 		
-		Response createNewMappingtemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+		Response createNewMappingtemResponse = checkFail(target(RestPaths.mappingItemCreateAppPathComponent)
 				.queryParam(RequestParameters.editToken, getDefaultEditTokenString())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root))));
 		String newMappingItemSequenceWrapperXml = createNewMappingtemResponse.readEntity(String.class);
 		RestWriteResponse newMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingItemSequenceWrapperXml);
 		UUID newMappingItemUUID = newMappingItemSequenceWrapper.uuid;
@@ -1776,7 +1776,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
 		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).longValue(), -5620);
+		Assert.assertEquals(retrievedMappingItemVersion.mapItemExtendedFields.get(0).columnNumber.intValue(), 0);
 		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).booleanValue(), true);
+		Assert.assertEquals(retrievedMappingItemVersion.mapItemExtendedFields.get(1).columnNumber.intValue(), 1);
 	}
 
 	@Test

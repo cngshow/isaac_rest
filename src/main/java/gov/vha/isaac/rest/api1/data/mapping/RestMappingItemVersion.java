@@ -129,6 +129,11 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		{
 			sourceConcept = Get.identifierService().getConceptSequence(sememe.getReferencedComponentNid());
 		}
+		
+		if (targetColPosition > 1 || qualifierColPosition > 1)
+		{
+			throw new RuntimeException("Unexpected error reading mapping item, expected target and qualifier in the first 2 positions");
+		}
 
 		DynamicSememeData[] data = sememe.getData();
 		
@@ -151,7 +156,10 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 				}
 				else
 				{
-					mapItemExtendedFields.add(RestDynamicSememeData.translate(i, data[i]));
+					RestDynamicSememeData rdsd = RestDynamicSememeData.translate(i, data[i]);
+					rdsd.columnNumber = i - 2;  //renumber, to match with the numbers we are removing.
+					mapItemExtendedFields.add(rdsd);
+					
 				}
 			}
 		}

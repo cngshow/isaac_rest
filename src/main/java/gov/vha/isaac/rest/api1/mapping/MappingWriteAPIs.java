@@ -611,9 +611,12 @@ public class MappingWriteAPIs
 		data[1] = (qualifierID == null ? null : new DynamicSememeUUIDImpl(qualifierID));
 		if (extendedDataFields != null)
 		{
-			for (int i = 0; i < extendedDataFields.size(); i++)
+			int i = 2;
+			DynamicSememeData[] translated = RestDynamicSememeData.translate(extendedDataFields.toArray(new RestDynamicSememeData[extendedDataFields.size()]));
+			
+			for (DynamicSememeData d : translated)
 			{
-				data[i + 2] = RestDynamicSememeData.translate(extendedDataFields.get(i));
+				data[i++] = d;
 			}
 		}
 		
@@ -697,9 +700,12 @@ public class MappingWriteAPIs
 		data[1] = (mappingItemQualifierConcept != null ? new DynamicSememeUUIDImpl(mappingItemQualifierConcept.getPrimordialUuid()) : null);
 		if (extendedDataFields != null)
 		{
-			for (int i = 2; i < extendedDataFields.size(); i++)
+			int i = 2;
+			DynamicSememeData[] translated = RestDynamicSememeData.translate(extendedDataFields.toArray(new RestDynamicSememeData[extendedDataFields.size()]));
+			
+			for (DynamicSememeData d : translated)
 			{
-				data[i] = RestDynamicSememeData.translate(extendedDataFields.get(i));
+				data[i++] = d;
 			}
 		}
 
