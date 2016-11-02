@@ -220,27 +220,41 @@ public class MappingAPIs
 		
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
-		Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
+		try
 		{
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
-					Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
-			
-			if (latest.isPresent())
+			Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
 			{
-				//TODO handle contradictions
-				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
-					positions.targetPos, positions.qualfierPos,
-					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-					RequestInfo.get().shouldExpand(ExpandUtil.comments),
-					processIdUUID));
-			}
-			if (results.size() >= 1000)
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
+						Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
+				
+				if (latest.isPresent())
+				{
+					//TODO handle contradictions
+					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+						positions.targetPos, positions.qualfierPos,
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+						RequestInfo.get().shouldExpand(ExpandUtil.comments),
+						processIdUUID));
+				}
+				if (results.size() >= 1000)
+				{
+					throw new RuntimeException("Java 9 will fix this with takeWhile...");
+				}
+				
+			});
+		}
+		catch (RuntimeException e)
+		{
+			if (e.getMessage().startsWith("Java 9 will"))
 			{
-				throw new RuntimeException("Java 9 will fix this with takeWhile...");
+				log.warn("Cutting results short, as paging isn't yet implemented!");
 			}
-			
-		});
+			else
+			{
+				throw e;
+			}
+		}
 		return results.toArray(new RestMappingItemVersion[results.size()]);
 	}
 	
