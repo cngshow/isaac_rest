@@ -138,6 +138,8 @@ class EditTokenUtil {
 				@SuppressWarnings("deprecation")
 				Optional<CommitRecord> commitRecord = Get.commitService().commit(
 						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn).get();
+				authorSequence = newCon.getConceptSequence();
+				
 			}
 			catch (Exception e)
 			{
