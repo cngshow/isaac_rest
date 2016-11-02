@@ -220,7 +220,8 @@ public class MappingWriteAPIs
 					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.targetConcept) : Optional.empty());
 		
 		Optional<UUID> mappingSetID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.mapSetConcept);
-		Optional<UUID> qualifierID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
+		Optional<UUID> qualifierID = (mappingItemCreationData.qualifierConcept == null) ? Optional.empty() :
+			Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
 		
 		if (!sourceConcept.isPresent())
 		{
