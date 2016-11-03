@@ -250,8 +250,9 @@ public class RequestInfo
 	 * Lazily create, cache and return an EditCoordinate
 	 *
 	 * @return EditToken
+	 * @throws RestException 
 	 */
-	public EditToken getEditToken() {
+	public EditToken getEditToken() throws RestException {
 		if (editToken_ == null) {
 			try {
 				EditToken editToken = null;
@@ -322,9 +323,13 @@ public class RequestInfo
 				editToken_ = editToken;
 
 				log.debug("Created EditToken \"" + requestInfo.get().editToken_ + "\"");
+			}
+			catch (RestException e) {
+				throw e;
 			} catch (RuntimeException e) {
 				throw e;
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -336,10 +341,10 @@ public class RequestInfo
 	 * Lazily create, cache and return an EditCoordinate
 	 *
 	 * @return
+	 * @throws RestException 
 	 */
-	public EditCoordinate getEditCoordinate()
+	public EditCoordinate getEditCoordinate() throws RestException
 	{
-		//TODO implement this properly - find the right author/module/path
 		if (editCoordinate_ == null) {
 			editCoordinate_ = new EditCoordinateImpl(
 					getEditToken().getAuthorSequence(),
@@ -352,8 +357,9 @@ public class RequestInfo
 
 	/**
 	 * @return
+	 * @throws RestException 
 	 */
-	public UUID getActiveWorkflowProcessId()
+	public UUID getActiveWorkflowProcessId() throws RestException
 	{
 		//TODO implement this properly - need the active workflow in this session
 		return getEditToken().getActiveWorkflowProcessId();
