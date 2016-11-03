@@ -86,7 +86,13 @@ public class RestDynamicSememeBase
 	 *   }]
 	 * }
 	 * 
+	 * If the sememe definition contains a column that is optional, and the optional column is at the end of the set of fields, you may omit the field 
+	 * from the array entirely.  If the optional field is in the middle of the columnData list, you may either pass a concrete type with a null data field, 
+	 * sush as a RestDyanamicSememeString - or, you may simply pass null in the array.  However, the column number will have to be assumed from the position
+	 * of the null within the array, as it arrives, in this case.
 	 * 
+	 * Column numbers are required whenever a non-null element is passed in the array, and the column number has precedence over the array position order 
+	 * when it comes to aligning the data for storage.
 	 */
 	@XmlElement
 	@JsonInclude

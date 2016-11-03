@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.mapping;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -220,7 +221,8 @@ public class MappingWriteAPIs
 					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.targetConcept) : Optional.empty());
 		
 		Optional<UUID> mappingSetID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.mapSetConcept);
-		Optional<UUID> qualifierID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
+		Optional<UUID> qualifierID = (mappingItemCreationData.qualifierConcept == null) ? Optional.empty() :
+			Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
 		
 		if (!sourceConcept.isPresent())
 		{
@@ -604,22 +606,15 @@ public class MappingWriteAPIs
 			StampCoordinate stampCoord,
 			EditCoordinate editCoord) throws RuntimeException, RestException
 	{
+		int sememeConceptSequence = Get.identifierService().getConceptSequenceForUuids(mappingSetID);
 		
-		DynamicSememeData[] data = new DynamicSememeData[2 + (extendedDataFields == null ? 0 : extendedDataFields.size())];
-		data[0] = (targetConcept == null ? null : new DynamicSememeUUIDImpl(targetConcept));
-		data[1] = (qualifierID == null ? null : new DynamicSememeUUIDImpl(qualifierID));
-		if (extendedDataFields != null)
-		{
-			for (int i = 0; i < extendedDataFields.size(); i++)
-			{
-				data[i + 2] = RestDynamicSememeData.translate(extendedDataFields.get(i));
-			}
-		}
+		DynamicSememeData[] data = translateAndFixOffset(sememeConceptSequence, targetConcept, qualifierID, extendedDataFields == null ? new RestDynamicSememeData[] {} :
+			extendedDataFields.toArray(new RestDynamicSememeData[extendedDataFields.size()]));
 		
 		SememeBuilder<? extends SememeChronology<?>> sb;
 		sb = Get.sememeBuilderService().getDynamicSememeBuilder(
 				sourceConcept.getNid(),  
-				Get.identifierService().getConceptSequenceForUuids(mappingSetID), 
+				sememeConceptSequence, 
 				data);
 		
 		UUID mappingItemUUID = UuidT5Generator.get(IsaacMappingConstants.get().MAPPING_NAMESPACE.getUUID(), 
@@ -660,6 +655,7 @@ public class MappingWriteAPIs
 		}
 		catch (Exception e)
 		{
+			log.error("Unexpected", e);
 			throw new RestException("Failed committing new mapping item sememe", e);
 		}
 		
@@ -691,16 +687,11 @@ public class MappingWriteAPIs
 				state,
 				editCoord);
 		
-		DynamicSememeData[] data = new DynamicSememeData[2 + (extendedDataFields == null ? 0 : extendedDataFields.size())];
-		data[0] = (mappingItemTargetConcept != null ? new DynamicSememeUUIDImpl(mappingItemTargetConcept) : null);
-		data[1] = (mappingItemQualifierConcept != null ? new DynamicSememeUUIDImpl(mappingItemQualifierConcept.getPrimordialUuid()) : null);
-		if (extendedDataFields != null)
-		{
-			for (int i = 2; i < extendedDataFields.size(); i++)
-			{
-				data[i] = RestDynamicSememeData.translate(extendedDataFields.get(i));
-			}
-		}
+		int sememeConceptSequence = mappingItemSememe.getAssemblageSequence();
+		
+		DynamicSememeData[] data = translateAndFixOffset(sememeConceptSequence, mappingItemTargetConcept, 
+				mappingItemQualifierConcept != null ? mappingItemQualifierConcept.getPrimordialUuid() : null, 
+				extendedDataFields == null ? new RestDynamicSememeData[] {} :extendedDataFields.toArray(new RestDynamicSememeData[extendedDataFields.size()]));
 
 		mutable.setData(data);
 
@@ -718,5 +709,62 @@ public class MappingWriteAPIs
 			throw new RuntimeException("Failed during commit", e);
 		}
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid());
+	}
+	
+	private static DynamicSememeData[] translateAndFixOffset(int sememeSequence, UUID targetConcept, UUID qualifierConcept, RestDynamicSememeData[] incomingExtendedDataFields) 
+			throws RestException
+	{
+		Positions positions = Positions.getPositions(sememeSequence);
+		
+		//Make sure what they sent us is sorted.
+		RestDynamicSememeData.sort(incomingExtendedDataFields);
+		
+		//Need to make a pass through, and insert the two fields where they belong (and update any other column numbers as appropriate
+		List<RestDynamicSememeData> temp = new ArrayList<>(incomingExtendedDataFields.length + 2);
+		int offset = 0;
+		for (RestDynamicSememeData rdsd : incomingExtendedDataFields)
+		{
+			if (temp.size() == positions.qualfierPos)
+			{
+				temp.add(new RestDynamicSememeUUID(positions.qualfierPos, qualifierConcept));
+				offset++;
+			}
+			if (temp.size() == positions.targetPos)
+			{
+				temp.add(new RestDynamicSememeUUID(positions.targetPos, targetConcept));
+				offset++;
+				//recheck
+				if (temp.size() == positions.qualfierPos)
+				{
+					temp.add(new RestDynamicSememeUUID(positions.qualfierPos, qualifierConcept));
+					offset++;
+				}
+			}
+			
+			temp.add(rdsd);
+			if (rdsd != null && rdsd.columnNumber != null)
+			{
+				rdsd.columnNumber = rdsd.columnNumber + offset;
+			}
+		}
+		//Need to check one more time, incase there were no incoming, or then ended up at the end of the list...
+		if (temp.size() == positions.qualfierPos)
+		{
+			temp.add(new RestDynamicSememeUUID(positions.qualfierPos, qualifierConcept));
+			offset++;
+		}
+		if (temp.size() == positions.targetPos)
+		{
+			temp.add(new RestDynamicSememeUUID(positions.targetPos, targetConcept));
+			offset++;
+			//recheck
+			if (temp.size() == positions.qualfierPos)
+			{
+				temp.add(new RestDynamicSememeUUID(positions.qualfierPos, qualifierConcept));
+				offset++;
+			}
+		}
+		//Then we can translate, which sorts and dupe column number checks again, to make sure we didn't get it wrong...
+		return RestDynamicSememeData.translate(temp.toArray(new RestDynamicSememeData[temp.size()]));
 	}
 }

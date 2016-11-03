@@ -39,7 +39,7 @@ public class RestDynamicSememeUUID extends RestDynamicSememeTypedData
 	public RestDynamicSememeUUID(int columnNumber, UUID value)
 	{
 		super(columnNumber, value, ObjectChronologyType.UNKNOWN_NID);
-		if (Get.identifierService().hasUuid(value))
+		if (value != null && Get.identifierService().hasUuid(value))
 		{
 			setTypedData(Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(value)));
 		}

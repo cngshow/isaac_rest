@@ -48,7 +48,18 @@ public class RestDynamicSememeInteger extends RestDynamicSememeData
 		//The rest parser sometimes deserializes to broader types
 		if (!(data instanceof Integer))
 		{
-			return ((Number)data).intValue();
+			if (data instanceof String)
+			{
+				return Integer.parseInt((String)data);
+			}
+			else if (data instanceof Number)
+			{
+				return ((Number)data).intValue();
+			}
+			else
+			{
+				throw new RuntimeException("Unexpected data type: " + data.getClass());
+			}
 		}
 		return (int)data;
 	}

@@ -48,7 +48,18 @@ public class RestDynamicSememeLong extends RestDynamicSememeData
 		//The rest parser sometimes deserializes to broader types
 		if (!(data instanceof Long))
 		{
-			return ((Number)data).longValue();
+			if (data instanceof String)
+			{
+				return Long.parseLong((String)data);
+			}
+			else if (data instanceof Number)
+			{
+				return ((Number)data).longValue();
+			}
+			else
+			{
+				throw new RuntimeException("Unexpected data type: " + data.getClass());
+			}
 		}
 		else
 		{

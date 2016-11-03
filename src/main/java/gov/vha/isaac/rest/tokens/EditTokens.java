@@ -19,7 +19,6 @@
 
 package gov.vha.isaac.rest.tokens;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -27,12 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.apache.commons.lang3.StringUtils;
-
 import gov.vha.isaac.ochre.api.UserRole;
-import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
-import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -46,8 +41,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class EditTokens {
 	private final static Object OBJECT_BY_TOKEN_CACHE_LOCK = new Object();
 	
-	private static final int DEFAULT_MAX_SIZE = 1024;
-	private static EditToken defaultEditToken = null;
+	private static final int DEFAULT_MAX_SIZE = 50;
 	private static Map<String, EditToken> OBJECT_BY_TOKEN_CACHE = null;
 
 	private static void init(final int maxEntries) {
@@ -60,21 +54,8 @@ public class EditTokens {
 						return size() > maxEntries;
 					}
 				};
-
-				EditCoordinate defaultEditCoordinate = EditCoordinates.getDefaultUserSolorOverlay();
-				defaultEditToken = EditTokens.getOrCreate(
-						defaultEditCoordinate.getAuthorSequence(),
-						defaultEditCoordinate.getModuleSequence(),
-						defaultEditCoordinate.getPathSequence(),
-						null,
-						new HashSet<UserRole>());
 			}
 		}
-	}
-
-	public static EditToken getDefaultEditToken() {
-		init(DEFAULT_MAX_SIZE);
-		return defaultEditToken;
 	}
 
 	/**
@@ -134,35 +115,10 @@ public class EditTokens {
 					token.getRoles()
 					);
 			put(newToken);
-			token.setInvalidForSubmit();
 			return newToken;
 		} else {
 			OBJECT_BY_TOKEN_CACHE.remove(token.getSerialized());
 			return renew(token);
-		}
-	}
-
-	public static EditToken renew(String tokenString) throws RestException {
-		EditToken token = get(tokenString);
-		
-		if (token == null) {
-			try {
-				EditToken passedToken = new EditToken(tokenString);
-				EditToken newToken = new EditToken(
-						passedToken.getAuthorSequence(),
-						passedToken.getModuleSequence(),
-						passedToken.getPathSequence(),
-						passedToken.getActiveWorkflowProcessId(),
-						passedToken.getRoles()
-						);
-				put(newToken);
-				return newToken;
-			} catch (Exception e) {
-				throw new RestException("Failed creating EditToken from passed token string \"" + tokenString + "\"", e);
-			}
-		} else {
-			OBJECT_BY_TOKEN_CACHE.remove(tokenString);
-			return renew(tokenString);
 		}
 	}
 
@@ -181,14 +137,6 @@ public class EditTokens {
 		return token;
 	}
 
-	public static EditToken getOrCreate(
-			int authorSequence,
-			int moduleSequence,
-			int pathSequence,
-			UUID workflowProcessId,
-			UserRole...roles) {
-		return getOrCreate(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles != null ? Arrays.asList(roles) : null);
-	}
 	public static EditToken getOrCreate(
 			int authorSequence,
 			int moduleSequence,
@@ -221,44 +169,6 @@ public class EditTokens {
 
 	/**
 	 * 
-	 * Returns (if extant) or creates (if missing) an analog of the passed EditToken with the specified processId
-	 * 
-	 * @param editToken
-	 * @param processId
-	 * @return
-	 */
-	public static EditToken getOrCreateWithSpecifiedProcessId(EditToken editToken, UUID processId) {
-		return getOrCreate(
-				editToken.getAuthorSequence(),
-				editToken.getModuleSequence(),
-				editToken.getPathSequence(),
-				processId,
-				editToken.getRoles()
-				);
-	}
-	/**
-	 * 
-	 * Creates and caches a new analog of the passed EditToken with the specified processId
-	 * 
-	 * @param editToken
-	 * @param processId
-	 * @return
-	 * @throws RestException 
-	 */
-	public static EditToken renewWithSpecifiedProcessId(EditToken editToken, UUID processId) {
-		EditToken token = getOrCreate(
-				editToken.getAuthorSequence(),
-				editToken.getModuleSequence(),
-				editToken.getPathSequence(),
-				processId,
-				editToken.getRoles()
-				);
-		
-		return renew(token);
-	}
-
-	/**
-	 * 
 	 * This method returns an Optional containing an EditToken object if its parameter exists in the parameters map.
 	 * If the parameter exists, it automatically attempts to construct and cache the EditToken object before returning it
 	 *
@@ -280,7 +190,7 @@ public class EditTokens {
 					EditTokens.put(token);
 					return Optional.of(token);
 				} catch (Exception e) {
-					throw new RestException("Failed creating EditToken from string \"" + tokenStringOptional.get() + "\"", e);
+					throw new RestException(RequestParameters.editToken, tokenStringOptional.get(), "Invalid Token String");
 				}
 			}
 		}

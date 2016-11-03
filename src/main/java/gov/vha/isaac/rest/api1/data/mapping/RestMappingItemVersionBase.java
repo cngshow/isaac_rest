@@ -62,8 +62,7 @@ public class RestMappingItemVersionBase
 
 	/**
 	 * The (optional) extended fields which carry additional information about this map item.  For details on these fields, read 
-	 * the assemblage definition of the assemblage concept provided with {@link RestMappingSetVersion#mapItemExtendedFieldsType} for 
-	 * the RestMappingSetVersion of {@link #mapSetConcept}
+	 * the info returned as part of the {@link RestMappingSetVersion#mapItemFieldsDefinition} field
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)

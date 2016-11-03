@@ -129,8 +129,9 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		{
 			sourceConcept = Get.identifierService().getConceptSequence(sememe.getReferencedComponentNid());
 		}
-
+		
 		DynamicSememeData[] data = sememe.getData();
+		int offset = 0;
 		
 		if (data != null)
 		{
@@ -142,16 +143,23 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 					targetConcept = ((data[i] != null) ? 
 						Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID())
 						: null);
+					offset++;
 				}
 				else if (i == qualifierColPosition)
 				{
 					qualifierConcept = ((data[i] != null) ? 
 							Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID()) 
 							: null);
+					offset++;
 				}
 				else
 				{
-					mapItemExtendedFields.add(RestDynamicSememeData.translate(i, data[i]));
+					RestDynamicSememeData rdsd = RestDynamicSememeData.translate(i, data[i]);
+					if (rdsd != null)
+					{
+						rdsd.columnNumber = i - offset;  //renumber, to match with the numbers we are removing.
+					}
+					mapItemExtendedFields.add(rdsd);
 				}
 			}
 		}
