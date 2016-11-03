@@ -130,12 +130,8 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 			sourceConcept = Get.identifierService().getConceptSequence(sememe.getReferencedComponentNid());
 		}
 		
-		if (targetColPosition > 1 || qualifierColPosition > 1)
-		{
-			throw new RuntimeException("Unexpected error reading mapping item, expected target and qualifier in the first 2 positions");
-		}
-
 		DynamicSememeData[] data = sememe.getData();
+		int offset = 0;
 		
 		if (data != null)
 		{
@@ -147,19 +143,23 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 					targetConcept = ((data[i] != null) ? 
 						Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID())
 						: null);
+					offset++;
 				}
 				else if (i == qualifierColPosition)
 				{
 					qualifierConcept = ((data[i] != null) ? 
 							Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID()) 
 							: null);
+					offset++;
 				}
 				else
 				{
 					RestDynamicSememeData rdsd = RestDynamicSememeData.translate(i, data[i]);
-					rdsd.columnNumber = i - 2;  //renumber, to match with the numbers we are removing.
+					if (rdsd != null)
+					{
+						rdsd.columnNumber = i - offset;  //renumber, to match with the numbers we are removing.
+					}
 					mapItemExtendedFields.add(rdsd);
-					
 				}
 			}
 		}
