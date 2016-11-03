@@ -200,7 +200,8 @@ public abstract class RestDynamicSememeData
 	}
 	
 	/**
-	 * This implementation sorts by the column number, and fills gaps as appropriate.
+	 * This implementation sorts by the column number, and fills gaps (with nulls) as appropriate, as determined by the 
+	 * passed in column numbers
 	 */
 	public static DynamicSememeData[] translate(RestDynamicSememeData[] values) throws RestException
 	{
@@ -209,8 +210,54 @@ public abstract class RestDynamicSememeData
 			return null;
 		}
 		
-		//Sort the values by column number, identify the largest col number in case there are gaps (optional columns left blank)
-		//and fill in the gaps as appropriate.
+		sort(values);
+		
+		List<DynamicSememeData> result = new ArrayList<DynamicSememeData>();
+		
+		for (RestDynamicSememeData rdsd : values)
+		{
+			while (result.size() < rdsd.columnNumber.intValue())
+			{
+				result.add(null);  //fill a gap
+			}
+			if (result.size() == rdsd.columnNumber.intValue() || rdsd.columnNumber.intValue() < 0)
+			{
+				result.add(RestDynamicSememeData.translate(rdsd));
+			}
+			else
+			{
+				throw new RuntimeException("Dan needs more sleep");
+			}
+		}
+		return result.toArray(new DynamicSememeData[result.size()]);
+	}
+	
+	public static void sort(RestDynamicSememeData[] values) throws RestException
+	{
+		if (values == null)
+		{
+			return;
+		}
+		
+		int nextColNum = 0;
+		for (int i = 0; i < values.length; i++)
+		{
+			if (values[i] == null)
+			{
+				//Put in an arbitrary filler, so we don't null pointer below.  Assume the null was in the correct position.
+				values[i] = new RestDynamicSememeString(nextColNum++, null);
+			}
+			else
+			{
+				if (values[i].columnNumber == null)
+				{
+					throw new RestException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
+				}
+				nextColNum = values[i].columnNumber + 1;
+			}
+		}
+		
+		//Sort the values by column number
 		try
 		{
 			Arrays.sort(values, new Comparator<RestDynamicSememeData>()
@@ -218,9 +265,9 @@ public abstract class RestDynamicSememeData
 				@Override
 				public int compare(RestDynamicSememeData o1, RestDynamicSememeData o2)
 				{
-					if (o1.columnNumber == null || o2.columnNumber == null)
+					if (o1.columnNumber == o2.columnNumber && o1.columnNumber >= 0)
 					{
-						throw new RuntimeException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
+						throw new RuntimeException("The field 'columnNumber' contained a duplicate");
 					}
 					return o1.columnNumber.compareTo(o2.columnNumber);
 				}
@@ -228,43 +275,24 @@ public abstract class RestDynamicSememeData
 		}
 		catch (RuntimeException e)
 		{
-			throw new RestException(e.getMessage());
+			throw new RestException(e);
 		}
-		
-		//size 1 isn't caught in the sort check above
-		if (values.length == 1 && values[0].columnNumber == null)
-		{
-			throw new RuntimeException("The field 'columnNumber' must be populated in the RestDynamicSememeData");
-		}
-		
-		int maxColumn = values.length == 0 ? 0 : (values[values.length - 1].columnNumber + 1);
-		
-		//There are some cases where the column number doesn't make sense (dynamicSememeArray type, validator data, etc) where a negative number might be passed
-		if (maxColumn <= 0)
-		{
-			maxColumn = values.length;
-		}
-		
-		DynamicSememeData[] result = new DynamicSememeData[maxColumn];
-		int readPos = 0;
-		for (int translated = 0; translated < maxColumn; translated++)
-		{
-			if (translated == values[readPos].columnNumber.intValue() || values[readPos].columnNumber.intValue() < 0)
-			{
-				result[translated] = RestDynamicSememeData.translate(values[readPos]);
-				readPos++;
-			}
-			else
-			{
-				result[translated] = null;  //fill a gap
-			}
-		}
-		return result;
 	}
 	
+	
+	/**
+	 * If you are translating an array of data, you should use the {@link #translate(RestDynamicSememeData[])} method instead, as that handles 
+	 * honoring column number and gaps properly.
+	 * @param data
+	 * @return
+	 */
 	public static DynamicSememeData translate(RestDynamicSememeData data)
 	{
 		if (data == null)
+		{
+			return null;
+		}
+		else if (data.data == null)
 		{
 			return null;
 		}
@@ -289,7 +317,6 @@ public abstract class RestDynamicSememeData
 		{
 			return new DynamicSememeDoubleImpl(((RestDynamicSememeDouble)data).getDouble());
 		}
-		
 		else if (data instanceof RestDynamicSememeFloat)
 		{
 			return new DynamicSememeFloatImpl(((RestDynamicSememeFloat)data).getFloat());

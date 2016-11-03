@@ -48,7 +48,18 @@ public class RestDynamicSememeFloat extends RestDynamicSememeData
 		//The rest parser sometimes deserializes to broader types
 		if (!(data instanceof Float))
 		{
-			return ((Number)data).floatValue();
+			if (data instanceof String)
+			{
+				return Float.parseFloat((String)data);
+			}
+			else if (data instanceof Number)
+			{
+				return ((Number)data).floatValue();
+			}
+			else
+			{
+				throw new RuntimeException("Unexpected data type: " + data.getClass());
+			}
 		}
 		return (float)data;
 	}

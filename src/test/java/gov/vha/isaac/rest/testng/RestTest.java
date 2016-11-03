@@ -356,7 +356,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
 		return XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, descriptionVersionsResult);
 	}
-
 	public String getEditTokenString(String ssoTokenString) {
 		String encodedToken = null;
 		try {
@@ -1884,7 +1883,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
 		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).longValue(), -5620);
+		Assert.assertEquals(retrievedMappingItemVersion.mapItemExtendedFields.get(0).columnNumber.intValue(), 0);
 		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).booleanValue(), true);
+		Assert.assertEquals(retrievedMappingItemVersion.mapItemExtendedFields.get(1).columnNumber.intValue(), 1);
 	}
 
 	@Test

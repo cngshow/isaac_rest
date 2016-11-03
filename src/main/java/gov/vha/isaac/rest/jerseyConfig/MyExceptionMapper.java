@@ -38,15 +38,20 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 	@Override
 	public Response toResponse(Exception ex)
 	{
-		boolean notReady = false;
+		boolean sendMessage = false;
 		if (ex instanceof ClientErrorException)
 		{
 			LoggerFactory.getLogger("web").info("ClientError:" + ex.toString());
 		}
 		else if (ex.getMessage() != null && ex.getMessage().startsWith("The system is not yet ready"))
 		{
-			notReady = true;
+			sendMessage = true;
 			LoggerFactory.getLogger("web").warn(ex.getMessage());
+		}
+		else if (ex.getMessage() != null && ex.getMessage().startsWith("Edit Token is no longer valid for write"))
+		{
+			sendMessage = true;
+			LoggerFactory.getLogger("web").info(ex.getMessage());
 		}
 		
 		else
@@ -59,9 +64,8 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 		{
 			return ((ClientErrorException)ex).getResponse();
 		}
-		else if (ex instanceof RestException || notReady)
+		else if (ex instanceof RestException || sendMessage)
 		{
-			
 			response = ex.toString();
 		}
 		else

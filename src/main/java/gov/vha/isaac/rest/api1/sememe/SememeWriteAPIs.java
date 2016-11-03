@@ -153,20 +153,34 @@ public class SememeWriteAPIs
 
 			if (creationData.getPreferredInDialectAssemblagesIds() != null) {
 				creationData.getPreferredInDialectAssemblagesIds().forEach((id) -> {
-					sememeBuilderService.getComponentSememeBuilder(
-							TermAux.PREFERRED.getNid(), newDescription.getNid(),
-							id).
-							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+					try
+					{
+						sememeBuilderService.getComponentSememeBuilder(
+								TermAux.PREFERRED.getNid(), newDescription.getNid(),
+								id).
+								build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+					}
+					catch (RestException e)
+					{
+						throw new RuntimeException();
+					}
 				});
 			}
 
 			if (creationData.getAcceptableInDialectAssemblagesIds() != null) {
 				creationData.getAcceptableInDialectAssemblagesIds().forEach((id) -> {
-					sememeBuilderService.getComponentSememeBuilder(
-							TermAux.ACCEPTABLE.getNid(), 
-							newDescription.getNid(),
-							id).
-							build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+					try
+					{
+						sememeBuilderService.getComponentSememeBuilder(
+								TermAux.ACCEPTABLE.getNid(), 
+								newDescription.getNid(),
+								id).
+								build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+					}
+					catch (RestException e)
+					{
+						throw new RuntimeException();
+					}
 				});
 			}
 

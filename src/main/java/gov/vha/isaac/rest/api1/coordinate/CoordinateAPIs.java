@@ -44,6 +44,7 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -306,23 +307,34 @@ public class CoordinateAPIs
 	 * It takes an explicit serialized SSO string parameter <code>ssoToken</code>
 	 * specifying authenticated user identification.
 	 * Also accepts an optional editToken string parameter specifying all component values
-	 * as well as optional individual editModule, editPath and wfProcessId parameters.
+	 * as well as optional individual editModule, editPath parameters.
 	 * If no optional parameters are specified,
 	 * then the editToken corresponding to the passed <code>ssoToken</code> token will be returned.
 	 * If any additional optional parameters are passed, then their values will be applied to the token specified by the
 	 * explicit serialized ssoToken string, and the resulting RestEditToken will be returned.
 	 * 
+	 *
 	 * @param ssoToken specifies an explicit serialized SSO token string
+	 * @param editToken - optional  Joel
+	 * @param editModule - optional Joel
+	 * @param editPath - optional Joel
+	 * 
 	 * 
 	 * @return RestEditToken
 	 * 
 	 * @throws RestException
 	 */
+	
+	//TODO JOEL, fix this documentation
+	//The format of the ssoToken needs to be documented, but also made clear, this is only for internal use by Komet / Prisme.
+	//There should be a parameter which accepts a UUID for a user, and that is only allowed to be passed when we recognize we are not in SSO mode.
+	//editToken needs to be properly documented, as what you do to renew an existing no longer valid for write token (aka, pass in the token, get back a renewed one)
+	
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.editTokenComponent)  
 	public RestEditToken getEditToken(
-			@QueryParam(RequestParameters.ssoToken) String coordToken, // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.ssoToken) String ssoToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editToken) String editToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editModule) String editModule, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
@@ -337,6 +349,6 @@ public class CoordinateAPIs
 
 		// All work is done in RequestInfo.get().getEditToken(), initially invoked by RestContainerRequestFilter
 
-		return new RestEditToken(RequestInfo.get().getEditToken());
+		return new RestEditToken(EditTokens.renew(RequestInfo.get().getEditToken()));
 	}
 }

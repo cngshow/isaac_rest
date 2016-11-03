@@ -48,7 +48,18 @@ public class RestDynamicSememeDouble extends RestDynamicSememeData
 		//The rest parser sometimes deserializes to broader types
 		if (!(data instanceof Double))
 		{
-			return ((Number)data).doubleValue();
+			if (data instanceof String)
+			{
+				return Double.parseDouble((String)data);
+			}
+			else if (data instanceof Number)
+			{
+				return ((Number)data).doubleValue();
+			}
+			else
+			{
+				throw new RuntimeException("Unexpected data type: " + data.getClass());
+			}
 		}
 		return (double)data;
 	}

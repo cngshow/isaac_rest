@@ -274,6 +274,7 @@ public class RequestInfo
 	 * Lazily create, cache and return an EditCoordinate
 	 *
 	 * @return EditToken
+	 * @throws RestException 
 	 */
 	public EditToken getEditToken() {
 		if (editToken_ == null) {
@@ -359,7 +360,8 @@ public class RequestInfo
 				log.debug("Created EditToken \"" + requestInfo.get().editToken_ + "\"");
 			} catch (RuntimeException e) {
 				throw e;
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -371,10 +373,10 @@ public class RequestInfo
 	 * Lazily create, cache and return an EditCoordinate
 	 *
 	 * @return
+	 * @throws RestException 
 	 */
-	public EditCoordinate getEditCoordinate()
+	public EditCoordinate getEditCoordinate() throws RestException
 	{
-		//TODO implement this properly - find the right author/module/path
 		if (editCoordinate_ == null) {
 			editCoordinate_ = new EditCoordinateImpl(
 					getEditToken().getAuthorSequence(),
@@ -387,8 +389,9 @@ public class RequestInfo
 
 	/**
 	 * @return
+	 * @throws RestException 
 	 */
-	public UUID getActiveWorkflowProcessId()
+	public UUID getActiveWorkflowProcessId() throws RestException
 	{
 		return getEditToken().getActiveWorkflowProcessId();
 	}

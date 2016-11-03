@@ -28,7 +28,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,6 +39,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.RestApplicationSecurityContext;
 import gov.vha.isaac.rest.session.User;
+import gov.vha.isaac.rest.tokens.EditToken;
 
 /**
  * 
@@ -102,29 +102,37 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 		LOG.debug("Running CONTAINER REQUEST FILTER " + this.getClass().getName() + " on request " + requestContext.getRequest().getMethod());
 		
 		LOG.debug("Path parameters: " + requestContext.getUriInfo().getPathParameters().keySet());
-		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getPathParameters().entrySet()) {
+		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getPathParameters().entrySet()) 
+		{
 			LOG.debug("Path parameter \"" + parameter.getKey() + "\"=\"" + parameter.getValue() + "\"");
 		}
 		LOG.debug("Query parameters: " + requestContext.getUriInfo().getQueryParameters().keySet());
-		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getQueryParameters().entrySet()) {
+		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getQueryParameters().entrySet()) 
+		{
 			LOG.debug("Query parameter \"" + parameter.getKey() + "\"=\"" + parameter.getValue() + "\"");
 		}
 
-		try  {
+		try
+		{
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
 
 			// TODO should User be populated with dummy value when neither SSO token nor EditToken passed?
 
-			if (requestContext.getUriInfo().getPath(true).contains("/write/")
-					|| ! requestContext.getMethod().equals(HttpMethod.GET)
+			//If they are asking for an edit token, or attempting to do a write, we need a valid editToken.
+			if (requestContext.getUriInfo().getPath().contains("write/")
 					|| requestContext.getUriInfo().getPath().contains(RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent)
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
 					) {
-				try {
-					 //TODO Joel find out why first invocation seems to fail and fix
-					RequestInfo.get().getEditCoordinate();
-				} catch (Exception e) {
-					 //ignore
+
+				EditToken et = RequestInfo.get().getEditToken();
+				
+				if (requestContext.getUriInfo().getPath().contains("write/"))
+				{
+					//If it is a write request, the edit token needs to be valid for write.
+					if (!et.isValidForWrite())
+					{
+						throw new IOException("Edit Token is no longer valid for write - please renew the token.");
+					}
 				}
 				RequestInfo.get().getEditCoordinate();
 			} else {

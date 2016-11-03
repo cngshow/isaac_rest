@@ -68,19 +68,6 @@ import gov.vha.isaac.rest.session.SecurityUtils;
 @RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class MappingAPIs
 {
-	private class Positions
-	{
-
-		protected int targetPos;
-		protected int qualfierPos;
-
-		public Positions(int targetPos, int qualifierPos)
-		{
-			this.targetPos = targetPos;
-			this.qualfierPos = qualifierPos;
-		}
-	}
-
 	private static Logger log = LogManager.getLogger(MappingAPIs.class);
 
 	@Context
@@ -235,64 +222,46 @@ public class MappingAPIs
 		
 		int sememeConceptSequence = Util.convertToConceptSequence(id);
 		
-		Positions positions = getPositions(sememeConceptSequence);
+		Positions positions = Positions.getPositions(sememeConceptSequence);
 		
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
-		Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
+		try
 		{
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
-					Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
-			
-			if (latest.isPresent())
+			Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
 			{
-				//TODO handle contradictions
-				results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
-					positions.targetPos, positions.qualfierPos,
-					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-					RequestInfo.get().shouldExpand(ExpandUtil.comments),
-					processIdUUID));
-			}
-			if (results.size() >= 1000)
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
+						Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
+				
+				if (latest.isPresent())
+				{
+					//TODO handle contradictions
+					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+						positions.targetPos, positions.qualfierPos,
+						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+						RequestInfo.get().shouldExpand(ExpandUtil.comments),
+						processIdUUID));
+				}
+				if (results.size() >= 250)
+				{
+					throw new RuntimeException("Java 9 will fix this with takeWhile...");
+				}
+				
+			});
+		}
+		catch (RuntimeException e)
+		{
+			if (e.getMessage() != null && e.getMessage().startsWith("Java 9 will"))
 			{
-				throw new RuntimeException("Java 9 will fix this with takeWhile...");
+				log.warn("Cutting results short, as paging isn't yet implemented!");
 			}
-			
-		});
+			else
+			{
+				throw e;
+			}
+		}
 		return results.toArray(new RestMappingItemVersion[results.size()]);
-	}
-	
-	/**
-	 * @param sememeAssemblageConceptSequence
-	 * @return
-	 */
-	private Positions getPositions(int sememeAssemblageConceptSequence)
-	{
-		int targetPos = -1;
-		int qualifierPos = -1;
-		
-		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(sememeAssemblageConceptSequence);
-		for (int i = 0; i < dsud.getColumnInfo().length; i++)
-		{
-			if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid()))
-			{
-				targetPos = i;
-			}
-			else if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_QUALIFIER.getPrimordialUuid()))
-			{
-				qualifierPos = i;
-			}
-			if (targetPos >= 0 && qualifierPos >= 0)
-			{
-				break;
-			}
-		}
-		if (targetPos < 0 || qualifierPos < 0)
-		{
-			throw new RuntimeException("Unexpecter error reading mapping sememe - possibly invalidly specified");
-		}
-		return new Positions(targetPos, qualifierPos);
 	}
 
 	/**
@@ -328,17 +297,15 @@ public class MappingAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 		
-		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
-		
 		int sequence = RequestInfoUtils.getSememeSequenceFromParameter(RequestParameters.id, id);
 		
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		@SuppressWarnings("rawtypes")
 		SememeChronology sememe =  Get.sememeService().getSememe(sequence);
 		
-		Positions positions = getPositions(sememe.getAssemblageSequence());
+		Positions positions = Positions.getPositions(sememe.getAssemblageSequence());
 		
-		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@SuppressWarnings({ "unchecked"})
 		Optional<LatestVersion<DynamicSememe<?>>> latest = sememe.getLatestVersion(DynamicSememe.class, 
 				Util.getPreWorkflowStampCoordinate(processIdUUID, sememe.getNid()));
 			
