@@ -224,7 +224,7 @@ public class MappingAPIs
 						RequestInfo.get().shouldExpand(ExpandUtil.comments),
 						processIdUUID));
 				}
-				if (results.size() >= 1000)
+				if (results.size() >= 250)
 				{
 					throw new RuntimeException("Java 9 will fix this with takeWhile...");
 				}
