@@ -33,6 +33,7 @@ import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.tokens.EditToken;
 
 /**
  * 
@@ -74,30 +75,37 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 		LOG.debug("Running CONTAINER REQUEST FILTER " + this.getClass().getName() + " on request " + requestContext.getRequest().getMethod());
 		
 		LOG.debug("Path parameters: " + requestContext.getUriInfo().getPathParameters().keySet());
-		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getPathParameters().entrySet()) {
+		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getPathParameters().entrySet()) 
+		{
 			LOG.debug("Path parameter \"" + parameter.getKey() + "\"=\"" + parameter.getValue() + "\"");
 		}
 		LOG.debug("Query parameters: " + requestContext.getUriInfo().getQueryParameters().keySet());
-		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getQueryParameters().entrySet()) {
+		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getQueryParameters().entrySet()) 
+		{
 			LOG.debug("Query parameter \"" + parameter.getKey() + "\"=\"" + parameter.getValue() + "\"");
 		}
 
-		try  {
+		try
+		{
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
 			
-			if (requestContext.getUriInfo().getPath().contains("/write/")
+			//If they are asking for an edit token, or attempting to do a write, we need a valid editToken.
+			if (requestContext.getUriInfo().getPath().contains("write/")
 					|| requestContext.getUriInfo().getPath().contains(RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent)
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
 					) {
-				try {
-					// TODO Joel find out why first invocation seems to fail and fix
-					RequestInfo.get().getEditCoordinate();
-				} catch (Exception e) {
-					// ignore
+				EditToken et = RequestInfo.get().getEditToken();
+				
+				if (requestContext.getUriInfo().getPath().contains("write/"))
+				{
+					//If it is a write request, the edit token needs to be valid for write.
+					if (!et.isValidForWrite())
+					{
+						throw new IOException("Edit Token is no longer valid for write - please renew the token.");
+					}
 				}
-				RequestInfo.get().getEditCoordinate();
 			}
-		} 
+		}
 		catch (IOException e) {
 			throw e;
 		} 

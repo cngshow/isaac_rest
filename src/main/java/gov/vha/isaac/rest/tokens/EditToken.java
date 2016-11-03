@@ -22,21 +22,23 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
 import gov.vha.isaac.ochre.api.util.PasswordHasher;
 import gov.vha.isaac.ochre.model.coordinate.EditCoordinateImpl;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -46,18 +48,20 @@ import gov.vha.isaac.ochre.model.coordinate.EditCoordinateImpl;
  */
 public class EditToken
 {
+	private static final Logger log = LoggerFactory.getLogger(EditToken.class);
+	
 	private static final byte tokenVersion = 1;
 	private static final int hashRounds = 2048;
 	private static final int hashLength = 64;
 	private static final int encodedHashLength = (int)Math.ceil(hashLength / 8f / 3f) * 4;  //http://stackoverflow.com/a/4715480
 	
-	private static final Logger log = LoggerFactory.getLogger(EditToken.class);
 	
 	private static volatile transient byte[] secret_;
-	private static transient AtomicInteger increment = new AtomicInteger();  //Used for CSRF protection
-	private transient boolean validForSubmit = false;
+	private static final AtomicInteger globalIncrement = new AtomicInteger();  //Used for CSRF protection
 	
-	private static HashMap<Integer, Long> validTokens = new HashMap<>();
+	private static final ConcurrentHashMap<Integer, Long> validTokens = new ConcurrentHashMap<>();
+	private static final long tokenMaxAge = 1000l * 60l * 60l;  //one hour
+	 
 
 	// Generate UUID
 	// Using the text 'NO_ACTIVE_WORKFLOW'
@@ -65,7 +69,7 @@ public class EditToken
 	private static final UUID NULL_UUID = UUID.fromString("a051e620-4fe1-5174-97d9-53dbce2ead0d");
 
 	private long creationTime;
-
+	private int increment;
 	private final int authorSequence;
 	private final int moduleSequence;
 	private final int pathSequence;
@@ -73,8 +77,7 @@ public class EditToken
 	private final Set<UserRole> roles = new TreeSet<>();
 	
 	private transient EditCoordinate editCoordinate = null;
-	
-	private final transient String serialization;
+	private transient String serialization;
 	
 	/**
 	 * Create a new edit token, valid for a short period of time.
@@ -91,8 +94,6 @@ public class EditToken
 			UUID activeWorkflowProcessId,
 			UserRole...roles)
 	{
-		this.creationTime = System.currentTimeMillis();
-
 		this.authorSequence = authorSequence;
 		this.moduleSequence = moduleSequence;
 		this.pathSequence = pathSequence;
@@ -104,6 +105,9 @@ public class EditToken
 			}
 		}
 
+		creationTime = System.currentTimeMillis();
+		increment = globalIncrement.getAndIncrement();
+		validTokens.put(increment, System.currentTimeMillis());
 		serialization = serialize();
 	}
 	EditToken(
@@ -140,8 +144,13 @@ public class EditToken
 			throw new Exception("Expected token version " + tokenVersion + " but read " + version);
 		}
 		
-		int increment = buffer.getInt();
+		increment = buffer.getInt();
 		creationTime = buffer.getLong();
+		
+		if ((System.currentTimeMillis() - creationTime) > tokenMaxAge)
+		{
+			throw new RestException("Edit Token Expired");
+		}
 
 		authorSequence = buffer.getInt();
 		moduleSequence = buffer.getInt();
@@ -158,43 +167,35 @@ public class EditToken
 		for (byte i = 0; i < numRoles; ++i) {
 			roles.add(UserRole.safeValueOf(buffer.getInt()).get());
 		}
-		
-		Long temp = validTokens.remove(increment);
-		if (temp == null || (System.currentTimeMillis() - temp) > 20000)
-		{
-			validForSubmit = false;
-		}
-		else
-		{
-			validForSubmit = true;
-		}
-		
-		expireUnusedTokens();
 
 		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
 
-		serialization = serialize();
+		serialization = encodedData;
 	}
 	
 	private void expireUnusedTokens()
 	{
-		Iterator<Entry<Integer, Long>> x = validTokens.entrySet().iterator();
-		while (x.hasNext())
+		try
 		{
-			if ((System.currentTimeMillis() -  x.next().getValue()) > 20000)
+			log.info("Expiring unused tokens - size before: " + validTokens.size());
+			Iterator<Entry<Integer, Long>> x = validTokens.entrySet().iterator();
+			while (x.hasNext())
 			{
-				x.remove();
+				if ((System.currentTimeMillis() -  x.next().getValue()) > tokenMaxAge)
+				{
+					x.remove();
+				}
 			}
+			log.info("Finished expiring unused tokens - size after: " + validTokens.size());
+		}
+		catch (Exception e)
+		{
+			log.error("Unexpected error expiring unused tokens", e);
 		}
 	}
 	
-	public String serialize()
+	private String serialize()
 	{
-		if ((System.currentTimeMillis() - creationTime) > (1000 * 60 * 15))
-		{
-			throw new RuntimeException("Token Expired");
-		}
-		creationTime = System.currentTimeMillis();
 		try
 		{
 			String data = Base64.getUrlEncoder().encodeToString(getBytesToWrite());
@@ -267,22 +268,21 @@ public class EditToken
 		return serialization;
 	}
 
-	public boolean isValidForSubmit()
+	/**
+	 * Note that one can only ask if a token is valid for write once.  This should only be called by the filter code, when the token is first read.
+	 * all subsequent calls will return false, until the token is renewed
+	 * @return
+	 */
+	public boolean isValidForWrite()
 	{
-		return validForSubmit;
-	}
-	
-	public void setInvalidForSubmit() {
-		validForSubmit = false;
+		return validTokens.remove(increment) == null ? false : true;
 	}
 	
 	private byte[] getBytesToWrite()
 	{
 		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer();
-		int thisIncrement = increment.getAndIncrement();
-		validTokens.put(thisIncrement, System.currentTimeMillis());
 		buffer.putByte(tokenVersion);
-		buffer.putInt(thisIncrement);
+		buffer.putInt(increment);
 		buffer.putLong(creationTime);
 		buffer.putInt(authorSequence);
 		buffer.putInt(moduleSequence);
@@ -318,6 +318,8 @@ public class EditToken
 					//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
 					new SecureRandom().nextBytes(temp);
 					secret_ = temp;
+					
+					Get.workExecutors().getScheduledThreadPoolExecutor().scheduleAtFixedRate(() -> {expireUnusedTokens();}, 15, 15, TimeUnit.MINUTES);
 				}
 			}
 		}
@@ -329,7 +331,7 @@ public class EditToken
 	 */
 	@Override
 	public String toString() {
-		return "EditToken [validForSubmit=" + validForSubmit + ", creationTime=" + creationTime + ", authorSequence="
+		return "EditToken [increment=" + increment + ", creationTime=" + creationTime + ", authorSequence="
 				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
 				+ ", activeWorkflowProcessId=" + activeWorkflowProcessId + ", roles=" + roles + ", serialization=" + serialization
 				+ "]";
@@ -349,11 +351,9 @@ public class EditToken
 		String token = t.serialize();
 		System.out.println(token);
 		EditToken t1 = new EditToken(token);
-		System.out.println(t1.validForSubmit);
+		System.out.println(t1.increment);
 		
 		String token1 = t1.serialize();
 		System.out.println(token1);
-		Thread.sleep(25000);
-		System.out.println(new EditToken(token1).validForSubmit);
 	}
 }
