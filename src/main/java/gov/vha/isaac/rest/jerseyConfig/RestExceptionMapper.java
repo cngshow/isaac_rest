@@ -40,7 +40,7 @@ public class RestExceptionMapper implements ExceptionMapper<RestException>
 	@Override
 	public Response toResponse(RestException e)
 	{
-		log.error(e);
+		log.info("User Error: " + e.toString(), e);
 		return Response.status(Response.Status.BAD_REQUEST).entity(e.toString()).type(MediaType.TEXT_PLAIN).build();
 	}
 
