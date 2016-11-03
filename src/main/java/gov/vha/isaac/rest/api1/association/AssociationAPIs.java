@@ -96,7 +96,7 @@ public class AssociationAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -159,7 +159,7 @@ public class AssociationAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -207,7 +207,7 @@ public class AssociationAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -292,7 +292,7 @@ public class AssociationAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -337,7 +337,7 @@ public class AssociationAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -383,7 +383,7 @@ public class AssociationAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

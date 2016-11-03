@@ -121,10 +121,10 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
 					) {
 				try {
-					// TODO Joel find out why first invocation seems to fail and fix
+					 //TODO Joel find out why first invocation seems to fail and fix
 					RequestInfo.get().getEditCoordinate();
 				} catch (Exception e) {
-					// ignore
+					 //ignore
 				}
 				RequestInfo.get().getEditCoordinate();
 			} else {

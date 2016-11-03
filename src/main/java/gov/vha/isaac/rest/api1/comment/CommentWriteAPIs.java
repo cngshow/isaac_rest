@@ -94,7 +94,7 @@ public class CommentWriteAPIs
 			RestCommentVersionBaseCreate dataToCreateComment,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -182,7 +182,7 @@ public class CommentWriteAPIs
 			@QueryParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

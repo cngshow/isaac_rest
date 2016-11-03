@@ -125,7 +125,7 @@ public class SememeWriteAPIs
 			RestSememeDescriptionCreateData creationData,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -213,7 +213,7 @@ public class SememeWriteAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -272,7 +272,7 @@ public class SememeWriteAPIs
 		RestDynamicSememeTypeCreate sememeTypeCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -361,7 +361,7 @@ public class SememeWriteAPIs
 		RestDynamicSememeBaseCreate sememeCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -443,7 +443,7 @@ public class SememeWriteAPIs
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

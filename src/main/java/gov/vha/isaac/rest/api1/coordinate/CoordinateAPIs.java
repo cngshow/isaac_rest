@@ -116,7 +116,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.descriptionLogicProfile) String descriptionLogicProfile,
 			@QueryParam(RequestParameters.classifier) String classifier) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -151,7 +151,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -195,7 +195,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -227,7 +227,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -259,7 +259,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -291,7 +291,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.coordToken) String coordToken
 			) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -328,7 +328,7 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
 			) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

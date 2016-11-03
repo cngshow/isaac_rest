@@ -64,7 +64,7 @@ public class ContentRequestAPIs
 	@Path(RestPaths.termRequestComponent)  
 	public Response putNewTermRequest(String data) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		//System.out.println("received media type: " + request.getMediaType());
 		System.out.println("got data '" + data + "'");

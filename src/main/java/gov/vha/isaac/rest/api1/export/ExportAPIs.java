@@ -87,7 +87,7 @@ public class ExportAPIs
 			@QueryParam(RequestParameters.changedBefore) String changedBefore)
 			throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(), 

@@ -94,7 +94,7 @@ public class SystemAPIs
 			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -247,7 +247,7 @@ public class SystemAPIs
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -320,7 +320,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestDynamicSememeDataTypeComponent)  
 	public RestDynamicSememeDataType[] getRestDynamicSememeDataTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -338,7 +338,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestDynamicSememeValidatorTypeComponent)  
 	public RestDynamicSememeValidatorType[] getRestDynamicSememeValidatorTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -356,7 +356,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestObjectChronologyTypeComponent)
 	public RestObjectChronologyType[] getRestObjectChronologyTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -374,7 +374,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestSememeTypeComponent)
 	public RestSememeType[] getRestObjectSememeTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -392,7 +392,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestConcreteDomainOperatorTypes)
 	public RestConcreteDomainOperatorsType[] getRestConcreteDomainOperatorTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -410,7 +410,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestNodeSemanticTypes)
 	public RestNodeSemanticType[] getRestNodeSemanticTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -428,7 +428,7 @@ public class SystemAPIs
 	@Path(RestPaths.enumerationRestSupportedIdTypes)
 	public RestSupportedIdType[] getRestSupportedIdTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -447,7 +447,7 @@ public class SystemAPIs
 	@Path(RestPaths.systemInfoComponent)
 	public RestSystemInfo getSystemInfo() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -467,7 +467,7 @@ public class SystemAPIs
 	@Path(RestPaths.userComponent + "{" + RequestParameters.id + "}")
 	public RestUserInfo getUserInfo(@PathParam(RequestParameters.id) String id) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

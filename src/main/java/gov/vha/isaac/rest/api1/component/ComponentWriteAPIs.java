@@ -103,7 +103,7 @@ public class ComponentWriteAPIs
 			@QueryParam(RequestParameters.active) String active,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

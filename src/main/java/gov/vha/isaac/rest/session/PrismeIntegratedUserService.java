@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.session;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,9 +82,10 @@ public class PrismeIntegratedUserService implements UserRoleService {
 //		 */
 //		//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
 
+		Client client = ClientBuilder.newClient();
 		URL url = new URL(getPrismeRolesByTokenUrl());
-		Map<String, String> params = new HashMap<>();
-		params.put("token", ssoToken);
+		Map<String, String> params = new HashMap<>();	
+		params.put("token", URLEncoder.encode(ssoToken, "UTF-8"));
 		String jsonResultString = getResultJsonFromPrisme(UserServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
 		return Optional.of(getUserFromJson(jsonResultString));
@@ -251,14 +253,20 @@ public class PrismeIntegratedUserService implements UserRoleService {
 	String getPrismeAllRolesUrl() {
 		return getPrismeProperties().getProperty("prisme_all_roles_url");
 	}
-	boolean usePrismeForAllRoles() {
+	public boolean usePrismeForAllRoles() {
 		return getPrismeAllRolesUrl() != null;
 	}
 	String getPrismeRolesByTokenUrl() {
 		return getPrismeProperties().getProperty("prisme_roles_by_token_url");
 	}
-	boolean usePrismeForRolesByToken() {
+	public boolean usePrismeForRolesByToken() {
 		return getPrismeRolesByTokenUrl() != null;
+	}
+	String getSsoTokenByNameUrl() {
+		return getPrismeProperties().getProperty("prisme_roles_user_url");
+	}
+	public boolean usePrismeForSsoTokenByName() {
+		return getSsoTokenByNameUrl() != null;
 	}
 
 	private String getResultJsonFromPrisme(String targetStr, String pathStr, Map<String, String> params) {

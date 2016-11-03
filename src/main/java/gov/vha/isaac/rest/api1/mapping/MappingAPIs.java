@@ -109,7 +109,7 @@ public class MappingAPIs
 			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -161,7 +161,7 @@ public class MappingAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.expand) String expand) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -220,7 +220,7 @@ public class MappingAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		//TODO this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
 		//will make it fast for early pages... still slow for later pages, unless we enhance the underlying isaac code to handle paging natively
@@ -319,7 +319,7 @@ public class MappingAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

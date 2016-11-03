@@ -104,7 +104,7 @@ public class AssociationWriteAPIs
 		RestAssociationTypeVersionBaseCreate associationCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -193,7 +193,7 @@ public class AssociationWriteAPIs
 		RestAssociationItemVersionBaseCreate associationItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -282,7 +282,7 @@ public class AssociationWriteAPIs
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

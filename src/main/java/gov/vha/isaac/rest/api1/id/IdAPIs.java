@@ -99,7 +99,7 @@ public class IdAPIs
 			@QueryParam(RequestParameters.outputType) @DefaultValue("uuid") String outputType,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -229,7 +229,7 @@ public class IdAPIs
 	@Path(RestPaths.idTypesComponent)  
 	public RestSupportedIdType[] getSupportedTypes() throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

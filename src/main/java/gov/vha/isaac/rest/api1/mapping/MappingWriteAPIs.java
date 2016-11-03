@@ -130,7 +130,7 @@ public class MappingWriteAPIs
 		RestMappingSetVersionBaseCreate mappingSetCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -177,7 +177,7 @@ public class MappingWriteAPIs
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -226,7 +226,7 @@ public class MappingWriteAPIs
 		RestMappingItemVersionBaseCreate mappingItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
@@ -285,7 +285,7 @@ public class MappingWriteAPIs
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
-		SecurityUtils.validateRole(securityContext, this);
+		SecurityUtils.validateRole(securityContext, getClass());
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
