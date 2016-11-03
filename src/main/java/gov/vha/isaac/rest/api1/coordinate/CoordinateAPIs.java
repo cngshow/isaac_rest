@@ -38,6 +38,7 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestStampCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -302,6 +303,10 @@ public class CoordinateAPIs
 	 */
 	
 	//TODO JOEL, fix this documentation
+	//The format of the ssoToken needs to be documented, but also made clear, this is only for internal use by Komet / Prisme.
+	//There should be a parameter which accepts a UUID for a user, and that is only allowed to be passed when we recognize we are not in SSO mode.
+	//editToken needs to be properly documented, as what you do to renew an existing no longer valid for write token (aka, pass in the token, get back a renewed one)
+	
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.editTokenComponent)  
@@ -319,6 +324,6 @@ public class CoordinateAPIs
 
 		// All work is done in RequestInfo.get().getEditToken(), initially invoked by RestContainerRequestFilter
 
-		return new RestEditToken(RequestInfo.get().getEditToken());
+		return new RestEditToken(EditTokens.renew(RequestInfo.get().getEditToken()));
 	}
 }
