@@ -30,6 +30,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import org.apache.logging.log4j.LogManager;
@@ -129,6 +130,6 @@ public class ExportAPIs
 		//https://github.com/johnculviner/jquery.fileDownload
 		//We must set the cookie fileDownload, this enables the GUI to provide feedback to the user telling them the file download
 		//was a success or a failure.
-		return Response.ok(stream).cookie(new NewCookie("fileDownload", "true")).header("content-disposition", "attachment; filename = export.xml").build();
+		return Response.ok(stream).cookie(new NewCookie(new Cookie("fileDownload", "true","/",null))).header("content-disposition", "attachment; filename = export.xml").build();
 	}
 }
