@@ -60,6 +60,9 @@ import gov.vha.isaac.rest.tokens.EditTokens;
 class EditTokenUtil {
 	private EditTokenUtil() {}
 
+	static UUID getUuidFromUserFsn(String fsn) {
+		return UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
+	}
 	static EditToken getUserToken(
 			User user,
 			int moduleSequence,
@@ -76,7 +79,7 @@ class EditTokenUtil {
 		
 		//TODO User already has an ID, why are you regenerated here?  Keep the logic in one place. 
 		// Generate SSO T5 UUID from FSN with MetaData.USER.getPrimordialUuid() as domain
-		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
+		final UUID uuidFromUserFsn = getUuidFromUserFsn(fsn);
 		
 		// If the SSO UUID already persisted
 		if (Get.identifierService().hasUuid(uuidFromUserFsn)) {

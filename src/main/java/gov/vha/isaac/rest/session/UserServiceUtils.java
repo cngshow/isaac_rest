@@ -21,21 +21,30 @@ package gov.vha.isaac.rest.session;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 
 /**
  * 
@@ -163,10 +172,10 @@ public class UserServiceUtils {
 		 */
 		User newUser = null;
 		try {
-			newUser = PrismeIntegratedUserService.getUserFromJson(jsonToUse);
+			newUser = UserServiceUtils.getUserFromJson(jsonToUse);
 		} catch (Exception e) {
 			try {
-				newUser = PrismeIntegratedUserService.getUserFromJson(TEST_JSON1);
+				newUser = UserServiceUtils.getUserFromJson(TEST_JSON1);
 			} catch (IOException e1) {
 				throw new RuntimeException(e1);
 			}
@@ -177,39 +186,39 @@ public class UserServiceUtils {
 		return Optional.of(newUser);
 	}
 
-	public static Optional<String> safeGetToken(String id, String password) {
-		try {
-			return Optional.of(getToken(id, password));
-		} catch (Exception e) {
-			System.err.println(e);
-			e.printStackTrace();
-			return Optional.empty();
-		} 
-	}
-	public static String getToken(String id, String password) throws Exception {		
-		URL url = new URL("https://vadev.mantech.com:4848/rails_prisme/roles/get_user_roles.json");
-		Client client = ClientBuilder.newClient();
-		Response response = client.target("https://vadev.mantech.com:4848")
-				.path(url.getPath())
-				.queryParam("id", id)
-				.queryParam("password", password)
-				.request().get();
-		String responseJson = response.readEntity(String.class);
-		
-		ObjectMapper mapper = new ObjectMapper();
-		Map<?, ?> map = null;
-		try {
-			map = mapper.readValue(responseJson, Map.class);
-		} catch (Exception e) {
-			throw new Exception("Failed parsing json \"" + responseJson);
-		} finally {
-			client.close();
-		}
-		
-		System.out.println("Output for id=\"" + id + "\", password=\"" + password + "\": \"" + map + "\"");
-		
-		return (String)map.get("token");
-	}
+//	private static Optional<String> safeGetToken(String id, String password) {
+//		try {
+//			return Optional.of(getToken(id, password));
+//		} catch (Exception e) {
+//			System.err.println(e);
+//			e.printStackTrace();
+//			return Optional.empty();
+//		} 
+//	}
+//	private static String getToken(String id, String password) throws Exception {		
+//		URL url = new URL("https://vadev.mantech.com:4848/rails_prisme/roles/get_user_roles.json");
+//		Client client = ClientBuilder.newClient();
+//		Response response = client.target("https://vadev.mantech.com:4848")
+//				.path(url.getPath())
+//				.queryParam("id", id)
+//				.queryParam("password", password)
+//				.request().get();
+//		String responseJson = response.readEntity(String.class);
+//		
+//		ObjectMapper mapper = new ObjectMapper();
+//		Map<?, ?> map = null;
+//		try {
+//			map = mapper.readValue(responseJson, Map.class);
+//		} catch (Exception e) {
+//			throw new Exception("Failed parsing json \"" + responseJson);
+//		} finally {
+//			client.close();
+//		}
+//		
+//		System.out.println("Output for id=\"" + id + "\", password=\"" + password + "\": \"" + map + "\"");
+//		
+//		return (String)map.get("token");
+//	}
 	private static void testToken(String token) {
 		PrismeIntegratedUserService service = LookupService.getService(PrismeIntegratedUserService.class);
 
@@ -272,7 +281,101 @@ public class UserServiceUtils {
 		//final String urlStr = "https://vadev.mantech.com:4848/rails_prisme/roles/get_roles_by_token.json?id=cris@cris.com&password=cris@cris.com&token=" + ssoToken;
 		//final String url = "https://vadev.mantech.com:4848/rails_prisme/roles/get_roles_by_token.json?token=" + ssoToken;
 
-		testToken(getToken("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com"));
-		testToken(getToken("readonly@readonly.com", "readonly@readonly.com"));
+		PrismeUserService PRISME_USER_SERVICE = LookupService.getService(PrismeIntegratedUserService.class);
+
+		testToken(PRISME_USER_SERVICE.getToken("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com"));
+		testToken(PRISME_USER_SERVICE.getToken("readonly@readonly.com", "readonly@readonly.com"));
+	}
+
+	static User getUserFromJson(String jsonToUse) throws JsonParseException, JsonMappingException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		Map<?, ?> map = null;
+		map = mapper.readValue(jsonToUse, Map.class);
+		
+		String userName = (String)map.get("user");
+		Set<UserRole> roleSet = new HashSet<>();
+		Collection<?> roles = (Collection<?>)map.get("roles");
+		for (Object roleMapObject : roles) {
+			Map<?,?> roleMap = (Map<?,?>)roleMapObject;
+			String roleName = (String)roleMap.get("name");
+			
+			roleSet.add(UserRole.safeValueOf(roleName).get());
+		}
+		
+		final UUID uuidFromUserFsn = UserServiceUtils.getUuidFromUserName(userName);;
+	
+		User newUser = new User(userName, uuidFromUserFsn, roleSet);
+		
+		return newUser;
+	}
+
+	static String getResultJsonFromPrisme(String targetStr, String pathStr) {
+		return UserServiceUtils.getResultJsonFromPrisme(targetStr, pathStr, new HashMap<>());
+	}
+	static String getResultJsonFromPrisme(String targetStr, String pathStr, Map<String, String> params) {
+		Client client = ClientBuilder.newClient();
+		WebTarget target = client.target(targetStr);
+		target = target.path(pathStr);
+		for (Map.Entry<String, String> entry : params.entrySet()) {
+			target = target.queryParam(entry.getKey(), entry.getValue());
+		}
+		Response response = target.request().get();
+		
+		String responseJson = response.readEntity(String.class);
+	
+		return responseJson;
+	}
+	static Set<UserRole> getAllRolesFromUrl(URL url) throws JsonParseException, JsonMappingException, IOException {
+		String jsonResultString = UserServiceUtils.getResultJsonFromPrisme(UserServiceUtils.getTargetFromUrl(url), url.getPath());
+		
+		Set<UserRole> roles = new HashSet<>();
+		
+		ObjectMapper mapper = new ObjectMapper();
+		Object returnedObject = mapper.readValue(jsonResultString, List.class);
+		
+		for (Object roleFromPrisme : (List<?>)returnedObject) {
+			roles.add(UserRole.valueOf(roleFromPrisme.toString()));
+		}
+		
+		return Collections.unmodifiableSet(roles);
+	}
+	static String getUserSsoTokenFromUrl(URL url, String id, String password) throws Exception {
+		Map<String, String> params = new HashMap<>();	
+		params.put("id", id);
+		params.put("password", password);
+		String jsonResultString = UserServiceUtils.getResultJsonFromPrisme(UserServiceUtils.getTargetFromUrl(url), url.getPath(), params);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		Map<?, ?> map = null;
+		try {
+			map = mapper.readValue(jsonResultString, Map.class);
+		} catch (Exception e) {
+			throw new Exception("Failed parsing json \"" + jsonResultString);
+		}
+		//System.out.println("Output for id=\"" + id + "\", password=\"" + password + "\": \"" + map + "\"");
+		
+		return (String)map.get("token");
+	}
+
+	static UUID getUuidFromUserName(String userName) {
+		return UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), userName);
+	}
+
+	static Optional<User> getUserFromUrl(URL url, String ssoToken) throws JsonParseException, JsonMappingException, IOException {
+//		/*
+//		 * Example URL for get_roles_by_token
+//		 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
+//		 */
+//		/*
+//		 * Example SSO Token
+//		 * %5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx94%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFXk%5Cx80%5CxB1%5CxA3%5CxF3%5Cx8D%5CxB1%5Cx7F%5CxBC%5Cx02K%22%2C+%22k%5Cf%5CxDC%5CxF7%2CP%5CxB2%5Cx97%5Cx99%5Cx99%5CxE0%5CxE1%7C%5CxBF%5Cx1DK%22%2C+%22J%5Cf%5Cx9B%5CxD8w%5Cx15%5CxFE%5CxD3%5CxC7%5CxDC%5CxAC%5Cx9E%5Cx1C%5CxD0bG%22%5D
+//		 */
+//		//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
+
+		Map<String, String> params = new HashMap<>();	
+		params.put("token", URLEncoder.encode(ssoToken, "UTF-8"));
+		String jsonResultString = UserServiceUtils.getResultJsonFromPrisme(UserServiceUtils.getTargetFromUrl(url), url.getPath(), params);
+		
+		return Optional.of(UserServiceUtils.getUserFromJson(jsonResultString));
 	}
 }

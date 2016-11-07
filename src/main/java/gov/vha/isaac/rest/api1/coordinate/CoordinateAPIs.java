@@ -31,6 +31,7 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -41,7 +42,10 @@ import gov.vha.isaac.rest.api1.data.coordinate.RestLanguageCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestLogicCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestStampCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
+import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
+import gov.vha.isaac.rest.session.PrismeUserService;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
 import gov.vha.isaac.rest.tokens.EditTokens;
@@ -303,49 +307,63 @@ public class CoordinateAPIs
 	
 	/**
 	 * 
-	 * This method returns <code>RestEditToken</code>.
-	 * It takes an explicit serialized SSO string parameter <code>ssoToken</code>
-	 * specifying authenticated user identification.
-	 * Also accepts an optional editToken string parameter specifying all component values
-	 * as well as optional individual editModule, editPath parameters.
-	 * If no optional parameters are specified,
-	 * then the editToken corresponding to the passed <code>ssoToken</code> token will be returned.
+	 * This method returns a <code>RestEditToken</code>, which is an encrypted String that is used internally
+	 * to authenticate and convey user and session information between KOMET and PRISME.  Information conveyed includes
+	 * user, module, and path concepts as well as, optionally, a workflow process.  Each EditToken expires after a set amount of time
+	 * and is otherwise usable for a write operation exactly once, after which it becomes expired and unusable for further write operations.
+	 * An expired token may be renewed by passing it as an editToken parameter to another getEditToken() call.
+	 * Additionally, all write operations return a <code>RestWriteResponse</code> object containing a renewed, and therefore readily usable EditToken.
+	 * If a previously-retrieved editToken parameter is passed, it will be used. The editToken parameter is incompatible with ssoToken and userId parameters.
+	 * If editToken is not passed and PRISME services are configured (prisme.properties exists and prisme_roles_by_token_url is set)
+	 * then a valid SSO token string must be passed in the ssoToken parameter
+	 * If editToken is not passed and PRISME services are not configured and userId is passed
+	 * then the userId parameter is parsed, to load a test user with all roles, as an existing concept id (UUID, NID or concept sequence),
+	 * a case-insensitive keyword "DEFAULT" or the FSN description of an existing user concept
+	 * If editToken is not passed and PRISME services are not configured and ssoToken is passed
+	 * AND IT IS RUNNING AS A UNIT TEST UNDER src/test then the ssoToken is parsed, to load or create a test user with name and roles specified by a string with the syntax {name}:{role1}[{,role2}[{,role3}[...]]].  
 	 * If any additional optional parameters are passed, then their values will be applied to the token specified by the
-	 * explicit serialized ssoToken string, and the resulting RestEditToken will be returned.
+	 * required parameters, and the resulting RestEditToken will be returned.
 	 * 
 	 *
-	 * @param ssoToken specifies an explicit serialized SSO token string
-	 * @param editToken - optional  Joel
-	 * @param editModule - optional Joel
-	 * @param editPath - optional Joel
-	 * 
-	 * 
+	 * @param ssoToken specifies an explicit serialized SSO token string. Not valid with use of userId or editToken. 
+	 * @param editToken - optional previously-retrieved editToken string encoding user, module, path concept ids and optional workflow process id. Not valid with use of ssoToken or userId.
+	 * @param editModule - optional module concept id
+	 * @param editPath - optional path concept id
+	 * @param userId - optional test User id of an existing concept id (UUID, NID or concept sequence),
+	 * a case-insensitive keyword "DEFAULT" or the exact FSN description of an existing user concept.
+	 * The userId parameter is only valid if PRISME is NOT configured.  Not valid with use of ssoToken or editToken.
+	 *
 	 * @return RestEditToken
 	 * 
 	 * @throws RestException
 	 */
-	
-	//TODO JOEL, fix this documentation
-	//The format of the ssoToken needs to be documented, but also made clear, this is only for internal use by Komet / Prisme.
-	//There should be a parameter which accepts a UUID for a user, and that is only allowed to be passed when we recognize we are not in SSO mode.
-	//editToken needs to be properly documented, as what you do to renew an existing no longer valid for write token (aka, pass in the token, get back a renewed one)
-	
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.editTokenComponent)  
 	public RestEditToken getEditToken(
 			@QueryParam(RequestParameters.ssoToken) String ssoToken, // Applied in RestContainerRequestFilter
+			@QueryParam(RequestParameters.userId) String userId, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editToken) String editToken, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editModule) String editModule, // Applied in RestContainerRequestFilter
 			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
 			) throws RestException
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
+		RequestInfoUtils.validateIncompatibleParameters(RequestInfo.get().getParameters(), RequestParameters.editToken, RequestParameters.ssoToken, RequestParameters.userId);
 
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.ssoToken,
-				RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+		PrismeUserService userService = LookupService.getService(PrismeIntegratedUserService.class);
+		if (! userService.usePrismeForRolesByToken()) {
+			RequestParameters.validateParameterNamesAgainstSupportedNames(
+					RequestInfo.get().getParameters(),
+					RequestParameters.ssoToken,
+					RequestParameters.userId,
+					RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+		} else {
+			RequestParameters.validateParameterNamesAgainstSupportedNames(
+					RequestInfo.get().getParameters(),
+					RequestParameters.ssoToken,
+					RequestParameters.EDIT_TOKEN_PARAM_NAMES);
+		}
 
 		// All work is done in RequestInfo.get().getEditToken(), initially invoked by RestContainerRequestFilter
 

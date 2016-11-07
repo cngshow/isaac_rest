@@ -98,7 +98,7 @@ public class ComponentWriteAPIs
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.updateStateComponent + "{" + RequestParameters.id + "}")
-	public RestWriteResponse updateState( // TODO test updateState()
+	public RestWriteResponse updateState(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.active) String active,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
