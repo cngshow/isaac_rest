@@ -46,7 +46,6 @@ public class RestApplicationSecurityContext implements SecurityContext {
 	 * 
 	 * This should never return null, as RequestInfo sets a default read_only User
 	 * if no SSO token or EditToken passed.
-	 * TODO Joel confirm that this behavior is ok
 	 */
 	@Override
 	public Principal getUserPrincipal() {return this.user;}

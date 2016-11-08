@@ -37,10 +37,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import gov.vha.isaac.ochre.api.UserRole;
-import gov.vha.isaac.ochre.api.UserRoleService;
 
 /**
- * The Class PrismeIntegratedUserService.
+ * The Class PrismeIntegratedUserService
  *
  * {@link PrismeIntegratedUserService}
  * 

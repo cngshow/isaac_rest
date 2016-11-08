@@ -74,17 +74,10 @@ class EditTokenUtil {
 		
 		Integer authorSequence = null;
 		
-		// FSN from userName is SSO primary key
-		final String fsn = user.getName();
-		
-		//TODO User already has an ID, why are you regenerated here?  Keep the logic in one place. 
-		// Generate SSO T5 UUID from FSN with MetaData.USER.getPrimordialUuid() as domain
-		final UUID uuidFromUserFsn = getUuidFromUserFsn(fsn);
-		
 		// If the SSO UUID already persisted
-		if (Get.identifierService().hasUuid(uuidFromUserFsn)) {
+		if (Get.identifierService().hasUuid(user.getId())) {
 			// Set authorSequence to value corresponding to SSO UUID
-			authorSequence = Get.identifierService().getConceptSequenceForUuids(uuidFromUserFsn);
+			authorSequence = Get.identifierService().getConceptSequenceForUuids(user.getId());
 		}
 
 		// If no existing author by SSO UUID, create new author concept with that SSO UUID
@@ -106,12 +99,12 @@ class EditTokenUtil {
 				LogicalExpression parentDef = defBuilder.build();
 
 				ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(
-						fsn,
+						user.getName(),
 						null,
 						parentDef);
 
 				// Set new author concept UUID to SSO UUID
-				builder.setPrimordialUuid(uuidFromUserFsn);
+				builder.setPrimordialUuid(user.getId());
 
 				// Add PRISME user.id in DYNAMIC_SEMEME_PRISME_USER_ID annotation
 				// TODO confirm that user.id is being added in DYNAMIC_SEMEME_PRISME_USER_ID annotation
@@ -140,7 +133,7 @@ class EditTokenUtil {
 
 				@SuppressWarnings("deprecation")
 				Optional<CommitRecord> commitRecord = Get.commitService().commit(
-						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn).get();
+						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + user.getName()).get();
 				authorSequence = newCon.getConceptSequence();
 				
 			}

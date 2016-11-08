@@ -55,10 +55,8 @@ import gov.vha.isaac.rest.tokens.EditToken;
  * to ensure that this filter is run before other user filters
  * 
  */
-//@Priority(Priorities.USER - 500)
 @Priority(Priorities.AUTHORIZATION)
 @Provider
-//@PreMatching // TODO should use?
 public class RestContainerRequestFilter implements ContainerRequestFilter {
 	private static Logger LOG = LogManager.getLogger();
 
@@ -116,8 +114,6 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 		{
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
 
-			// TODO should User be populated with dummy value when neither SSO token nor EditToken passed?
-
 			//If they are asking for an edit token, or attempting to do a write, we need a valid editToken.
 			if (requestContext.getUriInfo().getPath().contains("write/")
 					|| requestContext.getUriInfo().getPath().contains(RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent)
@@ -137,7 +133,8 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 				RequestInfo.get().getEditCoordinate();
 			} else {
 				// Set a default read_only user for clients that do not pass SSO token or EditToken
-				RequestInfo.get().setDefaultReadOnlyUser(); // TODO confirm that this will do what we want and not blow up
+				// The user has a name of "READ_ONLY_USER," a null UUID id and ALL UserRole values
+				RequestInfo.get().setDefaultReadOnlyUser();
 			}
 
 			authenticate(requestContext); // Apply after readAll() in order to populate User, if possible

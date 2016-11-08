@@ -177,7 +177,6 @@ public class RequestParameters {
 	 */
 	public final static Set<String> ALL_VALID_PARAMETERS;
 	static {
-		//TODO add new
 		Set<String> params = new HashSet<>();
 		params.addAll(COORDINATE_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
