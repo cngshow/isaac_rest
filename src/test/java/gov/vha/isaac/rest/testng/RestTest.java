@@ -1830,9 +1830,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
 				.queryParam(RequestParameters.editToken, getEditTokenString())
-				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkFail(updateCommentResponse);
@@ -1858,6 +1857,75 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestCommentVersion commentVersion : commentVersionsObject) {
 			if (commentVersion.getComment() != null && commentVersion.getComment().equals(updatedCommentText)
 					&& StringUtils.isBlank(commentVersion.getCommentContext())) {
+				commentVersionRetrievedByReferencedItem = commentVersion;
+				break;
+			}
+		}
+		Assert.assertNotNull(commentVersionRetrievedByReferencedItem);
+	}
+	
+	@Test
+	public void testCommentAPI2s() throws JsonProcessingException, IOException
+	{
+		int conceptNid = getIntegerIdForUuid(MetaData.AXIOM_ORIGIN.getPrimordialUuid(), "nid");
+
+		// Create a random string to confirm target data are relevant
+		UUID randomUuid = UUID.randomUUID();
+		
+		String json = jsonIze(new String[] {"commentedItem", "comment"}, new String[] {conceptNid + "", "my random comment"});
+		
+		Response createCommentResponse = checkFail(target(RestPaths.commentCreatePathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(json)));
+		String newCommentSememeSequenceWrapperXml = createCommentResponse.readEntity(String.class);
+		RestWriteResponse newCommentSememeSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newCommentSememeSequenceWrapperXml);
+		int newCommentSememeSequence = newCommentSememeSequenceWrapper.sequence;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newCommentSememeSequence > 0);
+		
+		// Retrieve new comment and validate fields
+		Response getCommentVersionResponse = checkFail(target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get());
+		String commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
+		RestCommentVersion newCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
+		Assert.assertEquals("my random comment", newCommentObject.getComment());
+		Assert.assertNull(newCommentObject.getCommentContext());
+		
+		// Update comment with new comment text value and empty comment context value
+		String context = "An updated comment text for (" + randomUuid + ")";
+		
+		json = jsonIze(new String[] {"comment", "commentContext", "active"}, new String[] {"my random comment 2", context, "true"});
+		
+		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
+				.queryParam(RequestParameters.editToken, getEditTokenString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(json));
+		checkFail(updateCommentResponse);
+		
+		// Retrieve updated comment and validate fields
+		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
+		RestCommentVersion updatedCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
+		Assert.assertEquals("my random comment 2", updatedCommentObject.getComment());
+		Assert.assertEquals(context, updatedCommentObject.getCommentContext());
+
+		// Get list of RestCommentVersion associated with MetaData.AXIOM_ORIGIN
+		Response getCommentVersionByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent 
+				+ MetaData.AXIOM_ORIGIN.getPrimordialUuid().toString())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String getCommentVersionByReferencedItemResult = checkFail(getCommentVersionByReferencedItemResponse).readEntity(String.class);
+		
+		RestCommentVersion[] commentVersionsObject = XMLUtils.unmarshalObjectArray(RestCommentVersion.class, getCommentVersionByReferencedItemResult);
+		Assert.assertTrue(commentVersionsObject != null && commentVersionsObject.length > 0);
+		RestCommentVersion commentVersionRetrievedByReferencedItem = null;
+		for (RestCommentVersion commentVersion : commentVersionsObject) {
+			if (commentVersion.getComment() != null && commentVersion.getComment().equals("my random comment 2")
+					&& context.equals(commentVersion.getCommentContext())) {
 				commentVersionRetrievedByReferencedItem = commentVersion;
 				break;
 			}
