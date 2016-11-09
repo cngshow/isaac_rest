@@ -109,9 +109,9 @@ public class CommentWriteAPIs
 
 			Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
 
-			if (StringUtils.isBlank(dataToCreateComment.getCommentContext())) 
+			if (StringUtils.isBlank(dataToCreateComment.getComment())) 
 			{
-				throw new RestException("The parameter 'commentText' is required");
+				throw new RestException("The field 'comment' is required");
 			}
 
 			
@@ -178,6 +178,11 @@ public class CommentWriteAPIs
 		}
 		
 		State stateToUse = (dataToUpdateComment.active == null || dataToUpdateComment.active) ? State.ACTIVE : State.INACTIVE;
+		
+		if (StringUtils.isBlank(dataToUpdateComment.getComment())) 
+		{
+			throw new RestException("The field 'comment' is required");
+		}
 
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);
