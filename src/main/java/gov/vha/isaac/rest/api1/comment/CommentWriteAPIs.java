@@ -26,6 +26,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -124,9 +125,9 @@ public class CommentWriteAPIs
 
 			Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
 
-			if (StringUtils.isBlank(dataToCreateComment.getCommentContext())) 
+			if (StringUtils.isBlank(dataToCreateComment.getComment())) 
 			{
-				throw new RestException("The parameter 'commentText' is required");
+				throw new RestException("The field 'comment' is required");
 			}
 
 			
@@ -167,8 +168,8 @@ public class CommentWriteAPIs
 	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
 	 * provided now, the new version will have that field stored as blank.
 	 * 
-	 * @param dataToUpdateComment - RestCommentVersionBase object containing data for updating a comment
 	 * @param id - The id (nid, sequence or UUID) of the comment to be updated 
+	 * @param dataToUpdateComment - RestCommentVersionBase object containing data for updating a comment
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
@@ -176,10 +177,10 @@ public class CommentWriteAPIs
 	 */
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.updatePathComponent)
+	@Path(RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public RestWriteResponse updateComment(
 			RestCommentVersionBase dataToUpdateComment,
-			@QueryParam(RequestParameters.id) String id,
+			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
@@ -195,6 +196,11 @@ public class CommentWriteAPIs
 		}
 		
 		State stateToUse = (dataToUpdateComment.active == null || dataToUpdateComment.active) ? State.ACTIVE : State.INACTIVE;
+		
+		if (StringUtils.isBlank(dataToUpdateComment.getComment())) 
+		{
+			throw new RestException("The field 'comment' is required");
+		}
 
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);

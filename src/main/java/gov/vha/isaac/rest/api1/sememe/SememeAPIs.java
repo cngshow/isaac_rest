@@ -381,7 +381,7 @@ public class SememeAPIs
 	 * sememes are not returned, as these are typically retrieved via a getDescriptions call on the Concept APIs.
 	 * @param includeAssociations - an optional flag to request that sememes that represent associations are returned.  By default, sememes that represent
 	 * associations are not returned, as these are typically retrieved via a getSourceAssociations call on the Association APIs.
-	 * @param includeMappings- an optional flag to request that sememes that represent mappings are returned.  By default, sememes that represent
+	 * @param includeMappings - an optional flag to request that sememes that represent mappings are returned.  By default, sememes that represent
 	 * mappings are not returned, as these are typically retrieved via a the Mapping APIs.
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0

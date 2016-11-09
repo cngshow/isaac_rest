@@ -115,11 +115,6 @@ public class RequestParameters {
 	public final static String maxPageSizeDefault = "10";
 	public final static Set<String> PAGINATION_PARAM_NAMES = unmodifiableSet(pageNum, maxPageSize);
 	
-	// Comment
-	public final static String commentContext = "commentContext";
-	public final static String commentText = "commentText";
-	public final static Set<String> COMMENT_PARAM_NAMES = unmodifiableSet(commentContext, commentText);
-	
 	public final static String assemblage = "assemblage";
 	public final static String includeDescriptions = "includeDescriptions";
 	public final static String includeAssociations = "includeAssociations";
@@ -180,7 +175,6 @@ public class RequestParameters {
 		Set<String> params = new HashSet<>();
 		params.addAll(COORDINATE_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
-		params.addAll(COMMENT_PARAM_NAMES);
 		params.addAll(EDIT_TOKEN_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
 			expand,
