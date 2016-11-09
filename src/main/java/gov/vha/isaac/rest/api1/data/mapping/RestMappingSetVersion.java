@@ -249,7 +249,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			{
 				try
 				{
-					comments = CommentAPIs.readComments(sememe.getNid() + "", processId);
+					comments = CommentAPIs.readComments(mappingConcept.get().getNid() + "", processId);
 				}
 				catch (RestException e)
 				{
