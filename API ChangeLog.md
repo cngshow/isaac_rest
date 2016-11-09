@@ -11,6 +11,7 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Fixed a bug where the create comment API was requiring a comment context (when it should be optional) and then fixed some issues with the 
         comment APIs and their default parsing of JSON (they were requiring @class notions, when they shouldn't) 
     * Fixed a bug where it wasn't reading comments properly on a mapset.
+    * API BREAKAGE - fix an inconsistent method for write/comment/update which was taking in the id as a query param, instead of a path param.
 
 * 2016/10/27 - 1.7.3: 
     * Fixed a bug where mapItems were being returned with column index info that started at 2, instead of 0

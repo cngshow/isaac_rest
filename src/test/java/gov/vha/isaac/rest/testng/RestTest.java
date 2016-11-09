@@ -1830,9 +1830,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);
 		}
-		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
 				.queryParam(RequestParameters.editToken, getEditTokenString())
-				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkFail(updateCommentResponse);
@@ -1899,9 +1898,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		json = jsonIze(new String[] {"comment", "commentContext", "active"}, new String[] {"my random comment 2", context, "true"});
 		
-		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
 				.queryParam(RequestParameters.editToken, getEditTokenString())
-				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(json));
 		checkFail(updateCommentResponse);
