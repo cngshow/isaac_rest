@@ -240,6 +240,7 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	}
 	
 	protected String getUserSsoTokenFromPrisme(String id, String password) throws Exception {
-		return UserServiceUtils.getUserSsoTokenFromUrl(new URL(getSsoTokenByNameUrl()), id, password);
+		URL url = new URL(getSsoTokenByNameUrl());
+		return UserServiceUtils.getUserSsoTokenFromUrl(url, id, password);
 	}
 }

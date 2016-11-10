@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -201,8 +202,21 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //	private static final String gregToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx91%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFX%7C%5Cx96%5CxA8%5CxA3%5CxA2%5CxC4%5CxB1%3D%5CxFF%5Cx01K%22%2C+%22oC%5Cx83%5CxF7%40%3A%5Cx94%5CxAC%5CxAF%5CxB6%5CxE1%5CxF4c%5CxB8%5CbK%22%2C+%22+M%5Cx89%5CxB8Xe%5CxF9%5CxD4%5CxC0%5CxDB%5CxAB%5Cx99%5Ce%5CxD7e%40%22%5D";
 //	private static final String joelToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC7%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx8C%5CxBA%5Cx1Ft%5CxDD%5CxB5%5CxA4%5CxB8%5CxC0%5CxE9Q%5CxAB%5CnK%22%2C+%22z%5D%5Cx83%5CxAFT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D";
 	
-	private static final String TEST_SSO_TOKEN = PRISME_USER_SERVICE.usePrismeForRolesByToken() ? PRISME_USER_SERVICE.safeGetToken("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com").get() : "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager";
-	private static final String TEST_READ_ONLY_SSO_TOKEN = PRISME_USER_SERVICE.usePrismeForRolesByToken() ? PRISME_USER_SERVICE.safeGetToken("readonly@readonly.com", "readonly@readonly.com").get() : "TestReadOnlyUser:read_only";
+	private static final String TEST_SSO_TOKEN = usePrismeForRolesByToken() ? getTokenFromPrisme("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com") : "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager";
+	private static final String TEST_READ_ONLY_SSO_TOKEN = usePrismeForRolesByToken() ? getTokenFromPrisme("readonly@readonly.com", "readonly@readonly.com") : "TestReadOnlyUser:read_only";
+	
+	private static boolean usePrismeForRolesByToken() {
+		try {
+			return PRISME_USER_SERVICE.usePrismeForRolesByToken();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	private static String getTokenFromPrisme(String name, String password) {
+		Optional<String> token = PRISME_USER_SERVICE.safeGetToken(name, password);
+		return token.get();
+	}
 	
 	@Override
 	protected Application configure()
@@ -1951,16 +1965,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 		// Attempt to update comment with read_only token
-		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+		Response updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
-				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		expectFail(updateCommentResponse);
 		// Attempt to update comment
-		updateCommentResponse = target(RestPaths.commentUpdatePathComponent)
+		updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
-				.queryParam(RequestParameters.id, newCommentSememeSequence)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		checkFail(updateCommentResponse);
