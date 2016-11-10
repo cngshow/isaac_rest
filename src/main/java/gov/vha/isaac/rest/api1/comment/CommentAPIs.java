@@ -158,7 +158,7 @@ public class CommentAPIs
 			@Override
 			public int compare(RestCommentVersion o1, RestCommentVersion o2)
 			{
-				return Long.compare(o1.getCommentStamp().time, o2.getCommentStamp().time);
+				return Long.compare(o1.commentStamp.time, o2.commentStamp.time);
 			}
 		});
 		return results;

@@ -45,11 +45,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestCommentVersionBaseCreate extends RestCommentVersionBase
 {	
 	/**
-	 * The identifier of the component that is being commented on.  Could be a concept or a sememe
+	 * The identifier of the component that is being commented on.  Could be a concept or a sememe - as such this accepts UUIDs and Nids (but does not accept sequence
+	 * identifiers)
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int commentedItem;
+	public String commentedItem;
 
 	protected RestCommentVersionBaseCreate()
 	{
@@ -57,18 +58,9 @@ public class RestCommentVersionBaseCreate extends RestCommentVersionBase
 		super();
 	}
 	
-	public RestCommentVersionBaseCreate(int commentedItem, String comment, String commentContext) {
+	public RestCommentVersionBaseCreate(String commentedItem, String comment, String commentContext) {
 		super(comment, commentContext);
-		
 		this.commentedItem = commentedItem;
-	}
-
-	/**
-	 * @return the commentedItem
-	 */
-	@XmlTransient
-	public int getCommentedItem() {
-		return commentedItem;
 	}
 
 	/* (non-Javadoc)

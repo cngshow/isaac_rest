@@ -7,6 +7,15 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/11/10 - 1.8.0:
+    * Enhanced the RestIdentifiedObject return type, so that it also includes nid, sequence, and type fields.  The previously existing uuids
+        field is unchanged.
+    * Enhanced the RestWriteResponse to return type (concept or sememe)
+    * Broke the Comment create / read API - RestCommentVersionBaseCreate 'commentedItem' field now takes in a string, instead of an integer, and can properly handle
+        a uuid or nid identifier.  On Return, the RestCommentVersion object now returns the 'commentedItem' field as a RestIdentifiedObject, rather than an integer.
+    * Fixed (via the above changes) a design flaw in the comment create API, where it was assuming that incoming sequence identifiers were concepts, rather than 
+        rejecting them as unknowable.
+
 * 2016/11/08 - 1.7.4: 
     * Fixed a bug where the create comment API was requiring a comment context (when it should be optional) and then fixed some issues with the 
         comment APIs and their default parsing of JSON (they were requiring @class notions, when they shouldn't) 

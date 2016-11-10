@@ -33,12 +33,9 @@ import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
@@ -51,6 +48,7 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.EditTokens;
 
@@ -74,7 +72,6 @@ public class CommentWriteAPIs
 	 * @return the {@link RestWriteResponse} wrapper identifying the created sememe which stores the comment data
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
@@ -89,39 +86,21 @@ public class CommentWriteAPIs
 
 		try
 		{
-			Integer commentedItemNid = null;
-			if (dataToCreateComment.getCommentedItem() == 0) {
-				throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.getCommentedItem()), "invalid specified id for commented item");
-			} else {
-				// Concept Sequence// NID
-				Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = Get.conceptService().getOptionalConcept(dataToCreateComment.getCommentedItem());
-				if (concept.isPresent()) {
-					commentedItemNid = concept.get().getNid();
-				} else {
-					Optional<? extends SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getOptionalSememe(dataToCreateComment.getCommentedItem());
-					if (sememe.isPresent()) {
-						commentedItemNid = sememe.get().getNid();
-					}
-				}
-				if (commentedItemNid == null) {
-					throw new RestException("dataToCreateComment.commentedItem", Integer.toString(dataToCreateComment.getCommentedItem()), "no concept or sememe for specified id for commented item");
-				}
-			}
+			int commentedItemNid = RequestInfoUtils.getNidFromUuidOrNidParameter("dataToCreateComment.commentedItem", dataToCreateComment.commentedItem);
 
 			Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
 
-			if (StringUtils.isBlank(dataToCreateComment.getComment())) 
+			if (StringUtils.isBlank(dataToCreateComment.comment)) 
 			{
 				throw new RestException("The field 'comment' is required");
 			}
 
-			
 			SememeBuilder<? extends SememeChronology<? extends DynamicSememe<?>>> sb = Get.sememeBuilderService().getDynamicSememeBuilder(
 					commentedItemNid,  
 					DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
 					new DynamicSememeData[] {
-							new DynamicSememeStringImpl(dataToCreateComment.getComment()),
-							(StringUtils.isBlank(dataToCreateComment.getCommentContext()) ? null : new DynamicSememeStringImpl(dataToCreateComment.getCommentContext()))}
+							new DynamicSememeStringImpl(dataToCreateComment.comment),
+							(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
 					);
 			
 			if (dataToCreateComment.active != null && !dataToCreateComment.active)
@@ -180,7 +159,7 @@ public class CommentWriteAPIs
 		
 		State stateToUse = (dataToUpdateComment.active == null || dataToUpdateComment.active) ? State.ACTIVE : State.INACTIVE;
 		
-		if (StringUtils.isBlank(dataToUpdateComment.getComment())) 
+		if (StringUtils.isBlank(dataToUpdateComment.comment)) 
 		{
 			throw new RestException("The field 'comment' is required");
 		}
@@ -192,8 +171,8 @@ public class CommentWriteAPIs
 		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse, RequestInfo.get().getEditCoordinate());
 		
 		editVersion.setData(
-			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.getComment()),
-			(StringUtils.isBlank(dataToUpdateComment.getCommentContext()) ? null : new DynamicSememeStringImpl(dataToUpdateComment.getCommentContext()))});
+			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.comment),
+			(StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToUpdateComment.commentContext))});
 		
 		try
 		{
