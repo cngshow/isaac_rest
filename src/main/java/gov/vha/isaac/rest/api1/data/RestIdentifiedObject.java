@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 
 /**
@@ -67,6 +68,25 @@ public class RestIdentifiedObject
 		// For JAXB only
 	}
 	
+	public RestIdentifiedObject(SememeChronology<?> sememe)
+	{
+		uuids.addAll(sememe.getUuidList());
+		nid = sememe.getNid();
+		sequence = sememe.getSememeSequence();
+		type = new RestObjectChronologyType(ObjectChronologyType.SEMEME);
+	}
+	
+	public RestIdentifiedObject(UUID uuid)
+	{
+		if (uuid == null) 
+		{
+			throw new RuntimeException("Attempted to return an empty RestIdentifiedObject!");
+		}
+		this.uuids.add(uuid);
+		nid = Get.identifierService().getNidForUuids(uuids);
+		readSequence();
+	}
+	
 	//TODO go through the callers of this method, and see which ones could use a different method, to pass more information up front.
 	public RestIdentifiedObject(List<UUID> uuids)
 	{
@@ -77,6 +97,25 @@ public class RestIdentifiedObject
 		this.uuids.addAll(uuids);
 		nid = Get.identifierService().getNidForUuids(uuids);
 		readSequence();
+	}
+	
+	public RestIdentifiedObject(int id, ObjectChronologyType type)
+	{
+		switch (type) {
+			case CONCEPT:
+				nid = Get.identifierService().getConceptNid(id);
+				sequence = Get.identifierService().getConceptSequence(id);
+				break;
+			case SEMEME:
+				nid = Get.identifierService().getSememeNid(id);
+				sequence = Get.identifierService().getSememeSequence(id);
+				break;
+			case UNKNOWN_NID:
+			default :
+				throw new RuntimeException("Unexpected case");
+		}
+		uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+		this.type = new RestObjectChronologyType(type);
 	}
 	
 	public RestIdentifiedObject(int nid)
