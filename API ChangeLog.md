@@ -15,6 +15,18 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
         a uuid or nid identifier.  On Return, the RestCommentVersion object now returns the 'commentedItem' field as a RestIdentifiedObject, rather than an integer.
     * Fixed (via the above changes) a design flaw in the comment create API, where it was assuming that incoming sequence identifiers were concepts, rather than 
         rejecting them as unknowable.
+    * Replaced RestCommentVersionBaseCreate with RestCommentVersionCreate
+    * Broke the Mapping read / write APIs for better handling of IDs.
+    * In the Mapping APIs, all instances where a concept sequence is returned (mapSetConcept, sourceConcept, targetConcept, qualifierConcept) have been changed
+        to the RestIdentifiedObject type, which returns UUID/Sequence/Nid
+    * 'sememeSequence' has been removed from RestMappingItemVersion, as this was (now) carrying back duplicate information already returned by identifiers.sequence
+    * 'active' was removed from RestMappingItemVersion, as this was carrying back duplicate information already returned by mappingItemStamp.state
+    * RestMappingItemVersionBaseCreate was replaced with RestMappingItemVersionCreate
+    * The updateMappingItem call that previously took in a RestMappingItemVersionBase now takes in a RestMappingItemVersionUpdate
+    * On update or create, the concept fields (mapSetConcept, sourceConcept, targetConcept, qualifierConcept) now take in a string object type.  They now accept
+        UUID, nid or sequence.
+    * Removed conceptSequence from RestMappingSetVersion, as this now carried back duplicate information available in identifiers.sequence
+
 
 * 2016/11/08 - 1.7.4: 
     * Fixed a bug where the create comment API was requiring a comment context (when it should be optional) and then fixed some issues with the 

@@ -45,7 +45,7 @@ import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
-import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionCreate;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
@@ -65,7 +65,7 @@ public class CommentWriteAPIs
 {
 	/**
 	 * Create a new comment according to the 
-	 * @param dataToCreateComment - {@link RestCommentVersionBaseCreate} object containing data used to construct a new comment
+	 * @param dataToCreateComment - {@link RestCommentVersionCreate} object containing data used to construct a new comment
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
@@ -76,7 +76,7 @@ public class CommentWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
 	public RestWriteResponse createNewComment(
-			RestCommentVersionBaseCreate dataToCreateComment,
+			RestCommentVersionCreate dataToCreateComment,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(

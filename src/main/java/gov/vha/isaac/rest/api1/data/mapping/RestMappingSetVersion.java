@@ -77,12 +77,6 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	public Expandables expandables;
 	
 	/**
-	 * The concept sequence of the concept that represents this mapping set
-	 */
-	@XmlElement
-	public int conceptSequence;
-	
-	/**
 	 * The identifier data of the concept that represents this mapping set
 	 */
 	@XmlElement
@@ -132,9 +126,8 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		
 		if (mappingConcept.isPresent())
 		{
-			conceptSequence = mappingConcept.get().getChronology().getConceptSequence();
 			active = mappingConcept.get().getState() == State.ACTIVE;
-			identifiers = new RestIdentifiedObject(mappingConcept.get().getUuidList());
+			identifiers = new RestIdentifiedObject(mappingConcept.get().getChronology());
 			//TODO whenever we make an edit to any component of the map set, we will also need to commit the concept, so that this stamp
 			//always updates with any other stamp that is updated
 			mappingSetStamp = new RestStampedVersion(mappingConcept.get());

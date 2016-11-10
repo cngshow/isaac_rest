@@ -109,7 +109,7 @@ import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionPage;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
-import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionCreate;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
@@ -118,7 +118,8 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
@@ -1364,16 +1365,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(testMappingSetVersion);
 
 		// RestMappingItemVersion
-		int sourceConceptSeq = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "conceptSequence");
-		int targetConceptSeq = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		int qualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_BROADER.getPrimordialUuid(), "conceptSequence");
+		String sourceConceptSeq = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "conceptSequence") + "";
+		String targetConceptSeq = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), "conceptSequence") + "";
+		String qualifierConceptUuid = IsaacMappingConstants.MAPPING_QUALIFIER_BROADER.getPrimordialUuid().toString();
 
-		RestMappingItemVersionBaseCreate newMappingSetItemData = new RestMappingItemVersionBaseCreate(
+		RestMappingItemVersionCreate newMappingSetItemData = new RestMappingItemVersionCreate(
 				targetConceptSeq,
-				qualifierConceptSeq,
-				testMappingSetUUID,
+				qualifierConceptUuid,
+				testMappingSetUUID.toString(),
 				sourceConceptSeq,
-				null);
+				null, null);
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(newMappingSetItemData);
@@ -1397,10 +1398,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
 		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
-		Assert.assertTrue(sourceConceptSeq == retrievedMappingItemVersion.sourceConcept);
-		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept);
-		Assert.assertTrue(qualifierConceptSeq == retrievedMappingItemVersion.qualifierConcept);
-		Assert.assertEquals(updatedMappingSetObject.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
+		Assert.assertTrue(sourceConceptSeq.equals(retrievedMappingItemVersion.sourceConcept.sequence + ""));
+		Assert.assertTrue(targetConceptSeq.equals(retrievedMappingItemVersion.targetConcept.sequence + ""));
+		Assert.assertTrue(qualifierConceptUuid.equals(retrievedMappingItemVersion.qualifierConcept.getFirst().toString()));
+		Assert.assertEquals(updatedMappingSetObject.identifiers.sequence, retrievedMappingItemVersion.mapSetConcept.sequence);
 		
 		// test getMappingItems() 
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
@@ -1410,25 +1411,24 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersion[] retrievedMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
 		RestMappingItemVersion mappingItemMatchingNewItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
-			if (currentMappingItem.getIdentifiers().getFirst().equals(newMappingItemUUID)
-					&& currentMappingItem.mapSetConcept == retrievedMappingSetVersion.conceptSequence
-					&& currentMappingItem.targetConcept == targetConceptSeq
-					&& currentMappingItem.sourceConcept == sourceConceptSeq
-					&& currentMappingItem.qualifierConcept == qualifierConceptSeq) {
+			if (currentMappingItem.identifiers.getFirst().equals(newMappingItemUUID)
+					&& currentMappingItem.mapSetConcept.sequence == retrievedMappingSetVersion.identifiers.sequence
+					&& currentMappingItem.targetConcept.sequence == Integer.parseInt(targetConceptSeq)
+					&& currentMappingItem.sourceConcept.sequence == Integer.parseInt(sourceConceptSeq)
+					&& currentMappingItem.qualifierConcept.uuids.get(0).toString().equals(qualifierConceptUuid)) {
 				mappingItemMatchingNewItem = currentMappingItem;
 				break;
 			}
 		}
 		Assert.assertNotNull(mappingItemMatchingNewItem);
 	
-		int updatedTargetConceptSeq = getIntegerIdForUuid(MetaData.DANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		int updatedQualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getPrimordialUuid(), "conceptSequence");
+		String updatedTargetConceptSeq = getIntegerIdForUuid(MetaData.DANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence") + "";
+		String updatedQualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getPrimordialUuid(), "conceptSequence") + "";
 
-		RestMappingItemVersionBase updatedMappingItemData = new RestMappingItemVersionBase(
+		RestMappingItemVersionUpdate updatedMappingItemData = new RestMappingItemVersionUpdate(
 				updatedTargetConceptSeq,
 				updatedQualifierConceptSeq,
-				null
-				);
+				null,null);
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(updatedMappingItemData);
@@ -1448,11 +1448,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		retrievedMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
 		RestMappingItemVersion mappingItemMatchingUpdatedItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
-			if (currentMappingItem.getIdentifiers().getFirst().equals(newMappingItemUUID)
-					&& currentMappingItem.mapSetConcept == retrievedMappingSetVersion.conceptSequence
-					&& currentMappingItem.targetConcept.intValue() == updatedMappingItemData.targetConcept.intValue()
-					&& currentMappingItem.sourceConcept == newMappingSetItemData.sourceConcept
-					&& currentMappingItem.qualifierConcept.intValue() == updatedMappingItemData.qualifierConcept.intValue()) {
+			if (currentMappingItem.identifiers.getFirst().equals(newMappingItemUUID)
+					&& currentMappingItem.mapSetConcept.sequence == retrievedMappingSetVersion.identifiers.sequence
+					&& currentMappingItem.targetConcept.sequence == Integer.parseInt(updatedMappingItemData.targetConcept)
+					&& currentMappingItem.sourceConcept.sequence == Integer.parseInt(newMappingSetItemData.sourceConcept)
+					&& currentMappingItem.qualifierConcept.sequence == Integer.parseInt(updatedMappingItemData.qualifierConcept)) {
 				mappingItemMatchingUpdatedItem = currentMappingItem;
 				break;
 			}
@@ -1522,7 +1522,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		
 		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
-		Assert.assertEquals(createdMapSet.conceptSequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.identifiers.sequence, createdMapSetId.sequence.intValue());
 		Assert.assertEquals(createdMapSet.description, "bla bla");
 		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
 		Assert.assertEquals(createdMapSet.name, name);
@@ -1559,7 +1559,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Create an item
 		
 		root = jfn.objectNode();
-		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("mapSetConcept", createdMapSet.identifiers.sequence);
 		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
 		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
@@ -1609,12 +1609,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
 		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
-		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
-		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
-		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
-		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
-		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
-		Assert.assertTrue(retrievedMappingItemVersion.active);
+		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept.sequence);
+		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept.sequence);
+		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept.sequence);
+		Assert.assertEquals(createdMapSet.identifiers.sequence, retrievedMappingItemVersion.mapSetConcept.sequence);
+		Assert.assertTrue(retrievedMappingItemVersion.mappingItemStamp.state.enumId == State.ACTIVE.ordinal());
 		
 		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
 		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).booleanValue(), true);
@@ -1623,7 +1623,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//This should fail, due to being a duplicate entry:
 		root = jfn.objectNode();
-		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("mapSetConcept", createdMapSet.identifiers.sequence);
 		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
 		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
@@ -1640,7 +1640,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//This should fail, due to failing a validator rule:
 		root = jfn.objectNode();
-		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("mapSetConcept", createdMapSet.identifiers.sequence);
 		root.put("sourceConcept", MetaData.BOOLEAN_LITERAL.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
 		root.put("qualifierConcept",  IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence());
@@ -1721,7 +1721,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		
 		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
-		Assert.assertEquals(createdMapSet.conceptSequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.identifiers.sequence, createdMapSetId.sequence.intValue());
 		Assert.assertEquals(createdMapSet.description, "bla bla");
 		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
 		Assert.assertEquals(createdMapSet.name, name);
@@ -1759,7 +1759,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Create an item
 		
 		root = jfn.objectNode();
-		root.put("mapSetConcept", createdMapSet.conceptSequence);
+		root.put("mapSetConcept", createdMapSet.identifiers.sequence);
 		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
 		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence());
@@ -1785,12 +1785,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
 		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
-		Assert.assertEquals(retrievedMappingItemVersion.sememeSequence, newMappingItemSequenceWrapper.sequence.intValue());
-		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept);
-		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept);
-		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept);
-		Assert.assertEquals(createdMapSet.conceptSequence, retrievedMappingItemVersion.mapSetConcept);
-		Assert.assertTrue(retrievedMappingItemVersion.active);
+		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept.sequence);
+		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept.sequence);
+		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept.sequence);
+		Assert.assertEquals(createdMapSet.identifiers.sequence, retrievedMappingItemVersion.mapSetConcept.sequence);
+		Assert.assertTrue(retrievedMappingItemVersion.mappingItemStamp.state.enumId == State.ACTIVE.ordinal());
 		
 		Assert.assertEquals(2, retrievedMappingItemVersion.mapItemExtendedFields.size());
 		Assert.assertEquals(((Long)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).longValue(), -5620);
@@ -1810,7 +1810,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Create a new comment on SNOROCKET_CLASSIFIER
 		String newCommentText = "A new comment text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 		String newCommentContext = "A new comment context for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
-		RestCommentVersionBaseCreate newCommentData = new RestCommentVersionBaseCreate(
+		RestCommentVersionCreate newCommentData = new RestCommentVersionCreate(
 				conceptNid,
 				newCommentText,
 				newCommentContext

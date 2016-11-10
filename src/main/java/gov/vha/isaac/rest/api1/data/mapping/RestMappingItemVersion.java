@@ -23,12 +23,11 @@ import java.util.List;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -55,56 +54,79 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate implements Comparable<RestMappingItemVersion>
+public class RestMappingItemVersion extends RestMappingItemVersionBase implements Comparable<RestMappingItemVersion>
 {
 	/**
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
-	Expandables expandables;
+	public Expandables expandables;
 	
 	/**
-	 * The sememe sequence of the sememe that represents this mapping item
+	 * The concept that identifies the map set that this entry belongs to.
 	 */
 	@XmlElement
-	public int sememeSequence;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject mapSetConcept;
 	
 	/**
-	 * The identifier data for the object
+	 * The source concept mapped by this map item.
 	 */
 	@XmlElement
-	RestIdentifiedObject identifiers;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject sourceConcept;
+	
+	/**
+	 * The (optional) target concept being mapped by this map item.  This field is optional, and may be blank, if no target mapping
+	 * is available.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject targetConcept;
+
+	/**
+	 * An (optional) concept used to qualify this mapping entry.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject qualifierConcept;
+	
+	/**
+	 * The identifier data for the sememe that represents this mapping item
+	 */
+	@XmlElement
+	public RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this mapping entry
 	 */
 	@XmlElement
-	RestStampedVersion mappingItemStamp;
+	public RestStampedVersion mappingItemStamp;
 	
 	
 	/**
 	 * An (optional) description of the {@link #sourceConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
-	String sourceDescription;
+	public String sourceDescription;
 	
 	/**
 	 * An (optional) description of the {@link #targetConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
-	String targetDescription;
+	public String targetDescription;
 	
 	/**
 	 * An (optional) description of the {@link #qualifierConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
-	String qualifierDescription;
+	public String qualifierDescription;
 	
 	/**
 	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
 	 */
 	@XmlElement
-	List<RestCommentVersion> comments;
+	public List<RestCommentVersion> comments;
 	
 		
 	protected RestMappingItemVersion()
@@ -116,18 +138,16 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, int targetColPosition, int qualifierColPosition, 
 			boolean expandDescriptions, boolean expandComments, UUID processId)
 	{
-		sememeSequence = sememe.getSememeSequence();
-		identifiers = new RestIdentifiedObject(sememe.getUuidList());
+		identifiers = new RestIdentifiedObject(sememe.getChronology());
 		mappingItemStamp = new RestStampedVersion(sememe);
-		active = sememe.getState() == State.ACTIVE;
-		mapSetConcept = sememe.getAssemblageSequence();
+		mapSetConcept = new RestIdentifiedObject(sememe.getAssemblageSequence(), ObjectChronologyType.CONCEPT);
 		if (Get.identifierService().getChronologyTypeForNid(sememe.getReferencedComponentNid()) != ObjectChronologyType.CONCEPT)
 		{
 			throw new RuntimeException("Source of the map is not a concept");
 		}
 		else
 		{
-			sourceConcept = Get.identifierService().getConceptSequence(sememe.getReferencedComponentNid());
+			sourceConcept = new RestIdentifiedObject(sememe.getReferencedComponentNid(), ObjectChronologyType.CONCEPT);
 		}
 		
 		DynamicSememeData[] data = sememe.getData();
@@ -141,14 +161,14 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 				if (i == targetColPosition)
 				{
 					targetConcept = ((data[i] != null) ? 
-						Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID())
+						new RestIdentifiedObject(((DynamicSememeUUID) data[i]).getDataUUID())
 						: null);
 					offset++;
 				}
 				else if (i == qualifierColPosition)
 				{
 					qualifierConcept = ((data[i] != null) ? 
-							Get.identifierService().getConceptSequenceForUuids(((DynamicSememeUUID) data[i]).getDataUUID()) 
+							new RestIdentifiedObject(((DynamicSememeUUID) data[i]).getDataUUID()) 
 							: null);
 					offset++;
 				}
@@ -169,12 +189,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 		{
 			if (qualifierConcept != null)
 			{
-				qualifierDescription = Util.readBestDescription(qualifierConcept);
+				qualifierDescription = Util.readBestDescription(qualifierConcept.sequence);
 			}
-			sourceDescription = Util.readBestDescription(sourceConcept);
+			sourceDescription = Util.readBestDescription(sourceConcept.sequence);
 			if (targetConcept != null)
 			{
-				targetDescription = Util.readBestDescription(targetConcept);
+				targetDescription = Util.readBestDescription(targetConcept.sequence);
 			}
 		}
 		else
@@ -232,44 +252,5 @@ public class RestMappingItemVersion extends RestMappingItemVersionBaseCreate imp
 				+ ", qualifierDescription=" + qualifierDescription + ", mapSetConcept=" + mapSetConcept
 				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
 				+ qualifierConcept + ", mapItemExtendedFields=" + mapItemExtendedFields + "]";
-	}
-
-	/**
-	 * @return the identifiers
-	 */
-	@XmlTransient
-	public RestIdentifiedObject getIdentifiers() {
-		return identifiers;
-	}
-
-	/**
-	 * @return the mappingItemStamp
-	 */
-	@XmlTransient
-	public RestStampedVersion getMappingItemStamp() {
-		return mappingItemStamp;
-	}
-
-	/**
-	 * @return the sourceDescription
-	 */
-	public String getSourceDescription() {
-		return sourceDescription;
-	}
-
-	/**
-	 * @return the targetDescription
-	 */
-	@XmlTransient
-	public String getTargetDescription() {
-		return targetDescription;
-	}
-
-	/**
-	 * @return the qualifierDescription
-	 */
-	@XmlTransient
-	public String getQualifierDescription() {
-		return qualifierDescription;
 	}
 }

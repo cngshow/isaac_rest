@@ -16,56 +16,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.mapping;
-
-import java.util.List;
+package gov.vha.isaac.rest.api1.data.comment;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
- * {@link RestMappingItemVersionBase}
- * This stub class carries shared type information for reuse.
+ * {@link RestCommentVersionCreate}
+ * This stub class is used for callers to create {@link RestCommentVersion} objects.  This class, in combination with {@link RestCommentVersionBase} 
+ * contains the fields that can be populated for creation.  
  * 
  * The API never returns this class.
 
- * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemVersionBase.class)
-public class RestMappingItemVersionBase
-{
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestCommentVersionCreate.class)
+public class RestCommentVersionCreate extends RestCommentVersionBase
+{	
 	/**
-	 * The (optional) extended fields which carry additional information about this map item.  For details on these fields, read 
-	 * the info returned as part of the {@link RestMappingSetVersion#mapItemFieldsDefinition} field
+	 * The identifier of the component that is being commented on.  Could be a concept or a sememe - as such this accepts UUIDs and Nids (but does not accept sequence
+	 * identifiers)
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestDynamicSememeData> mapItemExtendedFields;
-	
-	protected RestMappingItemVersionBase()
+	public String commentedItem;
+
+	protected RestCommentVersionCreate()
 	{
 		//for Jaxb
+		super();
+	}
+	
+	public RestCommentVersionCreate(String commentedItem, String comment, String commentContext) {
+		super(comment, commentContext);
+		this.commentedItem = commentedItem;
 	}
 
-	/**
-	 * @param targetConcept
-	 * @param mapItemExtendedFields
-	 * @param qualifierConcept
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
 	 */
-	public RestMappingItemVersionBase(List<RestDynamicSememeData> mapItemExtendedFields) 
-	{
-		super();
-		this.mapItemExtendedFields = mapItemExtendedFields;
+	@Override
+	public String toString() {
+		return "RestCommentVersionBaseCreate [commentedItem=" + commentedItem + ", comment=" + comment
+				+ ", commentContext=" + commentContext + "]";
 	}
 }

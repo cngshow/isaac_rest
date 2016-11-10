@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 
@@ -74,6 +75,14 @@ public class RestIdentifiedObject
 		nid = sememe.getNid();
 		sequence = sememe.getSememeSequence();
 		type = new RestObjectChronologyType(ObjectChronologyType.SEMEME);
+	}
+	
+	public RestIdentifiedObject(ConceptChronology<?> concept)
+	{
+		uuids.addAll(concept.getUuidList());
+		nid = concept.getNid();
+		sequence = concept.getConceptSequence();
+		type = new RestObjectChronologyType(ObjectChronologyType.CONCEPT);
 	}
 	
 	public RestIdentifiedObject(UUID uuid)
