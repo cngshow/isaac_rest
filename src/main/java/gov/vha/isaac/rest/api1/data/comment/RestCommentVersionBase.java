@@ -44,7 +44,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestCommentVersionBase
 {
 	/**
-	 * The comment
+	 * The comment (required)
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
