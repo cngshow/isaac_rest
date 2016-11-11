@@ -30,6 +30,8 @@ import java.util.UUID;
 
 import javax.inject.Singleton;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
 
@@ -49,6 +51,8 @@ import gov.vha.isaac.ochre.api.UserRole;
 @Rank(value = 10)
 @Singleton
 public class PrismeIntegratedUserService implements PrismeUserService {
+	private static Logger log = LogManager.getLogger(PrismeIntegratedUserService.class);
+	
 	private Properties prismeProperties_ = null;
 
 	protected PrismeIntegratedUserService() {
@@ -142,15 +146,19 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 		if (prismeProperties_ == null) {
 			prismeProperties_ = new Properties();
 
-			try (final InputStream stream = this.getClass().getResourceAsStream("/prisme.properties"))
-			{
+			InputStream stream = null;
+			try {
+				final URL propertiesFile = this.getClass().getResource("/prisme.properties");
+				
+				stream = this.getClass().getResourceAsStream("/prisme.properties");
+
 				if (stream == null)
 				{
-					//log.debug("No prisme.properties file was found on the classpath");
+					log.debug("No prisme.properties file was found on the classpath");
 				}
 				else
 				{
-					//log.info("Reading PRISME configuration from prisme.properties file");
+					log.info("Reading PRISME configuration from prisme.properties file " + propertiesFile);
 					prismeProperties_.load(stream);
 				}
 				
@@ -158,8 +166,17 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 			}
 			catch (Exception e)
 			{
-				//log.error("Unexpected error trying to read properties from the prisme.properties file", e);
+				log.error("Unexpected error trying to read properties from the prisme.properties file", e);
 				throw new RuntimeException(e);
+			}
+			finally {
+				if (stream != null) {
+					try {
+						stream.close();
+					} catch (Exception e) {
+						// ignore
+					}
+				}
 			}
 		}
 
@@ -232,15 +249,32 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 //		 * %5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx94%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFXk%5Cx80%5CxB1%5CxA3%5CxF3%5Cx8D%5CxB1%5Cx7F%5CxBC%5Cx02K%22%2C+%22k%5Cf%5CxDC%5CxF7%2CP%5CxB2%5Cx97%5Cx99%5Cx99%5CxE0%5CxE1%7C%5CxBF%5Cx1DK%22%2C+%22J%5Cf%5Cx9B%5CxD8w%5Cx15%5CxFE%5CxD3%5CxC7%5CxDC%5CxAC%5Cx9E%5Cx1C%5CxD0bG%22%5D
 //		 */
 //		//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
+		String prismeRolesByTokenUrlStr = getPrismeRolesByTokenUrl();
+		log.trace("Retrieved from prisme.properties prismeRolesByTokenUrlStr=\"" + prismeRolesByTokenUrlStr + "\"");
+		URL url = new URL(prismeRolesByTokenUrlStr);
+		Optional<User> user = UserServiceUtils.getUserFromUrl(url, ssoToken);
+		log.trace("Retrieved from " + prismeRolesByTokenUrlStr + " user=\"" + user + "\"");
 
-		return UserServiceUtils.getUserFromUrl(new URL(getPrismeRolesByTokenUrl()), ssoToken);
+		if (! user.isPresent()) {
+			log.error("FAILED retrieving User from " + prismeRolesByTokenUrlStr);
+		}
+		return user;
 	}
 	protected Set<UserRole> getAllRolesFromPrisme() throws JsonParseException, JsonMappingException, IOException {
-		return UserServiceUtils.getAllRolesFromUrl(new URL(getPrismeAllRolesUrl()));
+		String prismeAllRolesUrlStr = getPrismeAllRolesUrl();
+		log.trace("Retrieved from prisme.properties prismeAllRolesUrlStr=\"" + prismeAllRolesUrlStr + "\"");
+		URL url = new URL(prismeAllRolesUrlStr);
+		Set<UserRole> allRolesFromFromPrisme = UserServiceUtils.getAllRolesFromUrl(url);
+		log.trace("Retrieved from " + prismeAllRolesUrlStr + " allRolesFromFromPrisme=" + allRolesFromFromPrisme);
+		return allRolesFromFromPrisme;
 	}
 	
 	protected String getUserSsoTokenFromPrisme(String id, String password) throws Exception {
-		URL url = new URL(getSsoTokenByNameUrl());
-		return UserServiceUtils.getUserSsoTokenFromUrl(url, id, password);
+		String ssoTokenByNameUrlStr = getSsoTokenByNameUrl();
+		log.trace("Retrieved from prisme.properties ssoTokenByNameUrlStr=\"" + ssoTokenByNameUrlStr + "\"");
+		URL url = new URL(ssoTokenByNameUrlStr);
+		String ssoToken = UserServiceUtils.getUserSsoTokenFromUrl(url, id, password);
+		log.trace("Retrieved from " + ssoTokenByNameUrlStr + " ssoToken=\"" + ssoToken + "\"");
+		return ssoToken;
 	}
 }
