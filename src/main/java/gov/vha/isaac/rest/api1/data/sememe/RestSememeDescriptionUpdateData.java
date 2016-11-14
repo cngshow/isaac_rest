@@ -45,7 +45,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 public class RestSememeDescriptionUpdateData
 {
 	
-	//TODO This class and the CreateDAta class don't follow the existing pattern, and don't inherit from each other... need to redo this and clean it up 
+	//TODO 1 Dan This class and the CreateDAta class don't follow the existing pattern, and don't inherit from each other... need to redo this and clean it up 
 	//at some point.
 	
 	/**
