@@ -616,7 +616,7 @@ public class SearchAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.byReferencedComponentComponent)
+	@Path(RestPaths.forReferencedComponentComponent)
 	public RestSearchResultPage nidReferences(
 			@QueryParam(RequestParameters.nid) int nid,
 			@QueryParam(RequestParameters.sememeAssemblageId) Set<String> sememeAssemblageId, 
@@ -635,7 +635,7 @@ public class SearchAPIs
 				RequestParameters.expand,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		String restPath = RestPaths.searchAppPathComponent + RestPaths.byReferencedComponentComponent
+		String restPath = RestPaths.searchAppPathComponent + RestPaths.forReferencedComponentComponent
 				+ "?" + RequestParameters.nid + "=" + nid;
 		if (sememeAssemblageId != null) {
 			for (String id : sememeAssemblageId) {

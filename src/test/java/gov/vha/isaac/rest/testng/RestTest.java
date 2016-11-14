@@ -175,7 +175,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private final static String sememeSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.sememesComponent;
 	private final static String prefixSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.prefixComponent;
-	private final static String byRefSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.byReferencedComponentComponent;
+	private final static String byRefSearchRequestPath = RestPaths.searchAPIsPathComponent + RestPaths.forReferencedComponentComponent;
 	
 	private final static String conceptDescriptionsRequestPath = RestPaths.conceptAPIsPathComponent +  RestPaths.descriptionsComponent;
 	
@@ -183,9 +183,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private static final String coordinatesTokenRequestPath = RestPaths.coordinateAPIsPathComponent + RestPaths.coordinatesTokenComponent;
 
-	private final static String sememeByAssemblageRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byAssemblageComponent;
+	private final static String sememeByAssemblageRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.forAssemblageComponent;
 
-	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent;
+	private final static String sememeByReferencedComponentRequestPath = RestPaths.sememeAPIsPathComponent + RestPaths.forReferencedComponentComponent;
 
 	private static final String TEST_SSO_TOKEN = "Test_User:super_user,editor,read_only,approver,administrator,reviewer,manager";
 	

@@ -241,7 +241,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 			}
 			if (!RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable))
 			{
-				expandables.add(new Expandable(ExpandUtil.nestedSememesExpandable, RestPaths.sememeAPIsPathComponent + RestPaths.byReferencedComponentComponent 
+				expandables.add(new Expandable(ExpandUtil.nestedSememesExpandable, RestPaths.sememeAPIsPathComponent + RestPaths.forReferencedComponentComponent 
 						+ identifiers.getFirst().toString()));
 			}
 		}

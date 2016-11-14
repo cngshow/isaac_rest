@@ -26,6 +26,12 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * On update or create, the concept fields (mapSetConcept, sourceConcept, targetConcept, qualifierConcept) now take in a string object type.  They now accept
         UUID, nid or sequence.
     * Removed conceptSequence from RestMappingSetVersion, as this now carried back duplicate information available in identifiers.sequence
+    * Changed all path references of "by" to "for" (to clean up internal API consistency / reduce confusion)
+      - comment/version/byReferencedComponent -> comment/version/forReferencedComponent
+      - search/byReferencedComponent -> search/forReferencedComponent
+      - sememe/byReferencedComponent -> sememe/forReferencedComponent
+      - sememe/byAssemblage -> sememe/forAssemblage
+      
 
 
 * 2016/11/08 - 1.7.4: 

@@ -113,8 +113,8 @@ public class CommentAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.versionComponent + RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id +"}")
-	public RestCommentVersion[] getCommentsByReferencedItem(
+	@Path(RestPaths.versionComponent + RestPaths.forReferencedComponentComponent + "{" + RequestParameters.id +"}")
+	public RestCommentVersion[] getCommentsForReferencedItem(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
