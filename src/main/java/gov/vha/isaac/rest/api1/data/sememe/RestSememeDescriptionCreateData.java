@@ -19,15 +19,11 @@
 package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -46,64 +42,65 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestSememeDescriptionCreateData
 {
 	/**
-	 * The concept sequence of the concept that represents the case significance flag on the description .
+	 * The concept identifier (uuid, nid or sequence) of the concept that represents the case significance flag on the description .
 	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int caseSignificanceConceptSequence;
+	public String caseSignificanceConcept;
 	
 	/**
-	 * The concept sequence of the concept that represents the language of the description (note, this is NOT 
-	 * the dialect)
+	 * The optional concept identifier (uuid, nid or sequence) of the concept that represents the language of the description (note, this is NOT 
+	 * the dialect).  If not specified, defaults to ENGLISH
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int languageConceptSequence;
+	public String languageConcept;
 	
 	/**
 	 * The text of the description
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	String text;
+	public String text;
 	
 	/**
-	 * The concept sequence of the concept that represents the type of the description.  
+	 * The concept identifier (uuid, nid or sequence) of the concept that represents the type of the description.  
 	 * This should be FSN, Synonym, or Definition.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int descriptionTypeConceptSequence;
+	public String descriptionTypeConcept;
 
 	/**
-	 * A concept sequence of an optional concept that represents an extended type of the description.  
-	 * This may be something like Abbreviation or Vista Name
+	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
+	 * This may be a concept like Abbreviation or Vista Name
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Integer extendedDescriptionTypeConceptSequence;
+	public String extendedDescriptionTypeConcept;
 	
 	/**
-	 * The preferred dialects attached to this sememe
+	 * The optional concepts (UUID, nid or sequence) that represent preferred dialects attached to this sememe.  If not specified, 
+	 * defaults to US English
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Collection<Integer> preferredInDialectAssemblagesIds = new HashSet<>();
+	public Collection<String> preferredInDialectAssemblagesIds = new HashSet<>();
 
 	/**
-	 * The acceptable dialects attached to this sememe
+	 * The optional concepts (UUID, nid or sequence) that represent acceptable dialects attached to this sememe.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Collection<Integer> acceptableInDialectAssemblagesIds = new HashSet<>();
+	public Collection<String> acceptableInDialectAssemblagesIds = new HashSet<>();
 
 	/**
-	 * The nid of the component to which this sememe refers
+	 * The identifier (UUID or nid) of the component to which this sememe refers.  May NOT be a sequence identifier.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int referencedComponentNid;
+	public String referencedComponentId;
 	
 	/**
 	 * True to indicate the mapping set should be set as active, false for inactive.  
@@ -131,85 +128,21 @@ public class RestSememeDescriptionCreateData
 			int languageConceptSequence,
 			String text,
 			int descriptionTypeConceptSequence,
-			Collection<Integer> preferredInDialectAssemblagesIds,
-			Collection<Integer> acceptableInDialectAssemblagesIds,
+			Collection<String> preferredInDialectAssemblagesIds,
+			Collection<String> acceptableInDialectAssemblagesIds,
 			int referencedComponentNid) {
 		super();
-		this.caseSignificanceConceptSequence = caseSignificanceConceptSequence;
-		this.languageConceptSequence = languageConceptSequence;
+		this.caseSignificanceConcept = caseSignificanceConceptSequence + "";
+		this.languageConcept = languageConceptSequence + "";
 		this.text = text;
-		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
+		this.descriptionTypeConcept = descriptionTypeConceptSequence +"";
 		if (preferredInDialectAssemblagesIds != null) {
 			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
 		}
 		if (acceptableInDialectAssemblagesIds != null) {
 			this.acceptableInDialectAssemblagesIds.addAll(acceptableInDialectAssemblagesIds);
 		}
-		this.referencedComponentNid = referencedComponentNid;
-	}
-
-	/**
-	 * @return the caseSignificanceConceptSequence
-	 */
-	@XmlTransient
-	public int getCaseSignificanceConceptSequence() {
-		return caseSignificanceConceptSequence;
-	}
-
-	/**
-	 * @return the languageConceptSequence
-	 */
-	@XmlTransient
-	public int getLanguageConceptSequence() {
-		return languageConceptSequence;
-	}
-
-	/**
-	 * @return the text
-	 */
-	@XmlTransient
-	public String getText() {
-		return text;
-	}
-
-	/**
-	 * @return the descriptionTypeConceptSequence
-	 */
-	@XmlTransient
-	public int getDescriptionTypeConceptSequence() {
-		return descriptionTypeConceptSequence;
-	}
-	
-	/**
-	 * @return the extendedDescriptionTypeConceptSequence
-	 */
-	@XmlTransient
-	public Integer getExtendedDescriptionTypeConceptSequence() {
-		return extendedDescriptionTypeConceptSequence;
-	}
-
-	/**
-	 * @return the preferred dialectIds
-	 */
-	@XmlTransient
-	public Collection<Integer> getPreferredInDialectAssemblagesIds() {
-		return Collections.unmodifiableCollection(preferredInDialectAssemblagesIds);
-	}
-
-	/**
-	 * @return the acceptable dialectIds
-	 */
-	@XmlTransient
-	public Collection<Integer> getAcceptableInDialectAssemblagesIds() {
-		return Collections.unmodifiableCollection(acceptableInDialectAssemblagesIds);
-	}
-
-	/**
-	 * @return the referencedComponentNid
-	 */
-	@XmlTransient
-	public int getReferencedComponentNid() {
-		return referencedComponentNid;
+		this.referencedComponentId = referencedComponentNid + "";
 	}
 
 	/* (non-Javadoc)
@@ -218,14 +151,14 @@ public class RestSememeDescriptionCreateData
 	@Override
 	public String toString() {
 		return "RestSememeDescriptionCreateData ["
-				+ "caseSignificanceConceptSequence=" + caseSignificanceConceptSequence
-				+ ", languageConceptSequence=" + languageConceptSequence
+				+ "caseSignificanceConceptSequence=" + caseSignificanceConcept
+				+ ", languageConceptSequence=" + languageConcept
 				+ ", text=" + text
-				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
-				+ ", extendedDescriptionTypeConceptSequence=" + extendedDescriptionTypeConceptSequence
+				+ ", descriptionTypeConceptSequence=" + descriptionTypeConcept
+				+ ", extendedDescriptionTypeConcept=" + extendedDescriptionTypeConcept
 				+ ", preferredInDialectAssemblagesIds=" + preferredInDialectAssemblagesIds
 				+ ", acceptableInDialectAssemblagesIds=" + acceptableInDialectAssemblagesIds
-				+ ", referencedComponentNid=" + referencedComponentNid
+				+ ", referencedComponentId=" + referencedComponentId
 				+ "]";
 	}
 }

@@ -84,7 +84,7 @@ public class RestSememeDescriptionUpdateData
 	 * This field is optional, if not provided, it will be assumed to be active.
 	 */
 	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)  //TODO make this consistent with others
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Boolean active;
 	
 	protected RestSememeDescriptionUpdateData()
@@ -104,7 +104,7 @@ public class RestSememeDescriptionUpdateData
 			String text,
 			int descriptionTypeConceptSequence,
 //			Integer extendedDescriptionTypeConceptSequence,
-			boolean active) {
+			Boolean active) {
 		super();
 		this.caseSignificanceConceptSequence = caseSignificanceConceptSequence;
 		this.languageConceptSequence = languageConceptSequence;
@@ -114,10 +114,10 @@ public class RestSememeDescriptionUpdateData
 	}
 
 	/**
-	 * @param caseSignificanceConceptSequence
-	 * @param languageConceptSequence
+	 * @param caseSignificanceConcept
+	 * @param languageConcept
 	 * @param text
-	 * @param descriptionTypeConceptSequence
+	 * @param descriptionTypeConcept
 	 */
 	public RestSememeDescriptionUpdateData(
 			RestSememeDescriptionVersion version) {
@@ -188,12 +188,5 @@ public class RestSememeDescriptionUpdateData
 	 */
 	public void setDescriptionTypeConceptSequence(int descriptionTypeConceptSequence) {
 		this.descriptionTypeConceptSequence = descriptionTypeConceptSequence;
-	}
-
-	/**
-	 * @param active the active to set
-	 */
-	public void setActive(boolean active) {
-		this.active = active;
 	}
 }

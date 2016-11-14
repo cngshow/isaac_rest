@@ -119,7 +119,7 @@ public class AssociationWriteAPIs
 		{
 			ObjectChronology<?> builtDesc = LookupService.get().getService(DescriptionBuilderService.class).getDescriptionBuilder(associationCreationData.associationInverseName, 
 					rdud.getDynamicSememeUsageDescriptorSequence(), 
-					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).setAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT)
+					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).addAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT)
 						.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 			
 			Get.sememeBuilderService().getDynamicSememeBuilder(builtDesc.getNid(),DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence())
@@ -148,7 +148,7 @@ public class AssociationWriteAPIs
 		{
 			try
 			{
-				//TODO see if I still need to manually do this, I thought I fixed this.
+				//TODO 2 Dan (index config) see if I still need to manually do this, I thought I fixed this.
 				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0}, true);
 			}
 			catch (Exception e)
@@ -158,7 +158,7 @@ public class AssociationWriteAPIs
 		});
 		return new RestWriteResponse(
 				EditTokens.renew(RequestInfo.get().getEditToken()),
-				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
+				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
 				null, 
 				rdud.getDynamicSememeUsageDescriptorSequence());
 	}
@@ -188,7 +188,7 @@ public class AssociationWriteAPIs
 		Optional<UUID> target = associationItemCreationData.targetNid == null ? Optional.empty() : 
 			Get.identifierService().getUuidPrimordialForNid(associationItemCreationData.targetNid);
 		
-		Optional<UUID> associationID = Get.identifierService().getUuidPrimordialFromConceptSequence(associationItemCreationData.associationTypeSequence);
+		Optional<UUID> associationID = Get.identifierService().getUuidPrimordialFromConceptId(associationItemCreationData.associationTypeSequence);
 		
 		if (!source.isPresent())
 		{

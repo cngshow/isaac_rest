@@ -111,7 +111,7 @@ class EditTokenUtil {
 				builder.setPrimordialUuid(uuidFromUserFsn);
 
 				// Add PRISME user.id in DYNAMIC_SEMEME_PRISME_USER_ID annotation
-				// TODO confirm that user.id is being added in DYNAMIC_SEMEME_PRISME_USER_ID annotation
+				// TODO not sure if we even need this with the latest updates.  Check with Joel after merge
 //				SememeChronology<DynamicSememe<?>> prismeUserIdSememe = null;
 //				prismeUserIdSememe = 
 //						SememeUtil.addAnnotation(
@@ -122,7 +122,7 @@ class EditTokenUtil {
 
 				if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
 					for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
-						builder.getFullySpecifiedDescriptionBuilder().setPreferredInDialectAssemblage(Get.conceptSpecification(i));
+						builder.getFullySpecifiedDescriptionBuilder().addPreferredInDialectAssemblage(Get.conceptSpecification(i));
 					}
 				}
 

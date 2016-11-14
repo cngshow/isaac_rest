@@ -154,7 +154,6 @@ public class MappingWriteAPIs
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
@@ -202,7 +201,6 @@ public class MappingWriteAPIs
 	 * @return the sememe UUID identifying the sememe which stores the created mapping item
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemComponent + RestPaths.createPathComponent)
@@ -259,7 +257,6 @@ public class MappingWriteAPIs
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
@@ -308,7 +305,7 @@ public class MappingWriteAPIs
 		{
 			return Optional.empty();
 		}
-		return Get.identifierService().getUuidPrimordialFromConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter(paramName, conceptIdentifier));
+		return Get.identifierService().getUuidPrimordialFromConceptId(RequestInfoUtils.getConceptSequenceFromParameter(paramName, conceptIdentifier));
 		
 	}
 	
@@ -356,7 +353,7 @@ public class MappingWriteAPIs
 			for (RestDynamicSememeColumnInfoCreate colInfo : extendedFields)
 			{
 				columns[i] = new DynamicSememeColumnInfo(i++, 
-						Get.identifierService().getUuidPrimordialFromConceptSequence(colInfo.columnLabelConcept).get(), 
+						Get.identifierService().getUuidPrimordialFromConceptId(colInfo.columnLabelConcept).get(), 
 						DynamicSememeDataType.parse(colInfo.columnDataType, true), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
 						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
 			}
@@ -370,7 +367,7 @@ public class MappingWriteAPIs
 		{
 			try
 			{
-				//TODO see if I still need to manually do this, I thought I fixed this.
+				//TODO 2 Dan (index config)  see if I still need to manually do this, I thought I fixed this.
 				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0, 1, 2}, true);
 			}
 			catch (Exception e)
@@ -383,7 +380,7 @@ public class MappingWriteAPIs
 		if (!StringUtils.isBlank(inverseName))
 		{
 			ObjectChronology<?> builtDesc = LookupService.get().getService(DescriptionBuilderService.class).getDescriptionBuilder(inverseName, rdud.getDynamicSememeUsageDescriptorSequence(), 
-					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).setAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
+					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).addAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 			
 			Get.sememeBuilderService().getDynamicSememeBuilder(builtDesc.getNid(),DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).build(
 					editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
@@ -443,7 +440,7 @@ public class MappingWriteAPIs
 			throw new RuntimeException("Failed during commit", e);
 		}
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
-				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get());
+				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
 	private static RestWriteResponse updateMappingSet(
 			ConceptChronology<?> mappingConcept,

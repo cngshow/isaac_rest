@@ -23,18 +23,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
-import gov.vha.isaac.rest.SememeUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -115,9 +112,9 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		descriptionTypeConceptSequence = dsv.getDescriptionTypeConceptSequence();
 
 		// populate descriptionExtendedTypeConceptSequence
-		Optional<Integer> descriptionExtendedTypeOptional = SememeUtil.getDescriptionExtendedTypeConceptSequence(RequestInfo.get().getStampCoordinate(), dsv.getNid());
+		Optional<UUID> descriptionExtendedTypeOptional = Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), dsv.getNid());
 		if (descriptionExtendedTypeOptional.isPresent()) {
-			descriptionExtendedTypeConceptSequence = descriptionExtendedTypeOptional.get();
+			descriptionExtendedTypeConceptSequence = Get.identifierService().getConceptSequenceForUuids(descriptionExtendedTypeOptional.get());
 		}
 	}
 

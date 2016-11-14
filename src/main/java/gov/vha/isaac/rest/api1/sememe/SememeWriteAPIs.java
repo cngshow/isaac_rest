@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
@@ -71,7 +72,6 @@ import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
-import gov.vha.isaac.rest.SememeUtil;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -85,7 +85,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.EditTokens;
-import javafx.concurrent.Task;
 
 /**
  * {@link SememeWriteAPIs}
@@ -115,71 +114,97 @@ public class SememeWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken);
+		
+		if (StringUtils.isBlank(creationData.text))
+		{
+			throw new RestException("creationData.text", "The text value of the description is required");
+		}
 
 		// TODO test createDescription(), including validation of creationData.getDescriptionTypeConceptSequence()
-		try {
+		try 
+		{
+			
+			ArrayList<Integer> preferredDialects = new ArrayList<>();
+			ArrayList<Integer> acceptableDialects = new ArrayList<>();
+			
+			if (creationData.preferredInDialectAssemblagesIds != null)
+			{
+				for (String id : creationData.preferredInDialectAssemblagesIds) {
+					preferredDialects.add(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.preferredInDialectAssemblagesIds", id));
+				}
+			}
+			
+			if (preferredDialects.size() == 0)
+			{
+				preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getConceptSequence());
+			}
+			
+			if (creationData.preferredInDialectAssemblagesIds != null)
+			{
+				for (String id : creationData.acceptableInDialectAssemblagesIds) {
+					acceptableDialects.add(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.acceptableInDialectAssemblagesIds", id));
+				}
+			}
+			
 			SememeBuilderService<? extends SememeChronology<? extends SememeVersion<?>>> sememeBuilderService
 					= Get.sememeBuilderService();
 			SememeBuilder<? extends SememeChronology<? extends DescriptionSememe<?>>> descriptionSememeBuilder
 					= sememeBuilderService.getDescriptionSememeBuilder(
-							creationData.getCaseSignificanceConceptSequence(),
-							creationData.getLanguageConceptSequence(),
-							creationData.getDescriptionTypeConceptSequence(),
-							creationData.getText(),
-							creationData.getReferencedComponentNid());
+							//TODO this first one should be validating that it is a proper concept for this task... which probably should be lower in isaac, even.
+							RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.caseSignificanceConcept", creationData.caseSignificanceConcept),
+							StringUtils.isBlank(creationData.languageConcept) ? MetaData.ENGLISH_LANGUAGE.getConceptSequence() : 
+									RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.languageConcept", creationData.languageConcept),
+							//TODO validate this is a proper type... which should be down in isaac		
+							RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.descriptionTypeConcept", creationData.descriptionTypeConcept),
+							creationData.text,
+							RequestInfoUtils.getNidFromUuidOrNidParameter("RestSememeDescriptionCreateData.referencedComponentId", creationData.referencedComponentId));
 
 			if (creationData.active != null && !creationData.active)
 			{
 				descriptionSememeBuilder.setState(State.INACTIVE);
 			}
 			
+			// TODO test addition of extendedDescriptionTypeConceptSequence UUID annotation to new description
+			if (creationData.extendedDescriptionTypeConcept != null) {
+				descriptionSememeBuilder.addSememe(Get.sememeBuilderService().getDynamicSememeBuilder(
+						descriptionSememeBuilder, 
+						DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence(),
+						new DynamicSememeData[] {new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptId(
+								RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.extendedDescriptionTypeConcept", 
+										creationData.extendedDescriptionTypeConcept)).get())}));
+			}
+			
 			SememeChronology<? extends DescriptionSememe<?>> newDescription = descriptionSememeBuilder.build(RequestInfo.get().getEditCoordinate(),
 					ChangeCheckerMode.ACTIVE).get();
-
-			if (creationData.getPreferredInDialectAssemblagesIds() != null) {
-				creationData.getPreferredInDialectAssemblagesIds().forEach((id) -> {
-					try
-					{
-						sememeBuilderService.getComponentSememeBuilder(
-								TermAux.PREFERRED.getNid(), newDescription.getNid(),
-								id).
-								build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
-					}
-					catch (RestException e)
-					{
-						throw new RuntimeException();
-					}
-				});
-			}
-
-			if (creationData.getAcceptableInDialectAssemblagesIds() != null) {
-				creationData.getAcceptableInDialectAssemblagesIds().forEach((id) -> {
-					try
-					{
-						sememeBuilderService.getComponentSememeBuilder(
-								TermAux.ACCEPTABLE.getNid(), 
-								newDescription.getNid(),
-								id).
-								build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
-					}
-					catch (RestException e)
-					{
-						throw new RuntimeException();
-					}
-				});
-			}
-
-			// TODO test addition of extendedDescriptionTypeConceptSequence UUID annotation to new description
-			if (creationData.getExtendedDescriptionTypeConceptSequence() != null) {
-				SememeUtil.addAnnotation(
-						RequestInfo.get().getEditCoordinate(),
-						newDescription.getNid(),
-						new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptSequence(creationData.getExtendedDescriptionTypeConceptSequence()).get()),
-						DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getPrimordialUuid());
-			}
-
+			
+			preferredDialects.forEach((id) -> 
+			{
+				try
+				{
+					sememeBuilderService.getComponentSememeBuilder(TermAux.PREFERRED.getNid(), newDescription.getNid(), id).build(
+							RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+				}
+				catch (RestException e)
+				{
+					throw new RuntimeException(e);
+				}
+			});
+			
+			acceptableDialects.forEach((id) -> 
+			{
+				try
+				{
+					sememeBuilderService.getComponentSememeBuilder(TermAux.ACCEPTABLE.getNid(), newDescription.getNid(), id).build(
+							RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+				}
+				catch (RestException e)
+				{
+					throw new RuntimeException(e);
+				}
+			});
+			
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("creating new description sememe: NID=" 
-					+ newDescription.getNid() + ", text=" + creationData.getText()).get();
+					+ newDescription.getNid() + ", text=" + creationData.text).get();
 
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
@@ -187,9 +212,27 @@ public class SememeWriteAPIs
 			}
 
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), newDescription.getPrimordialUuid());
-		} catch (Exception e) {
+		}
+		catch (RuntimeException e)
+		{
+			if (e.getMessage() != null && e.getCause() instanceof RestException)
+			{
+				throw (RestException)e.getCause();
+			}
+			else
+			{
+				log.error("Unexpected error", e);
+				throw new RestException("Failed creating description");
+			}
+		}
+		catch (RestException e)
+		{
+			throw e;
+		}
+		catch (Exception e) 
+		{
 			log.error("Unexpected error", e);
-			throw new RestException("Failed creating description " + creationData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			throw new RestException("Failed creating description");
 		}
 	}
 	
@@ -293,10 +336,10 @@ public class SememeWriteAPIs
 		{
 			for (int i = 0; i < sememeTypeCreationData.dataColumnsDefinition.length; i++)
 			{
-				//TODO make index config smarter / easier.  Shouldn't be trying to index unindexable types
+				//TODO 2 Dan make index config smarter / easier.  Shouldn't be trying to index unindexable types
 				indexConfig.add(i);
 				columns[i] = new DynamicSememeColumnInfo(i, 
-						Get.identifierService().getUuidPrimordialFromConceptSequence(sememeTypeCreationData.dataColumnsDefinition[i].columnLabelConcept).get(), 
+						Get.identifierService().getUuidPrimordialFromConceptId(sememeTypeCreationData.dataColumnsDefinition[i].columnLabelConcept).get(), 
 						DynamicSememeDataType.parse(sememeTypeCreationData.dataColumnsDefinition[i].columnDataType, true), 
 						RestDynamicSememeData.translate(sememeTypeCreationData.dataColumnsDefinition[i].columnDefaultData), 
 						sememeTypeCreationData.dataColumnsDefinition[i].columnRequired, 
@@ -327,7 +370,7 @@ public class SememeWriteAPIs
 		{
 			try
 			{
-				//TODO see if I still need to manually do this, I thought I fixed this.
+				//TODO 2 Dan (index config)  see if I still need to manually do this, I thought I fixed this.
 				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), 
 						indexConfig.toArray(new Integer[indexConfig.size()]), true);
 			}
@@ -337,7 +380,7 @@ public class SememeWriteAPIs
 			}
 		});
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
-				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get());
+				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
 	
 	

@@ -1084,19 +1084,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String fsn = "fsn for test concept " + randomUuid.toString();
 		final String pt = "preferred term for test concept " + randomUuid.toString();
 		
-		final List<Integer> parentIds = new ArrayList<>();
-		parentIds.add(parent1Sequence);
-		parentIds.add(parent2Sequence);
+		final List<String> parentIds = new ArrayList<>();
+		parentIds.add(parent1Sequence + "");
+		parentIds.add(parent2Sequence + "");
 		
-		List<Integer> preferredDialects = new ArrayList<>();
-		preferredDialects.add(Get.identifierService().getConceptSequenceForUuids(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid()));
-		preferredDialects.add(Get.identifierService().getConceptSequenceForUuids(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid()));
+		List<String> preferredDialects = new ArrayList<>();
+		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
+		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
 
 		RestConceptCreateData newConceptData = new RestConceptCreateData(
 				parentIds,
 				fsn,
-				requiredDescriptionsLanguageSequence,
-				requiredDescriptionsExtendedTypeSequence,
+				requiredDescriptionsLanguageSequence + "",
+				requiredDescriptionsExtendedTypeSequence + "",
 				preferredDialects);
 
 		String xml = null;
@@ -1146,8 +1146,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				break;
 			}
 		}
-		// TODO (joel) determine why description extended type not populating
-		//Assert.assertTrue(foundDescriptionWithCorrectExtendedType);
+		Assert.assertTrue(foundDescriptionWithCorrectExtendedType);
 		for (RestSememeDescriptionVersion description : conceptDescriptionsObject) {
 			boolean foundPreferredDialect = false;
 			boolean foundUsEnglishDialect = false;
@@ -1168,7 +1167,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertTrue(foundPreferredDialect, "Preferred dialect not found");
 			Assert.assertTrue(foundUsEnglishDialect, "US English dialect not found");
-			//Assert.assertTrue(foundGbEnglishDialect, "GB English dialect not found"); // TODO (joel) find out why second dialect not being set
+			Assert.assertTrue(foundGbEnglishDialect, "GB English dialect not found");
 		}
 
 //		// Retrieve new concept and validate fields (Preferred Term in description)
@@ -1231,7 +1230,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.active, false)
 				.queryParam(RequestParameters.editToken, getEditTokenString())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));  //TODO I don't like this hack for putting nothign... need to see what is proper
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));
 		checkFail(deactivateConceptResponse);
 		
 		// Retrieve retired concept and validate
@@ -3341,7 +3340,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.queryParam(RequestParameters.expand, "referencedConcept")
 			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
 		
-		//TODO this is broken - lucene indexes don't seem to be updating properly.  Dan to fix, someday....
+		//TODO 2 Dan indexes this is broken - lucene indexes don't seem to be updating properly.  Dan to fix, someday....
 //		Assert.assertEquals(foundAssociations.length, 1);
 		
 		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent 

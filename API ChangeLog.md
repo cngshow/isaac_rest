@@ -31,7 +31,19 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
       - search/byReferencedComponent -> search/forReferencedComponent
       - sememe/byReferencedComponent -> sememe/forReferencedComponent
       - sememe/byAssemblage -> sememe/forAssemblage
-      
+    * Removed unnecessary "stampSequence" variable from the RestStampedVersion object.
+    * In the concept create API, the RestConceptCreateData had all fields that accept concepts changed to type string (parentConceptIds, descriptionLanguageConceptId,
+        descriptionPreferredInDialectAssemblagesConceptIds, extendedDescriptionTypeConcept)
+        - Some of the above fields had renames: descriptionExtendedTypeConceptId -> extendedDescriptionTypeConcept
+    * In the description create API, the RestSememeDescriptionCreateData had all the fields that accept concepts changed to type string (caseSignificanceConcept,
+        languageConcept, descriptionTypeConcept, extendedDescriptionTypeConcept, preferredInDialectAssemblagesIds, acceptableInDialectAssemblagesIds referencedComponentId)
+        - Many of the fiels above had renames: caseSignificanceConceptSequence -> caseSignificanceConcept, languageConceptSequence -> languageConcept, 
+        descriptionTypeConceptSequence -> descriptionTypeConcept, extendedDescriptionTypeConceptSequence -> extendedDescriptionTypeConcept, 
+        referencedComponentNid -> referencedComponentId
+    * Removed the field 'stampSequence' from RestStampedVersion
+    * Fixed a number of bugs with concept / description creation where extended description types and/or dialects were not being added.
+    * Added a bunch of missing validation on the concept inputs to create concept / create description.
+    
 
 
 * 2016/11/08 - 1.7.4: 
