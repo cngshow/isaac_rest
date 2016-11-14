@@ -38,7 +38,16 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 	@Override
 	public Response toResponse(Exception ex)
 	{
+		// Place any Exception with its own response status and handling here
+		if (ex instanceof SecurityException)
+		{
+			LoggerFactory.getLogger("web").info("SecurityException: " + ex.getMessage());
+			return Response.status(403).entity(ex.getMessage()).type("text/plain").build();
+		}
+
 		boolean sendMessage = false;
+
+		// Place any Exceptions that fall through to 500 here
 		if (ex instanceof ClientErrorException)
 		{
 			LoggerFactory.getLogger("web").info("ClientError:" + ex.toString());

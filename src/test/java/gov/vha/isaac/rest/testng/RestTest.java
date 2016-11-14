@@ -284,10 +284,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	
 	private Response checkFail(Response response)
 	{
-		if (response.getStatus() != Status.OK.getStatusCode())
+		return assertResponseStatus(response, Status.OK.getStatusCode());
+	}
+	private Response assertResponseStatus(Response response, int expectedStatus)
+	{
+		if (response.getStatus() != expectedStatus)
 		{
-			Assert.fail("Response code " + response.getStatus() + " - " + Status.fromStatusCode(response.getStatus())
-			+ response.readEntity(String.class));
+			Assert.fail("Unexpected response code " + response.getStatus() + " \"" + Status.fromStatusCode(response.getStatus()) + "\". Expected " + expectedStatus + " \"" + Status.fromStatusCode(expectedStatus) + "\". "
+			+ " " + response.readEntity(String.class));
 		}
 		return response;
 	}
@@ -984,7 +988,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		expectFail(createDescriptionResponse);
+		assertResponseStatus(createDescriptionResponse, Status.FORBIDDEN.getStatusCode());
 
 		// POST new description data object
 		createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
@@ -1041,7 +1045,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		expectFail(updateDescriptionResponse);
+		assertResponseStatus(updateDescriptionResponse, Status.FORBIDDEN.getStatusCode());
 		
 		// Attempt update as authorized user
 		updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
@@ -1076,7 +1080,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));
-		expectFail(deactivateDescriptionResponse);
+		assertResponseStatus(deactivateDescriptionResponse, Status.FORBIDDEN.getStatusCode());
 
 		// Attempt to deactivate description as authorized user
 		deactivateDescriptionResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent +  RestPaths.componentComponent 
@@ -1167,8 +1171,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		expectFail(unauthorizedCreateConceptResponse);
-		
+		assertResponseStatus(unauthorizedCreateConceptResponse, Status.FORBIDDEN.getStatusCode());
+
 		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
@@ -1294,7 +1298,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));  //TODO I don't like this hack for putting nothign... need to see what is proper
-		expectFail(deactivateConceptResponse);
+		assertResponseStatus(deactivateConceptResponse, Status.FORBIDDEN.getStatusCode());
 
 		// retire concept
 		deactivateConceptResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent 
@@ -1323,7 +1327,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
 					jsonIze(new String[] {"active"}, 
 							new String[] {"true"})));
-		expectFail(stateChangeResponse);
+		assertResponseStatus(stateChangeResponse, Status.FORBIDDEN.getStatusCode());
 
 		//Do it again using the direct concept API
 		stateChangeResponse = target(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent + RestPaths.updatePathComponent
@@ -1375,8 +1379,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		expectFail(createNewMappingSetResponse);
-		
+		assertResponseStatus(createNewMappingSetResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to create new mapping set
 		createNewMappingSetResponse = target(RestPaths.mappingSetCreateAppPathComponent)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
@@ -1421,8 +1425,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		expectFail(updateMappingSetResponse);
-		
+		assertResponseStatus(updateMappingSetResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to update mapping set
 		updateMappingSetResponse = target(RestPaths.mappingSetUpdateAppPathComponent + testMappingSetUUID)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
@@ -1484,7 +1488,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		expectFail(createNewMappingItemResponse);
+		assertResponseStatus(createNewMappingItemResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to create new mapping item
 		createNewMappingItemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
@@ -1546,7 +1551,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		expectFail(updateMappingItemResponse);
+		assertResponseStatus(updateMappingItemResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to update mapping item
 		updateMappingItemResponse = target(RestPaths.mappingItemUpdateAppPathComponent + newMappingItemUUID)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
@@ -1625,7 +1631,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
-		expectFail(createAssociationResponse);
+		assertResponseStatus(createAssociationResponse, Status.FORBIDDEN.getStatusCode());
 
 		// Attempt to create association
 		createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent
@@ -1694,7 +1700,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
-		expectFail(createNewMappingItemResponse);
+		assertResponseStatus(createNewMappingItemResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to create new mapping item
 		createNewMappingItemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
@@ -1931,8 +1938,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		expectFail(unauthorizedCreateCommentResponse);
-		
+		assertResponseStatus(unauthorizedCreateCommentResponse, Status.FORBIDDEN.getStatusCode());
+
 		Response createCommentResponse = target(RestPaths.commentCreatePathComponent)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
@@ -1969,7 +1976,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		expectFail(updateCommentResponse);
+		assertResponseStatus(updateCommentResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to update comment
 		updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
@@ -3327,7 +3335,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 					jsonIze(new String[] {"associationName", "associationInverseName", "description"}, 
 							new String[] {"test", "inverse Test", description})));
-		expectFail(createAssociationResponse);
+		assertResponseStatus(createAssociationResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to create association
 		createAssociationResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 					+ RestPaths.associationComponent + RestPaths.createPathComponent)
@@ -3376,7 +3385,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
 							new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.DOD_MODULE.getNid() + "", 
 									MetaData.AND.getNid() + ""})));
-		expectFail(createAssociationItemResponse);
+		assertResponseStatus(createAssociationItemResponse, Status.FORBIDDEN.getStatusCode());
+
 		// Attempt to make one
 		createAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 					+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
@@ -3410,7 +3420,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
 					jsonIze(new String[] {"targetNid", "active"}, 
 							new String[] {"", "false"})));
-		expectFail(updateAssociationItemResponse);
+		assertResponseStatus(updateAssociationItemResponse, Status.FORBIDDEN.getStatusCode());
+
 		//test update association
 		updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.uuid.toString())
@@ -3541,7 +3552,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
-		expectFail(createSememeResponse);
+		assertResponseStatus(createSememeResponse, Status.FORBIDDEN.getStatusCode());
+
 		//make one
 		createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
@@ -3625,7 +3637,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(json));
-		expectFail(createSememeResponse);
+		assertResponseStatus(createSememeResponse, Status.FORBIDDEN.getStatusCode());
+
 		// create sememe
 		createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.sememeTypeComponent 
 				+ RestPaths.createPathComponent)
