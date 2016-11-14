@@ -286,7 +286,7 @@ public class RequestInfo
 						path = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editPath);
 					}
 					
-					// Create new EditToken based on any passed parameters // TODO joel only recreate if necessary
+					// Create new EditToken based on any passed parameters
 					editToken = EditTokens.getOrCreate(
 							passedEditToken.get().getAuthorSequence(),
 							module,
@@ -361,23 +361,7 @@ public class RequestInfo
 	 */
 	public UUID getActiveWorkflowProcessId() throws RestException
 	{
-		//TODO implement this properly - need the active workflow in this session
 		return getEditToken().getActiveWorkflowProcessId();
-
-		//		try
-		//		{
-		//			if (workflowProcessId == null)
-		//			{
-		//				workflowProcessId =  LookupService.getService(WorkflowProvider.class).getWorkflowProcessInitializerConcluder()
-		//						.createWorkflowProcess(LookupService.getService(WorkflowProvider.class).getBPMNInfo().getDefinitionId(), -99, "Rest Test Name", "Rest Test Description");
-		//			}
-		//		}
-		//		catch (Exception e)
-		//		{
-		//			log.error("Unexpected", e);
-		//		}
-		//		return workflowProcessId;
-		//		return null;
 	}
 
 	/**

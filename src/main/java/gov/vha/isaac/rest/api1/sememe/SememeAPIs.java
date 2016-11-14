@@ -450,7 +450,7 @@ public class SememeAPIs
 		else
 		{
 			//Not annotated as a dynamic sememe.  We have to find a real value to determine if this is used as a static sememe.
-			//TODO someday, we will fix the underlying APIs to allow us to know the static sememe typing up front....
+			//TODO 3 Dan someday, we will fix the underlying APIs to allow us to know the static sememe typing up front....
 			Optional<SememeChronology<? extends SememeVersion<?>>> sc = Get.sememeService().getSememesFromAssemblage(conceptSequence).findAny();
 			if (sc.isPresent())
 			{

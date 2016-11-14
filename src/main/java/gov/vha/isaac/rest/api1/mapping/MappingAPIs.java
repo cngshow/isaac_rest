@@ -190,7 +190,7 @@ public class MappingAPIs
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
 	{
-		//TODO this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
+		//TODO 1 Dan this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
 		//will make it fast for early pages... still slow for later pages, unless we enhance the underlying isaac code to handle paging natively
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

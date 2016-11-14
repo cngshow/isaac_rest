@@ -54,7 +54,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestMappingItemVersion extends RestMappingItemVersionBase implements Comparable<RestMappingItemVersion>
+public class RestMappingItemVersion extends RestMappingItemVersionBase
 {
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -229,16 +229,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase implement
 		{
 			expandables = null;
 		}
-	}
-
-	/**
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
-	 */
-	@Override
-	public int compareTo(RestMappingItemVersion o)
-	{
-		// TODO implement sorting
-		return 0;
 	}
 
 	/* (non-Javadoc)

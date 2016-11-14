@@ -96,7 +96,7 @@ public class RestIdentifiedObject
 		readSequence();
 	}
 	
-	//TODO go through the callers of this method, and see which ones could use a different method, to pass more information up front.
+	//TODO 1 Dan go through the callers of this method, and see which ones could use a different method, to pass more information up front.
 	public RestIdentifiedObject(List<UUID> uuids)
 	{
 		if (uuids == null || uuids.size() == 0) 

@@ -76,7 +76,6 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private File dbLocation;
 	private static final DateTimeFormatter fileDateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-	//TODO implement convenience methods for 'associations'
 	//TODO we need to deal with contradictions properly whenever we pull things from a LatestVersion object.  See code in RestConceptChonology
 	//for extracting the latest description.
 

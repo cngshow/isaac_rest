@@ -322,7 +322,7 @@ public class AssociationAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		//TODO lookup by target performance is not good at the moment, not sure why
+		//TODO Dan lookup by target performance is not good at the moment, not sure why
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		List<AssociationInstance> results = AssociationUtilities.getTargetAssociations(Util.convertToNid(id), RequestInfo.get().getStampCoordinate());
 		RestAssociationItemVersion[] finalResult = new RestAssociationItemVersion[results.size()];

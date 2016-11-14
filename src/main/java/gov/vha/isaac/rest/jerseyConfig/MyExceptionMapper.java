@@ -72,6 +72,7 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 		{
 			response = "Unexpected Internal Error";
 		}
+		//TODO 500 isn't appropriate for user errors.  We need to distinguish user errors from internal errors  
 		return Response.status(500).entity(response).type("text/plain").build();
 	}
 }
