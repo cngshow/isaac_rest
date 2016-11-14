@@ -19,16 +19,12 @@
 package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -48,40 +44,43 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestConceptCreateData
 {
 	/**
-	 * The sequences of the parent concepts of this concept. At least one is required.
+	 * The concept identifiers (UUID, nid or sequence) of the parent concepts of this concept. At least one is required.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Set<Integer> parentConceptIds = new HashSet<>();
+	public Set<String> parentConceptIds = new HashSet<>();
 
 	/**
 	 * The required Fully Specified Name description of this concept.  
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	String fsn;
+	public String fsn;
 
 	/**
-	 * The required language concept associated with the required descriptions
+	 * The optional language concept (uuid, nid or sequence) associated with the required descriptions.  Will be set to 
+	 * ENGLISH if not specified
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int descriptionLanguageConceptId;
+	public String descriptionLanguageConceptId;
 	
 	/**
-	 * The optional preferred dialects associated with the required description.
-	 * A default will be assigned if not set.
+	 * The optional concept identifiers (uuid, nid or sequence) of the preferred dialects associated with the required description.
+	 * A default of US ENGLISH will be assigned if not set.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Collection<Integer> descriptionPreferredInDialectAssemblagesConceptIds = new HashSet<>();
+	public Collection<String> descriptionPreferredInDialectAssemblagesConceptIds = new HashSet<>();
 	
 	/**
-	 * An optional extended description type applying to required descriptions
+	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
+	 * This will be applied to the FSN description created on the concept.
+	 * This may be a concept like Abbreviation or Vista Name
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Integer descriptionExtendedTypeConceptId = null;
+	public String extendedDescriptionTypeConcept = null;
 	
 	/**
 	 * True to indicate the concept should be set as active, false for inactive.  
@@ -104,11 +103,11 @@ public class RestConceptCreateData
 	 * @param descriptionPreferredDialectsConceptIds (optional)
 	 */
 	public RestConceptCreateData(
-			Collection<Integer> parentConceptIds,
+			Collection<String> parentConceptIds,
 			String fsn,
-			int descriptionsLanguageConceptId,
-			Integer descriptionsExtendedTypeId,
-			Collection<Integer> descriptionsPreferredDialects) {
+			String descriptionsLanguageConceptId,
+			String descriptionsExtendedTypeId,
+			Collection<String> descriptionsPreferredDialects) {
 		super();
 		if (parentConceptIds.size() < 1) {
 			throw new IllegalArgumentException("At least one parent concept sequence is required");
@@ -117,7 +116,7 @@ public class RestConceptCreateData
 		this.fsn = fsn;
 		this.descriptionLanguageConceptId = descriptionsLanguageConceptId;
 		
-		this.descriptionExtendedTypeConceptId = descriptionsExtendedTypeId;
+		this.extendedDescriptionTypeConcept = descriptionsExtendedTypeId;
 		if (descriptionsPreferredDialects != null) {
 			this.descriptionPreferredInDialectAssemblagesConceptIds.addAll(descriptionsPreferredDialects);
 		}
@@ -129,55 +128,15 @@ public class RestConceptCreateData
 	 * @param descriptionLanguageConceptId
 	 */
 	public RestConceptCreateData(
-			Collection<Integer> parentConceptIds,
+			Collection<String> parentConceptIds,
 			String fsn,
-			int descriptionLanguageConceptId) {
+			String descriptionLanguageConceptId) {
 		this(
 				parentConceptIds,
 				fsn,
 				descriptionLanguageConceptId,
-				(Integer)null,
-				(Collection<Integer>)null);
-	}
-
-	/**
-	 * @return the parentConceptIds
-	 */
-	@XmlTransient
-	public Set<Integer> getParentConceptIds() {
-		return Collections.unmodifiableSet(parentConceptIds);
-	}
-
-	/**
-	 * @return the fsn
-	 */
-	@XmlTransient
-	public String getFsn() {
-		return fsn;
-	}
-
-	/**
-	 * @return the descriptionLanguageConceptId
-	 */
-	@XmlTransient
-	public int getDescriptionLanguageConceptId() {
-		return descriptionLanguageConceptId;
-	}
-
-	/**
-	 * @return the descriptionExtendedTypeConceptId
-	 */
-	@XmlTransient
-	public Integer getDescriptionExtendedTypeConceptId() {
-		return descriptionExtendedTypeConceptId;
-	}
-
-	/**
-	 * @return the descriptionPreferredInDialectAssemblagesConceptIds
-	 */
-	@XmlTransient
-	public Collection<Integer> getDescriptionPreferredInDialectAssemblagesConceptIds() {
-		return Collections.unmodifiableCollection(descriptionPreferredInDialectAssemblagesConceptIds);
+				(String)null,
+				(Collection<String>)null);
 	}
 
 	/* (non-Javadoc)
@@ -188,7 +147,7 @@ public class RestConceptCreateData
 		return "RestConceptCreateData ["
 				+ "fsn=" + fsn
 				+ ", descriptionLanguageSequence=" + descriptionLanguageConceptId
-				+ ", descriptionExtendedTypeId=" + descriptionExtendedTypeConceptId
+				+ ", extendedDescriptionTypeConcept=" + extendedDescriptionTypeConcept
 				+ ", descriptionPreferredInDialectAssemblagesConceptIds=" + descriptionPreferredInDialectAssemblagesConceptIds
 				+ ", parentConceptIds=" + parentConceptIds + "]";
 	}

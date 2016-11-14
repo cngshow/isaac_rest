@@ -7,6 +7,45 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/11/10 - 1.8.0:
+    * Enhanced the RestIdentifiedObject return type, so that it also includes nid, sequence, and type fields.  The previously existing uuids
+        field is unchanged.
+    * Enhanced the RestWriteResponse to return type (concept or sememe)
+    * Broke the Comment create / read API - RestCommentVersionBaseCreate 'commentedItem' field now takes in a string, instead of an integer, and can properly handle
+        a uuid or nid identifier.  On Return, the RestCommentVersion object now returns the 'commentedItem' field as a RestIdentifiedObject, rather than an integer.
+    * Fixed (via the above changes) a design flaw in the comment create API, where it was assuming that incoming sequence identifiers were concepts, rather than 
+        rejecting them as unknowable.
+    * Replaced RestCommentVersionBaseCreate with RestCommentVersionCreate
+    * Broke the Mapping read / write APIs for better handling of IDs.
+    * In the Mapping APIs, all instances where a concept sequence is returned (mapSetConcept, sourceConcept, targetConcept, qualifierConcept) have been changed
+        to the RestIdentifiedObject type, which returns UUID/Sequence/Nid
+    * 'sememeSequence' has been removed from RestMappingItemVersion, as this was (now) carrying back duplicate information already returned by identifiers.sequence
+    * 'active' was removed from RestMappingItemVersion, as this was carrying back duplicate information already returned by mappingItemStamp.state
+    * RestMappingItemVersionBaseCreate was replaced with RestMappingItemVersionCreate
+    * The updateMappingItem call that previously took in a RestMappingItemVersionBase now takes in a RestMappingItemVersionUpdate
+    * On update or create, the concept fields (mapSetConcept, sourceConcept, targetConcept, qualifierConcept) now take in a string object type.  They now accept
+        UUID, nid or sequence.
+    * Removed conceptSequence from RestMappingSetVersion, as this now carried back duplicate information available in identifiers.sequence
+    * Changed all path references of "by" to "for" (to clean up internal API consistency / reduce confusion)
+      - comment/version/byReferencedComponent -> comment/version/forReferencedComponent
+      - search/byReferencedComponent -> search/forReferencedComponent
+      - sememe/byReferencedComponent -> sememe/forReferencedComponent
+      - sememe/byAssemblage -> sememe/forAssemblage
+    * Removed unnecessary "stampSequence" variable from the RestStampedVersion object.
+    * In the concept create API, the RestConceptCreateData had all fields that accept concepts changed to type string (parentConceptIds, descriptionLanguageConceptId,
+        descriptionPreferredInDialectAssemblagesConceptIds, extendedDescriptionTypeConcept)
+        - Some of the above fields had renames: descriptionExtendedTypeConceptId -> extendedDescriptionTypeConcept
+    * In the description create API, the RestSememeDescriptionCreateData had all the fields that accept concepts changed to type string (caseSignificanceConcept,
+        languageConcept, descriptionTypeConcept, extendedDescriptionTypeConcept, preferredInDialectAssemblagesIds, acceptableInDialectAssemblagesIds referencedComponentId)
+        - Many of the fiels above had renames: caseSignificanceConceptSequence -> caseSignificanceConcept, languageConceptSequence -> languageConcept, 
+        descriptionTypeConceptSequence -> descriptionTypeConcept, extendedDescriptionTypeConceptSequence -> extendedDescriptionTypeConcept, 
+        referencedComponentNid -> referencedComponentId
+    * Removed the field 'stampSequence' from RestStampedVersion
+    * Fixed a number of bugs with concept / description creation where extended description types and/or dialects were not being added.
+    * Added a bunch of missing validation on the concept inputs to create concept / create description.
+    
+
+
 * 2016/11/08 - 1.7.4: 
     * Fixed a bug where the create comment API was requiring a comment context (when it should be optional) and then fixed some issues with the 
         comment APIs and their default parsing of JSON (they were requiring @class notions, when they shouldn't) 

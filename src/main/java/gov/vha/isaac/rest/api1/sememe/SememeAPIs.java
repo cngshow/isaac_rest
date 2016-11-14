@@ -314,8 +314,8 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.byAssemblageComponent + "{" + RequestParameters.id +  "}")
-	public RestSememeVersionPage getByAssemblage(
+	@Path(RestPaths.forAssemblageComponent + "{" + RequestParameters.id +  "}")
+	public RestSememeVersionPage getForAssemblage(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
 			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
@@ -401,8 +401,8 @@ public class SememeAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id + "}")
-	public RestSememeVersion[] getByReferencedComponent(
+	@Path(RestPaths.forReferencedComponentComponent + "{" + RequestParameters.id + "}")
+	public RestSememeVersion[] getForReferencedComponent(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.assemblage) Set<String> assemblage, 
 			@QueryParam(RequestParameters.includeDescriptions) @DefaultValue("false") String includeDescriptions,
@@ -454,7 +454,6 @@ public class SememeAPIs
 	 * @return - the full description
 	 * @throws RestException
 	 */
-	// TODO add processId parameter?
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.sememeDefinitionComponent + "{" + RequestParameters.id + "}")
@@ -477,7 +476,7 @@ public class SememeAPIs
 		else
 		{
 			//Not annotated as a dynamic sememe.  We have to find a real value to determine if this is used as a static sememe.
-			//TODO someday, we will fix the underlying APIs to allow us to know the static sememe typing up front....
+			//TODO 3 Dan someday, we will fix the underlying APIs to allow us to know the static sememe typing up front....
 			Optional<SememeChronology<? extends SememeVersion<?>>> sc = Get.sememeService().getSememesFromAssemblage(conceptSequence).findAny();
 			if (sc.isPresent())
 			{

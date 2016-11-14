@@ -260,7 +260,8 @@ public class RequestInfo
 	}
 	public Optional<User> getUser() {
 		if (user_ == null) {
-			Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(getEditToken().getAuthorSequence());
+			//Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(getEditToken().getAuthorSequence());
+			Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptId(getEditToken().getAuthorSequence());
 			if (userUuid.isPresent()) {
 				Optional<User> userOptional = UserCache.get(userUuid.get());
 				user_ = userOptional.isPresent() ? userOptional.get() : null;
@@ -316,7 +317,7 @@ public class RequestInfo
 					}
 					
 					// Create new EditToken based on any passed parameters
-					// This call will only create a new edit token if one with
+					// This call will only create a new edit token if one of
 					// its characteristics is not already cached
 					editToken = EditTokens.getOrCreate(
 							passedEditToken.get().getAuthorSequence(),
@@ -326,7 +327,7 @@ public class RequestInfo
 							passedEditToken.get().getRoles()
 							);
 					
-					Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(editToken.getAuthorSequence());
+					Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptId(editToken.getAuthorSequence());
 					if (UserCache.get(userUuid.get()).isPresent()) {
 						user_ = UserCache.get(userUuid.get()).get();
 					} else {
@@ -388,7 +389,7 @@ public class RequestInfo
 							String userName = Get.conceptDescriptionText(userConceptSequence); // TODO should get FSN only?
 							userOptional = Optional.of(new User(
 									userName,
-									Get.identifierService().getUuidPrimordialFromConceptSequence(userConceptSequence).get(),
+									Get.identifierService().getUuidPrimordialFromConceptId(userConceptSequence).get(),
 									UserRole.values()));
 						} else {
 							if (parameters_.containsKey(RequestParameters.ssoToken)) {

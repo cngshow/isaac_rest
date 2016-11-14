@@ -184,7 +184,7 @@ public class TaxonomyAPIs
 		} else {
 			alreadyAddedChildren.add(conceptSequence);
 		}
-		//TODO we need to guard against very large result returns - we must cap this, and, ideally, introduce paging, 
+		//TODO 3 we need to guard against very large result returns - we must cap this, and, ideally, introduce paging, 
 		//or something along those lines to handle very large result sets.
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{

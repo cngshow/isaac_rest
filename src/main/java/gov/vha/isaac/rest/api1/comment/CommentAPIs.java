@@ -128,8 +128,8 @@ public class CommentAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.versionComponent + RestPaths.byReferencedComponentComponent + "{" + RequestParameters.id +"}")
-	public RestCommentVersion[] getCommentsByReferencedItem(
+	@Path(RestPaths.versionComponent + RestPaths.forReferencedComponentComponent + "{" + RequestParameters.id +"}")
+	public RestCommentVersion[] getCommentsForReferencedItem(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.processId) String processId,
 		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
@@ -175,7 +175,7 @@ public class CommentAPIs
 			@Override
 			public int compare(RestCommentVersion o1, RestCommentVersion o2)
 			{
-				return Long.compare(o1.getCommentStamp().time, o2.getCommentStamp().time);
+				return Long.compare(o1.commentStamp.time, o2.commentStamp.time);
 			}
 		});
 		return results;

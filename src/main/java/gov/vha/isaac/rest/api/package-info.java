@@ -44,12 +44,41 @@
  * <p><code>descriptionLogicProfile</code> - specifies description profile assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
  * <p><code>classifier</code> - specifies classifier assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
  *
- *
  * <h2>Expandables</h2>
  * <p>The server has the ability to return data to help understand the API in the form of "expandables".  By default, expandables are on, when the server
  * is deployed in a debug enviornment.  Expandables are disabled when deployed in a production environment.  To override the default, and return expandable
  * metadata in a production environment, add this parameter to any call:
  * <code>expandables=true</code>
-  *</p>
+ * </p>
+ * 
+ * <h2>Data Model</h2>
+ * <p>
+ * The only native data types required for storing terminology information within ISAAC are Concepts and Sememes. Sememes are highly flexible and configurable 
+ * constructs in the system.
+ * <br><br>
+ * Each sememe that is defined (at runtime, by the needs of the terminology) can be thought of as a database table of its own, in a traditional database system.
+ * All of the typical elements from a terminology data model, such as descriptions, relationships, attributes, refsets, etc. - can be mapped into either ISAAC 
+ * concepts or ISAAC sememes, with no loss of fidelity. Furthermore, the sememes can be defined at the time that the data is imported, dynamically. The data model 
+ * of the system does not have to change to be able to store new types of data.
+ * <br><br>
+ * Another core notion of the system is a Chronology and a Version. Each unique Concept or Sememe in the system has a Chronology - which carries that attributes 
+ * of the entry that never change. For example, the identifier is never allowed to change - if the identifier is entered wrong, the item must be retired, and replaced 
+ * by a new item with the correct identifier.
+ * <br><br>
+ * The Version carries that attributes of the item that DO change from version to version. For example, in a sememe that carries a definition - if there is a misspelling 
+ * in the text value, a new version of the sememe would be created that has the corrected text. Both versions of the sememe link to the same sememe chronology, and have 
+ * the same identifier. Now there are two different versions.
+ * <br><br>
+ * Chronology objects carry a list of all versions of the object. Chronology objects also all extend from OchreExternalizable, which means that they know how to serialize 
+ * and deserialize themselves to an array of bytes - their most compact representation for storage.
+ * <br><br>
+ * The primary import, export, and change set formats of the system revolve around reading and writing the byte representation of the chronologies and versions from and 
+ * to storage.
+ * The ISAAC-Rest APIs are layered on top of this low-level java implementation - and provide access to both the lowest level of storage (concepts, sememes, chronologies, 
+ * versions) but also provide various convenience abstractions, such as the notion of associations, mapsets, descriptions, etc.
+ * <br>The Rest APIs also provide extensive search capabilities across the content of the system.
+ * <br><br>
+ * <img src="doc/ISAAC Core API.png"/>
+ * </p>
  */
 package gov.vha.isaac.rest.api;

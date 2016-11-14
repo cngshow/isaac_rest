@@ -45,8 +45,8 @@ public class RestPaths
 	public static final String componentComponent = "component/";
 	public static final String sememesComponent = "sememes/";
 	public static final String prefixComponent = "prefix/";
-	public static final String byAssemblageComponent = "byAssemblage/"; // TODO change to forAssemblage
-	public static final String byReferencedComponentComponent = "byReferencedComponent/"; // TODO change to forReferencedComponent
+	public static final String forAssemblageComponent = "forAssemblage/";
+	public static final String forReferencedComponentComponent = "forReferencedComponent/";
 	public static final String sememeDefinitionComponent = "sememeDefinition/";
 	public static final String systemInfoComponent = "systemInfo/";
 	public static final String termRequestComponent = "termRequest/";
@@ -115,7 +115,7 @@ public class RestPaths
 	public static final String sememeChronologyAppPathComponent = appPathComponent + sememeAPIsPathComponent + chronologyComponent;
 	public static final String sememeVersionsAppPathComponent = appPathComponent + sememeAPIsPathComponent + versionsComponent;
 	public static final String sememeVersionAppPathComponent = appPathComponent + sememeAPIsPathComponent +versionComponent;
-	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememeAPIsPathComponent +byAssemblageComponent;
+	public static final String sememeByAssemblageAppPathComponent = appPathComponent + sememeAPIsPathComponent +forAssemblageComponent;
 
 	public static final String descriptionCreatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + createPathComponent;
 	public static final String descriptionUpdatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + updatePathComponent;
@@ -151,5 +151,5 @@ public class RestPaths
 	public static final String commentCreatePathComponent = writePathComponent + commentAPIsPathComponent + createPathComponent;
 	public static final String commentUpdatePathComponent = writePathComponent + commentAPIsPathComponent + updatePathComponent;
 	public static final String commentVersionPathComponent = commentAPIsPathComponent + versionComponent;
-	public static final String commentVersionByReferencedComponentPathComponent = commentAPIsPathComponent + versionComponent + byReferencedComponentComponent;
+	public static final String commentVersionByReferencedComponentPathComponent = commentAPIsPathComponent + versionComponent + forReferencedComponentComponent;
 }

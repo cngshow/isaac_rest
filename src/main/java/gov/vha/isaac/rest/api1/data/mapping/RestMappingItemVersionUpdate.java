@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -29,14 +28,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
- * {@link RestMappingItemVersionBaseCreate}
- * This stub class is used for callers to create {@link RestMappingItemVersion} objects.  This class, in combination with {@link RestMappingItemVersionBase} 
- * contains the fields that can be populated for creation.  
+ * {@link RestMappingItemVersionUpdate}
+ * This stub class is used for callers to edit {@link RestMappingItemVersion} objects.  It only contains the fields that may be edited after creation.
  * 
  * The API never returns this class.
 
@@ -45,53 +42,47 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemVersionBaseCreate.class)
-public class RestMappingItemVersionBaseCreate extends RestMappingItemVersionBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemVersionUpdate.class)
+public class RestMappingItemVersionUpdate extends RestMappingItemVersionBase
 {
 	/**
-	 * The concept sequence that identifies the map set that this entry belongs to
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)  //TODO make this more friendly - string instead of int
-	public int mapSetConcept;
-	
-	/**
-	 * The source concept sequence being mapped by this map item
+	 * The (optional) target concept being mapped by this map item.  This field is optional, and may be blank, if no target mapping
+	 * is available.  Accepts a nid, sequence or UUID.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public int sourceConcept;
+	public String targetConcept;
+
+	/**
+	 * An (optional) concept used to qualify this mapping entry.  Accepts a nid, sequence or UUID.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String qualifierConcept;
+
+	/**
+	 * True to indicate the mapping item should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
 	
-	public RestMappingItemVersionBaseCreate()
+	protected RestMappingItemVersionUpdate()
 	{
 		//for Jaxb
-		super();
 	}
 
 	/**
 	 * @param targetConcept
-	 * @param qualifierConcept
 	 * @param mapItemExtendedFields
+	 * @param qualifierConcept
 	 */
-	public RestMappingItemVersionBaseCreate(
-			Integer targetConcept,
-			Integer qualifierConcept,
-			int mapSetConcept,
-			int sourceConcept,
-			List<RestDynamicSememeData> mapItemExtendedFields) {
-		super(targetConcept, qualifierConcept, mapItemExtendedFields);
-		this.mapSetConcept = mapSetConcept;
-		this.sourceConcept = sourceConcept;
-	}
-	
-	public RestMappingItemVersionBaseCreate(
-			Integer targetConcept,
-			Integer qualifierConcept,
-			UUID mapSetConcept,
-			int sourceConcept,
-			List<RestDynamicSememeData> mapItemExtendedFields) {
-		super(targetConcept, qualifierConcept, mapItemExtendedFields);
-		this.mapSetConcept = Get.identifierService().getConceptSequenceForUuids(mapSetConcept);
-		this.sourceConcept = sourceConcept;
+	public RestMappingItemVersionUpdate(String targetConcept, String qualifierConcept, List<RestDynamicSememeData> mapItemExtendedFields,  Boolean active) 
+	{
+		super(mapItemExtendedFields);
+		this.targetConcept = targetConcept;
+		this.qualifierConcept = qualifierConcept;
+		this.active = active;
 	}
 }
