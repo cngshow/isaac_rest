@@ -43,7 +43,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationTypeVersion.class)
-public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCreate
+public class RestAssociationTypeVersion extends RestAssociationTypeVersionCreate
 {
 	/**
 	 * The data that was not expanded as part of this call (but can be)

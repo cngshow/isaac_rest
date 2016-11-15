@@ -64,7 +64,7 @@ public class RestIdentifiedObject
 	 * The type of this object - concept, sememe, or unknown.
 	 */
 	@XmlElement
-	RestObjectChronologyType type;
+	public RestObjectChronologyType type;
 	
 	RestIdentifiedObject() {
 		// For JAXB only

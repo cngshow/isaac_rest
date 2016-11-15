@@ -56,7 +56,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersion.class)
-public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCreate
+public class RestAssociationItemVersion 
 {
 	private static Logger log = LogManager.getLogger();
 	/**
@@ -66,6 +66,29 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Expandables expandables;
 	
+	/**
+	 * The target item in the association.  Typically this is a concept, but it may also be a sememe.  Note that 
+	 * this may be null, in the case where the association intends to represent that no target is available for a particular 
+	 * association type and source component.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject targetId;
+	
+	
+	/**
+	 * The concept identifiers of the association type
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject associationType;
+	
+	/**
+	 * The identifiers of the source item in the association.  Typically this is a concept, but it may also be a sememe.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject sourceId;
 	
 	/**
 	 * The sememe identifiers of the sememe that represents this association
@@ -132,11 +155,11 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	 */
 	public RestAssociationItemVersion(AssociationInstance read, UUID processId) throws RestException
 	{
-		associationTypeSequence = read.getAssociationTypeSequenece();
+		associationType = new RestIdentifiedObject(read.getAssociationTypeSequenece(), ObjectChronologyType.CONCEPT);
 		identifiers = new RestIdentifiedObject(read.getData().getChronology());
 		associationItemStamp = new RestStampedVersion(read.getData());
-		sourceNid = read.getSourceComponent().getNid();
-		targetNid = read.getTargetComponent().isPresent() ? read.getTargetComponent().get().getNid() : null;
+		sourceId = new RestIdentifiedObject(read.getSourceComponent());
+		targetId = read.getTargetComponent().isPresent() ? new RestIdentifiedObject(read.getTargetComponent().get()) : null;
 		
 		sourceConcept = null;
 		sourceSememe = null;
@@ -150,16 +173,16 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 			expandables = new Expandables();
 			if (RequestInfo.get().shouldExpand(ExpandUtil.source))
 			{
-				if (Get.identifierService().getChronologyTypeForNid(sourceNid) == ObjectChronologyType.CONCEPT)
+				if (sourceId.type.enumId == ObjectChronologyType.CONCEPT.ordinal())
 				{
-					sourceConcept = new RestConceptChronology(Get.conceptService().getConcept(sourceNid), 
+					sourceConcept = new RestConceptChronology(Get.conceptService().getConcept(sourceId.sequence), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 							processId);
 				}
-				else if (Get.identifierService().getChronologyTypeForNid(sourceNid) == ObjectChronologyType.SEMEME)
+				else if (sourceId.type.enumId == ObjectChronologyType.SEMEME.ordinal())
 				{
-					sourceSememe = new RestSememeChronology(Get.sememeService().getSememe(sourceNid), 
+					sourceSememe = new RestSememeChronology(Get.sememeService().getSememe(sourceId.sequence), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), 
 							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), 
@@ -168,22 +191,22 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 				}
 				else
 				{
-					log.error("Unexpected object type for source nid: " + sourceNid);
+					log.error("Unexpected object type for source nid: " + sourceId.nid);
 				}
 			}
 			
-			if (RequestInfo.get().shouldExpand(ExpandUtil.target) && targetNid != null)
+			if (RequestInfo.get().shouldExpand(ExpandUtil.target) && targetId != null)
 			{
-				if (Get.identifierService().getChronologyTypeForNid(targetNid) == ObjectChronologyType.CONCEPT)
+				if (targetId.type.enumId == ObjectChronologyType.CONCEPT.ordinal())
 				{
-					targetConcept = new RestConceptChronology(Get.conceptService().getConcept(targetNid), 
+					targetConcept = new RestConceptChronology(Get.conceptService().getConcept(targetId.sequence), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 							processId);
 				}
-				else if (Get.identifierService().getChronologyTypeForNid(targetNid) == ObjectChronologyType.SEMEME)
+				else if (targetId.type.enumId == ObjectChronologyType.SEMEME.ordinal())
 				{
-					targetSememe = new RestSememeChronology(Get.sememeService().getSememe(targetNid), 
+					targetSememe = new RestSememeChronology(Get.sememeService().getSememe(targetId.sequence), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable), 
 							RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable), 
@@ -192,7 +215,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 				}
 				else
 				{
-					log.error("Unexpected object type for source nid: " + targetNid);
+					log.error("Unexpected object type for target nid: " + targetId.nid);
 				}
 			}
 			
@@ -219,24 +242,24 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 			}
 			if (!RequestInfo.get().shouldExpand(ExpandUtil.source))
 			{
-				if (Get.identifierService().getChronologyTypeForNid(sourceNid) == ObjectChronologyType.CONCEPT)
+				if (sourceId.type.enumId == ObjectChronologyType.CONCEPT.ordinal())
 				{
-					expandables.add(new Expandable(ExpandUtil.source, RestPaths.conceptChronologyAppPathComponent   + sourceNid));
+					expandables.add(new Expandable(ExpandUtil.source, RestPaths.conceptChronologyAppPathComponent   + sourceId.nid));
 				}
-				else if (Get.identifierService().getChronologyTypeForNid(sourceNid) == ObjectChronologyType.SEMEME)
+				else if (sourceId.type.enumId == ObjectChronologyType.SEMEME.ordinal())
 				{
-					expandables.add(new Expandable(ExpandUtil.source, RestPaths.sememeChronologyAppPathComponent + sourceNid));
+					expandables.add(new Expandable(ExpandUtil.source, RestPaths.sememeChronologyAppPathComponent + sourceId.nid));
 				}
 			}
-			if (!RequestInfo.get().shouldExpand(ExpandUtil.target) && targetNid != null)
+			if (!RequestInfo.get().shouldExpand(ExpandUtil.target) && targetId != null)
 			{
-				if (Get.identifierService().getChronologyTypeForNid(targetNid) == ObjectChronologyType.CONCEPT)
+				if (targetId.type.enumId == ObjectChronologyType.CONCEPT.ordinal())
 				{
-					expandables.add(new Expandable(ExpandUtil.target, RestPaths.conceptChronologyAppPathComponent   + targetNid));
+					expandables.add(new Expandable(ExpandUtil.target, RestPaths.conceptChronologyAppPathComponent   + targetId.nid));
 				}
-				else if (Get.identifierService().getChronologyTypeForNid(targetNid) == ObjectChronologyType.SEMEME)
+				else if (targetId.type.enumId == ObjectChronologyType.SEMEME.ordinal())
 				{
-					expandables.add(new Expandable(ExpandUtil.target, RestPaths.sememeChronologyAppPathComponent + targetNid));
+					expandables.add(new Expandable(ExpandUtil.target, RestPaths.sememeChronologyAppPathComponent + targetId.nid));
 				}
 			}
 			if (!RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable))

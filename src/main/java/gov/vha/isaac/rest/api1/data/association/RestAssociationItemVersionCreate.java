@@ -27,39 +27,42 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * {@link RestAssociationTypeVersionBaseCreate}
- * This stub class is used by callers to create {@link RestAssociationTypeVersion} objects.  Typically, this class would be combined with a RestAssociationTypeVersionBase
- * class - but that doesn't yet exist at this time, as there are currently no editable fields in the association type.  Callers can edit the underlying concept that 
- * represents the association directly, if they choose.
+ * {@link RestAssociationItemVersionCreate}
+ * This stub class is used by callers to create {@link RestAssociationItemVersion} objects.  This class, in combination with {@link RestAssociationItemVersionUpdate}
+ * contains the fields that can be populated for creation.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationTypeVersionBaseCreate.class )
-public class RestAssociationTypeVersionBaseCreate
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersionCreate.class)
+public class RestAssociationItemVersionCreate extends RestAssociationItemVersionUpdate
 {
 	/**
-	 * The best (primary) name of the association, per the user specified stamp coordinates.
-	 * This would typically be a value like "broader than"
+	 * The concept uuid, nid or sequence of the association type
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String associationName;
+	public String associationType;
 	
 	/**
-	 * The inverse name (if any) of the association, per the user specified stamp coordinates.  This optional
-	 * field may not be present.  This would typically be a value like "narrower than"
+	 * The nid or UUID of the source item in the association.  Typically this is a concept, but it may also be a sememe.
+	 * Sequences are not allowed here.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String associationInverseName;
-
-	/**
-	 * The description of the purpose of this association.
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String description;
+	public String sourceId;
+	
+	protected RestAssociationItemVersionCreate()
+	{
+		//for jaxb
+	}
+	
+	public RestAssociationItemVersionCreate(int associationTypeSequence, int sourceNid)
+	{
+		this.associationType = associationTypeSequence + "";
+		this.sourceId = sourceNid + "";
+	}
 }

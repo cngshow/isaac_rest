@@ -3245,7 +3245,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-						jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+						jsonIze(new String[] {"associationType", "sourceId", "targetId"}, 
 								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.DOD_MODULE.getNid() + "", 
 										MetaData.AND.getNid() + ""})));
 		
@@ -3260,9 +3260,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestAssociationItemVersion createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
 		
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
-		Assert.assertEquals(createdAssociationItem.targetNid.intValue(), MetaData.AND.getNid());
-		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].identifiers.sequence);
+		Assert.assertEquals(createdAssociationItem.sourceId.nid, MetaData.DOD_MODULE.getNid());
+		Assert.assertEquals(createdAssociationItem.targetId.nid, MetaData.AND.getNid());
+		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
 		
 		
@@ -3273,7 +3273,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.queryParam(RequestParameters.editToken, getEditTokenString())
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
-					jsonIze(new String[] {"targetNid", "active"}, 
+					jsonIze(new String[] {"targetId", "active"}, 
 							new String[] {"", "false"})));
 	
 		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
@@ -3289,9 +3289,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
 		
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
-		Assert.assertNull(createdAssociationItem.targetNid);
-		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].identifiers.sequence);
+		Assert.assertEquals(createdAssociationItem.sourceId.nid, MetaData.DOD_MODULE.getNid());
+		Assert.assertNull(createdAssociationItem.targetId);
+		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
 			
 		
@@ -3310,7 +3310,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.queryParam(RequestParameters.editToken, getEditTokenString())
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+					jsonIze(new String[] {"associationType", "sourceId", "targetId"}, 
 							new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.AMT_MODULE.getNid() + "", ""}))));
 		
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
@@ -3318,7 +3318,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.queryParam(RequestParameters.editToken, getEditTokenString())
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
+					jsonIze(new String[] {"associationType", "sourceId", "targetId"}, 
 							new String[] {descType2.sequence + "", MetaData.AMT_MODULE.getNid() + "", 
 									MetaData.AXIOM_ORIGIN.getNid() + ""}))));
 		
@@ -3363,9 +3363,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
 		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
 		Assert.assertEquals(pagedAssociations.results.length, 1);
-		Assert.assertEquals(pagedAssociations.results[0].associationTypeSequence, createdAssociationId.sequence.intValue());
+		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence, createdAssociationId.sequence.intValue());
 		
-		int r1Source = pagedAssociations.results[0].sourceNid;
+		int r1Source = pagedAssociations.results[0].sourceId.nid;
 		
 		pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class, 
 				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + createdAssociationId.uuid)
@@ -3378,9 +3378,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 2);
 		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
 		Assert.assertEquals(pagedAssociations.results.length, 1);
-		Assert.assertEquals(pagedAssociations.results[0].associationTypeSequence, createdAssociationId.sequence.intValue());
+		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence, createdAssociationId.sequence.intValue());
 		
-		Assert.assertNotEquals(r1Source, pagedAssociations.results[0].sourceNid);
+		Assert.assertNotEquals(r1Source, pagedAssociations.results[0].sourceId.nid);
 	}
 	
 	@Test

@@ -46,6 +46,12 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Removed 'associationConceptSequence' from RestAssociationTypeVersion as it now duplicated information returned in 'identifiers'
     * Removed 'conceptSequence' from RestConceptChronology as it now duplicated information returned in 'identifiers'
     * Removed 'sememeSequence' from RestSememeChronology as it now duplicated information returned in 'identifiers'
+    * Realign the Association APIs with the newest patterns
+      - RestAssociationVersionBase renamed to RestAssociationItemVersionUpdate - targetNid renamed to targetId and changed to a string.
+      - RestAssociationItemVersionCreate - Fields changed to strings, and renamed: associationTypeSequence -> associationType, sourceNid -> sourceId
+      - RestAssociationTypeVersionBaseCreate renamed to RestAssociationTypeVersionCreate
+      - RestAssociationItemVersion - Fields changed to RestIdentifiedObject and renamed : associationTypeSequence -> associationType, sourceNid -> sourceId
+          targetNid renamed to targetId
 
 
 * 2016/11/08 - 1.7.4: 
