@@ -55,6 +55,8 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Realign the API for creating mapsets (portions missed above)
         - RestMappingSetExtensionValueBaseCreate renamed to RestMappingSetExtensionValueCreate, extensionNameConcept changed to a String type.
         - RestMappingSetExtensionValue - extensionNameConcept changed to a RestIdentifiedObject
+    * RestDynamicSememeColumnInfo columnConceptSequence renamed to columnLabelConcept, changed to a RestIdentifiedObject
+    * RestDynamicSememeColumnInfoCreate columnLabelConcept changed from int to string
 
 
 * 2016/11/08 - 1.7.4: 

@@ -1535,7 +1535,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
 		
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnConceptSequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnLabelConcept.sequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, true);
@@ -1544,7 +1544,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData);
 		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes);
 		
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnConceptSequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnLabelConcept.sequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, false);
@@ -1735,7 +1735,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
 
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnConceptSequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnLabelConcept.sequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, false);
@@ -1746,7 +1746,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes.length, 1);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes[0].enumId, DynamicSememeValidatorType.LESS_THAN.ordinal());
 		
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnConceptSequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnLabelConcept.sequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, true);
@@ -3500,7 +3500,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			{
 				continue;
 			}
-			Assert.assertEquals(i +1, createdSememeType.columnInfo[i].columnConceptSequence);
+			Assert.assertEquals(i +1, createdSememeType.columnInfo[i].columnLabelConcept.sequence);
 			Assert.assertEquals(i, createdSememeType.columnInfo[i].columnOrder);
 			Assert.assertEquals(t.getDisplayName(), createdSememeType.columnInfo[i].columnDataType.friendlyName);
 			Assert.assertEquals(t.ordinal(), createdSememeType.columnInfo[i].columnDataType.enumId);

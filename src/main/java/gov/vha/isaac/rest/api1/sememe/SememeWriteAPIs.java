@@ -339,7 +339,9 @@ public class SememeWriteAPIs
 				//TODO 2 Dan make index config smarter / easier.  Shouldn't be trying to index unindexable types
 				indexConfig.add(i);
 				columns[i] = new DynamicSememeColumnInfo(i, 
-						Get.identifierService().getUuidPrimordialFromConceptId(sememeTypeCreationData.dataColumnsDefinition[i].columnLabelConcept).get(), 
+						Get.identifierService().getUuidPrimordialFromConceptId(
+								RequestInfoUtils.getConceptSequenceFromParameter("RestDynamicSememeTypeCreate.dataColumnsDefinition.columnLabelConcept", 
+										sememeTypeCreationData.dataColumnsDefinition[i].columnLabelConcept)).get(), 
 						DynamicSememeDataType.parse(sememeTypeCreationData.dataColumnsDefinition[i].columnDataType, true), 
 						RestDynamicSememeData.translate(sememeTypeCreationData.dataColumnsDefinition[i].columnDefaultData), 
 						sememeTypeCreationData.dataColumnsDefinition[i].columnRequired, 

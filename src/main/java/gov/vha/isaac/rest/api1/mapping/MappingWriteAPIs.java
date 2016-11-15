@@ -353,7 +353,9 @@ public class MappingWriteAPIs
 			for (RestDynamicSememeColumnInfoCreate colInfo : extendedFields)
 			{
 				columns[i] = new DynamicSememeColumnInfo(i++, 
-						Get.identifierService().getUuidPrimordialFromConceptId(colInfo.columnLabelConcept).get(), 
+						Get.identifierService().getUuidPrimordialFromConceptId(
+								RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.columnLabelConcept", 
+										colInfo.columnLabelConcept)).get(), 
 						DynamicSememeDataType.parse(colInfo.columnDataType, true), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
 						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
 			}
