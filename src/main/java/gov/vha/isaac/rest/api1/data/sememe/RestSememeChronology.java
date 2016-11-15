@@ -64,12 +64,6 @@ public class RestSememeChronology
 	Expandables expandables;
 	
 	/**
-	 * The sememe sequence identifier of this sememe instance
-	 */
-	@XmlElement
-	int sememeSequence;
-	
-	/**
 	 * The concept sequence identifier of the concept that represents the type of this sememe
 	 */
 	@XmlElement
@@ -98,7 +92,7 @@ public class RestSememeChronology
 	String referencedComponentNidDescription;
 	
 	/**
-	 * The permanent identifier object(s) attached to this sememe instance
+	 * The permanent identifiers attached to this sememe instance
 	 */
 	@XmlElement
 	RestIdentifiedObject identifiers;
@@ -117,8 +111,7 @@ public class RestSememeChronology
 	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeNested,
 			boolean populateReferencedDetails, UUID processId) throws RestException
 	{
-		identifiers = new RestIdentifiedObject(sc.getUuidList());
-		sememeSequence = sc.getSememeSequence();
+		identifiers = new RestIdentifiedObject(sc);
 		assemblageSequence = sc.getAssemblageSequence();
 		referencedComponentNid = sc.getReferencedComponentNid();
 		if (populateReferencedDetails)
@@ -199,11 +192,6 @@ public class RestSememeChronology
 	public RestIdentifiedObject getIdentifiers() {
 		return identifiers;
 	}
-
-	@XmlTransient
-	public int getSememeSequence() {
-		return sememeSequence;
-	}
 	
 	@XmlTransient
 	public int getAssemblageSequence() {
@@ -230,7 +218,7 @@ public class RestSememeChronology
 	 */
 	@Override
 	public String toString() {
-		return "RestSememeChronology [sememeSequence=" + sememeSequence + ", assemblageSequence=" + assemblageSequence
+		return "RestSememeChronology [assemblageSequence=" + assemblageSequence
 				+ ", referencedComponentNid=" + referencedComponentNid + ", referencedComponentNidObjectType="
 				+ referencedComponentNidObjectType + ", referencedComponentNidDescription="
 				+ referencedComponentNidDescription + ", identifiers=" + identifiers + ", versions=" + versions + "]";

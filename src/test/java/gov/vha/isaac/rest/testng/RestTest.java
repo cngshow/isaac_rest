@@ -965,7 +965,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Iterate description list to find new description
 		RestSememeDescriptionVersion matchingVersion = null;
 		for (RestSememeDescriptionVersion version : conceptDescriptionsObject) {
-			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+			if (version.getSememeChronology().getIdentifiers().sequence == descriptionSememeSequence) {
 				matchingVersion = version;
 				break;
 			}
@@ -1009,7 +1009,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Iterate description list to find new description
 		matchingVersion = null;
 		for (RestSememeDescriptionVersion version : conceptDescriptionsObject) {
-			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+			if (version.getSememeChronology().getIdentifiers().sequence == descriptionSememeSequence) {
 				matchingVersion = version;
 				break;
 			}
@@ -1038,7 +1038,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Iterate description list to find new description
 		matchingVersion = null;
 		for (RestSememeDescriptionVersion version : conceptDescriptionsObject) {
-			if (version.getSememeChronology().getSememeSequence() == descriptionSememeSequence) {
+			if (version.getSememeChronology().getIdentifiers().sequence == descriptionSememeSequence) {
 				matchingVersion = version;
 				break;
 			}
@@ -1077,7 +1077,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
 		RestConceptVersion conceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
-		Assert.assertEquals(conceptVersionObject.getConChronology().getConceptSequence(), parent1Sequence);
+		Assert.assertEquals(conceptVersionObject.getConChronology().getIdentifiers().sequence, parent1Sequence);
 		
 		final UUID randomUuid = UUID.randomUUID();
 
@@ -1129,10 +1129,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
 		Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
 		Assert.assertTrue(
-				(newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent1Sequence
-				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent2Sequence)
-				|| (newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent2Sequence
-						&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
+				(newConceptVersionObject.getParents().get(0).getConChronology().getIdentifiers().sequence == parent1Sequence
+				&& newConceptVersionObject.getParents().get(1).getConChronology().getIdentifiers().sequence == parent2Sequence)
+				|| (newConceptVersionObject.getParents().get(0).getConChronology().getIdentifiers().sequence == parent2Sequence
+						&& newConceptVersionObject.getParents().get(1).getConChronology().getIdentifiers().sequence == parent1Sequence));
 
 		// Retrieve all descriptions referring to new concept
 		RestSememeDescriptionVersion[] conceptDescriptionsObject = getDescriptionsForConcept(newConceptSequence);
@@ -1199,10 +1199,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// validate conceptVersionFromTaxonomy parents
 		Assert.assertTrue(conceptVersionFromTaxonomy.getParents().size() == 2);
 		Assert.assertTrue(
-				(conceptVersionFromTaxonomy.getParents().get(0).getConChronology().getConceptSequence() == parent1Sequence
-				&& conceptVersionFromTaxonomy.getParents().get(1).getConChronology().getConceptSequence() == parent2Sequence)
-				|| (conceptVersionFromTaxonomy.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence
-						|| conceptVersionFromTaxonomy.getParents().get(0).getConChronology().getConceptSequence() == parent2Sequence));
+				(conceptVersionFromTaxonomy.getParents().get(0).getConChronology().getIdentifiers().sequence == parent1Sequence
+				&& conceptVersionFromTaxonomy.getParents().get(1).getConChronology().getIdentifiers().sequence == parent2Sequence)
+				|| (conceptVersionFromTaxonomy.getParents().get(1).getConChronology().getIdentifiers().sequence == parent1Sequence
+						|| conceptVersionFromTaxonomy.getParents().get(0).getConChronology().getIdentifiers().sequence == parent2Sequence));
 
 		// Find new parent 1 concept in taxonomy
 		taxonomyResponse = target(taxonomyRequestPath)
@@ -1216,7 +1216,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(conceptVersionFromTaxonomy.getChildren().size() > 0);
 		boolean foundNewConceptAsChildOfSpecifiedParent = false;
 		for (RestConceptVersion child : conceptVersionFromTaxonomy.getChildren()) {
-			if (child.getConChronology().getConceptSequence() == newConceptSequence) {
+			if (child.getConChronology().getIdentifiers().sequence == newConceptSequence) {
 				foundNewConceptAsChildOfSpecifiedParent = true;
 				break;
 			}
@@ -1962,7 +1962,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testPaginatedSememesByAssemblage()
 	{
-		String xpathExpr = "/restSememeVersionPage/results/sememeChronology/sememeSequence";
+		String xpathExpr = "/restSememeVersionPage/results/sememeChronology/identifiers";
 
 		// Test to confirm that requested maxPageSize of results returned
 		for (int pageSize : new int[] { 1, 5, 10 }) {
@@ -2896,7 +2896,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.descriptionTypePrefs, "synonym,fsn"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			xpath = "/restConceptVersion/children/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
 			node = XMLUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
@@ -2911,7 +2911,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.coordToken, fsnDescriptionPreferredToken.token))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			xpath = "/restConceptVersion/children/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
 			node = XMLUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
@@ -2926,7 +2926,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.descriptionTypePrefs, "fsn,synonym"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restConceptVersion/children/conChronology[conceptSequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			xpath = "/restConceptVersion/children/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
 			node = XMLUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
@@ -3075,8 +3075,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							.readEntity(String.class);
 					identifiedObjectsResult = XMLUtils.unmarshalObject(RestIdentifiedObjectsResult.class, result);
 					// Test RestSememeChronology AND RestConceptChronology
-					Assert.assertTrue(identifiedObjectsResult.getConcept().getConceptSequence() == sequence);
-					Assert.assertTrue(identifiedObjectsResult.getSememe().getSememeSequence() == sequence);
+					Assert.assertTrue(identifiedObjectsResult.getConcept().getIdentifiers().sequence == sequence);
+					Assert.assertTrue(identifiedObjectsResult.getSememe().getIdentifiers().sequence == sequence);
 
 					break;
 				}
@@ -3246,7 +3246,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
-								new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.DOD_MODULE.getNid() + "", 
+								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.DOD_MODULE.getNid() + "", 
 										MetaData.AND.getNid() + ""})));
 		
 		result = checkFail(createAssociationItemResponse).readEntity(String.class);
@@ -3262,7 +3262,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
 		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
 		Assert.assertEquals(createdAssociationItem.targetNid.intValue(), MetaData.AND.getNid());
-		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
+		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
 		
 		
@@ -3291,7 +3291,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
 		Assert.assertEquals(createdAssociationItem.sourceNid, MetaData.DOD_MODULE.getNid());
 		Assert.assertNull(createdAssociationItem.targetNid);
-		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].associationConceptSequence);
+		Assert.assertEquals(createdAssociationItem.associationTypeSequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
 			
 		
@@ -3311,7 +3311,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
-							new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.AMT_MODULE.getNid() + "", ""}))));
+							new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.AMT_MODULE.getNid() + "", ""}))));
 		
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)

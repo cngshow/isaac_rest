@@ -19,13 +19,11 @@
 package gov.vha.isaac.rest.api1.data.association;
 
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.associations.AssociationType;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -52,28 +50,21 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCr
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Expandables expandables;
+	public Expandables expandables;
 	
 	/**
-	 * The concept sequence of the concept that represents the association definition.
+	 * The identifiers of the concept that represents the association definition
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public int associationConceptSequence;
-	
-	/**
-	 * The concept UUID(s) of the concept that represents the association definition
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	RestIdentifiedObject identifiers;
+	public RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this association type
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	RestStampedVersion associationItemStamp;
+	public RestStampedVersion associationItemStamp;
 	
 	/**
 	 * The Concept Chronology of the concept represented by associationConceptSequence.  Typically blank, unless requested via the expand parameter
@@ -93,15 +84,14 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCr
 	public RestAssociationTypeVersion(AssociationType read, UUID processId)
 	{
 		//TODO the way that the AssociationType is constructed, it isn't paying attention to language or FSN vs Synonym prefs.  This should be fixed...
-		associationConceptSequence = read.getAssociationTypeSequenece();
 		associationName = read.getAssociationName();
 		associationInverseName = read.getAssociationInverseName().orElse(null);
 		description = read.getDescription();
-		identifiers = new RestIdentifiedObject(read.getAssociationTypeConcept().getUuidList());
+		identifiers = new RestIdentifiedObject(read.getAssociationTypeConcept());
 		
 		if (RequestInfo.get().shouldExpand(ExpandUtil.referencedConcept))
 		{
-			associationConcept = new RestConceptChronology(Get.conceptService().getConcept(associationConceptSequence), 
+			associationConcept = new RestConceptChronology(read.getAssociationTypeConcept(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 					processId);
@@ -112,7 +102,8 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionBaseCr
 			if (RequestInfo.get().returnExpandableLinks())
 			{
 				expandables = new Expandables();
-				expandables.add(new Expandable(ExpandUtil.referencedConcept, RestPaths.conceptChronologyAppPathComponent + associationConceptSequence));
+				expandables.add(new Expandable(ExpandUtil.referencedConcept, RestPaths.conceptChronologyAppPathComponent 
+						+ read.getAssociationTypeConcept().getConceptSequence()));
 			}
 		}
 	}

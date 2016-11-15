@@ -7,7 +7,7 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
-* 2016/11/10 - 1.8.0:
+* 2016/11/?? - 1.8.0:
     * Enhanced the RestIdentifiedObject return type, so that it also includes nid, sequence, and type fields.  The previously existing uuids
         field is unchanged.
     * Enhanced the RestWriteResponse to return type (concept or sememe)
@@ -43,7 +43,9 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Removed the field 'stampSequence' from RestStampedVersion
     * Fixed a number of bugs with concept / description creation where extended description types and/or dialects were not being added.
     * Added a bunch of missing validation on the concept inputs to create concept / create description.
-    
+    * Removed 'associationConceptSequence' from RestAssociationTypeVersion as it now duplicated information returned in 'identifiers'
+    * Removed 'conceptSequence' from RestConceptChronology as it now duplicated information returned in 'identifiers'
+    * Removed 'sememeSequence' from RestSememeChronology as it now duplicated information returned in 'identifiers'
 
 
 * 2016/11/08 - 1.7.4: 
