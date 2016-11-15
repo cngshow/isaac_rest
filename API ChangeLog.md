@@ -52,6 +52,9 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
       - RestAssociationTypeVersionBaseCreate renamed to RestAssociationTypeVersionCreate
       - RestAssociationItemVersion - Fields changed to RestIdentifiedObject and renamed : associationTypeSequence -> associationType, sourceNid -> sourceId
           targetNid renamed to targetId
+    * Realign the API for creating mapsets (portions missed above)
+        - RestMappingSetExtensionValueBaseCreate renamed to RestMappingSetExtensionValueCreate, extensionNameConcept changed to a String type.
+        - RestMappingSetExtensionValue - extensionNameConcept changed to a RestIdentifiedObject
 
 
 * 2016/11/08 - 1.7.4: 
