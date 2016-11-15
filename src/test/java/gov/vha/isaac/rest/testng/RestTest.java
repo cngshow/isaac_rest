@@ -3408,8 +3408,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-					jsonIze(new String[] {"associationTypeSequence", "sourceNid", "targetNid"}, 
-							new String[] {createdAssociations[0].associationConcept.getConceptSequence() + "", MetaData.DOD_MODULE.getNid() + "", 
+					jsonIze(new String[] {"associationType", "sourceId", "targetId"}, 
+							new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.DOD_MODULE.getNid() + "", 
 									MetaData.AND.getNid() + ""})));
 		assertResponseStatus(createAssociationItemResponse, Status.FORBIDDEN.getStatusCode());
 
@@ -3454,7 +3454,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 			.request()
 			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
-					jsonIze(new String[] {"targetNid", "active"}, 
+					jsonIze(new String[] {"targetId", "active"}, 
 							new String[] {"", "false"})));
 		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
 		RestWriteResponse updatedAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
