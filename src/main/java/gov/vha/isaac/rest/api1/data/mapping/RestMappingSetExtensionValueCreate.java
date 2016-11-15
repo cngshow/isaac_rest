@@ -25,38 +25,37 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
- * {@link RestMappingSetExtensionValueBaseCreate}
+ * {@link RestMappingSetExtensionValueCreate}
  * 
- * This stub class is used for callers as part of creating {@link RestMappingSetVersion} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
+ * This stub class is used for callers as part of creating {@link RestMappingSetExtensionValue} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
  * contains the fields that may be set during the initial create. 
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueBaseCreate.class)
-public class RestMappingSetExtensionValueBaseCreate extends RestMappingSetExtensionValueBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueCreate.class)
+public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionValueBase
 {
-	//TODO 2 Dan finish refactoring the create paths of the map sets  
 	/**
-	 * The concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
-	 * will be used as the label of the extension.  On create, this accepts a nid or a sequence.  On read, it returns a concept sequence.
+	 * The concept (uuid, nid or sequence) that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
+	 * will be used as the label of the extension.
 	 */
 	@XmlElement
-	public int extensionNameConcept;
+	public String extensionNameConcept;
 	
-	public RestMappingSetExtensionValueBaseCreate()
+	public RestMappingSetExtensionValueCreate()
 	{
 		//for Jaxb
 		super();
 	}
 	
-	public RestMappingSetExtensionValueBaseCreate(int extensionNameConcept)
+	public RestMappingSetExtensionValueCreate(String extensionNameConcept)
 	{
 		super();
 		this.extensionNameConcept = extensionNameConcept;
 	}
 	
-	public RestMappingSetExtensionValueBaseCreate(int extensionNameConcept, RestDynamicSememeData extensionValue)
+	public RestMappingSetExtensionValueCreate(String extensionNameConcept, RestDynamicSememeData extensionValue)
 	{
 		super(extensionValue);
 		this.extensionNameConcept = extensionNameConcept;

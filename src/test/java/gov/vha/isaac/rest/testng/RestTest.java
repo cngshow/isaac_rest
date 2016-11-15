@@ -1531,7 +1531,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
 		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
-		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept.sequence, MetaData.AMT_MODULE.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
 		
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
@@ -1730,7 +1730,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
 		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
-		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept.sequence, MetaData.AMT_MODULE.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
 		
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
