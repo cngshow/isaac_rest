@@ -40,6 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersionBaseCreate.class)
 public class RestAssociationItemVersionBaseCreate extends RestAssociationItemVersionBase
 {
+	//TODO 2 DAN refactor association create APIs per new pattern
 	/**
 	 * The concept sequence of the association type
 	 */

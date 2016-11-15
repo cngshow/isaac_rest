@@ -68,7 +68,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	
 	
 	/**
-	 * The sememe UUID(s) of the sememe that represents this association
+	 * The sememe identifiers of the sememe that represents this association
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)

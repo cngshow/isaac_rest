@@ -36,7 +36,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueBaseCreate.class)
 public class RestMappingSetExtensionValueBaseCreate extends RestMappingSetExtensionValueBase
 {
-	
+	//TODO 2 Dan finish refactoring the create paths of the map sets  
 	/**
 	 * The concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
 	 * will be used as the label of the extension.  On create, this accepts a nid or a sequence.  On read, it returns a concept sequence.

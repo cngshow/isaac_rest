@@ -45,7 +45,7 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	public String extensionNameConceptDescription;
 	
 	/**
-	 * The UUID(s) of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
+	 * The identifiers of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
 	 * will be used as the label of the extension.
 	 */
 	@XmlElement
