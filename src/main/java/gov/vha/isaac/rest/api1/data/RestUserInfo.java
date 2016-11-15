@@ -84,7 +84,7 @@ public class RestUserInfo
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public RestUserInfo(int conceptNid)
 	{
-		userId = new RestIdentifiedObject(Get.identifierService().getUuidsForNid(conceptNid));
+		userId = new RestIdentifiedObject(conceptNid);
 		Get.sememeService().getDescriptionsForComponent(conceptNid).forEach(description -> 
 		{
 			DescriptionSememe ds = ((LatestVersion<DescriptionSememeImpl>)((SememeChronology)description)

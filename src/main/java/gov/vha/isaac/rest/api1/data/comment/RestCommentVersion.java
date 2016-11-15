@@ -66,7 +66,7 @@ public class RestCommentVersion extends RestCommentVersionBase
 	{
 		super(commentSememe.getData()[0].getDataObject().toString(),
 				(commentSememe.getData().length > 1 && commentSememe.getData()[1] != null) ? commentSememe.getData()[1].getDataObject().toString() : null);
-		identifiers = new RestIdentifiedObject(commentSememe.getUuidList());
+		identifiers = new RestIdentifiedObject(commentSememe.getChronology());
 		commentStamp = new RestStampedVersion(commentSememe);
 		commentedItem = new RestIdentifiedObject(commentSememe.getReferencedComponentNid());
 		if (commentSememe.getAssemblageSequence() != DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())

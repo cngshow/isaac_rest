@@ -133,7 +133,7 @@ public class RestAssociationItemVersion extends RestAssociationItemVersionBaseCr
 	public RestAssociationItemVersion(AssociationInstance read, UUID processId) throws RestException
 	{
 		associationTypeSequence = read.getAssociationTypeSequenece();
-		identifiers = new RestIdentifiedObject(read.getData().getUuidList());
+		identifiers = new RestIdentifiedObject(read.getData().getChronology());
 		associationItemStamp = new RestStampedVersion(read.getData());
 		sourceNid = read.getSourceComponent().getNid();
 		targetNid = read.getTargetComponent().isPresent() ? read.getTargetComponent().get().getNid() : null;

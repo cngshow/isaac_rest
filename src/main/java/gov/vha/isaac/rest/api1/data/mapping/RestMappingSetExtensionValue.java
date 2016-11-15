@@ -60,7 +60,7 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	public RestMappingSetExtensionValue(int extensionNameConcept, RestDynamicSememeData extensionValue)
 	{
 		this.extensionNameConcept = Get.identifierService().getConceptSequence(extensionNameConcept);
-		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(Get.identifierService().getUuidsForNid(Get.identifierService().getConceptNid(extensionNameConcept)));
+		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(Get.identifierService().getConceptNid(extensionNameConcept));
 		this.extensionValue = extensionValue;
 		this.extensionNameConceptDescription = Util.readBestDescription(extensionNameConcept);
 	}

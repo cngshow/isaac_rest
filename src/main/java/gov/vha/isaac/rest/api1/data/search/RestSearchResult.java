@@ -133,7 +133,7 @@ public class RestSearchResult
 					.getIdentifiedObjectChronology(matchNid);
 			if (object.isPresent())
 			{
-				identifiers = new RestIdentifiedObject(object.get().getUuidList());
+				identifiers = new RestIdentifiedObject(object.get());
 			}
 			else
 			{
