@@ -31,47 +31,18 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * 
- * {@link RestSememeDescriptionCreateData}
+ * {@link RestSememeDescriptionCreate}
+ * This class, in conjunction with {@link RestSememeDescriptionUpdate} is used to create new {@link RestSememeDescriptionVersion} objects.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * @author darmbrust
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeDescriptionCreateData.class)
-public class RestSememeDescriptionCreateData
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeDescriptionCreate.class)
+public class RestSememeDescriptionCreate extends RestSememeDescriptionUpdate
 {
-	/**
-	 * The concept identifier (uuid, nid or sequence) of the concept that represents the case significance flag on the description .
-	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String caseSignificanceConcept;
-	
-	/**
-	 * The optional concept identifier (uuid, nid or sequence) of the concept that represents the language of the description (note, this is NOT 
-	 * the dialect).  If not specified, defaults to ENGLISH
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String languageConcept;
-	
-	/**
-	 * The text of the description
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String text;
-	
-	/**
-	 * The concept identifier (uuid, nid or sequence) of the concept that represents the type of the description.  
-	 * This should be FSN, Synonym, or Definition.
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String descriptionTypeConcept;
-
 	/**
 	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
 	 * This may be a concept like Abbreviation or Vista Name
@@ -102,17 +73,11 @@ public class RestSememeDescriptionCreateData
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String referencedComponentId;
 	
-	/**
-	 * True to indicate the mapping set should be set as active, false for inactive.  
-	 * This field is optional, if not provided, it will be assumed to be active.
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Boolean active;
 	
-	protected RestSememeDescriptionCreateData()
+	protected RestSememeDescriptionCreate()
 	{
 		//for Jaxb
+		super();
 	}
 
 	/**
@@ -123,19 +88,15 @@ public class RestSememeDescriptionCreateData
 	 * @param dialectIds
 	 * @param referencedComponentNid
 	 */
-	public RestSememeDescriptionCreateData(
-			int caseSignificanceConceptSequence,
-			int languageConceptSequence,
+	public RestSememeDescriptionCreate(
+			String caseSignificanceConceptSequence,
+			String languageConceptSequence,
 			String text,
-			int descriptionTypeConceptSequence,
+			String descriptionTypeConceptSequence,
 			Collection<String> preferredInDialectAssemblagesIds,
 			Collection<String> acceptableInDialectAssemblagesIds,
 			int referencedComponentNid) {
-		super();
-		this.caseSignificanceConcept = caseSignificanceConceptSequence + "";
-		this.languageConcept = languageConceptSequence + "";
-		this.text = text;
-		this.descriptionTypeConcept = descriptionTypeConceptSequence +"";
+		super(caseSignificanceConceptSequence, languageConceptSequence, text, descriptionTypeConceptSequence, true);
 		if (preferredInDialectAssemblagesIds != null) {
 			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
 		}

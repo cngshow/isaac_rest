@@ -57,6 +57,15 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
         - RestMappingSetExtensionValue - extensionNameConcept changed to a RestIdentifiedObject
     * RestDynamicSememeColumnInfo columnConceptSequence renamed to columnLabelConcept, changed to a RestIdentifiedObject
     * RestDynamicSememeColumnInfoCreate columnLabelConcept changed from int to string
+    * Realign description update API to new patterh
+        - RestSememeDescriptionCreateData renamed to RestSememeDescriptionCreate
+        - RestSememeDescriptionUpdateData renamed to RestSememeDescriptionUpdate, fields renamed and changed to strings: 
+            caseSignificanceConceptSequence -> caseSignificanceConcept, languageConceptSequence -> languageConcept, descriptionTypeConceptSequence -> descriptionTypeConcept
+    * Realign RestSememeChronology - fields renamed / changed to RestIdentifiedObjects: assemblageSequence -> assemblage, referencedComponenentNid -> referencedComponent, 
+        removed referencedComponentNidObjectType as no longer necessary
+    * Realign RestSememeDescriptionVersion - fields renamed / changed to RestIdentifiedObjets: caseSignificanceConceptSequence -> caseSignificancConcept, 
+        languageConceptSequence -> languageConcept, descriptionTypeConceptSequence -> descriptionTypeConcept, descriptionExtendedTypeConceptSequence -> 
+        descriptionExtendedTypeConcept
 
 
 * 2016/11/08 - 1.7.4: 

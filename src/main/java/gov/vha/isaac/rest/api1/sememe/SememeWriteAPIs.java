@@ -79,8 +79,8 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeBase;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeBaseCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypeCreate;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreateData;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdateData;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreate;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdate;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -108,7 +108,7 @@ public class SememeWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionComponent + RestPaths.createPathComponent)
 	public RestWriteResponse createDescriptionSememe(
-			RestSememeDescriptionCreateData creationData,
+			RestSememeDescriptionCreate creationData,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
@@ -251,7 +251,7 @@ public class SememeWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.descriptionComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
 	public RestWriteResponse updateDescriptionSememe(
-			RestSememeDescriptionUpdateData updateData,
+			RestSememeDescriptionUpdate updateData,
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -271,10 +271,14 @@ public class SememeWriteAPIs
 							DescriptionSememeImpl.class, (updateData.active == null || updateData.active ? State.ACTIVE : State.INACTIVE),
 							RequestInfo.get().getEditCoordinate());
 
-			mutableVersion.setCaseSignificanceConceptSequence(updateData.getCaseSignificanceConceptSequence());
-			mutableVersion.setLanguageConceptSequence(updateData.getLanguageConceptSequence());
-			mutableVersion.setText(updateData.getText());
-			mutableVersion.setDescriptionTypeConceptSequence(updateData.getDescriptionTypeConceptSequence());
+			mutableVersion.setCaseSignificanceConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", 
+					updateData.caseSignificanceConcept));
+			mutableVersion.setLanguageConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.languageConcept", 
+					updateData.languageConcept));
+			mutableVersion.setText(updateData.text);
+			//TODO this needs a validator in isaac, to ensure it is a proper type
+			mutableVersion.setDescriptionTypeConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.descriptionTypeConcept", 
+					updateData.descriptionTypeConcept));
 
 			Get.commitService().addUncommitted(sememeChronology).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 

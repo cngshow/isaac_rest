@@ -73,7 +73,7 @@ public class RestIdentifiedObjectsResult
 	@Override
 	public String toString() {
 		return "RestIdentifiedObjectsResult [concept=" + (concept != null ? concept.getDescription() : null) + ", sememe=" 
-				+ (sememe != null ? sememe.getIdentifiers().uuids : null) + "]";
+				+ (sememe != null ? sememe.identifiers.uuids : null) + "]";
 	}
 
 	/**
