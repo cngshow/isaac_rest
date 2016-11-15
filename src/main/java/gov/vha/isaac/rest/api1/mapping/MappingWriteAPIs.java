@@ -107,8 +107,7 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent)
-@DeclareRoles({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
 public class MappingWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(MappingWriteAPIs.class);

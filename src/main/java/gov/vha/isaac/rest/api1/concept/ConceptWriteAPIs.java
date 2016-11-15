@@ -79,8 +79,7 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent)
-@DeclareRoles({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
 public class ConceptWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(ConceptWriteAPIs.class);
