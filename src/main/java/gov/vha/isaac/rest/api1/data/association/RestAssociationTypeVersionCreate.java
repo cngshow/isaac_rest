@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * {@link RestAssociationTypeVersionBaseCreate}
+ * {@link RestAssociationTypeVersionCreate}
  * This stub class is used by callers to create {@link RestAssociationTypeVersion} objects.  Typically, this class would be combined with a RestAssociationTypeVersionBase
  * class - but that doesn't yet exist at this time, as there are currently no editable fields in the association type.  Callers can edit the underlying concept that 
  * represents the association directly, if they choose.
@@ -37,8 +37,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationTypeVersionBaseCreate.class )
-public class RestAssociationTypeVersionBaseCreate
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationTypeVersionCreate.class )
+public class RestAssociationTypeVersionCreate
 {
 	/**
 	 * The best (primary) name of the association, per the user specified stamp coordinates.

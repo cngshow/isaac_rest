@@ -35,7 +35,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBaseCreate
+public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBase
 {
 	/**
 	 * The selected description of the extensionNameConcept that describes the purpose of this extended field on a map set definition.  
@@ -45,7 +45,14 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	public String extensionNameConceptDescription;
 	
 	/**
-	 * The UUID(s) of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
+	 * The concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
+	 * will be used as the label of the extension.  On create, this accepts a nid or a sequence.  On read, it returns a concept sequence.
+	 */
+	@XmlElement
+	public RestIdentifiedObject extensionNameConcept;
+	
+	/**
+	 * The identifiers of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
 	 * will be used as the label of the extension.
 	 */
 	@XmlElement
@@ -59,8 +66,8 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	
 	public RestMappingSetExtensionValue(int extensionNameConcept, RestDynamicSememeData extensionValue)
 	{
-		this.extensionNameConcept = Get.identifierService().getConceptSequence(extensionNameConcept);
-		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(Get.identifierService().getUuidsForNid(Get.identifierService().getConceptNid(extensionNameConcept)));
+		this.extensionNameConcept = new RestIdentifiedObject(extensionNameConcept);
+		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(Get.identifierService().getConceptNid(extensionNameConcept));
 		this.extensionValue = extensionValue;
 		this.extensionNameConceptDescription = Util.readBestDescription(extensionNameConcept);
 	}

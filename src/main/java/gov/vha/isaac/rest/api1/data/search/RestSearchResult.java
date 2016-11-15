@@ -88,8 +88,9 @@ public class RestSearchResult
 	Expandables expandables;
 	
 	/**
-	 * The (optionally) populated identifiers (UUIDs) of the sememe that matched the query.  Must pass expand='uuid' to have
-	 * this populated.
+	 * The (optionally) populated identifiers (UUIDs, nid and sequence) of the sememe that matched the query.  Must pass expand='uuid' to have
+	 * this populated.  When populated, the nid here is identical to matchNid - but this is significantly more expensive to populate than matchNid
+	 * (because that comes directly from the search index) - hence, this field is only optionally populated.
 	 */
 	@XmlElement
 	RestIdentifiedObject identifiers;
@@ -132,7 +133,7 @@ public class RestSearchResult
 					.getIdentifiedObjectChronology(matchNid);
 			if (object.isPresent())
 			{
-				identifiers = new RestIdentifiedObject(object.get().getUuidList());
+				identifiers = new RestIdentifiedObject(object.get());
 			}
 			else
 			{

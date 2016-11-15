@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -63,7 +64,7 @@ public class RestIdentifiedObject
 	 * The type of this object - concept, sememe, or unknown.
 	 */
 	@XmlElement
-	RestObjectChronologyType type;
+	public RestObjectChronologyType type;
 	
 	RestIdentifiedObject() {
 		// For JAXB only
@@ -96,7 +97,6 @@ public class RestIdentifiedObject
 		readSequence();
 	}
 	
-	//TODO 1 Dan go through the callers of this method, and see which ones could use a different method, to pass more information up front.
 	public RestIdentifiedObject(List<UUID> uuids)
 	{
 		if (uuids == null || uuids.size() == 0) 
@@ -106,6 +106,24 @@ public class RestIdentifiedObject
 		this.uuids.addAll(uuids);
 		nid = Get.identifierService().getNidForUuids(uuids);
 		readSequence();
+	}
+	
+	public RestIdentifiedObject(ObjectChronology<?> object)
+	{
+		nid = object.getNid();
+		uuids.addAll(object.getUuidList());
+		switch (object.getOchreObjectType()) {
+			case CONCEPT:
+				sequence = Get.identifierService().getConceptSequence(nid);
+				type = new RestObjectChronologyType(ObjectChronologyType.CONCEPT);
+				break;
+			case SEMEME:
+				sequence = Get.identifierService().getSememeSequence(nid);
+				type = new RestObjectChronologyType(ObjectChronologyType.SEMEME);
+				break;
+			default :
+				throw new RuntimeException("Unexpected case");
+		}
 	}
 	
 	public RestIdentifiedObject(int id, ObjectChronologyType type)

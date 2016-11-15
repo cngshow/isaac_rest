@@ -85,7 +85,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
@@ -345,7 +345,7 @@ public class MappingWriteAPIs
 			String purpose,
 			String description,
 			List<RestDynamicSememeColumnInfoCreate> extendedFields,
-			List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields,
+			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
 			StampCoordinate stampCoord, 
 			EditCoordinate editCoord) throws IOException
 	{
@@ -374,7 +374,9 @@ public class MappingWriteAPIs
 			for (RestDynamicSememeColumnInfoCreate colInfo : extendedFields)
 			{
 				columns[i] = new DynamicSememeColumnInfo(i++, 
-						Get.identifierService().getUuidPrimordialFromConceptId(colInfo.columnLabelConcept).get(), 
+						Get.identifierService().getUuidPrimordialFromConceptId(
+								RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.columnLabelConcept", 
+										colInfo.columnLabelConcept)).get(), 
 						DynamicSememeDataType.parse(colInfo.columnDataType, true), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
 						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
 			}
@@ -416,7 +418,7 @@ public class MappingWriteAPIs
 
 		if (mapSetExtendedFields != null)
 		{
-			for (RestMappingSetExtensionValueBaseCreate field : mapSetExtendedFields)
+			for (RestMappingSetExtensionValueCreate field : mapSetExtendedFields)
 			{
 				if (field.extensionValue instanceof RestDynamicSememeString)
 				{
@@ -424,7 +426,10 @@ public class MappingWriteAPIs
 					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
 							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(field.extensionNameConcept)),
+									new DynamicSememeNidImpl(
+											Get.identifierService().getConceptNid(
+													RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
+															field.extensionNameConcept))),
 									new DynamicSememeStringImpl(((RestDynamicSememeString)field.extensionValue).getString())}).build(
 							editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 				}
@@ -434,7 +439,9 @@ public class MappingWriteAPIs
 					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getSequence(), 
 							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(field.extensionNameConcept)),
+									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(
+											RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
+													field.extensionNameConcept))),
 									new DynamicSememeNidImpl(
 											(field.extensionValue instanceof RestDynamicSememeNid ? 
 												((RestDynamicSememeNid)field.extensionValue).getNid() :

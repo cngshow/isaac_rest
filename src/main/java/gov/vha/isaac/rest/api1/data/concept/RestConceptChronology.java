@@ -53,12 +53,6 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class RestConceptChronology implements Comparable<RestConceptChronology>
 {
 	/**
-	 * The concept sequence identifier of this concept
-	 */
-	@XmlElement
-	int conceptSequence;
-	
-	/**
 	 * The "best" description for this concept.  This is selected based on the attributes within the session for 
 	 * stamp and language coordinates - or - if none present - the server default.
 	 */
@@ -72,7 +66,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	Expandables expandables;
 	
 	/**
-	 * The identifier data for the object
+	 * The identifiers for the concept
 	 */
 	@XmlElement
 	RestIdentifiedObject identifiers;
@@ -91,8 +85,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	@SuppressWarnings("rawtypes") 
 	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId)
 	{
-		conceptSequence = cc.getConceptSequence();
-		identifiers = new RestIdentifiedObject(cc.getUuidList());
+		identifiers = new RestIdentifiedObject(cc);
 		
 		description = Util.readBestDescription(cc.getNid());
 		
@@ -146,14 +139,6 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	{
 		return AlphanumComparator.compare(description,  o.description,  true);
 	}
-
-	/**
-	 * @return conceptSequence
-	 */
-	@XmlTransient
-	public int getConceptSequence() {
-		return conceptSequence;
-	}
 	
 	/**
 	 * @return description
@@ -183,7 +168,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 */
 	@Override
 	public String toString() {
-		return "RestConceptChronology [conceptSequence=" + conceptSequence + ", description=" + description
+		return "RestConceptChronology [description=" + description
 				+ ", identifiers=" + identifiers + ", versions=" + versions + "]";
 	}
 }

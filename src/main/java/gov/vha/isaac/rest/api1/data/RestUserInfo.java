@@ -50,7 +50,7 @@ public class RestUserInfo
 {
 	private transient static Logger log = LogManager.getLogger();
 	/**
-	 * The UUID(s) that identify the concept which is a placeholder for a user in the system.
+	 * The identifiers of the concept which is a placeholder for a user in the system.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -84,7 +84,7 @@ public class RestUserInfo
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public RestUserInfo(int conceptNid)
 	{
-		userId = new RestIdentifiedObject(Get.identifierService().getUuidsForNid(conceptNid));
+		userId = new RestIdentifiedObject(conceptNid);
 		Get.sememeService().getDescriptionsForComponent(conceptNid).forEach(description -> 
 		{
 			DescriptionSememe ds = ((LatestVersion<DescriptionSememeImpl>)((SememeChronology)description)

@@ -7,7 +7,7 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
-* 2016/11/10 - 1.8.0:
+* 2016/11/?? - 1.8.0:
     * Enhanced the RestIdentifiedObject return type, so that it also includes nid, sequence, and type fields.  The previously existing uuids
         field is unchanged.
     * Enhanced the RestWriteResponse to return type (concept or sememe)
@@ -43,7 +43,29 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * Removed the field 'stampSequence' from RestStampedVersion
     * Fixed a number of bugs with concept / description creation where extended description types and/or dialects were not being added.
     * Added a bunch of missing validation on the concept inputs to create concept / create description.
-    
+    * Removed 'associationConceptSequence' from RestAssociationTypeVersion as it now duplicated information returned in 'identifiers'
+    * Removed 'conceptSequence' from RestConceptChronology as it now duplicated information returned in 'identifiers'
+    * Removed 'sememeSequence' from RestSememeChronology as it now duplicated information returned in 'identifiers'
+    * Realign the Association APIs with the newest patterns
+      - RestAssociationVersionBase renamed to RestAssociationItemVersionUpdate - targetNid renamed to targetId and changed to a string.
+      - RestAssociationItemVersionCreate - Fields changed to strings, and renamed: associationTypeSequence -> associationType, sourceNid -> sourceId
+      - RestAssociationTypeVersionBaseCreate renamed to RestAssociationTypeVersionCreate
+      - RestAssociationItemVersion - Fields changed to RestIdentifiedObject and renamed : associationTypeSequence -> associationType, sourceNid -> sourceId
+          targetNid renamed to targetId
+    * Realign the API for creating mapsets (portions missed above)
+        - RestMappingSetExtensionValueBaseCreate renamed to RestMappingSetExtensionValueCreate, extensionNameConcept changed to a String type.
+        - RestMappingSetExtensionValue - extensionNameConcept changed to a RestIdentifiedObject
+    * RestDynamicSememeColumnInfo columnConceptSequence renamed to columnLabelConcept, changed to a RestIdentifiedObject
+    * RestDynamicSememeColumnInfoCreate columnLabelConcept changed from int to string
+    * Realign description update API to new patterh
+        - RestSememeDescriptionCreateData renamed to RestSememeDescriptionCreate
+        - RestSememeDescriptionUpdateData renamed to RestSememeDescriptionUpdate, fields renamed and changed to strings: 
+            caseSignificanceConceptSequence -> caseSignificanceConcept, languageConceptSequence -> languageConcept, descriptionTypeConceptSequence -> descriptionTypeConcept
+    * Realign RestSememeChronology - fields renamed / changed to RestIdentifiedObjects: assemblageSequence -> assemblage, referencedComponenentNid -> referencedComponent, 
+        removed referencedComponentNidObjectType as no longer necessary
+    * Realign RestSememeDescriptionVersion - fields renamed / changed to RestIdentifiedObjets: caseSignificanceConceptSequence -> caseSignificancConcept, 
+        languageConceptSequence -> languageConcept, descriptionTypeConceptSequence -> descriptionTypeConcept, descriptionExtendedTypeConceptSequence -> 
+        descriptionExtendedTypeConcept
 
 
 * 2016/11/08 - 1.7.4: 

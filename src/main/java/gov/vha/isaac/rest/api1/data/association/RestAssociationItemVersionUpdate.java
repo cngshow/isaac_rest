@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * {@link RestAssociationItemVersionBase}
+ * {@link RestAssociationItemVersionUpdate}
  * This stub class is used by callers to edit {@link RestAssociationItemVersion} objects.  It only contains the fields that may be edited after creation.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
@@ -36,17 +36,17 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersionBase.class)
-public class RestAssociationItemVersionBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersionUpdate.class)
+public class RestAssociationItemVersionUpdate
 {
 	/**
-	 * The nid of the target item in the association.  Typically this is a concept, but it may also be a sequence.  Note that 
+	 * The uuid or nid of the target item in the association.  Typically this is a concept, but it may also be a sememe.  Note that 
 	 * this may be null, in the case where the association intends to represent that no target is available for a particular 
-	 * association type and source component.
+	 * association type and source component.  May not be a sequence.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Integer targetNid;
+	public String targetId;
 	
 	/**
 	 * True to indicate the association should be set as active, false for inactive.  
@@ -56,13 +56,13 @@ public class RestAssociationItemVersionBase
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Boolean active;
 	
-	protected RestAssociationItemVersionBase()
+	protected RestAssociationItemVersionUpdate()
 	{
 		//for jaxb
 	}
 	
-	public RestAssociationItemVersionBase(Integer targetNid)
+	public RestAssociationItemVersionUpdate(String targetNid)
 	{
-		this.targetNid = targetNid;
+		this.targetId = targetNid;
 	}
 }
