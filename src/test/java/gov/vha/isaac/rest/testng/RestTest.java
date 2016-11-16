@@ -453,7 +453,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		EditToken retrievedEditToken = null;
 		try {
 			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
-		} catch (RestException e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 		
