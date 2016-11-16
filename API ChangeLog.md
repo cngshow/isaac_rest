@@ -7,6 +7,11 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/11/16 - 1.9.1:
+    * adding role-based security authentication to API classes
+    * adding use of PRISME SSO APIs
+    * returning json-serialized RestExceptionResponse on API request failure
+
 * 2016/11/16 - 1.9.0:
     * renamed RestDynamicSememeTypedData to RestDynamicSememeIdentifiedData (but this was an abstract parent class, so it shouldn't impact the API)
     * renamed RestDynamicSememeIdentifiedData.dataObjectType to 'dataIdentifed' and changed the type to a RestIdentifiedObject.
