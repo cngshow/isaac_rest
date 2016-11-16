@@ -106,16 +106,6 @@ class EditTokenUtil {
 				// Set new author concept UUID to SSO UUID
 				builder.setPrimordialUuid(user.getId());
 
-				// Add PRISME user.id in DYNAMIC_SEMEME_PRISME_USER_ID annotation
-				// TODO not sure if we even need this with the latest updates.  Check with Joel after merge
-//				SememeChronology<DynamicSememe<?>> prismeUserIdSememe = null;
-//				prismeUserIdSememe = 
-//						SememeUtil.addAnnotation(
-//								adminEditCoordinate,
-//								builder.getNid(),
-//								new DynamicSememeLongImpl(user.getId()),
-//								DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getPrimordialUuid());
-
 				if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
 					for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
 						builder.getFullySpecifiedDescriptionBuilder().addPreferredInDialectAssemblage(Get.conceptSpecification(i));

@@ -38,11 +38,11 @@ public class RestException extends IOException
 	{
 		super(message);
 	}
-	public RestException(Throwable t)
+	public RestException(Throwable t) // TODO remove cause ctors inappropriate for RestException
 	{
 		super(t);
 	}
-	public RestException(String message, Throwable t)
+	public RestException(String message, Throwable t) // TODO remove cause ctors inappropriate for RestException
 	{
 		super(message, t);
 	}
@@ -60,9 +60,20 @@ public class RestException extends IOException
 		parameterValue_ = parameterValue;
 	}
 
-	@Override
-	public String toString()
-	{
+	/**
+	 * @return the parameterName
+	 */
+	public String getParameterName() {
+		return parameterName_;
+	}
+	/**
+	 * @return the parameterValue
+	 */
+	public String getParameterValue() {
+		return parameterValue_;
+	}
+
+	public String getParameterSpecificMessage() {
 		if (StringUtils.isNotBlank(parameterName_))
 		{
 			return "The parameter '" + parameterName_ + "' " + (StringUtils.isNotBlank(parameterValue_) ? "with value '" + parameterValue_ + "'" : "")
@@ -71,7 +82,22 @@ public class RestException extends IOException
 		else if (StringUtils.isNotBlank(parameterValue_))
 		{
 			return "The parameter value '" + parameterValue_ + "'" + "  resulted in the error: " + getMessage();
+		} else {
+			return null;
 		}
-		return getMessage();
+	}
+
+	@Override
+	public String toString()
+	{
+		String parameterSpecificMessage = getParameterSpecificMessage();
+		if (parameterSpecificMessage != null)
+		{
+			return parameterSpecificMessage;
+		}
+		else
+		{
+			return getMessage();
+		}
 	}
 }

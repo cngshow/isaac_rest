@@ -64,7 +64,7 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  */
 public class RequestInfo
 {
-	private static Logger log = LogManager.getLogger();
+	private static Logger log = LogManager.getLogger(RequestInfo.class);
 
 	private final static User DEFAULT_READ_ONLY_USER = new User("READ_ONLY_USER", null, UserRole.READ_ONLY);
 	
