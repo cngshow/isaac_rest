@@ -11,7 +11,7 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * renamed RestDynamicSememeTypedData to RestDynamicSememeIdentifiedData (but this was an abstract parent class, so it shouldn't impact the API)
     * renamed RestDynamicSememeIdentifiedData.dataObjectType to 'dataIdentifed' and changed the type to a RestIdentifiedObject.
     * changed RestDynamicSememeDefinition.assemblageConceptId into a RestIdentifiedObject
-    * added assemblageconceptDescription to RestDynamicSememeDefinition
+    * added assemblageConceptDescription to RestDynamicSememeDefinition
     * removed extensionNameConcept from RestMappingSetExtensionValue (was a duplicate of extensionNameConceptIdentifiers)
 
 * 2016/11/15 - 1.8.0:
