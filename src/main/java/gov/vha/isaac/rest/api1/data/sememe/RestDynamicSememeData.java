@@ -258,25 +258,18 @@ public abstract class RestDynamicSememeData
 		}
 		
 		//Sort the values by column number
-		try
+		Arrays.sort(values, new Comparator<RestDynamicSememeData>()
 		{
-			Arrays.sort(values, new Comparator<RestDynamicSememeData>()
+			@Override
+			public int compare(RestDynamicSememeData o1, RestDynamicSememeData o2)
 			{
-				@Override
-				public int compare(RestDynamicSememeData o1, RestDynamicSememeData o2)
+				if (o1.columnNumber == o2.columnNumber && o1.columnNumber >= 0)
 				{
-					if (o1.columnNumber == o2.columnNumber && o1.columnNumber >= 0)
-					{
-						throw new RuntimeException("The field 'columnNumber' contained a duplicate");
-					}
-					return o1.columnNumber.compareTo(o2.columnNumber);
+					throw new RuntimeException("The field 'columnNumber' contained a duplicate");
 				}
-			});
-		}
-		catch (RuntimeException e)
-		{
-			throw new RestException(e);
-		}
+				return o1.columnNumber.compareTo(o2.columnNumber);
+			}
+		});
 	}
 	
 	

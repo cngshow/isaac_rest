@@ -19,6 +19,9 @@
 package gov.vha.isaac.rest.api1.request;
 
 import java.util.UUID;
+
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -26,10 +29,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.server.ContainerRequest;
+
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.session.SecurityUtils;
 
 
 /**
@@ -38,8 +45,12 @@ import gov.vha.isaac.rest.api1.RestPaths;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.contentRequestAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class ContentRequestAPIs
 {
+	@Context
+	private SecurityContext securityContext;
+
 	/**
 	 * An initial sample of accepting a POST request - this particular one is for testing with the NDS team.
 	 * @param data - this API simply accepts a string value - either plain text, JSON, or XML encoded.
@@ -52,6 +63,8 @@ public class ContentRequestAPIs
 	@Path(RestPaths.termRequestComponent)  
 	public Response putNewTermRequest(String data) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		//System.out.println("received media type: " + request.getMediaType());
 		System.out.println("got data '" + data + "'");
 		if (data.contains("BAD"))

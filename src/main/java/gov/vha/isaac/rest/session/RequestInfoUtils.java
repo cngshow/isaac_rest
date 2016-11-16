@@ -48,7 +48,32 @@ public class RequestInfoUtils {
 			throw new RestException(parameterName, params.get(parameterName) + "", "incorrect number (" + (params.get(parameterName) != null ? params.get(parameterName).size() : 0) + " of values. Expected exactly 1 value.");
 		}
 	}
+	public static void validateSingleParameterValue(String parameterName, List<String> value) throws RestException {
+		if (value == null || value.size() != 1) {
+			throw new RestException(parameterName, value + "", "incorrect number (" + (value != null ? value.size() : 0) + " of values. Expected exactly 1 value.");
+		}
+	}
 
+	public static void validateIncompatibleParameters(Map<String, List<String>> params, String...parameterNames) throws RestException {
+		if (parameterNames != null) {
+			for (String parameterName : parameterNames) {
+				for (String conflictingParameterName : parameterNames) {
+					if (! conflictingParameterName.equals(parameterName) && params.containsKey(parameterName) && params.containsKey(conflictingParameterName)) {
+						throw new RestException(parameterName, params.get(parameterName) + "", "Parameters " + parameterName + " and " + conflictingParameterName + " are incompatible");
+					}
+				}
+			}
+		}
+	}
+	public static UUID parseUuidParameter(String parameterName, List<String> parameterValues) throws RestException {
+		validateSingleParameterValue(parameterName, parameterValues);
+		String value = parameterValues.iterator().next();
+		try {
+			return UUID.fromString(value);
+		} catch (Exception e) {
+			throw new RestException(parameterName, value, "invalid UUID " + parameterName + " parameter value: " + value);
+		}
+	}
 	public static UUID parseUuidParameter(String parameterName, String str) throws RestException {
 		try {
 			return UUID.fromString(str);

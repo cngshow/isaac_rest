@@ -19,6 +19,7 @@
 
 package gov.vha.isaac.rest.session;
 
+import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,22 +35,28 @@ import gov.vha.isaac.ochre.api.UserRole;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-public class User {
+public class User implements Principal {
 	private final String name;
 	private final UUID id;
 	private final Set<UserRole> roles = new HashSet<>();
 	
 	public User(String name, UUID id, Collection<UserRole> roles) {
+		this(name, id, roles != null ? roles.toArray(new UserRole[roles.size()]) : (UserRole[])null);
+	}
+	public User(String name, UUID id, UserRole...roles) {
 		this.name = name;
 		this.id = id;
 		if (roles != null) {
-			this.roles.addAll(roles);
+			for (UserRole role : roles) {
+				this.roles.add(role);
+			}
 		}
 	}
-	
-	/**
-	 * @return
+
+	/* (non-Javadoc)
+	 * @see java.security.Principal#getName()
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}

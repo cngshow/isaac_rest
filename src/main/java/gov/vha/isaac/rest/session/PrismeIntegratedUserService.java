@@ -18,24 +18,30 @@
  */
 package gov.vha.isaac.rest.session;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+
 import javax.inject.Singleton;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.vha.isaac.MetaData;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import gov.vha.isaac.ochre.api.UserRole;
-import gov.vha.isaac.ochre.api.UserRoleService;
-import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 
 /**
- * The Class MockUserService.
+ * The Class PrismeIntegratedUserService
  *
  * {@link PrismeIntegratedUserService}
  * 
@@ -44,185 +50,36 @@ import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 @Service(name="rest-prismeUserService")
 @Rank(value = 10)
 @Singleton
-public class PrismeIntegratedUserService implements UserRoleService {
-//	/*
-//	 * Example URL for get_roles_by_token
-//	 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
-//	 */
-//	/*
-//	 * Example SSO Token
-//	 * %5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx94%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFXk%5Cx80%5CxB1%5CxA3%5CxF3%5Cx8D%5CxB1%5Cx7F%5CxBC%5Cx02K%22%2C+%22k%5Cf%5CxDC%5CxF7%2CP%5CxB2%5Cx97%5Cx99%5Cx99%5CxE0%5CxE1%7C%5CxBF%5Cx1DK%22%2C+%22J%5Cf%5Cx9B%5CxD8w%5Cx15%5CxFE%5CxD3%5CxC7%5CxDC%5CxAC%5Cx9E%5Cx1C%5CxD0bG%22%5D
-//	 */
-//	//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
+public class PrismeIntegratedUserService implements PrismeUserService {
+	private static Logger log = LogManager.getLogger(PrismeIntegratedUserService.class);
+	
+	private Properties prismeProperties_ = null;
 
-//	// TODO Joel implement prisme_all_roles_url=https://vaauscttdbs80.aac.va.gov:8080/rails_prisme/roles/get_all_roles.json
-//	/*
-//	 * TODO implement https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_all_roles
-//	 * returning ["super_user","administrator","read_only","editor","reviewer","approver","manager"]
-//	 */
-
-	public static final String TEST_JSON1 = "{\"roles\":["
-			+ "{\"id\":19990,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ ","
-			+ "{\"id\":19991,\"name\":\"editor\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ ","
-			+ "{\"id\":19992,\"name\":\"reviewer\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ ","
-			+ "{\"id\":19993,\"name\":\"administrator\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ ","
-			+ "{\"id\":19994,\"name\":\"manager\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ ","
-			+ "{\"id\":19995,\"name\":\"approver\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ "],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
-	public static final String TEST_JSON2 = "{\"roles\":["
-			+ "{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ "],\"token_parsed?\":true,\"user\":\"VHAISBKniazJ\",\"type\":\"ssoi\",\"id\":10005}";
-	public static final String TEST_JSON3 = "{\"roles\":["
-			+ "{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ ","
-			+ "{\"id\":19991,\"name\":\"editor\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-			+ "],\"token_parsed?\":true,\"user\":\"VHAISHEfronJ\",\"type\":\"ssoi\",\"id\":10005}";
-
-	/**
-	 * 
-	 * Attempt to construct a user from a string of the following format:
-	 * 
-	 * {name}:{role1}[{,role2}[{,role3}[...]]]
-	 * 
-	 * @param arg
-	 * @return
-	 */
-	private static Optional<String> constructTestUser(String arg) {
-		try {
-			String[] components = arg.split(":");
-
-			String name = null;
-			Set<UserRole> roles = new HashSet<>();
-			if (components.length == 2) {
-				if (components[0].matches("[A-Za-z][A-Za-z0-9_]*")) {
-					name = components[0].trim();
-
-					String[] roleStrings = components[1].split(",");
-
-					for (int i = 0; i < roleStrings.length; ++i) {
-						roles.add(UserRole.safeValueOf(roleStrings[i].trim()).get());
-					}
-				}
-			}
-			
-			if (name != null && name.length() > 0 && roles.size() > 0) {
-				StringBuilder builder = new StringBuilder();
-				builder.append("{\"roles\":[");
-				boolean addedRole = false;
-				for (UserRole role : roles) {
-					if (addedRole) {
-						builder.append(",");
-					}
-					builder.append("{\"id\":19990,\"name\":\"" + role.toString() + "\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}");
-
-					addedRole = true;
-				}
-				
-				builder.append("],\"token_parsed?\":true,\"user\":\"" + name + "\",\"type\":\"ssoi\",\"id\":10005}");
-				
-				return Optional.of(builder.toString());
-			}
-		} catch (Exception e) {
-			// ignore
-		}
-
-		return Optional.empty();
-	}
-
-	private PrismeIntegratedUserService() {
+	protected PrismeIntegratedUserService() {
 		//for HK2
 	}
 
-	/**
-	 * Return a user and roles available for that user
-	 *
-	 * @param ssoToken
-	 *            the user's SSO token string
-	 * @return the user and roles available to the user
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#getUser(java.lang.String)
 	 * 
-	 * For test purposes, attempt to construct a user from a string of the following format:
-	 * {name}:{role1}[{,role2}[{,role3}[...]]]
-	 *
+	 * This implementation will fail if PRISME is not configured
 	 */
+	@Override
 	public Optional<User> getUser(String ssoToken) {
-		String jsonToUse = null;
-		
-		Optional<String> createdJson = constructTestUser(ssoToken);
-		if (createdJson.isPresent()) {
-			jsonToUse = createdJson.get();
-		} else {
-			if (ssoToken.equals(TEST_JSON1)) {
-				jsonToUse = TEST_JSON1;
-			} else if (ssoToken.equals(TEST_JSON2)) {
-				jsonToUse = TEST_JSON2;
-			} else if (ssoToken.equals(TEST_JSON3)) {
-				jsonToUse = TEST_JSON3;
-			} else if (ssoToken.equals("TEST_JSON1")) {
-				jsonToUse = TEST_JSON1;
-			} else if (ssoToken.equals("TEST_JSON2")) {
-				jsonToUse = TEST_JSON2;
-			} else if (ssoToken.equals("TEST_JSON3")) {
-				jsonToUse = TEST_JSON3;
-			} else {
-				// Either a real SSO token or custom JSON
-				jsonToUse = ssoToken;
-			}
-		}
-
-		/*
-		 * Example URL for get_roles_by_token
-		 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
-		 */
-		
-		ObjectMapper mapper = new ObjectMapper();
-		Map<?, ?> map = null;
 		try {
-			map = mapper.readValue(jsonToUse, Map.class);
-		} catch (Exception e) {
-			// Passed text may be random or a real SSO token, which we can't handle, so use a default
-			jsonToUse = TEST_JSON1;
+			return getUserFromPrisme(ssoToken);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-
-		// TODO Joel implement access to PRISME API
-
-		//Map map = mapper.readValue(url, Map.class);
-		
-		if (map == null) {
-			try {
-				map = mapper.readValue(jsonToUse, Map.class);
-			} catch (Exception e) {
-				throw new RuntimeException("Failed reading test JSON \"" + jsonToUse + "\".  Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
-			}
-		}
-
-		String userName = (String)map.get("user");
-		Set<UserRole> roleSet = new HashSet<>();
-		Collection<?> roles = (Collection<?>)map.get("roles");
-		for (Object roleMapObject : roles) {
-			Map<?,?> roleMap = (Map<?,?>)roleMapObject;
-			String roleName = (String)roleMap.get("name");
-			
-			roleSet.add(UserRole.safeValueOf(roleName).get());
-		}
-		
-		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), userName);
-
-		User newUser = new User(userName, uuidFromUserFsn, roleSet);
-		
-		UserCache.put(newUser);
-
-		return Optional.of(newUser);
 	}
 
 	/* (non-Javadoc)
 	 * @see gov.vha.isaac.ochre.api.UserRoleService#getUserRoles(java.util.UUID)
 	 * 
 	 * This method should throw exception if the user has not already been cached
+	 */
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#getUserRoles(java.util.UUID)
 	 */
 	@Override
 	public Set<UserRole> getUserRoles(UUID userId)
@@ -232,18 +89,192 @@ public class PrismeIntegratedUserService implements UserRoleService {
 
 	/* (non-Javadoc)
 	 * @see gov.vha.isaac.ochre.api.UserRoleService#getAllUserRoles()
+	 * 
+	 * This implementation gets all roles from PRISME IFF prisme.properties is in classpath
+	 * and contains a value for property "prisme_all_roles_url", otherwise it returns all of the
+	 * UserRole text values except for "automated"
+	 */
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#getAllUserRoles()
 	 */
 	@Override
 	public Set<UserRole> getAllUserRoles()
 	{
-		// TODO Joel call PRISME for available roles and return only the intersection with the enum
-		Set<UserRole> availableRoles = new HashSet<>();
-		for (UserRole role : UserRole.values()) {
-			if (role != UserRole.AUTOMATED) { // AUTOMATED will not be a PRISME role
-				availableRoles.add(role);
+		if (usePrismeForAllRoles()) {
+			try {
+				return getAllRolesFromPrisme();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			Set<UserRole> availableRoles = new HashSet<>();
+
+			for (UserRole role : UserRole.values()) {
+				if (role != UserRole.AUTOMATED) { // AUTOMATED will not be a PRISME role
+					availableRoles.add(role);
+				}
+			}
+
+			return Collections.unmodifiableSet(availableRoles);
+		}
+	}
+
+	/**
+	 * Return a Properties object which contains PRISME properties. Empty if prisme.properties not found. Never returns null.
+	 * 
+	 * @return
+	 */
+	protected Properties getPrismeProperties()
+	{
+//		#if prisme.properties is present prisme must be up!
+//		#edits here require a restart to your Komet instance
+//		#Edit prisme_root to use prisme for roles.
+//		#prisme_root=http://localhost:8080/rails_prisme
+//		#prisme_all_roles_url=https://localhost:443/roles/get_all_roles.json
+//		#prisme_roles_user_url=https://localhost:443/roles/get_user_roles.json
+//		#prisme_roles_ssoi_url=https://localhost:443/roles/get_ssoi_roles.json
+//		#prisme_roles_by_token_url=https://localhost:443/roles/get_roles_by_token.json
+//		#prisme_config_url=https://localhost:443/utilities/prisme_config.json
+//		#Edit this to true to default to the prisme instead of the test roles test harness.
+//		#war_group_id=gov.vha.isaac.gui.rails
+//		#war_artifact_id=rails_komet
+//		#war_version=1.11
+//		#war_repo=releases
+//		#war_classifier=a
+//		#war_package=war
+//		#isaac_root=https://vadev.mantech.com:4848/isaac-rest/
+		if (prismeProperties_ == null) {
+			prismeProperties_ = new Properties();
+
+			InputStream stream = null;
+			try {
+				final URL propertiesFile = this.getClass().getResource("/prisme.properties");
+				
+				stream = this.getClass().getResourceAsStream("/prisme.properties");
+
+				if (stream == null)
+				{
+					log.debug("No prisme.properties file was found on the classpath");
+				}
+				else
+				{
+					log.info("Reading PRISME configuration from prisme.properties file " + propertiesFile);
+					prismeProperties_.load(stream);
+				}
+				
+				return prismeProperties_;
+			}
+			catch (Exception e)
+			{
+				log.error("Unexpected error trying to read properties from the prisme.properties file", e);
+				throw new RuntimeException(e);
+			}
+			finally {
+				if (stream != null) {
+					try {
+						stream.close();
+					} catch (Exception e) {
+						// ignore
+					}
+				}
 			}
 		}
-		
-		return Collections.unmodifiableSet(availableRoles);
+
+		return prismeProperties_;
+	}
+
+	protected String getPrismeAllRolesUrl() {
+		return getPrismeProperties().getProperty("prisme_all_roles_url");
+	}
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#usePrismeForAllRoles()
+	 */
+	@Override
+	public boolean usePrismeForAllRoles() {
+		return getPrismeAllRolesUrl() != null;
+	}
+	protected String getPrismeRolesByTokenUrl() {
+		return getPrismeProperties().getProperty("prisme_roles_by_token_url");
+	}
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#usePrismeForRolesByToken()
+	 */
+	@Override
+	public boolean usePrismeForRolesByToken() {
+		return getPrismeRolesByTokenUrl() != null;
+	}
+	protected String getSsoTokenByNameUrl() {
+		return getPrismeProperties().getProperty("prisme_roles_user_url");
+	}
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#usePrismeForSsoTokenByName()
+	 */
+	@Override
+	public boolean usePrismeForSsoTokenByName() {
+		return getSsoTokenByNameUrl() != null;
+	}
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#safeGetToken(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public Optional<String> safeGetToken(String id, String password) {
+		try {
+			return Optional.of(getToken(id, password));
+		} catch (Exception e) {
+			System.err.println(e);
+			e.printStackTrace();
+			return Optional.empty();
+		} 
+	}
+	/* (non-Javadoc)
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#getToken(java.lang.String, java.lang.String)
+	 */
+	@Override
+	public String getToken(String id, String password) throws Exception {		
+		if (usePrismeForSsoTokenByName()) {
+			return getUserSsoTokenFromPrisme(id, password);
+		} else {
+			throw new RuntimeException("Cannot generate SSO token for " + id + " without access to PRISME");
+		}
+	}
+
+	// Private helpers
+	protected Optional<User> getUserFromPrisme(String ssoToken) throws JsonParseException, JsonMappingException, IOException {
+//		/*
+//		 * Example URL for get_roles_by_token
+//		 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
+//		 */
+//		/*
+//		 * Example SSO Token
+//		 * %5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx94%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFXk%5Cx80%5CxB1%5CxA3%5CxF3%5Cx8D%5CxB1%5Cx7F%5CxBC%5Cx02K%22%2C+%22k%5Cf%5CxDC%5CxF7%2CP%5CxB2%5Cx97%5Cx99%5Cx99%5CxE0%5CxE1%7C%5CxBF%5Cx1DK%22%2C+%22J%5Cf%5Cx9B%5CxD8w%5Cx15%5CxFE%5CxD3%5CxC7%5CxDC%5CxAC%5Cx9E%5Cx1C%5CxD0bG%22%5D
+//		 */
+//		//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
+		String prismeRolesByTokenUrlStr = getPrismeRolesByTokenUrl();
+		log.trace("Retrieved from prisme.properties prismeRolesByTokenUrlStr=\"" + prismeRolesByTokenUrlStr + "\"");
+		URL url = new URL(prismeRolesByTokenUrlStr);
+		Optional<User> user = UserServiceUtils.getUserFromUrl(url, ssoToken);
+		log.trace("Retrieved from " + prismeRolesByTokenUrlStr + " user=\"" + user + "\"");
+
+		if (! user.isPresent()) {
+			log.error("FAILED retrieving User from " + prismeRolesByTokenUrlStr);
+		}
+		return user;
+	}
+	protected Set<UserRole> getAllRolesFromPrisme() throws JsonParseException, JsonMappingException, IOException {
+		String prismeAllRolesUrlStr = getPrismeAllRolesUrl();
+		log.trace("Retrieved from prisme.properties prismeAllRolesUrlStr=\"" + prismeAllRolesUrlStr + "\"");
+		URL url = new URL(prismeAllRolesUrlStr);
+		Set<UserRole> allRolesFromFromPrisme = UserServiceUtils.getAllRolesFromUrl(url);
+		log.trace("Retrieved from " + prismeAllRolesUrlStr + " allRolesFromFromPrisme=" + allRolesFromFromPrisme);
+		return allRolesFromFromPrisme;
+	}
+	
+	protected String getUserSsoTokenFromPrisme(String id, String password) throws Exception {
+		String ssoTokenByNameUrlStr = getSsoTokenByNameUrl();
+		log.trace("Retrieved from prisme.properties ssoTokenByNameUrlStr=\"" + ssoTokenByNameUrlStr + "\"");
+		URL url = new URL(ssoTokenByNameUrlStr);
+		String ssoToken = UserServiceUtils.getUserSsoTokenFromUrl(url, id, password);
+		log.trace("Retrieved from " + ssoTokenByNameUrlStr + " ssoToken=\"" + ssoToken + "\"");
+		return ssoToken;
 	}
 }
