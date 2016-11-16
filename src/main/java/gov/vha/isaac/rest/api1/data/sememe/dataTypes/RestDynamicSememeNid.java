@@ -20,9 +20,7 @@ package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeIdentifiedData;
 
 /**
  * 
@@ -32,11 +30,11 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestDynamicSememeNid extends RestDynamicSememeTypedData
+public class RestDynamicSememeNid extends RestDynamicSememeIdentifiedData
 {
 	public RestDynamicSememeNid(int columnNumber, int value)
 	{
-		super(columnNumber, value, Get.identifierService().getChronologyTypeForNid(value));
+		super(columnNumber, value);
 	}
 	
 	protected RestDynamicSememeNid()

@@ -43,22 +43,26 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 public class RestIdentifiedObject
 {
 	/**
-	 * The globally unique, fixed, stable set of identifiers for the object
+	 * The globally unique, fixed, stable set of identifiers for the object.  Typically populated, but may be null in edge cases - such as 
+	 * a sequence stored in a dynamic sememe column - one has to refer to the dynamic sememe definition to determine if the sequence represents
+	 * a concept or a sememe - which is expensive, so it isn't pre-populated here - which will leave the UUIDs and nid blank.
 	 */
 	@XmlElement
 	public List<UUID> uuids = new ArrayList<>();
 	
 	/**
-	 * The local-database-only internal nid identifier for this object.
+	 * The local-database-only internal nid identifier for this object.  Typically populated, but may be null in edge cases - such as 
+	 * a UUID stored in a dynamic sememe column which doesn't represent a known object.
 	 */
 	@XmlElement
-	public int nid;
+	public Integer nid;
 	
 	/**
-	 * The local-database-only internal sequence identifier for this object.
+	 * The local-database-only internal sequence identifier for this object.  Typically populated, but may be null in edge cases - such as 
+	 * a UUID stored in a dynamic sememe column which doesn't represent a known object.
 	 */
 	@XmlElement
-	public int sequence;
+	public Integer sequence;
 	
 	/**
 	 * The type of this object - concept, sememe, or unknown.
@@ -92,9 +96,47 @@ public class RestIdentifiedObject
 		{
 			throw new RuntimeException("Attempted to return an empty RestIdentifiedObject!");
 		}
-		this.uuids.add(uuid);
-		nid = Get.identifierService().getNidForUuids(uuids);
-		readSequence();
+		if (Get.identifierService().hasUuid(uuid))
+		{
+			nid = Get.identifierService().getNidForUuids(uuid);
+			uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+			readSequence();
+		}
+		else
+		{
+			uuids.add(uuid);
+			type = new RestObjectChronologyType(ObjectChronologyType.UNKNOWN_NID);
+		}
+	}
+	
+	public RestIdentifiedObject(UUID uuid, ObjectChronologyType type)
+	{
+		if (uuid == null) 
+		{
+			throw new RuntimeException("Attempted to return an empty RestIdentifiedObject!");
+		}
+		this.type = new RestObjectChronologyType(type);
+		if (type == ObjectChronologyType.UNKNOWN_NID)
+		{
+			uuids.add(uuid);
+		}
+		else
+		{
+			switch (type) 
+			{
+				case CONCEPT:
+					sequence = Get.identifierService().getConceptSequenceForUuids(uuid);
+					nid = Get.identifierService().getConceptNid(sequence);
+					break;
+				case SEMEME:
+					sequence = Get.identifierService().getSememeSequenceForUuids(uuid);
+					nid = Get.identifierService().getSememeNid(sequence);
+					break;
+				default :
+					throw new RuntimeException("Unexpected case");
+			}
+			uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+		}
 	}
 	
 	public RestIdentifiedObject(List<UUID> uuids)
@@ -103,9 +145,17 @@ public class RestIdentifiedObject
 		{
 			throw new RuntimeException("Attempted to return an empty RestIdentifiedObject!");
 		}
-		this.uuids.addAll(uuids);
-		nid = Get.identifierService().getNidForUuids(uuids);
-		readSequence();
+		if (Get.identifierService().hasUuid(uuids))
+		{
+			nid = Get.identifierService().getNidForUuids(uuids);
+			this.uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+			readSequence();
+		}
+		else
+		{
+			this.uuids.addAll(uuids);
+			type = new RestObjectChronologyType(ObjectChronologyType.UNKNOWN_NID);
+		}
 	}
 	
 	public RestIdentifiedObject(ObjectChronology<?> object)
@@ -128,6 +178,7 @@ public class RestIdentifiedObject
 	
 	public RestIdentifiedObject(int id, ObjectChronologyType type)
 	{
+		this.type = new RestObjectChronologyType(type);
 		switch (type) {
 			case CONCEPT:
 				nid = Get.identifierService().getConceptNid(id);
@@ -142,14 +193,41 @@ public class RestIdentifiedObject
 				throw new RuntimeException("Unexpected case");
 		}
 		uuids.addAll(Get.identifierService().getUuidsForNid(nid));
-		this.type = new RestObjectChronologyType(type);
 	}
 	
-	public RestIdentifiedObject(int nid)
+	public RestIdentifiedObject(int id)
 	{
-		this.nid = nid;
-		uuids.addAll(Get.identifierService().getUuidsForNid(nid));
-		readSequence();
+		if (id < 0)
+		{
+			this.nid = id;
+			uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+			readSequence();
+		}
+		else
+		{
+			//was passed a sequence, but don't know if it is a concept or a sememe.
+			this.sequence = id;
+			
+			if (Get.conceptService().hasConcept(sequence))
+			{
+				if (Get.sememeService().hasSememe(sequence))
+				{
+					this.type = new RestObjectChronologyType(ObjectChronologyType.UNKNOWN_NID);
+				}
+				else
+				{
+					this.type = new RestObjectChronologyType(ObjectChronologyType.CONCEPT);
+					this.nid = Get.identifierService().getConceptNid(sequence);
+					this.uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+				}
+			}
+			else if (Get.sememeService().hasSememe(sequence))
+			{
+				this.type = new RestObjectChronologyType(ObjectChronologyType.SEMEME);
+				this.nid = Get.identifierService().getSememeNid(sequence);
+				this.uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+			}
+		}
 	}
 	
 	private void readSequence()

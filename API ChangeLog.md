@@ -7,7 +7,14 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
-* 2016/11/?? - 1.8.0:
+* 2016/11/16 - 1.9.0:
+    * renamed RestDynamicSememeTypedData to RestDynamicSememeIdentifiedData (but this was an abstract parent class, so it shouldn't impact the API)
+    * renamed RestDynamicSememeIdentifiedData.dataObjectType to 'dataIdentifed' and changed the type to a RestIdentifiedObject.
+    * changed RestDynamicSememeDefinition.assemblageConceptId into a RestIdentifiedObject
+    * added assemblageconceptDescription to RestDynamicSememeDefinition
+    * removed extensionNameConcept from RestMappingSetExtensionValue (was a duplicate of extensionNameConceptIdentifiers)
+
+* 2016/11/15 - 1.8.0:
     * Enhanced the RestIdentifiedObject return type, so that it also includes nid, sequence, and type fields.  The previously existing uuids
         field is unchanged.
     * Enhanced the RestWriteResponse to return type (concept or sememe)

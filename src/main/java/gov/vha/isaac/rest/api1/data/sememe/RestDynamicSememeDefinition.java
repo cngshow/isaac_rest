@@ -22,9 +22,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
+import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 
@@ -45,7 +47,8 @@ public class RestDynamicSememeDefinition
 	
 	public RestDynamicSememeDefinition(DynamicSememeUsageDescription dsud)
 	{
-		this.assemblageConceptId = dsud.getDynamicSememeUsageDescriptorSequence();
+		this.assemblageConceptId = new RestIdentifiedObject(dsud.getDynamicSememeUsageDescriptorSequence(), ObjectChronologyType.CONCEPT);
+		this.assemblageConceptDescription = Util.readBestDescription(this.assemblageConceptId.sequence);
 		this.sememeUsageDescription = dsud.getDynamicSememeUsageDescription();
 		this.referencedComponentTypeRestriction = dsud.getReferencedComponentTypeRestriction() == null ? null : 
 			new RestObjectChronologyType(dsud.getReferencedComponentTypeRestriction());
@@ -65,7 +68,14 @@ public class RestDynamicSememeDefinition
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public int assemblageConceptId;
+	public RestIdentifiedObject assemblageConceptId;
+	
+	/**
+	 * The "best" description for the concept identified by the assemblageConceptId.  This is selected based on the attributes within the session for 
+	 * stamp and language coordinates - or - if none present - the server default.
+	 */
+	@XmlElement
+	String assemblageConceptDescription;
 	
 	/**
 	 * the user-friendly description of the overall purpose of this sememe

@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
@@ -45,18 +46,11 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	public String extensionNameConceptDescription;
 	
 	/**
-	 * The concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
-	 * will be used as the label of the extension.  On create, this accepts a nid or a sequence.  On read, it returns a concept sequence.
-	 */
-	@XmlElement
-	public RestIdentifiedObject extensionNameConcept;
-	
-	/**
 	 * The identifiers of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
 	 * will be used as the label of the extension.
 	 */
 	@XmlElement
-	RestIdentifiedObject extensionNameConceptIdentifiers;
+	public RestIdentifiedObject extensionNameConceptIdentifiers;
 	
 	public RestMappingSetExtensionValue()
 	{
@@ -66,8 +60,7 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	
 	public RestMappingSetExtensionValue(int extensionNameConcept, RestDynamicSememeData extensionValue)
 	{
-		this.extensionNameConcept = new RestIdentifiedObject(extensionNameConcept);
-		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(Get.identifierService().getConceptNid(extensionNameConcept));
+		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(extensionNameConcept, ObjectChronologyType.CONCEPT);
 		this.extensionValue = extensionValue;
 		this.extensionNameConceptDescription = Util.readBestDescription(extensionNameConcept);
 	}

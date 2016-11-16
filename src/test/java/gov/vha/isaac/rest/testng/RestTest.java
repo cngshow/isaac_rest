@@ -972,11 +972,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		// Validate description fields
 		Assert.assertNotNull(matchingVersion);
-		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence, initialCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence.intValue(), initialCaseSignificanceConceptSequence);
 		Assert.assertEquals(matchingVersion.text, initialDescriptionText);
-		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence, initialDescriptionTypeConceptSequence);
-		Assert.assertEquals(matchingVersion.languageConcept.sequence, initialLanguageConceptSequence);
-		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid, referencedConceptNid);
+		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), initialLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
 		
 		// Construct description update data object
 		final int newCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
@@ -1016,11 +1016,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		// Validate description fields
 		Assert.assertNotNull(matchingVersion);
-		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence, newCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence.intValue(), newCaseSignificanceConceptSequence);
 		Assert.assertEquals(matchingVersion.text, newDescriptionText);
-		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence, initialDescriptionTypeConceptSequence);
-		Assert.assertEquals(matchingVersion.languageConcept.sequence, newLanguageConceptSequence);
-		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid, referencedConceptNid);
+		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
 
 		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent +  RestPaths.componentComponent 
 				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
@@ -1044,11 +1044,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 		}
 		Assert.assertNotNull(matchingVersion);
-		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence, newCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence.intValue(), newCaseSignificanceConceptSequence);
 		Assert.assertEquals(matchingVersion.text, newDescriptionText);
-		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence, initialDescriptionTypeConceptSequence);
-		Assert.assertEquals(matchingVersion.languageConcept.sequence, newLanguageConceptSequence);
-		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid, referencedConceptNid);
+		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
 		Assert.assertEquals(matchingVersion.getSememeVersion().getState(), new RestStateType(State.INACTIVE));
 	}
 	
@@ -1077,7 +1077,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
 		RestConceptVersion conceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
-		Assert.assertEquals(conceptVersionObject.getConChronology().getIdentifiers().sequence, parent1Sequence);
+		Assert.assertEquals(conceptVersionObject.getConChronology().getIdentifiers().sequence.intValue(), parent1Sequence);
 		
 		final UUID randomUuid = UUID.randomUUID();
 
@@ -1413,9 +1413,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersion mappingItemMatchingNewItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
 			if (currentMappingItem.identifiers.getFirst().equals(newMappingItemUUID)
-					&& currentMappingItem.mapSetConcept.sequence == retrievedMappingSetVersion.identifiers.sequence
-					&& currentMappingItem.targetConcept.sequence == Integer.parseInt(targetConceptSeq)
-					&& currentMappingItem.sourceConcept.sequence == Integer.parseInt(sourceConceptSeq)
+					&& currentMappingItem.mapSetConcept.sequence.intValue() == retrievedMappingSetVersion.identifiers.sequence.intValue()
+					&& currentMappingItem.targetConcept.sequence.intValue() == Integer.parseInt(targetConceptSeq)
+					&& currentMappingItem.sourceConcept.sequence.intValue() == Integer.parseInt(sourceConceptSeq)
 					&& currentMappingItem.qualifierConcept.uuids.get(0).toString().equals(qualifierConceptUuid)) {
 				mappingItemMatchingNewItem = currentMappingItem;
 				break;
@@ -1450,10 +1450,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersion mappingItemMatchingUpdatedItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
 			if (currentMappingItem.identifiers.getFirst().equals(newMappingItemUUID)
-					&& currentMappingItem.mapSetConcept.sequence == retrievedMappingSetVersion.identifiers.sequence
-					&& currentMappingItem.targetConcept.sequence == Integer.parseInt(updatedMappingItemData.targetConcept)
-					&& currentMappingItem.sourceConcept.sequence == Integer.parseInt(newMappingSetItemData.sourceConcept)
-					&& currentMappingItem.qualifierConcept.sequence == Integer.parseInt(updatedMappingItemData.qualifierConcept)) {
+					&& currentMappingItem.mapSetConcept.sequence.intValue() == retrievedMappingSetVersion.identifiers.sequence.intValue()
+					&& currentMappingItem.targetConcept.sequence.intValue() == Integer.parseInt(updatedMappingItemData.targetConcept)
+					&& currentMappingItem.sourceConcept.sequence.intValue() == Integer.parseInt(newMappingSetItemData.sourceConcept)
+					&& currentMappingItem.qualifierConcept.sequence.intValue() == Integer.parseInt(updatedMappingItemData.qualifierConcept)) {
 				mappingItemMatchingUpdatedItem = currentMappingItem;
 				break;
 			}
@@ -1523,7 +1523,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		
 		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
-		Assert.assertEquals(createdMapSet.identifiers.sequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.identifiers.sequence.intValue(), createdMapSetId.sequence.intValue());
 		Assert.assertEquals(createdMapSet.description, "bla bla");
 		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
 		Assert.assertEquals(createdMapSet.name, name);
@@ -1533,11 +1533,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
 		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
-		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept.sequence, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConceptIdentifiers.sequence.intValue(), MetaData.AMT_MODULE.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
 		
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnLabelConcept.sequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnLabelConcept.sequence.intValue(), MetaData.BOOLEAN_LITERAL.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, true);
@@ -1546,7 +1546,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorData);
 		Assert.assertNull(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes);
 		
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnLabelConcept.sequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnLabelConcept.sequence.intValue(), MetaData.CONDOR_CLASSIFIER.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, false);
@@ -1600,7 +1600,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestCommentVersion newCommentObject = XMLUtils.unmarshalObject(RestCommentVersion.class, commentVersionResult);
 		Assert.assertEquals("my random comment", newCommentObject.comment);
 		Assert.assertNull(newCommentObject.commentContext);
-		Assert.assertEquals(newMappingItemSequenceWrapper.nid.intValue(), newCommentObject.commentedItem.nid);
+		Assert.assertEquals(newMappingItemSequenceWrapper.nid.intValue(), newCommentObject.commentedItem.nid.intValue());
 		Assert.assertEquals(newMappingItemSequenceWrapper.uuid, newCommentObject.commentedItem.uuids.get(0));
 		
 
@@ -1610,7 +1610,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
 		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
-		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence.intValue(), newMappingItemSequenceWrapper.sequence.intValue());
 		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept.sequence);
 		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept.sequence);
 		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_EXACT.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept.sequence);
@@ -1722,7 +1722,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		
 		RestMappingSetVersion createdMapSet = XMLUtils.unmarshalObject(RestMappingSetVersion.class, result);
-		Assert.assertEquals(createdMapSet.identifiers.sequence, createdMapSetId.sequence.intValue());
+		Assert.assertEquals(createdMapSet.identifiers.sequence.intValue(), createdMapSetId.sequence.intValue());
 		Assert.assertEquals(createdMapSet.description, "bla bla");
 		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
 		Assert.assertEquals(createdMapSet.name, name);
@@ -1732,12 +1732,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
 		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
-		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConcept.sequence, MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConceptIdentifiers.sequence.intValue(), MetaData.AMT_MODULE.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
 		
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
 
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnLabelConcept.sequence, MetaData.CONDOR_CLASSIFIER.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnLabelConcept.sequence.intValue(), MetaData.CONDOR_CLASSIFIER.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnName, MetaData.CONDOR_CLASSIFIER.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnOrder, 0);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnRequired, false);
@@ -1748,7 +1748,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes.length, 1);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(0).columnValidatorTypes[0].enumId, DynamicSememeValidatorType.LESS_THAN.ordinal());
 		
-		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnLabelConcept.sequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnLabelConcept.sequence.intValue(), MetaData.BOOLEAN_LITERAL.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnName, MetaData.BOOLEAN_LITERAL.getConceptDescriptionText());
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnOrder, 1);
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.get(1).columnRequired, true);
@@ -1786,7 +1786,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
 		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
-		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence, newMappingItemSequenceWrapper.sequence.intValue());
+		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence.intValue(), newMappingItemSequenceWrapper.sequence.intValue());
 		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept.sequence);
 		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept.sequence);
 		Assert.assertTrue(IsaacMappingConstants.MAPPING_QUALIFIER_NARROWER.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept.sequence);
@@ -2548,18 +2548,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			//Validate that the important bit of the description sememe are put together properly
 			//Assert.assertTrue(preDialect.contains("<assemblageSequence>" + MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence() + "</assemblageSequence>"), "Wrong language");
-			Assert.assertEquals(description.getSememeChronology().assemblage.sequence, MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence(), "Wrong language");
+			Assert.assertEquals(description.getSememeChronology().assemblage.sequence.intValue(), MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence(), "Wrong language");
 			
 			//Assert.assertTrue(preDialect.contains("<referencedComponentNid>" + MetaData.USER.getNid() + "</referencedComponentNid>"), "Wrong concept");
-			Assert.assertEquals(description.getSememeChronology().referencedComponent.nid, MetaData.USER.getNid(), "Wrong concept");
+			Assert.assertEquals(description.getSememeChronology().referencedComponent.nid.intValue(), MetaData.USER.getNid(), "Wrong concept");
 
 			//Assert.assertTrue(preDialect.contains("<caseSignificanceConceptSequence>" + MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence() 
 			//+ "</caseSignificanceConceptSequence>"), "Wrong case sentivity");
-			Assert.assertEquals(description.caseSignificanceConcept.sequence, MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence(), "Wrong case sentivity");
+			Assert.assertEquals(description.caseSignificanceConcept.sequence.intValue(), MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence(), "Wrong case sentivity");
 
 			//Assert.assertTrue(preDialect.contains("<languageConceptSequence>" + MetaData.ENGLISH_LANGUAGE.getConceptSequence() 
 			//+ "</languageConceptSequence>"), "Wrong language");
-			Assert.assertEquals(description.languageConcept.sequence, MetaData.ENGLISH_LANGUAGE.getConceptSequence(), "Wrong language");
+			Assert.assertEquals(description.languageConcept.sequence.intValue(), MetaData.ENGLISH_LANGUAGE.getConceptSequence(), "Wrong language");
 
 			//Assert.assertTrue((preDialect.contains("<text>user</text>") || preDialect.contains("<text>user (ISAAC)</text>")), "Wrong text " + preDialect);
 			Assert.assertTrue(description.text.equals("user") || description.text.equals("user (ISAAC)"), "Wrong text" + description.text);
@@ -2573,7 +2573,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 			//validate that the dialect bits are put together properly
 			//Assert.assertTrue(dialect.contains("<assemblageSequence>" + MetaData.US_ENGLISH_DIALECT.getConceptSequence() + "</assemblageSequence>"), "Wrong dialect");
-			Assert.assertEquals(description.getSememeChronology().assemblage.sequence, MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence(), "Wrong dialect");
+			Assert.assertEquals(description.getSememeChronology().assemblage.sequence.intValue(), MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence(), "Wrong dialect");
 			
 			//Assert.assertTrue(dialect.contains("<data xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xsi:type=\"xs:int\">" + MetaData.PREFERRED.getNid() + "</data>"), "Wrong value");
 			boolean foundPreferredDialect = false;
@@ -3263,8 +3263,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestAssociationItemVersion createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
 		
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceId.nid, MetaData.DOD_MODULE.getNid());
-		Assert.assertEquals(createdAssociationItem.targetId.nid, MetaData.AND.getNid());
+		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.DOD_MODULE.getNid());
+		Assert.assertEquals(createdAssociationItem.targetId.nid.intValue(), MetaData.AND.getNid());
 		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
 		
@@ -3292,7 +3292,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
 		
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceId.nid, MetaData.DOD_MODULE.getNid());
+		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.DOD_MODULE.getNid());
 		Assert.assertNull(createdAssociationItem.targetId);
 		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
@@ -3366,7 +3366,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
 		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
 		Assert.assertEquals(pagedAssociations.results.length, 1);
-		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence, createdAssociationId.sequence.intValue());
+		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), createdAssociationId.sequence.intValue());
 		
 		int r1Source = pagedAssociations.results[0].sourceId.nid;
 		
@@ -3381,7 +3381,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 2);
 		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
 		Assert.assertEquals(pagedAssociations.results.length, 1);
-		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence, createdAssociationId.sequence.intValue());
+		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), createdAssociationId.sequence.intValue());
 		
 		Assert.assertNotEquals(r1Source, pagedAssociations.results[0].sourceId.nid);
 	}
@@ -3491,7 +3491,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		RestDynamicSememeDefinition createdSememeType = XMLUtils.unmarshalObject(RestDynamicSememeDefinition.class, result);
 		
-		Assert.assertEquals(createdSememeTypeId.sequence.intValue(), createdSememeType.assemblageConceptId);
+		Assert.assertEquals(createdSememeTypeId.sequence.intValue(), createdSememeType.assemblageConceptId.sequence.intValue());
 		Assert.assertEquals("A test sememe", createdSememeType.sememeUsageDescription);
 		Assert.assertTrue("CONCEPT".equalsIgnoreCase(createdSememeType.referencedComponentTypeRestriction.enumName));
 		Assert.assertNull(createdSememeType.referencedComponentTypeSubRestriction);
@@ -3503,7 +3503,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			{
 				continue;
 			}
-			Assert.assertEquals(i +1, createdSememeType.columnInfo[i].columnLabelConcept.sequence);
+			Assert.assertEquals(i +1, createdSememeType.columnInfo[i].columnLabelConcept.sequence.intValue());
 			Assert.assertEquals(i, createdSememeType.columnInfo[i].columnOrder);
 			Assert.assertEquals(t.getDisplayName(), createdSememeType.columnInfo[i].columnDataType.friendlyName);
 			Assert.assertEquals(t.ordinal(), createdSememeType.columnInfo[i].columnDataType.enumId);
@@ -3584,7 +3584,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		descriptions = XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, result);
 		
-		Assert.assertEquals(descriptions[0].descriptionExtendedTypeConcept.sequence, MetaData.BOOLEAN_LITERAL.getConceptSequence());
+		Assert.assertEquals(descriptions[0].descriptionExtendedTypeConcept.sequence.intValue(), MetaData.BOOLEAN_LITERAL.getConceptSequence());
 	}
 	
 	/**

@@ -21,10 +21,7 @@ package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeIdentifiedData;
 
 /**
  * 
@@ -34,15 +31,11 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestDynamicSememeUUID extends RestDynamicSememeTypedData
+public class RestDynamicSememeUUID extends RestDynamicSememeIdentifiedData
 {
 	public RestDynamicSememeUUID(int columnNumber, UUID value)
 	{
-		super(columnNumber, value, ObjectChronologyType.UNKNOWN_NID);
-		if (value != null && Get.identifierService().hasUuid(value))
-		{
-			setTypedData(Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(value)));
-		}
+		super(columnNumber, value);
 	}
 	
 	protected RestDynamicSememeUUID()
