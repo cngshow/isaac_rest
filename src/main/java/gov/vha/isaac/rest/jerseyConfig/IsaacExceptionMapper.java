@@ -33,8 +33,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api.exceptions.RestExceptionResponse;
 
 /**
  * 

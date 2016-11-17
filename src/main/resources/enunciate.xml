@@ -13,6 +13,6 @@
 	
 	<api-classes>
 		<!-- This class isn't found by enunciate, due to how it is used. -->
-		<include pattern="gov.vha.isaac.rest.api1.data.systeminfo.RestExceptionResponse"/>
+		<include pattern="gov.vha.isaac.rest.api.exceptions.RestExceptionResponse"/>
 	</api-classes>
 </enunciate>
