@@ -20,20 +20,27 @@ package gov.vha.isaac.rest.api1.association;
 
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
@@ -57,12 +64,14 @@ import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionBase;
-import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionBaseCreate;
-import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionCreate;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionUpdate;
+import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersionCreate;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 import gov.vha.isaac.rest.tokens.EditTokens;
 
 
@@ -72,9 +81,13 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
 public class AssociationWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(AssociationWriteAPIs.class);
+
+	@Context
+	private SecurityContext securityContext;
 
 	/**
 	 * @param associationCreationData - object containing data used to create new association
@@ -88,9 +101,11 @@ public class AssociationWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationComponent + RestPaths.createPathComponent)
 	public RestWriteResponse createNewAssociationType(
-		RestAssociationTypeVersionBaseCreate associationCreationData,
+		RestAssociationTypeVersionCreate associationCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
@@ -119,7 +134,7 @@ public class AssociationWriteAPIs
 		{
 			ObjectChronology<?> builtDesc = LookupService.get().getService(DescriptionBuilderService.class).getDescriptionBuilder(associationCreationData.associationInverseName, 
 					rdud.getDynamicSememeUsageDescriptorSequence(), 
-					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).setAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT)
+					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).addAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT)
 						.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 			
 			Get.sememeBuilderService().getDynamicSememeBuilder(builtDesc.getNid(),DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence())
@@ -148,7 +163,7 @@ public class AssociationWriteAPIs
 		{
 			try
 			{
-				//TODO see if I still need to manually do this, I thought I fixed this.
+				//TODO 2 Dan (index config) see if I still need to manually do this, I thought I fixed this.
 				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0}, true);
 			}
 			catch (Exception e)
@@ -158,7 +173,7 @@ public class AssociationWriteAPIs
 		});
 		return new RestWriteResponse(
 				EditTokens.renew(RequestInfo.get().getEditToken()),
-				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
+				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
 				null, 
 				rdud.getDynamicSememeUsageDescriptorSequence());
 	}
@@ -175,39 +190,44 @@ public class AssociationWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.createPathComponent)
 	public RestWriteResponse createNewAssociationItem(
-		RestAssociationItemVersionBaseCreate associationItemCreationData,
+		RestAssociationItemVersionCreate associationItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
 		Optional<? extends ObjectChronology<? extends StampedVersion>> source = Get.identifiedObjectService()
-				.getIdentifiedObjectChronology(associationItemCreationData.sourceNid);
-		Optional<UUID> target = associationItemCreationData.targetNid == null ? Optional.empty() : 
-			Get.identifierService().getUuidPrimordialForNid(associationItemCreationData.targetNid);
+				.getIdentifiedObjectChronology(
+						RequestInfoUtils.getNidFromUuidOrNidParameter("RestAssociationItemVersionCreate.sourceId", associationItemCreationData.sourceId));
+		Optional<UUID> target = StringUtils.isBlank(associationItemCreationData.targetId) ? Optional.empty() : 
+			Get.identifierService().getUuidPrimordialForNid(
+					RequestInfoUtils.getNidFromUuidOrNidParameter("RestAssociationItemVersionCreate.targetId", associationItemCreationData.targetId));
 		
-		Optional<UUID> associationID = Get.identifierService().getUuidPrimordialFromConceptSequence(associationItemCreationData.associationTypeSequence);
+		int assemblageType = RequestInfoUtils.getConceptSequenceFromParameter("RestAssociationItemVersionCreate.associationType", associationItemCreationData.associationType);
+		Optional<UUID> associationID = Get.identifierService().getUuidPrimordialFromConceptId(assemblageType);
 		
 		if (!source.isPresent())
 		{
-			throw new RestException("sourceNid", associationItemCreationData.sourceNid + "", "Unable to locate the source component");
+			throw new RestException("sourceId", associationItemCreationData.sourceId + "", "Unable to locate the source component");
 		}
 		if (!associationID.isPresent())
 		{
-			throw new RestException("associationTypeSequence", associationItemCreationData.associationTypeSequence + "", "Unable to locate the association type");
+			throw new RestException("associationTypeSequence", associationItemCreationData.associationType + "", "Unable to locate the association type");
 		}
-		if (associationItemCreationData.targetNid != null && !target.isPresent())
+		if (StringUtils.isNotBlank(associationItemCreationData.targetId) && !target.isPresent())
 		{
-			throw new RestException("targetNid", associationItemCreationData.targetNid + "", "Unable to locate the target component");
+			throw new RestException("targetId", associationItemCreationData.targetId + "", "Unable to locate the target component");
 		}
 
 		DynamicSememeData[] data = new DynamicSememeData[1];
 		data[0] = (target.isPresent() ?  new DynamicSememeUUIDImpl(target.get()) : null);
 		
 		SememeBuilder<? extends SememeChronology<?>> sb =  Get.sememeBuilderService().getDynamicSememeBuilder(
-				source.get().getNid(), associationItemCreationData.associationTypeSequence, data);
+				source.get().getNid(), assemblageType, data);
 		
 		UUID associationItemUUID = UuidT5Generator.get(IsaacMappingConstants.get().MAPPING_NAMESPACE.getUUID(), 
 				source.get().getPrimordialUuid().toString() + "|" 
@@ -261,10 +281,12 @@ public class AssociationWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.associationItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public RestWriteResponse updateAssociationItem(
-		RestAssociationItemVersionBase associationItemUpdateData,
+		RestAssociationItemVersionUpdate associationItemUpdateData,
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -274,12 +296,13 @@ public class AssociationWriteAPIs
 		State stateToUse = (associationItemUpdateData.active == null || associationItemUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> associationItemSememeChronology = SememeAPIs.findSememeChronology(id);
 		
-		Optional<UUID> target = associationItemUpdateData.targetNid == null ? Optional.empty() : 
-			Get.identifierService().getUuidPrimordialForNid(associationItemUpdateData.targetNid);
+		Optional<UUID> target = StringUtils.isBlank(associationItemUpdateData.targetId) ? Optional.empty() : 
+			Get.identifierService().getUuidPrimordialForNid(
+					RequestInfoUtils.getNidFromUuidOrNidParameter("RestAssociationItemVersionUpdate.targetId", associationItemUpdateData.targetId));
 		
-		if (associationItemUpdateData.targetNid != null && !target.isPresent())
+		if (StringUtils.isNotBlank(associationItemUpdateData.targetId) && !target.isPresent())
 		{
-			throw new RestException("targetNid", associationItemUpdateData.targetNid + "", "Unable to locate the target component");
+			throw new RestException("targetId", associationItemUpdateData.targetId + "", "Unable to locate the target component");
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })

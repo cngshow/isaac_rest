@@ -10,4 +10,9 @@
 	<modules>
 		<docs title="ISAAC REST Server" splashPackage="gov.vha.isaac.rest.api"/>
 	</modules>
+	
+	<api-classes>
+		<!-- This class isn't found by enunciate, due to how it is used. -->
+		<include pattern="gov.vha.isaac.rest.api.exceptions.RestExceptionResponse"/>
+	</api-classes>
 </enunciate>

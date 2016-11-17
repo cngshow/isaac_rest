@@ -30,13 +30,13 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
  * 
  * {@link RestMappingSetExtensionValueBase}
  * 
- * This stub class is used for callers as part of creating or editing {@link RestMappingSetVersion} objects.  It only contains the fields they may be edited 
+ * This stub class is used for callers as part of creating or editing {@link RestMappingSetExtensionValue} objects.  It only contains the fields they may be edited 
  * after creation.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueBase.class)
 public class RestMappingSetExtensionValueBase
 {
 	/**

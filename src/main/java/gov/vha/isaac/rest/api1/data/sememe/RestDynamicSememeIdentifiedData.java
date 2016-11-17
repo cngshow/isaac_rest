@@ -27,14 +27,14 @@ import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.rest.Util;
-import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 
 /**
  * 
- * {@link RestDynamicSememeTypedData}
+ * {@link RestDynamicSememeIdentifiedData}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
@@ -44,15 +44,19 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 	RestDynamicSememeNid[].class, RestDynamicSememeSequence[].class, RestDynamicSememeUUID[].class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
-public abstract class RestDynamicSememeTypedData extends RestDynamicSememeData
+public abstract class RestDynamicSememeIdentifiedData extends RestDynamicSememeData
 {
 	/**
-	 * The type of the object that is referenced by the data.  This would tell you if the (nid, sequence or UUID) represents a concept or a sememe (or unknown).
-	 * Especially in the case of a RestDynamicSememeSequence, the value may come back as unknown - the caller will have to refer to the documentation of the sememe
-	 * to determine the actual type of the data stored here in those cases.
+	 * When the data type of the sememe is nid, sequence, or UUID, this usually represents a concept or a sememe in the system.  This field carries 
+	 * all of the information about that object, when it is a concept or sememe in the system.  For example, if the data type is nid, the 'data' field will 
+	 * be an int that contains the nid.  This filed will contain the (same) nid, but also the sequence, and the data type (concept or sememe).  
+	 * 
+	 * In some cases, where the data type is a UUID - the UUID may not represent a concept or sememe, in which case, the dataIdentified will carry the UUID, 
+	 * and the data type unknown (but sequence and nid would be blank).
+	 * 
 	 */
 	@XmlElement
-	private RestObjectChronologyType dataObjectType;
+	private RestIdentifiedObject dataIdentified;
 	
 	/**
 	 * If the dataObjectType represents is a concept, then this carries the "best" description for that concept.  This is selected based on the 
@@ -64,42 +68,36 @@ public abstract class RestDynamicSememeTypedData extends RestDynamicSememeData
 	String conceptDescription;
 
 	
-	protected RestDynamicSememeTypedData(Integer columnNumber, Object data, ObjectChronologyType dataType)
+	protected RestDynamicSememeIdentifiedData(Integer columnNumber, Object data)
 	{
 		super(columnNumber, data);
-		setTypedData(dataType);
+		setTypedData();
 	}
 	
-	protected void setTypedData(ObjectChronologyType dataType)
+	protected void setTypedData()
 	{
-		dataObjectType = new RestObjectChronologyType(dataType);
-		if (dataObjectType.enumId == ObjectChronologyType.CONCEPT.ordinal())
+		if (data != null)
 		{
-			int nid;
 			if (data instanceof Integer)
 			{
-				if ((int)data < 0)
-				{
-					nid = (int)data;
-				}
-				else
-				{
-					nid = Get.identifierService().getConceptNid((int)data);
-				}
+				dataIdentified = new RestIdentifiedObject((int)data);
 			}
 			else if (data instanceof UUID)
 			{
-				nid = Get.identifierService().getNidForUuids((UUID)data);
+				dataIdentified = new RestIdentifiedObject((UUID)data);
 			}
 			else
 			{
 				throw new RuntimeException("Unexpected");
 			}
-			conceptDescription = Util.readBestDescription(nid);
+			if (dataIdentified.type.enumId == ObjectChronologyType.CONCEPT.ordinal())
+			{
+				conceptDescription = Util.readBestDescription(dataIdentified.nid);
+			}
 		}
 	}
 	
-	protected RestDynamicSememeTypedData()
+	protected RestDynamicSememeIdentifiedData()
 	{
 		//for jaxb
 	}

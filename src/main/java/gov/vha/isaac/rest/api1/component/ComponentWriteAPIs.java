@@ -19,18 +19,25 @@
 package gov.vha.isaac.rest.api1.component;
 
 import java.util.Optional;
+
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
@@ -54,6 +61,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 import javafx.concurrent.Task;
 
 /**
@@ -63,9 +71,13 @@ import javafx.concurrent.Task;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent)
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
 public class ComponentWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(ComponentWriteAPIs.class);
+
+	@Context
+	private SecurityContext securityContext;
 
 	/**
 	 * Reset component status to ACTIVE if passed value is true, or INACTIVE if passed value is false
@@ -85,11 +97,13 @@ public class ComponentWriteAPIs
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.updatePathComponent + RestPaths.updateStateComponent + "{" + RequestParameters.id + "}")
-	public RestWriteResponse updateState( // TODO test updateState()
+	public RestWriteResponse updateState(
 			@PathParam(RequestParameters.id) String id,
 			@QueryParam(RequestParameters.active) String active,
 			@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -256,7 +270,7 @@ public class ComponentWriteAPIs
 						case RELATIONSHIP_ADAPTOR:
 						case UNKNOWN:
 						default:
-							throw new RestException("Unsupported sememe " + id + " of type " + sememe.getSememeType());
+							throw new RestException(RequestParameters.id, id, "Unsupported sememe of type " + sememe.getSememeType());
 					}
 					if (commit)
 					{
@@ -267,7 +281,7 @@ public class ComponentWriteAPIs
 	
 				case UNKNOWN_NID:
 				default :
-					throw new RestException(RequestParameters.id, "Could not locate component to change the state");
+					throw new RestException(RequestParameters.id, id, "Could not locate component to change the state");
 			}
 
 			if (commit)

@@ -20,10 +20,7 @@ package gov.vha.isaac.rest.api1.data.sememe.dataTypes;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeIdentifiedData;
 
 /**
  * 
@@ -33,26 +30,11 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypedData;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestDynamicSememeSequence extends RestDynamicSememeTypedData
+public class RestDynamicSememeSequence extends RestDynamicSememeIdentifiedData
 {
 	public RestDynamicSememeSequence(int columnNumber, int value)
 	{
-		super(columnNumber, value, ObjectChronologyType.UNKNOWN_NID);
-		if (Get.conceptService().hasConcept(value))
-		{
-			if (Get.sememeService().hasSememe(value))
-			{
-				//leave unknown
-			}
-			else
-			{
-				setTypedData(ObjectChronologyType.CONCEPT);
-			}
-		}
-		else if (Get.sememeService().hasSememe(value))
-		{
-			setTypedData(ObjectChronologyType.SEMEME);
-		}
+		super(columnNumber, value);
 	}
 	
 	protected RestDynamicSememeSequence()

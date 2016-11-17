@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.RestEditToken;
+import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.tokens.EditToken;
 
 /**
@@ -74,6 +75,13 @@ public class RestWriteResponse
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Integer sequence;
 	
+	/**
+	 * The type of this object - concept, sememe, or unknown.  (if applicable, may be null)
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	RestObjectChronologyType type;
+	
 	RestWriteResponse() {
 		// For JAXB
 	}
@@ -89,6 +97,7 @@ public class RestWriteResponse
 		nid = nidIn;
 		sequence = sequenceIn;
 		editToken = editTokenIn;
+		type = null;
 		if (nid == null || sequence == null || uuid == null)
 		{
 			if (nid != null || uuid != null)
@@ -114,6 +123,11 @@ public class RestWriteResponse
 				{
 					sequence = Get.identifierService().getSememeSequence(nid);
 				}
+				type = new RestObjectChronologyType(oct);
+			}
+			if (nid != null && type == null)
+			{
+				type = new RestObjectChronologyType(Get.identifierService().getChronologyTypeForNid(nid));
 			}
 		}
 	}

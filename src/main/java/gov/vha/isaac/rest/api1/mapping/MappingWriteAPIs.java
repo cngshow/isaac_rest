@@ -23,13 +23,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,13 +43,13 @@ import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.concept.description.DescriptionBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -77,9 +83,9 @@ import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBaseCreate;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
@@ -89,7 +95,9 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.SecurityUtils;
 import gov.vha.isaac.rest.tokens.EditTokens;
 
 
@@ -99,9 +107,13 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.mappingAPIsPathComponent)
+@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
 public class MappingWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(MappingWriteAPIs.class);
+
+	@Context
+	private SecurityContext securityContext;
 
 	/**
 	 * @param mappingSetCreationData - object containing data used to create new mapping set
@@ -118,6 +130,8 @@ public class MappingWriteAPIs
 		RestMappingSetVersionBaseCreate mappingSetCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES,
@@ -154,7 +168,6 @@ public class MappingWriteAPIs
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
@@ -163,6 +176,8 @@ public class MappingWriteAPIs
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -202,27 +217,24 @@ public class MappingWriteAPIs
 	 * @return the sememe UUID identifying the sememe which stores the created mapping item
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemComponent + RestPaths.createPathComponent)
 	public RestWriteResponse createNewMappingItem(
-		RestMappingItemVersionBaseCreate mappingItemCreationData,
+		RestMappingItemVersionCreate mappingItemCreationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.COORDINATE_PARAM_NAMES,
 				RequestParameters.editToken);
 
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> sourceConcept = Get.conceptService().getOptionalConcept(mappingItemCreationData.sourceConcept);
-		Optional<UUID> targetConcept = (mappingItemCreationData.targetConcept == null ? Optional.empty() : 
-			Get.conceptService().hasConcept(mappingItemCreationData.targetConcept) ? 
-					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.targetConcept) : Optional.empty());
-		
-		Optional<UUID> mappingSetID = Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.mapSetConcept);
-		Optional<UUID> qualifierID = (mappingItemCreationData.qualifierConcept == null) ? Optional.empty() :
-			Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemCreationData.qualifierConcept);
+		Optional<UUID> sourceConcept = readConcept(mappingItemCreationData.sourceConcept, "mappingItemCreationData.sourceConcept");
+		Optional<UUID> targetConcept = readConcept(mappingItemCreationData.targetConcept, "mappingItemCreationData.targetConcept");
+		Optional<UUID> mappingSetID = readConcept(mappingItemCreationData.mapSetConcept, "mappingItemCreationData.mapSetConcept");
+		Optional<UUID> qualifierID = readConcept(mappingItemCreationData.qualifierConcept, "mappingItemCreationData.qualifierConcept");
 		
 		if (!sourceConcept.isPresent())
 		{
@@ -236,7 +248,11 @@ public class MappingWriteAPIs
 		{
 			throw new RestException("targetConcept", mappingItemCreationData.targetConcept + "", "Unable to locate the target concept");
 		}
-
+		if (mappingItemCreationData.qualifierConcept != null && !qualifierID.isPresent())
+		{
+			throw new RestException("qualifierConcept", mappingItemCreationData.qualifierConcept + "", "Unable to locate the qualifier concept");
+		}
+		
 		return createMappingItem(
 						sourceConcept.get(),
 						mappingSetID.get(),
@@ -259,15 +275,16 @@ public class MappingWriteAPIs
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @throws RestException
 	 */
-	//TODO fix the comments above around editToken 
 	@PUT
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingItemComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id +"}")
 	public RestWriteResponse updateMappingItem(
-		RestMappingItemVersionBase mappingItemUpdateData,
+		RestMappingItemVersionUpdate mappingItemUpdateData,
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -278,28 +295,38 @@ public class MappingWriteAPIs
 
 		SememeChronology<?> mappingItemSememeChronology = SememeAPIs.findSememeChronology(id);
 		
-		Optional<UUID> targetConcept = (mappingItemUpdateData.targetConcept == null ? Optional.empty() : 
-			Get.conceptService().hasConcept(mappingItemUpdateData.targetConcept) ? 
-					Get.identifierService().getUuidPrimordialFromConceptSequence(mappingItemUpdateData.targetConcept) : Optional.empty());
+		Optional<UUID> targetConcept = readConcept(mappingItemUpdateData.targetConcept, "mappingItemUpdateData.targetConcept");
 		
 		if (mappingItemUpdateData.targetConcept != null && !targetConcept.isPresent())
 		{
 			throw new RestException("targetConcept", mappingItemUpdateData.targetConcept + "", "Unable to locate the target concept");
 		}
 
+		Optional<UUID> qualifierConcept = readConcept(mappingItemUpdateData.qualifierConcept, "mappingItemUpdateData.qualifierConcept");
+		
 		try {
 			return updateMappingItem(
 					mappingItemSememeChronology,
 					targetConcept.orElse(null),
-					mappingItemUpdateData.qualifierConcept != null ? Get.conceptService().getConcept(mappingItemUpdateData.qualifierConcept) : null,
+					qualifierConcept.isPresent() ? Get.conceptService().getConcept(qualifierConcept.get()) : null,
 					mappingItemUpdateData.mapItemExtendedFields,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate(),
 					stateToUse);
 
 		} catch (IOException e) {
-			throw new RestException("Failed updating mapping item " + id + " on " + e.getClass().getName() + " exception \"" + e.getLocalizedMessage() + "\"");
+			throw new RuntimeException("Failed updating mapping item " + id, e);
 		}
+	}
+	
+	private Optional<UUID> readConcept(String conceptIdentifier, String paramName) throws RestException
+	{
+		if (StringUtils.isBlank(conceptIdentifier))
+		{
+			return Optional.empty();
+		}
+		return Get.identifierService().getUuidPrimordialFromConceptId(RequestInfoUtils.getConceptSequenceFromParameter(paramName, conceptIdentifier));
+		
 	}
 	
 	/**
@@ -317,7 +344,7 @@ public class MappingWriteAPIs
 			String purpose,
 			String description,
 			List<RestDynamicSememeColumnInfoCreate> extendedFields,
-			List<RestMappingSetExtensionValueBaseCreate> mapSetExtendedFields,
+			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
 			StampCoordinate stampCoord, 
 			EditCoordinate editCoord) throws IOException
 	{
@@ -346,7 +373,9 @@ public class MappingWriteAPIs
 			for (RestDynamicSememeColumnInfoCreate colInfo : extendedFields)
 			{
 				columns[i] = new DynamicSememeColumnInfo(i++, 
-						Get.identifierService().getUuidPrimordialFromConceptSequence(colInfo.columnLabelConcept).get(), 
+						Get.identifierService().getUuidPrimordialFromConceptId(
+								RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.columnLabelConcept", 
+										colInfo.columnLabelConcept)).get(), 
 						DynamicSememeDataType.parse(colInfo.columnDataType, true), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
 						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
 			}
@@ -360,7 +389,7 @@ public class MappingWriteAPIs
 		{
 			try
 			{
-				//TODO see if I still need to manually do this, I thought I fixed this.
+				//TODO 2 Dan (index config)  see if I still need to manually do this, I thought I fixed this.
 				SememeIndexerConfiguration.configureColumnsToIndex(rdud.getDynamicSememeUsageDescriptorSequence(), new Integer[] {0, 1, 2}, true);
 			}
 			catch (Exception e)
@@ -373,7 +402,7 @@ public class MappingWriteAPIs
 		if (!StringUtils.isBlank(inverseName))
 		{
 			ObjectChronology<?> builtDesc = LookupService.get().getService(DescriptionBuilderService.class).getDescriptionBuilder(inverseName, rdud.getDynamicSememeUsageDescriptorSequence(), 
-					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).setAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
+					MetaData.SYNONYM, MetaData.ENGLISH_LANGUAGE).addAcceptableInDialectAssemblage(MetaData.US_ENGLISH_DIALECT).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 			
 			Get.sememeBuilderService().getDynamicSememeBuilder(builtDesc.getNid(),DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).build(
 					editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
@@ -388,7 +417,7 @@ public class MappingWriteAPIs
 
 		if (mapSetExtendedFields != null)
 		{
-			for (RestMappingSetExtensionValueBaseCreate field : mapSetExtendedFields)
+			for (RestMappingSetExtensionValueCreate field : mapSetExtendedFields)
 			{
 				if (field.extensionValue instanceof RestDynamicSememeString)
 				{
@@ -396,7 +425,10 @@ public class MappingWriteAPIs
 					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
 							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(field.extensionNameConcept)),
+									new DynamicSememeNidImpl(
+											Get.identifierService().getConceptNid(
+													RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
+															field.extensionNameConcept))),
 									new DynamicSememeStringImpl(((RestDynamicSememeString)field.extensionValue).getString())}).build(
 							editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 				}
@@ -406,7 +438,9 @@ public class MappingWriteAPIs
 					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getSequence(), 
 							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(field.extensionNameConcept)),
+									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(
+											RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
+													field.extensionNameConcept))),
 									new DynamicSememeNidImpl(
 											(field.extensionValue instanceof RestDynamicSememeNid ? 
 												((RestDynamicSememeNid)field.extensionValue).getNid() :
@@ -433,7 +467,7 @@ public class MappingWriteAPIs
 			throw new RuntimeException("Failed during commit", e);
 		}
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
-				Get.identifierService().getUuidPrimordialFromConceptSequence(rdud.getDynamicSememeUsageDescriptorSequence()).get());
+				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
 	private static RestWriteResponse updateMappingSet(
 			ConceptChronology<?> mappingConcept,
@@ -597,14 +631,14 @@ public class MappingWriteAPIs
 	 * @throws IOException
 	 */
 	private static RestWriteResponse createMappingItem(
-			ConceptChronology<?> sourceConcept,
+			UUID sourceConcept,
 			UUID mappingSetID,
 			UUID targetConcept, 
 			UUID qualifierID,
 			List<RestDynamicSememeData> extendedDataFields,
 			boolean active,
 			StampCoordinate stampCoord,
-			EditCoordinate editCoord) throws RuntimeException, RestException
+			EditCoordinate editCoord) throws RestException
 	{
 		int sememeConceptSequence = Get.identifierService().getConceptSequenceForUuids(mappingSetID);
 		
@@ -613,12 +647,12 @@ public class MappingWriteAPIs
 		
 		SememeBuilder<? extends SememeChronology<?>> sb;
 		sb = Get.sememeBuilderService().getDynamicSememeBuilder(
-				sourceConcept.getNid(),  
+				Get.identifierService().getNidForUuids(sourceConcept),
 				sememeConceptSequence, 
 				data);
 		
 		UUID mappingItemUUID = UuidT5Generator.get(IsaacMappingConstants.get().MAPPING_NAMESPACE.getUUID(), 
-				sourceConcept.getPrimordialUuid().toString() + "|" 
+				sourceConcept.toString() + "|" 
 				+ mappingSetID.toString() + "|"
 				+ ((targetConcept == null)? "" : targetConcept.toString()) + "|" 
 				+ ((qualifierID == null)?   "" : qualifierID.toString()));
@@ -656,7 +690,7 @@ public class MappingWriteAPIs
 		catch (Exception e)
 		{
 			log.error("Unexpected", e);
-			throw new RestException("Failed committing new mapping item sememe", e);
+			throw new RuntimeException("Failed committing new mapping item sememe", e);
 		}
 		
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());

@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -46,7 +48,6 @@ import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
-import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.EditToken;
 import gov.vha.isaac.rest.tokens.EditTokens;
 
@@ -60,90 +61,75 @@ import gov.vha.isaac.rest.tokens.EditTokens;
 class EditTokenUtil {
 	private EditTokenUtil() {}
 
+	static UUID getUuidFromUserFsn(String fsn) {
+		return UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
+	}
 	static EditToken getUserToken(
 			User user,
 			int moduleSequence,
 			int pathSequence,
-			UUID processId) throws RestException {
+			UUID processId) {
 		EditCoordinate adminEditCoordinate = EditCoordinates.getDefaultUserMetadata();
 		LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
 		LogicCoordinate logicCoordinate = LogicCoordinates.getStandardElProfile();
-		
+
 		Integer authorSequence = null;
-		
-		// FSN from userName is SSO primary key
-		final String fsn = user.getName();
-		
-		//TODO User already has an ID, why are you regenerated here?  Keep the logic in one place. 
-		// Generate SSO T5 UUID from FSN with MetaData.USER.getPrimordialUuid() as domain
-		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
-		
+
 		// If the SSO UUID already persisted
-		if (Get.identifierService().hasUuid(uuidFromUserFsn)) {
+		if (Get.identifierService().hasUuid(user.getId())) {
 			// Set authorSequence to value corresponding to SSO UUID
-			authorSequence = Get.identifierService().getConceptSequenceForUuids(uuidFromUserFsn);
+			authorSequence = Get.identifierService().getConceptSequenceForUuids(user.getId());
 		}
 
 		// If no existing author by SSO UUID, create new author concept with that SSO UUID
 		if (authorSequence == null) {
+			ConceptSpecification defaultDescriptionsLanguageConceptSpec = Get.conceptSpecification(languageCoordinate.getLanguageConceptSequence());
+			ConceptSpecification defaultDescriptionDialectConceptSpec = Get.conceptSpecification(languageCoordinate.getDialectAssemblagePreferenceList()[0]);
+
+			ConceptBuilderService conceptBuilderService = LookupService.getService(ConceptBuilderService.class);
+			conceptBuilderService.setDefaultLanguageForDescriptions(defaultDescriptionsLanguageConceptSpec);
+			conceptBuilderService.setDefaultDialectAssemblageForDescriptions(defaultDescriptionDialectConceptSpec);
+			conceptBuilderService.setDefaultLogicCoordinate(logicCoordinate);
+
+			LogicalExpressionBuilder defBuilder = LookupService.getService(LogicalExpressionBuilderService.class).getLogicalExpressionBuilder();
+
+			NecessarySet(And(ConceptAssertion(MetaData.USER, defBuilder)));
+
+			LogicalExpression parentDef = defBuilder.build();
+
+			ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(
+					user.getName(),
+					null,
+					parentDef);
+
+			// Set new author concept UUID to SSO UUID
+			builder.setPrimordialUuid(user.getId());
+
+			if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
+				for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
+					builder.getFullySpecifiedDescriptionBuilder().addPreferredInDialectAssemblage(Get.conceptSpecification(i));
+				}
+			}
+
+			List<?> createdObjects = new ArrayList<>();
+			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(adminEditCoordinate, ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
+
 			try
 			{
-				ConceptSpecification defaultDescriptionsLanguageConceptSpec = Get.conceptSpecification(languageCoordinate.getLanguageConceptSequence());
-				ConceptSpecification defaultDescriptionDialectConceptSpec = Get.conceptSpecification(languageCoordinate.getDialectAssemblagePreferenceList()[0]);
-
-				ConceptBuilderService conceptBuilderService = LookupService.getService(ConceptBuilderService.class);
-				conceptBuilderService.setDefaultLanguageForDescriptions(defaultDescriptionsLanguageConceptSpec);
-				conceptBuilderService.setDefaultDialectAssemblageForDescriptions(defaultDescriptionDialectConceptSpec);
-				conceptBuilderService.setDefaultLogicCoordinate(logicCoordinate);
-
-				LogicalExpressionBuilder defBuilder = LookupService.getService(LogicalExpressionBuilderService.class).getLogicalExpressionBuilder();
-
-				NecessarySet(And(ConceptAssertion(MetaData.USER, defBuilder)));
-
-				LogicalExpression parentDef = defBuilder.build();
-
-				ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(
-						fsn,
-						null,
-						parentDef);
-
-				// Set new author concept UUID to SSO UUID
-				builder.setPrimordialUuid(uuidFromUserFsn);
-
-				// Add PRISME user.id in DYNAMIC_SEMEME_PRISME_USER_ID annotation
-				// TODO confirm that user.id is being added in DYNAMIC_SEMEME_PRISME_USER_ID annotation
-//				SememeChronology<DynamicSememe<?>> prismeUserIdSememe = null;
-//				prismeUserIdSememe = 
-//						SememeUtil.addAnnotation(
-//								adminEditCoordinate,
-//								builder.getNid(),
-//								new DynamicSememeLongImpl(user.getId()),
-//								DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getPrimordialUuid());
-
-				if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
-					for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
-						builder.getFullySpecifiedDescriptionBuilder().setPreferredInDialectAssemblage(Get.conceptSpecification(i));
-					}
-				}
-
-				List<?> createdObjects = new ArrayList<>();
-				ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(adminEditCoordinate, ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
-
 				Get.commitService().addUncommitted(newCon).get();
 
-//				if (prismeUserIdSememe != null) {
-//					Get.commitService().addUncommitted(prismeUserIdSememe).get();
-//				}
+				//				if (prismeUserIdSememe != null) {
+				//					Get.commitService().addUncommitted(prismeUserIdSememe).get();
+				//				}
 
 				@SuppressWarnings("deprecation")
 				Optional<CommitRecord> commitRecord = Get.commitService().commit(
-						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn).get();
-				authorSequence = newCon.getConceptSequence();
-				
+						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + user.getName()).get();
+				authorSequence = newCon.getConceptSequence();				
 			}
-			catch (Exception e)
+			catch (InterruptedException | ExecutionException  e)
 			{
-				throw new RestException("Creation of user concept failed. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+				throw new RuntimeException("Creation of user concept failed. Caught " + e.getClass().getSimpleName() + " " + e.getLocalizedMessage());
 			}
 		}
 

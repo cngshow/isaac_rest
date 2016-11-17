@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
@@ -41,7 +40,6 @@ import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
-import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 
@@ -56,37 +54,24 @@ import gov.vha.isaac.rest.session.RequestParameters;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestSememeChronology
 {
-	
 	/**
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
-	Expandables expandables;
-	
-	/**
-	 * The sememe sequence identifier of this sememe instance
-	 */
-	@XmlElement
-	int sememeSequence;
+	public Expandables expandables;
 	
 	/**
 	 * The concept sequence identifier of the concept that represents the type of this sememe
 	 */
 	@XmlElement
-	int assemblageSequence;
+	public RestIdentifiedObject assemblage;
 	
 	/**
-	 * The NID identifier of the object that is referenced by this sememe instance.  This could represent a concept or a sememe.
+	 * The identifier of the object that is referenced by this sememe instance.  This could represent a concept or a sememe.
 	 */
 	@XmlElement
-	int referencedComponentNid;
+	public RestIdentifiedObject referencedComponent;
 	
-	/**
-	 * The type of the object that is referenced by the referencedComponentNid value.  This would tell you if the nid represents a concept or a sememe.
-	 * Only populated when the expand parameter 'referencedDetails' is passed.
-	 */
-	@XmlElement
-	RestObjectChronologyType referencedComponentNidObjectType;
 	
 	/**
 	 * If the referencedComponentNid represents a concept, then this carries the "best" description for that concept.  This is selected based on the 
@@ -95,19 +80,19 @@ public class RestSememeChronology
 	 * Only populated when the expand parameter 'referencedDetails' is passed.
 	 */
 	@XmlElement
-	String referencedComponentNidDescription;
+	public String referencedComponentNidDescription;
 	
 	/**
-	 * The permanent identifier object(s) attached to this sememe instance
+	 * The permanent identifiers attached to this sememe instance
 	 */
 	@XmlElement
-	RestIdentifiedObject identifiers;
+	public RestIdentifiedObject identifiers;
 	
 	/**
 	 * The list of sememe versions.  Depending on the expand parameter, may be empty, the latest only, or all versions.
 	 */
 	@XmlElement
-	List<RestSememeVersion> versions;
+	public List<RestSememeVersion> versions;
 
 	protected RestSememeChronology()
 	{
@@ -117,22 +102,19 @@ public class RestSememeChronology
 	public RestSememeChronology(SememeChronology<? extends SememeVersion<?>> sc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeNested,
 			boolean populateReferencedDetails, UUID processId) throws RestException
 	{
-		identifiers = new RestIdentifiedObject(sc.getUuidList());
-		sememeSequence = sc.getSememeSequence();
-		assemblageSequence = sc.getAssemblageSequence();
-		referencedComponentNid = sc.getReferencedComponentNid();
+		identifiers = new RestIdentifiedObject(sc);
+		assemblage= new RestIdentifiedObject(sc.getAssemblageSequence(), ObjectChronologyType.CONCEPT);
+		referencedComponent = new RestIdentifiedObject(sc.getReferencedComponentNid());
 		if (populateReferencedDetails)
 		{
-			ObjectChronologyType cronType = Get.identifierService().getChronologyTypeForNid(referencedComponentNid);
-			referencedComponentNidObjectType = new RestObjectChronologyType(cronType);
-			if (cronType == ObjectChronologyType.CONCEPT)
+			if (referencedComponent.type.enumId == ObjectChronologyType.CONCEPT.ordinal())
 			{
-				referencedComponentNidDescription = Util.readBestDescription(referencedComponentNid);
+				referencedComponentNidDescription = Util.readBestDescription(referencedComponent.nid);
 			}
-			else if (cronType == ObjectChronologyType.SEMEME)
+			else if (referencedComponent.type.enumId == ObjectChronologyType.SEMEME.ordinal())
 			{
 				@SuppressWarnings("rawtypes")
-				SememeChronology<? extends SememeVersion> referencedComponentSememe = Get.sememeService().getSememe(referencedComponentNid);
+				SememeChronology<? extends SememeVersion> referencedComponentSememe = Get.sememeService().getSememe(referencedComponent.nid);
 				if (SememeType.DESCRIPTION == referencedComponentSememe.getSememeType())
 				{
 					@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -195,44 +177,13 @@ public class RestSememeChronology
 		}
 	}
 	
-	@XmlTransient
-	public RestIdentifiedObject getIdentifiers() {
-		return identifiers;
-	}
-
-	@XmlTransient
-	public int getSememeSequence() {
-		return sememeSequence;
-	}
-	
-	@XmlTransient
-	public int getAssemblageSequence() {
-		return assemblageSequence;
-	}
-	
-	@XmlTransient
-	public int getReferencedComponentNid() {
-		return referencedComponentNid;
-	}
-	
-	@XmlTransient
-	public RestObjectChronologyType getReferencedComponentNidObjectType() {
-		return referencedComponentNidObjectType;
-	}
-	
-	@XmlTransient
-	public String getReferencedComponentNidDescription() {
-		return referencedComponentNidDescription;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "RestSememeChronology [sememeSequence=" + sememeSequence + ", assemblageSequence=" + assemblageSequence
-				+ ", referencedComponentNid=" + referencedComponentNid + ", referencedComponentNidObjectType="
-				+ referencedComponentNidObjectType + ", referencedComponentNidDescription="
+		return "RestSememeChronology [assemblageSequence=" + assemblage
+				+ ", referencedComponentNid=" + referencedComponent + ", referencedComponentNidDescription="
 				+ referencedComponentNidDescription + ", identifiers=" + identifiers + ", versions=" + versions + "]";
 	}
 }

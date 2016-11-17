@@ -48,12 +48,37 @@ public class RequestInfoUtils {
 			throw new RestException(parameterName, params.get(parameterName) + "", "incorrect number (" + (params.get(parameterName) != null ? params.get(parameterName).size() : 0) + " of values. Expected exactly 1 value.");
 		}
 	}
+	public static void validateSingleParameterValue(String parameterName, List<String> value) throws RestException {
+		if (value == null || value.size() != 1) {
+			throw new RestException(parameterName, value + "", "incorrect number (" + (value != null ? value.size() : 0) + " of values. Expected exactly 1 value.");
+		}
+	}
 
+	public static void validateIncompatibleParameters(Map<String, List<String>> params, String...parameterNames) throws RestException {
+		if (parameterNames != null) {
+			for (String parameterName : parameterNames) {
+				for (String conflictingParameterName : parameterNames) {
+					if (! conflictingParameterName.equals(parameterName) && params.containsKey(parameterName) && params.containsKey(conflictingParameterName)) {
+						throw new RestException(parameterName, params.get(parameterName) + "", "Parameters " + parameterName + " and " + conflictingParameterName + " are incompatible");
+					}
+				}
+			}
+		}
+	}
+	public static UUID parseUuidParameter(String parameterName, List<String> parameterValues) throws RestException {
+		validateSingleParameterValue(parameterName, parameterValues);
+		String value = parameterValues.iterator().next();
+		try {
+			return UUID.fromString(value);
+		} catch (Exception e) {
+			throw new RestException(parameterName, value, "invalid UUID parameter value");
+		}
+	}
 	public static UUID parseUuidParameter(String parameterName, String str) throws RestException {
 		try {
 			return UUID.fromString(str);
 		} catch (Exception e) {
-			throw new RestException(parameterName, str, "invalid UUID " + parameterName + " parameter value: " + str);
+			throw new RestException(parameterName, str, "invalid UUID parameter value");
 		}
 	}
 	public static Optional<UUID> parseUuidParameterIfNonBlank(String parameterName, String str) throws RestException {
@@ -68,16 +93,16 @@ public class RequestInfoUtils {
 		try {
 			return Integer.parseInt(str);
 		} catch (Exception e) {
-			throw new RestException(parameterName, str, "invalid integer " + parameterName + " parameter value: " + str);
+			throw new RestException(parameterName, str, "invalid integer parameter value");
 		}
 	}
 	
 	public static int getNidFromParameter(String parameterName, int nid) throws RestException {
 		if (nid >= 0) {
-			throw new RestException(parameterName, nid + "", "invalid " + parameterName + " NID parameter value: " + nid);
+			throw new RestException(parameterName, nid + "", "invalid NID parameter value");
 		}
 		if (! Get.conceptService().hasConcept(nid) && ! Get.sememeService().hasSememe(nid)) {
-			throw new RestException(parameterName, nid + "", "no concept or sememe exists corresponding to NID " + parameterName + " parameter value: " + nid);
+			throw new RestException(parameterName, nid + "", "no concept or sememe exists corresponding to NID");
 		} else {
 			return nid;
 		}
@@ -100,7 +125,7 @@ public class RequestInfoUtils {
 					}
 				}
 				else {
-					throw new RestException(parameterName, str, "no concept or sememe exists corresponding to " + parameterName + " parameter value: " + str);
+					throw new RestException(parameterName, str, "no concept or sememe exists corresponding to parameter");
 				}
 			} catch (RestException ex) {
 				throw ex;
@@ -146,14 +171,14 @@ public class RequestInfoUtils {
 			}
 			int id = Integer.parseInt(str);
 			if (! Get.conceptService().hasConcept(id)) {
-				throw new RestException(parameterName, str, "no concept exists corresponding to integer concept sequence " + parameterName + " parameter value: " + str);
+				throw new RestException(parameterName, str, "no concept exists corresponding to concept id " + str);
 			} else {
 				return Get.identifierService().getConceptSequence(id);
 			}
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new RestException(parameterName, str, "invalid integer concept sequence " + parameterName + " parameter value: " + str);
+			throw new RestException(parameterName, str, "invalid concept id" + str);
 		}
 	}
 
@@ -179,14 +204,14 @@ public class RequestInfoUtils {
 			}
 			int id = Integer.parseInt(str);
 			if (! Get.sememeService().hasSememe(id)) {
-				throw new RestException(parameterName, str, "no sememe exists corresponding to id " + parameterName + " parameter value: " + str);
+				throw new RestException(parameterName, str, "no sememe exists corresponding to parameter");
 			} else {
 				return Get.identifierService().getSememeSequence(id);
 			}
 		} catch (RestException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new RestException(parameterName, str, "invalid sememe id " + parameterName + " parameter value: " + str);
+			throw new RestException(parameterName, str, "invalid sememe parameter value");
 		}
 	}
 
@@ -199,10 +224,10 @@ public class RequestInfoUtils {
 	}
 
 	public static boolean getBooleanFromParameters(String parameterName, Map<String, List<String>> parameters) throws RestException {
-		if (parameters.get(parameterName).size() != 1) {
-			throw new RestException(parameterName, null, "invalid boolean parameter value");
+		if (parameters.get(parameterName) == null || parameters.get(parameterName).size() != 1) {
+			throw new RestException(parameterName, parameters.get(parameterName) + "", "invalid boolean parameter value");
 		}
-		return parseBooleanParameter(parameterName, parameters.get(parameterName).get(0));
+		return parseBooleanParameter(parameterName, parameters.get(parameterName).iterator().next());
 	}
 
 	public static List<String> expandCommaDelimitedElements(String list) {

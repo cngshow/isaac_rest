@@ -231,7 +231,7 @@ public class Util
 			UUID temp = processIdOptional.get();
 			if (RequestInfo.get().getWorkflow().getWorkflowAccessor().getProcessDetails(temp) == null)
 			{
-				throw new RestException("processId", "The provided processId of '" + temp.toString() + "' is not a valid workflow process");
+				throw new RestException(RequestParameters.processId, workflowProcessId, "Not a valid workflow process");
 			}
 			return temp;
 		}

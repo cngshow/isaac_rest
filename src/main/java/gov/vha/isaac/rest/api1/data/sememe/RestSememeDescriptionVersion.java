@@ -19,23 +19,20 @@
 package gov.vha.isaac.rest.api1.data.sememe;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
-import gov.vha.isaac.rest.SememeUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -54,40 +51,40 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 	 * This should be description case sensitive, description not case sensitive or description initial character sensitive
 	 */
 	@XmlElement
-	int caseSignificanceConceptSequence;
+	public RestIdentifiedObject caseSignificanceConcept;
 	
 	/**
 	 * The concept sequence of the concept that represents the language of the description (note, this is NOT 
 	 * the dialect)
 	 */
 	@XmlElement
-	int languageConceptSequence;
+	public RestIdentifiedObject languageConcept;
 	
 	/**
 	 * The text of the description
 	 */
 	@XmlElement
-	String text;
+	public String text;
 	
 	/**
 	 * The concept sequence of the concept that represents the type of the description.  
 	 * This should be FSN, Synonym, or Definition.
 	 */
 	@XmlElement
-	int descriptionTypeConceptSequence;
+	public RestIdentifiedObject descriptionTypeConcept;
 	
 	/**
 	 * The optional concept sequence of the concept that represents the extended type of the description.  
 	 * This should be a {@link MetaData.DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE}.
 	 */
 	@XmlElement
-	Integer descriptionExtendedTypeConceptSequence;
+	public RestIdentifiedObject descriptionExtendedTypeConcept;
 
 	/**
 	 * The dialects attached to this sememe.  Not populated by default, include expand=nestedSememes to expand this.
 	 */
 	@XmlElement
-	List<RestDynamicSememeVersion> dialects = new ArrayList<>();
+	public List<RestDynamicSememeVersion> dialects = new ArrayList<>();
 
 	protected RestSememeDescriptionVersion()
 	{
@@ -101,7 +98,7 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		setup(dsv, includeChronology, expandNested, expandReferenced, (restSememeVersion ->
 			{
 				//If the assemblage is a dialect, put it in our list.
-				if (Get.taxonomyService().wasEverKindOf(restSememeVersion.sememeChronology.assemblageSequence, MetaData.DIALECT_ASSEMBLAGE.getConceptSequence()))
+				if (Get.taxonomyService().wasEverKindOf(restSememeVersion.sememeChronology.assemblage.sequence, MetaData.DIALECT_ASSEMBLAGE.getConceptSequence()))
 				{
 					dialects.add((RestDynamicSememeVersion) restSememeVersion);
 					return false;
@@ -109,77 +106,28 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 				return true;
 			}),
 			processId);
-		caseSignificanceConceptSequence = dsv.getCaseSignificanceConceptSequence();
-		languageConceptSequence = dsv.getLanguageConceptSequence();
+		caseSignificanceConcept = new RestIdentifiedObject(dsv.getCaseSignificanceConceptSequence(), ObjectChronologyType.CONCEPT);
+		languageConcept = new RestIdentifiedObject(dsv.getLanguageConceptSequence(), ObjectChronologyType.CONCEPT);
 		text = dsv.getText();
-		descriptionTypeConceptSequence = dsv.getDescriptionTypeConceptSequence();
+		descriptionTypeConcept = new RestIdentifiedObject(dsv.getDescriptionTypeConceptSequence(), ObjectChronologyType.CONCEPT);
 
 		// populate descriptionExtendedTypeConceptSequence
-		Optional<Integer> descriptionExtendedTypeOptional = SememeUtil.getDescriptionExtendedTypeConceptSequence(RequestInfo.get().getStampCoordinate(), dsv.getNid());
+		Optional<UUID> descriptionExtendedTypeOptional = Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), dsv.getNid());
 		if (descriptionExtendedTypeOptional.isPresent()) {
-			descriptionExtendedTypeConceptSequence = descriptionExtendedTypeOptional.get();
+			descriptionExtendedTypeConcept = new RestIdentifiedObject(descriptionExtendedTypeOptional.get());
 		}
 	}
-
-	/**
-	 * @return the caseSignificanceConceptSequence
-	 */
-	@XmlTransient
-	public int getCaseSignificanceConceptSequence() {
-		return caseSignificanceConceptSequence;
-	}
-
-	/**
-	 * @return the languageConceptSequence
-	 */
-	@XmlTransient
-	public int getLanguageConceptSequence() {
-		return languageConceptSequence;
-	}
-
-	/**
-	 * @return the text
-	 */
-	@XmlTransient
-	public String getText() {
-		return text;
-	}
-
-	/**
-	 * @return the descriptionTypeConceptSequence
-	 */
-	@XmlTransient
-	public int getDescriptionTypeConceptSequence() {
-		return descriptionTypeConceptSequence;
-	}
-
-	/**
-	 * @return the descriptionExtendedTypeConceptSequence
-	 */
-	@XmlTransient
-	public Integer getDescriptionExtendedTypeConceptSequence() {
-		return descriptionExtendedTypeConceptSequence;
-	}
-
-	/**
-	 * @return the dialects
-	 */
-	@XmlTransient
-	public List<RestDynamicSememeVersion> getDialects() {
-		return Collections.unmodifiableList(dialects);
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
 		return "RestSememeDescriptionVersion ["
-				+ "caseSignificanceConceptSequence=" + caseSignificanceConceptSequence
-				+ ", languageConceptSequence=" + languageConceptSequence
+				+ "caseSignificanceConceptSequence=" + caseSignificanceConcept
+				+ ", languageConceptSequence=" + languageConcept
 				+ ", text=" + text
-				+ ", descriptionTypeConceptSequence=" + descriptionTypeConceptSequence
-				+ ", descriptionExtendedTypeConceptSequence=" + descriptionExtendedTypeConceptSequence
+				+ ", descriptionTypeConceptSequence=" + descriptionTypeConcept
+				+ ", descriptionExtendedTypeConceptSequence=" + descriptionExtendedTypeConcept
 				+ ", dialects=" + dialects
 				+ ", expandables=" + expandables
 				+ ", sememeChronology=" + sememeChronology

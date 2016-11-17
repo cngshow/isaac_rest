@@ -56,6 +56,7 @@ package gov.vha.isaac.rest.api1.workflow;
 // * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
 // */
 //@Path(RestPaths.workflowAPIsPathComponent)
+//@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 //public class WorkflowAPIs {
 //
 //	private static Logger log = LogManager.getLogger(WorkflowAPIs.class);

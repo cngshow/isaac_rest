@@ -16,67 +16,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api1.data.comment;
+package gov.vha.isaac.rest.api1.data.mapping;
 
+import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
- * {@link RestCommentVersionBaseCreate}
- * This stub class is used for callers to create {@link RestCommentVersion} objects.  This class, in combination with {@link RestCommentVersionBase} 
+ * {@link RestMappingItemVersionCreate}
+ * This stub class is used for callers to create {@link RestMappingItemVersion} objects.  This class, in combination with {@link RestMappingItemVersionUpdate} 
  * contains the fields that can be populated for creation.  
  * 
  * The API never returns this class.
 
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestCommentVersionBaseCreate.class)
-public class RestCommentVersionBaseCreate extends RestCommentVersionBase
-{	
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemVersionCreate.class)
+public class RestMappingItemVersionCreate extends RestMappingItemVersionUpdate
+{
 	/**
-	 * The identifier of the component that is being commented on.  Could be a concept or a sememe
+	 * The concept that identifies the map set that this entry belongs to.  Accepts a nid, sequence or UUID.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int commentedItem;
-
-	protected RestCommentVersionBaseCreate()
+	public String mapSetConcept;
+	
+	/**
+	 * The source concept being mapped by this map item.  Accepts a nid, sequence or UUID.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String sourceConcept;
+	
+	public RestMappingItemVersionCreate()
 	{
 		//for Jaxb
 		super();
 	}
-	
-	public RestCommentVersionBaseCreate(int commentedItem, String comment, String commentContext) {
-		super(comment, commentContext);
-		
-		this.commentedItem = commentedItem;
-	}
 
-	/**
-	 * @return the commentedItem
-	 */
-	@XmlTransient
-	public int getCommentedItem() {
-		return commentedItem;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "RestCommentVersionBaseCreate [commentedItem=" + commentedItem + ", comment=" + comment
-				+ ", commentContext=" + commentContext + "]";
+	public RestMappingItemVersionCreate(String targetConcept, String qualifierConcept, String mapSetConcept, String sourceConcept, 
+			List<RestDynamicSememeData> mapItemExtendedFields, Boolean active) 
+	{
+		super(targetConcept, qualifierConcept, mapItemExtendedFields, active);
+		this.mapSetConcept = mapSetConcept;
+		this.sourceConcept = sourceConcept;
 	}
 }

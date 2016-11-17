@@ -27,8 +27,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * {@link RestAssociationItemVersionBaseCreate}
- * This stub class is used by callers to create {@link RestAssociationItemVersion} objects.  This class, in combination with {@link RestAssociationItemVersionBase}
+ * {@link RestAssociationItemVersionCreate}
+ * This stub class is used by callers to create {@link RestAssociationItemVersion} objects.  This class, in combination with {@link RestAssociationItemVersionUpdate}
  * contains the fields that can be populated for creation.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
@@ -37,31 +37,32 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersionBaseCreate.class)
-public class RestAssociationItemVersionBaseCreate extends RestAssociationItemVersionBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestAssociationItemVersionCreate.class)
+public class RestAssociationItemVersionCreate extends RestAssociationItemVersionUpdate
 {
 	/**
-	 * The concept sequence of the association type
+	 * The concept uuid, nid or sequence of the association type
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public int associationTypeSequence;
+	public String associationType;
 	
 	/**
-	 * The nid of the source item in the association.  Typically this is a concept, but it may also be a sequence.
+	 * The nid or UUID of the source item in the association.  Typically this is a concept, but it may also be a sememe.
+	 * Sequences are not allowed here.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public int sourceNid;
+	public String sourceId;
 	
-	protected RestAssociationItemVersionBaseCreate()
+	protected RestAssociationItemVersionCreate()
 	{
 		//for jaxb
 	}
 	
-	public RestAssociationItemVersionBaseCreate(int associationTypeSequence, int sourceNid)
+	public RestAssociationItemVersionCreate(int associationTypeSequence, int sourceNid)
 	{
-		this.associationTypeSequence = associationTypeSequence;
-		this.sourceNid = sourceNid;
+		this.associationType = associationTypeSequence + "";
+		this.sourceId = sourceNid + "";
 	}
 }

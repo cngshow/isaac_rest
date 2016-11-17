@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
@@ -35,7 +36,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBaseCreate
+public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBase
 {
 	/**
 	 * The selected description of the extensionNameConcept that describes the purpose of this extended field on a map set definition.  
@@ -45,11 +46,11 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	public String extensionNameConceptDescription;
 	
 	/**
-	 * The UUID(s) of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
+	 * The identifiers of the concept that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
 	 * will be used as the label of the extension.
 	 */
 	@XmlElement
-	RestIdentifiedObject extensionNameConceptIdentifiers;
+	public RestIdentifiedObject extensionNameConceptIdentifiers;
 	
 	public RestMappingSetExtensionValue()
 	{
@@ -59,8 +60,7 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 	
 	public RestMappingSetExtensionValue(int extensionNameConcept, RestDynamicSememeData extensionValue)
 	{
-		this.extensionNameConcept = Get.identifierService().getConceptSequence(extensionNameConcept);
-		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(Get.identifierService().getUuidsForNid(Get.identifierService().getConceptNid(extensionNameConcept)));
+		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(extensionNameConcept, ObjectChronologyType.CONCEPT);
 		this.extensionValue = extensionValue;
 		this.extensionNameConceptDescription = Util.readBestDescription(extensionNameConcept);
 	}

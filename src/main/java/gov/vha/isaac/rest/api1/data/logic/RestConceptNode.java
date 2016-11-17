@@ -95,14 +95,18 @@ public class RestConceptNode extends RestLogicNode {
 	
 	private void finishSetup(int conceptSequence) {
 	this.conceptSequence = conceptSequence;
-	conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(conceptSequence);
+	conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate())
+			.conceptDescriptionText(conceptSequence);
 	try {
-		// TODO Fine tune this when data problems resolved
-		Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getLogicCoordinate());
+		// TODO Joel - what does this mean?  You left: Fine tune this when data problems resolved
+		Optional<SememeChronology<? extends LogicGraphSememe<?>>> lgcOptional = 
+				Frills.getLogicGraphChronology(conceptSequence, RequestInfo.get().getStated(), RequestInfo.get().getStampCoordinate(), 
+						RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getLogicCoordinate());
 		Optional<LatestVersion<LogicGraphSememe<?>>> lgs = Frills.getLogicGraphVersion(lgcOptional.get(), RequestInfo.get().getStampCoordinate());
 		isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
 	} catch (Exception e) {
-		LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", Optional.ofNullable(Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate())));
+		LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", 
+				Optional.ofNullable(Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate())));
 		isConceptDefined = false;
 	}
 

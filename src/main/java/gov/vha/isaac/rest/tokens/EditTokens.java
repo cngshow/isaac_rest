@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -39,6 +42,8 @@ import gov.vha.isaac.rest.session.RequestParameters;
  *
  */
 public class EditTokens {
+	private static Logger log = LogManager.getLogger(EditTokens.class);
+	
 	private final static Object OBJECT_BY_TOKEN_CACHE_LOCK = new Object();
 	
 	private static final int DEFAULT_MAX_SIZE = 50;
@@ -122,15 +127,11 @@ public class EditTokens {
 		}
 	}
 
-	public static EditToken getOrCreate(String key) throws RestException {
+	public static EditToken getOrCreate(String key) throws Exception {
 		EditToken token = get(key);
 		
 		if (token == null) {
-			try {
-				token = new EditToken(key);
-			} catch (Exception e) {
-				throw new RestException("Failed creating EditToken from \"" + key + "\".  Caught " + e.getClass().getName() + " " + e.getLocalizedMessage(), e);
-			}
+			token = new EditToken(key);
 			put(token);
 		}
 		
@@ -190,7 +191,7 @@ public class EditTokens {
 					EditTokens.put(token);
 					return Optional.of(token);
 				} catch (Exception e) {
-					throw new RestException(RequestParameters.editToken, tokenStringOptional.get(), "Invalid Token String");
+					throw new SecurityException("Invalid Token String");
 				}
 			}
 		}

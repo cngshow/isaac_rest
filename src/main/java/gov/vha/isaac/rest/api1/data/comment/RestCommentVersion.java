@@ -20,8 +20,6 @@ package gov.vha.isaac.rest.api1.data.comment;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
@@ -39,19 +37,25 @@ import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestCommentVersion extends RestCommentVersionBaseCreate
+public class RestCommentVersion extends RestCommentVersionBase
 {
 	/**
-	 * The identifier data for the object
+	 * The identifier data for the comment itself
 	 */
 	@XmlElement
-	RestIdentifiedObject identifiers;
+	public RestIdentifiedObject identifiers;
+	
+	/**
+	 * The identifier data of the item the comment is placed on
+	 */
+	@XmlElement
+	public RestIdentifiedObject commentedItem;
 	
 	/**
 	 * The StampedVersion details for this comment
 	 */
 	@XmlElement
-	RestStampedVersion commentStamp;
+	public RestStampedVersion commentStamp;
 	
 	RestCommentVersion() {
 		// For JAXB
@@ -60,31 +64,15 @@ public class RestCommentVersion extends RestCommentVersionBaseCreate
 	
 	public RestCommentVersion(DynamicSememe<?> commentSememe)
 	{
-		super(commentSememe.getReferencedComponentNid(),
-				commentSememe.getData()[0].getDataObject().toString(),
+		super(commentSememe.getData()[0].getDataObject().toString(),
 				(commentSememe.getData().length > 1 && commentSememe.getData()[1] != null) ? commentSememe.getData()[1].getDataObject().toString() : null);
-		identifiers = new RestIdentifiedObject(commentSememe.getUuidList());
+		identifiers = new RestIdentifiedObject(commentSememe.getChronology());
 		commentStamp = new RestStampedVersion(commentSememe);
+		commentedItem = new RestIdentifiedObject(commentSememe.getReferencedComponentNid());
 		if (commentSememe.getAssemblageSequence() != DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getConceptSequence())
 		{
 			throw new RuntimeException("The provided sememe isn't a comment!");
 		}
-	}
-
-	/**
-	 * @return the identifiers
-	 */
-	@XmlTransient
-	public RestIdentifiedObject getIdentifiers() {
-		return identifiers;
-	}
-
-	/**
-	 * @return the commentStamp
-	 */
-	@XmlTransient
-	public RestStampedVersion getCommentStamp() {
-		return commentStamp;
 	}
 
 	/* (non-Javadoc)

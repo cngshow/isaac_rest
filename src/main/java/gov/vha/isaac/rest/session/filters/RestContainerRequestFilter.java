@@ -22,17 +22,23 @@ package gov.vha.isaac.rest.session.filters;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Priority;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
+import gov.vha.isaac.rest.session.RestApplicationSecurityContext;
+import gov.vha.isaac.rest.session.User;
 import gov.vha.isaac.rest.tokens.EditToken;
 
 /**
@@ -49,7 +55,7 @@ import gov.vha.isaac.rest.tokens.EditToken;
  * to ensure that this filter is run before other user filters
  * 
  */
-@Priority(Priorities.USER - 500)
+@Priority(Priorities.AUTHORIZATION)
 @Provider
 public class RestContainerRequestFilter implements ContainerRequestFilter {
 	private static Logger LOG = LogManager.getLogger();
@@ -60,18 +66,37 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 	public RestContainerRequestFilter() {
 	}
 
+	private void authenticate(ContainerRequestContext requestContext) {
+		// GET, POST, PUT, ...
+		String method = requestContext.getMethod();
+
+		String path = requestContext.getUriInfo().getPath(true);
+
+		// Allow wadl to be retrieved
+		if(method.equals(HttpMethod.GET) && (path.equals("application.wadl") || path.equals("application.wadl/xsd0.xsd"))) {
+			return;
+		}
+
+		// Get user
+		User user = RequestInfo.get().getUser().get();
+
+		// Configure Security Context here
+		String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
+		requestContext.setSecurityContext(new RestApplicationSecurityContext(user, scheme));
+	}
+
 	/* (non-Javadoc)
 	 * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
 	 */
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		
+
 		if (!ApplicationConfig.getInstance().isIsaacReady())
 		{
 			LOG.debug("Rejecting request as ISAAC is not yet ready");
 			throw new IOException("The system is not yet ready.  Status:  " + ApplicationConfig.getInstance().getStatusMessage());
 		}
-		
+
 		LOG.debug("Running CONTAINER REQUEST FILTER " + this.getClass().getName() + " on request " + requestContext.getRequest().getMethod());
 		
 		LOG.debug("Path parameters: " + requestContext.getUriInfo().getPathParameters().keySet());
@@ -88,12 +113,13 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 		try
 		{
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
-			
+
 			//If they are asking for an edit token, or attempting to do a write, we need a valid editToken.
 			if (requestContext.getUriInfo().getPath().contains("write/")
 					|| requestContext.getUriInfo().getPath().contains(RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent)
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
 					) {
+
 				EditToken et = RequestInfo.get().getEditToken();
 				
 				if (requestContext.getUriInfo().getPath().contains("write/"))
@@ -104,8 +130,15 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 						throw new IOException("Edit Token is no longer valid for write - please renew the token.");
 					}
 				}
+				RequestInfo.get().getEditCoordinate();
+			} else {
+				// Set a default read_only user for clients that do not pass SSO token or EditToken
+				// The user has a name of "READ_ONLY_USER," a null UUID id and ALL UserRole values
+				RequestInfo.get().setDefaultReadOnlyUser();
 			}
-		}
+
+			authenticate(requestContext); // Apply after readAll() in order to populate User, if possible
+		} 
 		catch (IOException e) {
 			throw e;
 		} 

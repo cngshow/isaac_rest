@@ -39,12 +39,6 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 public class RestStampedVersion
 {
 	/**
-	 * The stamp sequence of this version
-	 */
-	@XmlElement
-	public int stampSequence; // TODO remove or change from into to Integer
-	
-	/**
 	 * The State of this version (active, inactive, primordial or cancelled)
 	 */
 	@XmlElement
@@ -85,7 +79,6 @@ public class RestStampedVersion
 	
 	public RestStampedVersion(StampedVersion sv)
 	{
-		stampSequence = sv.getStampSequence();
 		state = new RestStateType(sv.getState());
 		time = sv.getTime();
 		authorSequence = sv.getAuthorSequence();
@@ -94,7 +87,6 @@ public class RestStampedVersion
 	}
 	public RestStampedVersion(Stamp s)
 	{
-		stampSequence = -1; // TODO remove or change from int to Integer
 		state = new RestStateType(s.getStatus());
 		time = s.getTime();
 		authorSequence = s.getAuthorSequence();
@@ -107,7 +99,7 @@ public class RestStampedVersion
 	 */
 	@Override
 	public String toString() {
-		return "RestStampedVersion [stampSequence=" + stampSequence + ", state=" + state + ", time=" + time
+		return "RestStampedVersion [state=" + state + ", time=" + time
 				+ ", authorSequence=" + authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence="
 				+ pathSequence + "]";
 	}

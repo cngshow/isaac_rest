@@ -22,9 +22,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
 
@@ -38,44 +37,12 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestDynamicSememeColumnInfo
 {
-	protected RestDynamicSememeColumnInfo()
-	{
-		//for jaxb
-	}
-	
-	public RestDynamicSememeColumnInfo(DynamicSememeColumnInfo dsci)
-	{
-		this.columnConceptSequence = Get.identifierService().getConceptSequenceForUuids(dsci.getColumnDescriptionConcept());
-		this.columnDataType = new RestDynamicSememeDataType(dsci.getColumnDataType());
-		this.columnDefaultData = dsci.getDefaultColumnValue() == null ? null : RestDynamicSememeData.translate(dsci.getColumnOrder(), dsci.getDefaultColumnValue());
-		this.columnDescription = dsci.getColumnDescription();
-		this.columnName = dsci.getColumnName();
-		this.columnOrder = dsci.getColumnOrder();
-		this.columnRequired = dsci.isColumnRequired();
-		this.columnValidatorData = dsci.getValidatorData() == null ? null : new RestDynamicSememeData[dsci.getValidatorData().length];
-		if (this.columnValidatorData != null)
-		{
-			for (int i = 0; i < dsci.getValidatorData().length; i++)
-			{
-				this.columnValidatorData[i] = RestDynamicSememeData.translate(dsci.getColumnOrder(), dsci.getValidatorData()[i]);
-			}
-		}
-		this.columnValidatorTypes = dsci.getValidator() == null ? null : new RestDynamicSememeValidatorType[dsci.getValidator().length];
-		if (this.columnValidatorTypes != null)
-		{
-			for (int i = 0; i < dsci.getValidatorData().length; i++)
-			{
-				this.columnValidatorTypes[i] = new RestDynamicSememeValidatorType(dsci.getValidator()[i]);
-			}
-		}
-	}
-
 	/**
 	 * The concept sequence number of the concept that represents the column within the dynamic sememe.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public int columnConceptSequence;
+	public RestIdentifiedObject columnLabelConcept;
 	
 	/**
 	 * The user-friendly name to display for this column.
@@ -137,4 +104,38 @@ public class RestDynamicSememeColumnInfo
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestDynamicSememeData[] columnValidatorData;
+	
+	protected RestDynamicSememeColumnInfo()
+	{
+		//for jaxb
+	}
+	
+	public RestDynamicSememeColumnInfo(DynamicSememeColumnInfo dsci)
+	{
+		this.columnLabelConcept = new RestIdentifiedObject(dsci.getColumnDescriptionConcept());
+		this.columnDataType = new RestDynamicSememeDataType(dsci.getColumnDataType());
+		this.columnDefaultData = dsci.getDefaultColumnValue() == null ? null : RestDynamicSememeData.translate(dsci.getColumnOrder(), dsci.getDefaultColumnValue());
+		this.columnDescription = dsci.getColumnDescription();
+		this.columnName = dsci.getColumnName();
+		this.columnOrder = dsci.getColumnOrder();
+		this.columnRequired = dsci.isColumnRequired();
+		this.columnValidatorData = dsci.getValidatorData() == null ? null : new RestDynamicSememeData[dsci.getValidatorData().length];
+		if (this.columnValidatorData != null)
+		{
+			for (int i = 0; i < dsci.getValidatorData().length; i++)
+			{
+				this.columnValidatorData[i] = RestDynamicSememeData.translate(dsci.getColumnOrder(), dsci.getValidatorData()[i]);
+			}
+		}
+		this.columnValidatorTypes = dsci.getValidator() == null ? null : new RestDynamicSememeValidatorType[dsci.getValidator().length];
+		if (this.columnValidatorTypes != null)
+		{
+			for (int i = 0; i < dsci.getValidatorData().length; i++)
+			{
+				this.columnValidatorTypes[i] = new RestDynamicSememeValidatorType(dsci.getValidator()[i]);
+			}
+		}
+	}
+
+	
 }
