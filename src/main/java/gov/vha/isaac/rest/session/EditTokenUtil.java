@@ -60,6 +60,9 @@ import gov.vha.isaac.rest.tokens.EditTokens;
 class EditTokenUtil {
 	private EditTokenUtil() {}
 
+	static UUID getUuidFromUserFsn(String fsn) {
+		return UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
+	}
 	static EditToken getUserToken(
 			User user,
 			int moduleSequence,
@@ -70,18 +73,11 @@ class EditTokenUtil {
 		LogicCoordinate logicCoordinate = LogicCoordinates.getStandardElProfile();
 		
 		Integer authorSequence = null;
-		
-		// FSN from userName is SSO primary key
-		final String fsn = user.getName();
-		
-		//TODO Joel User already has an ID, why are you regenerated here?  Keep the logic in one place. 
-		// Generate SSO T5 UUID from FSN with MetaData.USER.getPrimordialUuid() as domain
-		final UUID uuidFromUserFsn = UuidT5Generator.get(MetaData.USER.getPrimordialUuid(), fsn);
-		
+
 		// If the SSO UUID already persisted
-		if (Get.identifierService().hasUuid(uuidFromUserFsn)) {
+		if (Get.identifierService().hasUuid(user.getId())) {
 			// Set authorSequence to value corresponding to SSO UUID
-			authorSequence = Get.identifierService().getConceptSequenceForUuids(uuidFromUserFsn);
+			authorSequence = Get.identifierService().getConceptSequenceForUuids(user.getId());
 		}
 
 		// If no existing author by SSO UUID, create new author concept with that SSO UUID
@@ -103,22 +99,12 @@ class EditTokenUtil {
 				LogicalExpression parentDef = defBuilder.build();
 
 				ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(
-						fsn,
+						user.getName(),
 						null,
 						parentDef);
 
 				// Set new author concept UUID to SSO UUID
-				builder.setPrimordialUuid(uuidFromUserFsn);
-
-				// Add PRISME user.id in DYNAMIC_SEMEME_PRISME_USER_ID annotation
-				// TODO not sure if we even need this with the latest updates.  Check with Joel after merge
-//				SememeChronology<DynamicSememe<?>> prismeUserIdSememe = null;
-//				prismeUserIdSememe = 
-//						SememeUtil.addAnnotation(
-//								adminEditCoordinate,
-//								builder.getNid(),
-//								new DynamicSememeLongImpl(user.getId()),
-//								DynamicSememeConstants.get().DYNAMIC_SEMEME_PRISME_USER_ID.getPrimordialUuid());
+				builder.setPrimordialUuid(user.getId());
 
 				if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
 					for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
@@ -137,7 +123,7 @@ class EditTokenUtil {
 
 				@SuppressWarnings("deprecation")
 				Optional<CommitRecord> commitRecord = Get.commitService().commit(
-						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + fsn).get();
+						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + user.getName()).get();
 				authorSequence = newCon.getConceptSequence();
 				
 			}

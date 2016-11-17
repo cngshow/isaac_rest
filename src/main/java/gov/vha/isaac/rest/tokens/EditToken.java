@@ -127,50 +127,55 @@ public class EditToken
 	 */
 	EditToken(String encodedData) throws Exception
 	{
-		long time = System.currentTimeMillis();
-		String readHash = encodedData.substring(0, encodedHashLength);
-		String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), getSecret(), hashRounds, hashLength);
-		
-		if (!readHash.equals(calculatedHash))
-		{
-			throw new RuntimeException("Invalid token!");
-		}
-		
-		byte[] readBytes = Base64.getUrlDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
-		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
-		byte version = buffer.getByte();
-		if (version != tokenVersion)
-		{
-			throw new Exception("Expected token version " + tokenVersion + " but read " + version);
-		}
-		
-		increment = buffer.getInt();
-		creationTime = buffer.getLong();
-		
-		if ((System.currentTimeMillis() - creationTime) > tokenMaxAge)
-		{
-			throw new RestException("Edit Token Expired");
-		}
+		try {
+			long time = System.currentTimeMillis();
+			String readHash = encodedData.substring(0, encodedHashLength);
+			String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), getSecret(), hashRounds, hashLength);
 
-		authorSequence = buffer.getInt();
-		moduleSequence = buffer.getInt();
-		pathSequence = buffer.getInt();
-		
-		UUID tmpUuid = buffer.getUuid();
-		if (tmpUuid.equals(NULL_UUID)) {
-			activeWorkflowProcessId = null;
-		} else {
-			activeWorkflowProcessId = tmpUuid;
+			if (!readHash.equals(calculatedHash))
+			{
+				throw new RuntimeException("Invalid token!");
+			}
+
+			byte[] readBytes = Base64.getUrlDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
+			ByteArrayDataBuffer buffer = new ByteArrayDataBuffer(readBytes);
+			byte version = buffer.getByte();
+			if (version != tokenVersion)
+			{
+				throw new Exception("Expected token version " + tokenVersion + " but read " + version);
+			}
+
+			increment = buffer.getInt();
+			creationTime = buffer.getLong();
+
+			if ((System.currentTimeMillis() - creationTime) > tokenMaxAge)
+			{
+				throw new RestException("Edit Token Expired");
+			}
+
+			authorSequence = buffer.getInt();
+			moduleSequence = buffer.getInt();
+			pathSequence = buffer.getInt();
+
+			UUID tmpUuid = buffer.getUuid();
+			if (tmpUuid.equals(NULL_UUID)) {
+				activeWorkflowProcessId = null;
+			} else {
+				activeWorkflowProcessId = tmpUuid;
+			}
+
+			byte numRoles = buffer.getByte();
+			for (byte i = 0; i < numRoles; ++i) {
+				roles.add(UserRole.safeValueOf(buffer.getInt()).get());
+			}
+
+			log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
+
+			serialization = encodedData;
+		} catch (Exception e) {
+			log.warn("Failed creating EditToken from \"" + encodedData + "\"", e);
+			throw e;
 		}
-
-		byte numRoles = buffer.getByte();
-		for (byte i = 0; i < numRoles; ++i) {
-			roles.add(UserRole.safeValueOf(buffer.getInt()).get());
-		}
-
-		log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
-
-		serialization = encodedData;
 	}
 	
 	private void expireUnusedTokens()
@@ -347,7 +352,7 @@ public class EditToken
 				2,
 				3,
 				randomUuid,
-				UserRole.ADMINISTRATOR, UserRole.EDITOR, UserRole.READ_ONLY);
+				UserRole.SUPER_USER, UserRole.EDITOR, UserRole.READ_ONLY);
 		String token = t.serialize();
 		System.out.println(token);
 		EditToken t1 = new EditToken(token);

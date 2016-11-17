@@ -78,6 +78,16 @@
  * versions) but also provide various convenience abstractions, such as the notion of associations, mapsets, descriptions, etc.
  * <br>The Rest APIs also provide extensive search capabilities across the content of the system.
  * <br><br>
+ * On failure a ISAAC REST API will return an HTTP response containing a JSON-serialized RestExceptionResponse object.
+ * <br>
+ * <table>
+ * <tr><td style="padding:0 15px 0 15px;">Status</td><td style="padding:0 15px 0 15px;">Code</td><td style="padding:0 15px 0 15px;">Description</td></tr>
+ * <tr><td style="padding:0 15px 0 15px;">BAD_REQUEST</td><td style="padding:0 15px 0 15px;">400</td><td style="padding:0 15px 0 15px;">Bad Request - API client passed a query a bad parameter, parameter value or combination of parameters</td></tr>
+ * <tr><td style="padding:0 15px 0 15px;">UNAUTHORIZED</td><td style="padding:0 15px 0 15px;">401</td><td style="padding:0 15px 0 15px;">Unauthorized - API user is unauthorized</td></tr>
+ * <tr><td style="padding:0 15px 0 15px;">INTERNAL_SERVER_ERROR</td><td style="padding:0 15px 0 15px;">500</td><td style="padding:0 15px 0 15px;">Internal Server Error - default, undifferentiated server-side error</td></tr>
+ * <tr><td style="padding:0 15px 0 15px;">SERVICE_UNAVAILABLE</td><td style="padding:0 15px 0 15px;">503</td><td style="padding:0 15px 0 15px;">Service Unavailable - ISAAC is not yet initialized</td></tr>
+ * </table>
+ * <br><br>
  * <img src="doc/ISAAC Core API.png"/>
  * </p>
  */
