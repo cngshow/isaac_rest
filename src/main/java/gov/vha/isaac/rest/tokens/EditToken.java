@@ -134,7 +134,7 @@ public class EditToken
 
 			if (!readHash.equals(calculatedHash))
 			{
-				throw new RuntimeException("Invalid token!");
+				throw new SecurityException("Invalid token!");
 			}
 
 			byte[] readBytes = Base64.getUrlDecoder().decode(encodedData.substring(encodedHashLength, encodedData.length()));
