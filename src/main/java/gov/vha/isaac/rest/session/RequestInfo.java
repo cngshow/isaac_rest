@@ -346,7 +346,7 @@ public class RequestInfo
 					if (userService.usePrismeForRolesByToken()) {
 						// FAIL if userId parameter set
 						if (parameters_.containsKey(RequestParameters.userId)) {
-							throw new RuntimeException(new RestException(RequestParameters.userId, parameters_.get(RequestParameters.userId) + "", "Cannot specify userId parameter when PRISME configured"));
+							throw new SecurityException(new RestException(RequestParameters.userId, parameters_.get(RequestParameters.userId) + "", "Cannot specify userId parameter when PRISME configured"));
 						}
 						log.debug("Constructing new EditToken from User from PRISME with SSO token " + parameters_.get(RequestParameters.ssoToken));
 						// Validate ssoToken parameter

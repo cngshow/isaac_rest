@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.jerseyConfig;
 
 
+import java.io.IOException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -39,12 +40,12 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestExceptionResponse;
 
 /**
  * 
- * {@link MyExceptionMapper}
+ * {@link IsaacExceptionMapper}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @Provider
-public class MyExceptionMapper implements ExceptionMapper<Exception>
+public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 {
 	private static Logger log = LogManager.getLogger("web");
 	
@@ -71,7 +72,7 @@ public class MyExceptionMapper implements ExceptionMapper<Exception>
 		Status status = Status.INTERNAL_SERVER_ERROR; // Default is INTERNAL_SERVER_ERROR
 		
 		// Place any Exception with its own response status and handling here
-		if (ex instanceof SecurityException)
+		if (ex instanceof SecurityException || (ex instanceof IOException && ((IOException)ex).getCause() instanceof SecurityException))
 		{
 			log.info("SecurityException: " + ex.getMessage());
 

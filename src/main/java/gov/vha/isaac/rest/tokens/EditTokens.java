@@ -191,7 +191,7 @@ public class EditTokens {
 					EditTokens.put(token);
 					return Optional.of(token);
 				} catch (Exception e) {
-					throw new RestException(RequestParameters.editToken, tokenStringOptional.get(), "Invalid Token String");
+					throw new SecurityException("Invalid Token String");
 				}
 			}
 		}
