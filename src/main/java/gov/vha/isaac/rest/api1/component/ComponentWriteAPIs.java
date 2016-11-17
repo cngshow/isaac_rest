@@ -270,7 +270,7 @@ public class ComponentWriteAPIs
 						case RELATIONSHIP_ADAPTOR:
 						case UNKNOWN:
 						default:
-							throw new RestException("Unsupported sememe " + id + " of type " + sememe.getSememeType());
+							throw new RestException(RequestParameters.id, id, "Unsupported sememe of type " + sememe.getSememeType());
 					}
 					if (commit)
 					{
@@ -281,7 +281,7 @@ public class ComponentWriteAPIs
 	
 				case UNKNOWN_NID:
 				default :
-					throw new RestException(RequestParameters.id, "Could not locate component to change the state");
+					throw new RestException(RequestParameters.id, id, "Could not locate component to change the state");
 			}
 
 			if (commit)

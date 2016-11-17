@@ -315,7 +315,7 @@ public class MappingWriteAPIs
 					stateToUse);
 
 		} catch (IOException e) {
-			throw new RestException("Failed updating mapping item " + id + " on " + e.getClass().getName() + " exception \"" + e.getLocalizedMessage() + "\"");
+			throw new RuntimeException("Failed updating mapping item " + id, e);
 		}
 	}
 	
@@ -638,7 +638,7 @@ public class MappingWriteAPIs
 			List<RestDynamicSememeData> extendedDataFields,
 			boolean active,
 			StampCoordinate stampCoord,
-			EditCoordinate editCoord) throws RuntimeException, RestException
+			EditCoordinate editCoord) throws RestException
 	{
 		int sememeConceptSequence = Get.identifierService().getConceptSequenceForUuids(mappingSetID);
 		
@@ -690,7 +690,7 @@ public class MappingWriteAPIs
 		catch (Exception e)
 		{
 			log.error("Unexpected", e);
-			throw new RestException("Failed committing new mapping item sememe", e);
+			throw new RuntimeException("Failed committing new mapping item sememe", e);
 		}
 		
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());

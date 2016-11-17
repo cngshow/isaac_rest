@@ -212,7 +212,7 @@ public class AssociationWriteAPIs
 		
 		if (!source.isPresent())
 		{
-			throw new RestException("sourceNid", associationItemCreationData.sourceId + "", "Unable to locate the source component");
+			throw new RestException("sourceId", associationItemCreationData.sourceId + "", "Unable to locate the source component");
 		}
 		if (!associationID.isPresent())
 		{
@@ -220,7 +220,7 @@ public class AssociationWriteAPIs
 		}
 		if (StringUtils.isNotBlank(associationItemCreationData.targetId) && !target.isPresent())
 		{
-			throw new RestException("targetNid", associationItemCreationData.targetId + "", "Unable to locate the target component");
+			throw new RestException("targetId", associationItemCreationData.targetId + "", "Unable to locate the target component");
 		}
 
 		DynamicSememeData[] data = new DynamicSememeData[1];
@@ -302,7 +302,7 @@ public class AssociationWriteAPIs
 		
 		if (StringUtils.isNotBlank(associationItemUpdateData.targetId) && !target.isPresent())
 		{
-			throw new RestException("targetNid", associationItemUpdateData.targetId + "", "Unable to locate the target component");
+			throw new RestException("targetId", associationItemUpdateData.targetId + "", "Unable to locate the target component");
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })

@@ -38,10 +38,6 @@ public class RestException extends IOException
 	{
 		super(message);
 	}
-	public RestException(String message, Throwable t) // TODO remove cause ctors inappropriate for RestException
-	{
-		super(message, t);
-	}
 
 	public RestException(String parameterName, String message)
 	{

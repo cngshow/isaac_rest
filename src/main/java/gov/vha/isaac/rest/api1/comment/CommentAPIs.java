@@ -106,7 +106,7 @@ public class CommentAPIs
 			return new RestCommentVersion(sv.get().value());
 		}
 		
-		throw new RestException("id", id, "No comment was found on the given coordinate");
+		throw new RestException(RequestParameters.id, id, "No comment was found on the given coordinate");
 	}
 	
 	/**

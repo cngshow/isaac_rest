@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.sememe;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
@@ -279,23 +280,23 @@ public class SememeWriteAPIs
 		// TODO test updateDescription(), including validation of updateData.getDescriptionTypeConceptSequence()
 		int sememeSequence = RequestInfoUtils.getSememeSequenceFromParameter(RequestParameters.id, id);
 
+		SememeChronology<? extends SememeVersion<?>> sememeChronology = Get.sememeService().getOptionalSememe(sememeSequence).get();
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		DescriptionSememeImpl mutableVersion =
+		(DescriptionSememeImpl)((SememeChronology)sememeChronology).createMutableVersion(
+				DescriptionSememeImpl.class, (updateData.active == null || updateData.active ? State.ACTIVE : State.INACTIVE),
+				RequestInfo.get().getEditCoordinate());
+
+		mutableVersion.setCaseSignificanceConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", 
+				updateData.caseSignificanceConcept));
+		mutableVersion.setLanguageConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.languageConcept", 
+				updateData.languageConcept));
+		mutableVersion.setText(updateData.text);
+		//TODO this needs a validator in isaac, to ensure it is a proper type
+		mutableVersion.setDescriptionTypeConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.descriptionTypeConcept", 
+				updateData.descriptionTypeConcept));
+
 		try {
-			SememeChronology<? extends SememeVersion<?>> sememeChronology = Get.sememeService().getOptionalSememe(sememeSequence).get();
-			@SuppressWarnings({ "rawtypes", "unchecked" })
-			DescriptionSememeImpl mutableVersion =
-					(DescriptionSememeImpl)((SememeChronology)sememeChronology).createMutableVersion(
-							DescriptionSememeImpl.class, (updateData.active == null || updateData.active ? State.ACTIVE : State.INACTIVE),
-							RequestInfo.get().getEditCoordinate());
-
-			mutableVersion.setCaseSignificanceConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", 
-					updateData.caseSignificanceConcept));
-			mutableVersion.setLanguageConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.languageConcept", 
-					updateData.languageConcept));
-			mutableVersion.setText(updateData.text);
-			//TODO this needs a validator in isaac, to ensure it is a proper type
-			mutableVersion.setDescriptionTypeConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.descriptionTypeConcept", 
-					updateData.descriptionTypeConcept));
-
 			Get.commitService().addUncommitted(sememeChronology).get();
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("updating description sememe: SEQ=" + sememeSequence 
 					+ ", NID=" + sememeChronology.getNid() + " with " + updateData).get();
@@ -304,12 +305,11 @@ public class SememeWriteAPIs
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
-			
-			return new RestWriteResponse(RequestInfo.get().getEditToken(), mutableVersion.getPrimordialUuid());
-			
 		} catch (Exception e) {
-			throw new RestException("Failed updating description " + id + " with " + updateData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			throw new RuntimeException("Failed updating description " + id + " with " + updateData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
+
+		return new RestWriteResponse(RequestInfo.get().getEditToken(), mutableVersion.getPrimordialUuid());
 	}
 	
 	/**

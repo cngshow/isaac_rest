@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -46,7 +48,6 @@ import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
-import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.EditToken;
 import gov.vha.isaac.rest.tokens.EditTokens;
 
@@ -67,11 +68,11 @@ class EditTokenUtil {
 			User user,
 			int moduleSequence,
 			int pathSequence,
-			UUID processId) throws RestException {
+			UUID processId) {
 		EditCoordinate adminEditCoordinate = EditCoordinates.getDefaultUserMetadata();
 		LanguageCoordinate languageCoordinate = LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate();
 		LogicCoordinate logicCoordinate = LogicCoordinates.getStandardElProfile();
-		
+
 		Integer authorSequence = null;
 
 		// If the SSO UUID already persisted
@@ -82,54 +83,53 @@ class EditTokenUtil {
 
 		// If no existing author by SSO UUID, create new author concept with that SSO UUID
 		if (authorSequence == null) {
+			ConceptSpecification defaultDescriptionsLanguageConceptSpec = Get.conceptSpecification(languageCoordinate.getLanguageConceptSequence());
+			ConceptSpecification defaultDescriptionDialectConceptSpec = Get.conceptSpecification(languageCoordinate.getDialectAssemblagePreferenceList()[0]);
+
+			ConceptBuilderService conceptBuilderService = LookupService.getService(ConceptBuilderService.class);
+			conceptBuilderService.setDefaultLanguageForDescriptions(defaultDescriptionsLanguageConceptSpec);
+			conceptBuilderService.setDefaultDialectAssemblageForDescriptions(defaultDescriptionDialectConceptSpec);
+			conceptBuilderService.setDefaultLogicCoordinate(logicCoordinate);
+
+			LogicalExpressionBuilder defBuilder = LookupService.getService(LogicalExpressionBuilderService.class).getLogicalExpressionBuilder();
+
+			NecessarySet(And(ConceptAssertion(MetaData.USER, defBuilder)));
+
+			LogicalExpression parentDef = defBuilder.build();
+
+			ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(
+					user.getName(),
+					null,
+					parentDef);
+
+			// Set new author concept UUID to SSO UUID
+			builder.setPrimordialUuid(user.getId());
+
+			if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
+				for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
+					builder.getFullySpecifiedDescriptionBuilder().addPreferredInDialectAssemblage(Get.conceptSpecification(i));
+				}
+			}
+
+			List<?> createdObjects = new ArrayList<>();
+			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(adminEditCoordinate, ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
+
 			try
 			{
-				ConceptSpecification defaultDescriptionsLanguageConceptSpec = Get.conceptSpecification(languageCoordinate.getLanguageConceptSequence());
-				ConceptSpecification defaultDescriptionDialectConceptSpec = Get.conceptSpecification(languageCoordinate.getDialectAssemblagePreferenceList()[0]);
-
-				ConceptBuilderService conceptBuilderService = LookupService.getService(ConceptBuilderService.class);
-				conceptBuilderService.setDefaultLanguageForDescriptions(defaultDescriptionsLanguageConceptSpec);
-				conceptBuilderService.setDefaultDialectAssemblageForDescriptions(defaultDescriptionDialectConceptSpec);
-				conceptBuilderService.setDefaultLogicCoordinate(logicCoordinate);
-
-				LogicalExpressionBuilder defBuilder = LookupService.getService(LogicalExpressionBuilderService.class).getLogicalExpressionBuilder();
-
-				NecessarySet(And(ConceptAssertion(MetaData.USER, defBuilder)));
-
-				LogicalExpression parentDef = defBuilder.build();
-
-				ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(
-						user.getName(),
-						null,
-						parentDef);
-
-				// Set new author concept UUID to SSO UUID
-				builder.setPrimordialUuid(user.getId());
-
-				if (languageCoordinate.getDialectAssemblagePreferenceList() != null && languageCoordinate.getDialectAssemblagePreferenceList().length > 0) {
-					for (int i : languageCoordinate.getDialectAssemblagePreferenceList()) {
-						builder.getFullySpecifiedDescriptionBuilder().addPreferredInDialectAssemblage(Get.conceptSpecification(i));
-					}
-				}
-
-				List<?> createdObjects = new ArrayList<>();
-				ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(adminEditCoordinate, ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
-
 				Get.commitService().addUncommitted(newCon).get();
 
-//				if (prismeUserIdSememe != null) {
-//					Get.commitService().addUncommitted(prismeUserIdSememe).get();
-//				}
+				//				if (prismeUserIdSememe != null) {
+				//					Get.commitService().addUncommitted(prismeUserIdSememe).get();
+				//				}
 
 				@SuppressWarnings("deprecation")
 				Optional<CommitRecord> commitRecord = Get.commitService().commit(
 						"creating new concept: NID=" + newCon.getNid() + ", FSN=" + user.getName()).get();
-				authorSequence = newCon.getConceptSequence();
-				
+				authorSequence = newCon.getConceptSequence();				
 			}
-			catch (Exception e)
+			catch (InterruptedException | ExecutionException  e)
 			{
-				throw new RestException("Creation of user concept failed. Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+				throw new RuntimeException("Creation of user concept failed. Caught " + e.getClass().getSimpleName() + " " + e.getLocalizedMessage());
 			}
 		}
 

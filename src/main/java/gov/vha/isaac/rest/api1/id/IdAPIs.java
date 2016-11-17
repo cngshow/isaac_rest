@@ -215,7 +215,7 @@ public class IdAPIs
 		}
 		else
 		{
-			throw new RestException("id", id, "Unable to locate an object with the given id.");
+			throw new RestException(RequestParameters.id, id, "Unable to locate an object with the given id");
 		}
 	}
 

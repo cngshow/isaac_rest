@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.comment;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
@@ -97,33 +98,31 @@ public class CommentWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.editToken,
 				RequestParameters.COORDINATE_PARAM_NAMES);
+		int commentedItemNid = RequestInfoUtils.getNidFromUuidOrNidParameter("dataToCreateComment.commentedItem", dataToCreateComment.commentedItem);
 
-		try
+		Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
+
+		if (StringUtils.isBlank(dataToCreateComment.comment)) 
 		{
-			int commentedItemNid = RequestInfoUtils.getNidFromUuidOrNidParameter("dataToCreateComment.commentedItem", dataToCreateComment.commentedItem);
+			throw new RestException("The field 'comment' is required");
+		}
 
-			Optional<UUID> uuid = Get.identifierService().getUuidPrimordialForNid(commentedItemNid);
+		SememeBuilder<? extends SememeChronology<? extends DynamicSememe<?>>> sb = Get.sememeBuilderService().getDynamicSememeBuilder(
+				commentedItemNid,  
+				DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
+				new DynamicSememeData[] {
+						new DynamicSememeStringImpl(dataToCreateComment.comment),
+						(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
+				);
 
-			if (StringUtils.isBlank(dataToCreateComment.comment)) 
-			{
-				throw new RestException("The field 'comment' is required");
-			}
+		if (dataToCreateComment.active != null && !dataToCreateComment.active)
+		{
+			sb.setState(State.INACTIVE);
+		}
 
-			SememeBuilder<? extends SememeChronology<? extends DynamicSememe<?>>> sb = Get.sememeBuilderService().getDynamicSememeBuilder(
-					commentedItemNid,  
-					DynamicSememeConstants.get().DYNAMIC_SEMEME_COMMENT_ATTRIBUTE.getSequence(), 
-					new DynamicSememeData[] {
-							new DynamicSememeStringImpl(dataToCreateComment.comment),
-							(StringUtils.isBlank(dataToCreateComment.commentContext) ? null : new DynamicSememeStringImpl(dataToCreateComment.commentContext))}
-					);
-			
-			if (dataToCreateComment.active != null && !dataToCreateComment.active)
-			{
-				sb.setState(State.INACTIVE);
-			}
-			
-			SememeChronology<? extends DynamicSememe<?>> built = sb.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
+		SememeChronology<? extends DynamicSememe<?>> built = sb.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 
+		try {
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Added comment for " + (uuid.isPresent() ? uuid.get() : commentedItemNid)).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
@@ -132,16 +131,12 @@ public class CommentWriteAPIs
 
 			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
 		}
-		catch (RestException e)
-		{
-			throw  e;
-		}
 		catch (Exception e)
 		{
-			throw new RestException("Failed creating new comment " + dataToCreateComment + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage(), e);
+			throw new RuntimeException("Failed creating new comment " + dataToCreateComment + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage(), e);
 		}
 	}
-	
+
 	/**
 	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
 	 * provided now, the new version will have that field stored as blank.

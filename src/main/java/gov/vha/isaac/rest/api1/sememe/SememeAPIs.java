@@ -249,7 +249,7 @@ public class SememeAPIs
 		}
 		else
 		{
-			throw new RestException("id", id, "No sememe was found");
+			throw new RestException(RequestParameters.id, id, "No sememe was found");
 		}
 	}
 	

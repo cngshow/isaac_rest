@@ -161,7 +161,7 @@ public class TaxonomyAPIs
 			rcv.sortParentsAndChildren();
 			return rcv;
 		}
-		throw new RestException("id", id, "No concept was found");
+		throw new RestException(RequestParameters.id, id, "No concept was found");
 	}
 
 	public static void addChildren(
