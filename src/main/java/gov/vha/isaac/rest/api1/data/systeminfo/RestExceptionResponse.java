@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.jerseyConfig;
+package gov.vha.isaac.rest.api1.data.systeminfo;
 
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -43,34 +43,36 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class RestExceptionResponse
 {
 	/**
+	 * A concise message
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String conciseMessage;
 
 	/**
+	 * A verbose message
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String verboseMessage;
 
 	/**
+	 * An optional relevant query parameter name
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String relevantQueryParameterName;
 
 	/**
+	 * An optional relevant query parameter value
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String relevantQueryParameterValue;
 	
 	/**
-	 * Optional HTTP response Status
+	 * Optional HTTP response Status (internal use only)
 	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Status status;
 	
 	RestExceptionResponse() {
