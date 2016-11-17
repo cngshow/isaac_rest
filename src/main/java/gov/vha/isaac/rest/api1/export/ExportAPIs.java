@@ -130,6 +130,15 @@ public class ExportAPIs
 		//https://github.com/johnculviner/jquery.fileDownload
 		//We must set the cookie fileDownload, this enables the GUI to provide feedback to the user telling them the file download
 		//was a success or a failure.
-		return Response.ok(stream).header("content-disposition", "attachment; filename = export.xml").cookie(new NewCookie(new Cookie("fileDownload", "true","/",null))).build();
+		try
+		{
+			return Response.ok(stream).header("content-disposition", "attachment; filename = export.xml")
+					.cookie(new NewCookie(new Cookie("fileDownload", "true","/",null))).build();
+		}
+		catch (Exception e)
+		{
+			log.warn("Error streaming the XML file back", e);
+			throw e;
+		}
 	}
 }
