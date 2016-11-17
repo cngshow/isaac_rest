@@ -102,12 +102,9 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 			sendMessage = true;
 			log.info(ex.getMessage());
 		}
-		else if (ex instanceof RestException
-				&& (((RestException)ex).getParameterSpecificMessage() != null || ex.getCause() == null)
-			)
+		else if (ex instanceof RestException)
 		{
-			// Only accept parameter-specific RestException or one without a cause as a RestException
-			log.info("RestException", ex);
+			log.info("RestException: " + ex.toString(), ex);
 		}
 		else
 		{
@@ -137,9 +134,7 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 					status);
 			return buildResponse(exceptionResponse);
 		}
-		else if (
-				ex instanceof RestException
-				&& (((RestException)ex).getParameterSpecificMessage() != null || ex.getCause() == null))
+		else if (ex instanceof RestException)
 		{			
 			RestException re = (RestException) ex;
 			
