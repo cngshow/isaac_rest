@@ -69,9 +69,9 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingSetVersion extends RestMappingSetVersionBase implements Comparable<RestMappingSetVersion>
 {
+	//TODO populate expandables
 	/**
 	 * The data that was not expanded as part of this call (but can be)
-	 * TODO populate expandables
 	 */
 	@XmlElement
 	public Expandables expandables;
