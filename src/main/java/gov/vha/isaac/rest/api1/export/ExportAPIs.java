@@ -161,7 +161,6 @@ public class ExportAPIs
 			Method cookieMethod = bob.getClass().getMethod("cookie", NewCookie[].class);
 			// cookie method is this fella: public javax.ws.rs.core.Response$ResponseBuilder org.glassfish.jersey.message.internal.OutboundJaxrsResponse$Builder.cookie(javax.ws.rs.core.NewCookie[])
 			bob = (ResponseBuilder)cookieMethod.invoke(bob, new Object[]{new NewCookie[]{shinyNewCookie}});// the new Object[] prevents varargs expansion, see http://stackoverflow.com/questions/15951521/invoke-method-with-an-array-parameter-using-reflection (It makes no darn sense to me either)
-			//Final parameter in NewCookie constructor is http only flag.  True is required by the evil fortify scan.
 			return bob.build();
 /**
 	The above reflection code replaces the following:
