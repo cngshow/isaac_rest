@@ -56,6 +56,19 @@ public class RestConceptCreateData
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String fsn;
+	
+	/**
+	 * If set to true, and if the provided parentConceptIds all represent concepts that have a common semantic tag, then a semantic tag will be appended to 
+	 * the FSN which matches the semantic tag of the parent concept(s).  Additionally, a preferred term description will be created with the exact value provided
+	 * by the FSN.  If the parent concepts have multiple semantic tags, an error will be thrown.
+	 * If not set, or set to false, then:
+	 *   - if the fsn value contains a semantic tag: the FSN will be created exactly as specified, and a preferred term will be created by stripping the semantic tag
+	 *     from the provided value.
+	 *   - if the fsn value does not contain a semantic tag: FSN description will be created and it will carry the exact value of the FSN.  No preferred term will be created 
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean calculateSemanticTag;
 
 	/**
 	 * The optional language concept (uuid, nid or sequence) associated with the required descriptions.  Will be set to 
@@ -75,7 +88,8 @@ public class RestConceptCreateData
 	
 	/**
 	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
-	 * This will be applied to the FSN description created on the concept.
+	 * This will be applied to the preferred description created on the concept if {@link #calculateSemanticTag} is true.  Will be applied to 
+	 * the FSN description created onthe concept if  {@link #calculateSemanticTag} is false or absent.
 	 * This may be a concept like Abbreviation or Vista Name
 	 */
 	@XmlElement
@@ -105,6 +119,7 @@ public class RestConceptCreateData
 	public RestConceptCreateData(
 			Collection<String> parentConceptIds,
 			String fsn,
+			boolean createSemanticTag,
 			String descriptionsLanguageConceptId,
 			String descriptionsExtendedTypeId,
 			Collection<String> descriptionsPreferredDialects) {
@@ -114,6 +129,7 @@ public class RestConceptCreateData
 		}
 		this.parentConceptIds.addAll(parentConceptIds);
 		this.fsn = fsn;
+		this.calculateSemanticTag = createSemanticTag;
 		this.descriptionLanguageConceptId = descriptionsLanguageConceptId;
 		
 		this.extendedDescriptionTypeConcept = descriptionsExtendedTypeId;
@@ -130,10 +146,12 @@ public class RestConceptCreateData
 	public RestConceptCreateData(
 			Collection<String> parentConceptIds,
 			String fsn,
+			boolean createSemanticTag,
 			String descriptionLanguageConceptId) {
 		this(
 				parentConceptIds,
 				fsn,
+				createSemanticTag,
 				descriptionLanguageConceptId,
 				(String)null,
 				(Collection<String>)null);
