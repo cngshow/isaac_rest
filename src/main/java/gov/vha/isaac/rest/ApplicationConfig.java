@@ -3,6 +3,7 @@ package gov.vha.isaac.rest;
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -11,6 +12,7 @@ import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,6 +40,12 @@ import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.commit.CommitService;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
 import gov.vha.isaac.ochre.api.metacontent.MetaContentService;
 import gov.vha.isaac.ochre.api.util.ArtifactUtilities;
 import gov.vha.isaac.ochre.api.util.DBLocator;
@@ -60,6 +68,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private StringProperty status_ = new SimpleStringProperty("Not Started");
 	private boolean debugMode = true;
 	private boolean shutdown = false;
+
+	private static String databaseRootLocation;
 
 	//Note - this injection works fine, when deployed as a war to tomcat.  However, when launched in the localJettyRunner from eclipse,
 	//this remains null.
@@ -214,13 +224,14 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					{
 						log.info("ISAAC Init thread begins");
 
-						String databaseRootLocation = stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
+						databaseRootLocation = stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
 						if (StringUtils.isBlank(databaseRootLocation) || !Files.isDirectory(Paths.get(databaseRootLocation)))
 						{
 							//if there isn't an official system property set, check this one or if the directory does not exist
 							String sysProp = stringForFortify(System.getProperty("isaacDatabaseLocation"));
 							if (StringUtils.isBlank(sysProp) || !Files.isDirectory(Paths.get(sysProp)))
 							{
+								databaseRootLocation = sysProp;
 								//No ISAAC default property set, nor the isaacDatabaseLocation property is set.  Download a DB.
 								log.info("Downloading a database for use");
 								status_.set("Downloading DB");
@@ -274,6 +285,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							log.error("Startup failed due to ", e);
 							//rename directory of existing database and restart startup.
 							//if database exists, rename folder
+
+							// commented out for local testing, do not want to download db again
 							if (dbLocation != null && dbLocation.exists())
 							{
 								//This service was locking a file and not allowing the directory to moved/renamed.
@@ -288,11 +301,16 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 								//download a new database and start ISAAC
 								dbLocation = downloadDB();
+
+								loadFiles();
+								//validateLoad();
+
 								status_.set("Starting ISAAC");
 								LookupService.startupIsaac();
 
-								log.info("Directories containing the corrupt database where renamed.  A new database was downloaded.");
+								log.info("Directories containing the corrupt database where renamed.  A new database was downloaded and ibdf file(s) loaded");
 							}
+							//*/
 						}
 
 						systemInfo_ = new RestSystemInfo();
@@ -328,6 +346,9 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						status_.set("FAILED!");
 					}
 				}
+
+
+
 			};
 
 			LookupService.get().getService(WorkExecutors.class).getExecutor().execute(r);
@@ -468,7 +489,9 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 			log.info("Checking for existing DB");
 
-			File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
+			//File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
+			File targetDBLocation = new File("C:/Users/Nuno/Desktop/test/ISAAC.rest.db");
+
 			if (targetDBLocation.isDirectory())
 			{
 				if (validateExistingDb(targetDBLocation, groupId, artifactId, version, classifier)) {
@@ -580,6 +603,76 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			convertString.chars().forEach(c -> temp.append((char)c));
 		}
 		return temp.toString();
+	}
+
+	private void loadFiles() throws IOException {
+		//reimport change-sets into the database.
+		//concepts and sememes
+		log.info("Begin loading from files");
+
+		File[] filesToLoad = new File(databaseRootLocation).listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".ibdf");
+			}
+		});
+
+		log.info("Found " + filesToLoad.length + " to load.");
+
+		//order files
+		Arrays.sort(filesToLoad);
+
+		BinaryDataReaderService reader;
+		CommitService commitService = Get.commitService();
+		for(File file : filesToLoad)
+		{
+			log.info("Loading file: {}", file.getCanonicalPath());
+			reader =  Get.binaryDataReader(file.toPath());
+			reader.getStream().forEach((o) -> {
+				commitService.importNoChecks(o);
+			});
+			commitService.postProcessImportNoChecks();
+		}
+
+	}
+
+	private void validateLoad() throws IOException{
+
+		//validate loaded ibdfs.
+		File[] loadedFiles = new File(databaseRootLocation).listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".ibdf");
+			}
+		});
+
+		BinaryDataReaderService reader;
+		for(File file : loadedFiles)
+		{
+			reader =  Get.binaryDataReader(file.toPath());
+			reader.getStream().forEach((o) -> {
+				switch (o.getOchreObjectType())
+				{
+				case CONCEPT:
+				{
+					ConceptChronology conceptChronology = (ConceptChronology) o;
+					ConceptChronology<? extends ConceptVersion<?>> con = Get.conceptService().getConcept(conceptChronology.getNid());
+					log.debug("concept: " + conceptChronology.getNid() + " - count: " + con.getVersionList().size());
+					break;
+				}
+				case SEMEME:
+				{
+					SememeChronology sememeChronology = (SememeChronology) o;
+					SememeChronology<? extends SememeVersion<?>> sem = Get.sememeService().getSememe(sememeChronology.getNid());
+					log.debug("sememe: " + sememeChronology.getNid() + " - count: " + sem.getVersionList().size());
+					break;
+				}
+				default :
+					log.info("Object type is not a concept or sememe.  File {}", file.getAbsolutePath());
+				}
+			});
+		}
+
 	}
 
 }
