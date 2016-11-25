@@ -489,8 +489,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 			log.info("Checking for existing DB");
 
-			//File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
-			File targetDBLocation = new File("C:/Users/Nuno/Desktop/test/ISAAC.rest.db");
+			File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
 
 			if (targetDBLocation.isDirectory())
 			{
