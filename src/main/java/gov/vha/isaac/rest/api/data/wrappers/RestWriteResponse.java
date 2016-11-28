@@ -82,7 +82,7 @@ public class RestWriteResponse
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestObjectChronologyType type;
 	
-	RestWriteResponse() {
+	protected RestWriteResponse() {
 		// For JAXB
 	}
 	

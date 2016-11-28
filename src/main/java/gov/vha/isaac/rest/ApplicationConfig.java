@@ -61,6 +61,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private boolean debugMode = true;
 	private boolean shutdown = false;
 
+	private static String databaseRootLocation;
+
 	//Note - this injection works fine, when deployed as a war to tomcat.  However, when launched in the localJettyRunner from eclipse,
 	//this remains null.
 	@Context
@@ -214,13 +216,14 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					{
 						log.info("ISAAC Init thread begins");
 
-						String databaseRootLocation = stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
+						databaseRootLocation = stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
 						if (StringUtils.isBlank(databaseRootLocation) || !Files.isDirectory(Paths.get(databaseRootLocation)))
 						{
 							//if there isn't an official system property set, check this one or if the directory does not exist
 							String sysProp = stringForFortify(System.getProperty("isaacDatabaseLocation"));
 							if (StringUtils.isBlank(sysProp) || !Files.isDirectory(Paths.get(sysProp)))
 							{
+								databaseRootLocation = sysProp;
 								//No ISAAC default property set, nor the isaacDatabaseLocation property is set.  Download a DB.
 								log.info("Downloading a database for use");
 								status_.set("Downloading DB");
@@ -288,10 +291,11 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 								//download a new database and start ISAAC
 								dbLocation = downloadDB();
+
 								status_.set("Starting ISAAC");
 								LookupService.startupIsaac();
 
-								log.info("Directories containing the corrupt database where renamed.  A new database was downloaded.");
+								log.info("Directories containing the corrupt database were renamed.  A new database was downloaded and ibdf file(s) loaded");
 							}
 						}
 
@@ -328,6 +332,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						status_.set("FAILED!");
 					}
 				}
+
 			};
 
 			LookupService.get().getService(WorkExecutors.class).getExecutor().execute(r);
@@ -469,6 +474,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			log.info("Checking for existing DB");
 
 			File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
+
 			if (targetDBLocation.isDirectory())
 			{
 				if (validateExistingDb(targetDBLocation, groupId, artifactId, version, classifier)) {
@@ -581,5 +587,4 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		}
 		return temp.toString();
 	}
-
 }

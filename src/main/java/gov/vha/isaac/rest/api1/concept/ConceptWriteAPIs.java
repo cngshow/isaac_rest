@@ -22,10 +22,9 @@ import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.And;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.ConceptAssertion;
 import static gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder.NecessarySet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-
-import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -36,7 +35,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,6 +43,7 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptBuilder;
@@ -54,9 +53,12 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
@@ -98,7 +100,7 @@ public class ConceptWriteAPIs
 	@POST
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.createPathComponent)
-	public RestWriteResponse createConcept(
+	public RestWriteResponseConceptCreate createConcept(
 			RestConceptCreateData creationData,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -142,34 +144,62 @@ public class ConceptWriteAPIs
 			conceptBuilderService.setDefaultLogicCoordinate(RequestInfo.get().getLogicCoordinate());
 
 			LogicalExpressionBuilder defBuilder = LookupService.getService(LogicalExpressionBuilderService.class).getLogicalExpressionBuilder();
+			
+			HashSet<String> parentSemanticTags = new HashSet<>();
+			StampCoordinate readBackCoordinate = null;
+			boolean makeSemTag = false;
+			if (creationData.calculateSemanticTag != null && creationData.calculateSemanticTag.booleanValue()) {
+				readBackCoordinate = Frills.getStampCoordinateFromEditCoordinate(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate());
+				makeSemTag = true;
+			}
 
 			for (String parentId : creationData.parentConceptIds) {
-				NecessarySet(And(ConceptAssertion(RequestInfoUtils.getConceptSequenceFromParameter("RestConceptCreateData.parentConceptIds", parentId), defBuilder)));
+				int conSequence = RequestInfoUtils.getConceptSequenceFromParameter("RestConceptCreateData.parentConceptIds", parentId);
+				NecessarySet(And(ConceptAssertion(conSequence, defBuilder)));
+				if (readBackCoordinate != null) {
+					Frills.getDescriptionsOfType(Get.identifierService().getConceptNid(conSequence), MetaData.FULLY_SPECIFIED_NAME, readBackCoordinate).forEach(desc -> 
+					{
+						if (desc.getText().lastIndexOf('(') > 0 && desc.getText().lastIndexOf(')') > 0)
+						{
+							parentSemanticTags.add(desc.getText().substring(desc.getText().lastIndexOf('(') + 1, desc.getText().lastIndexOf(')')));
+						}
+					});
+				}
+			}
+			
+			if (makeSemTag && parentSemanticTags.size() != 1)
+			{
+				throw new RestException("Unable to automatically create semantic tag as requested.  Parent concepts have " + parentSemanticTags.size() + " semantic tags, "
+						+ " when 1 is expected");
 			}
 
 			LogicalExpression parentDef = defBuilder.build();
 
-			ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(creationData.fsn, null, parentDef);
+			ConceptBuilder builder = conceptBuilderService.getDefaultConceptBuilder(creationData.fsn, makeSemTag ? parentSemanticTags.iterator().next() : null, parentDef);
 			
 			builder.setState((creationData.active == null || creationData.active.booleanValue()) ? State.ACTIVE : State.INACTIVE);
 			
 			// Add optional descriptionExtendedTypeConceptId, if exists
 			if (creationData.extendedDescriptionTypeConcept != null) {
 				builder.addSememe(Get.sememeBuilderService().getDynamicSememeBuilder(
-						builder.getFullySpecifiedDescriptionBuilder(), 
+						makeSemTag ? builder.getSynonymPreferredDescriptionBuilder() : builder.getFullySpecifiedDescriptionBuilder(), 
 						DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence(),
 						new DynamicSememeData[] {new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptId(
-								RequestInfoUtils.getConceptSequenceFromParameter("RestConceptCreateData.extendedDescriptionTypeConcept", creationData.extendedDescriptionTypeConcept)).get())}));
+								RequestInfoUtils.getConceptSequenceFromParameter("RestConceptCreateData.extendedDescriptionTypeConcept", 
+										creationData.extendedDescriptionTypeConcept)).get())}));
 			}
 			
 			// Add optional descriptionPreferredInDialectAssemblagesConceptIdsList beyond first (already added , if exists
 			for (int i = 1; i < preferredDialects.size(); i++)
 			{
 				builder.getFullySpecifiedDescriptionBuilder().addPreferredInDialectAssemblage(preferredDialects.get(i));
-				builder.getSynonymPreferredDescriptionBuilder().addPreferredInDialectAssemblage(preferredDialects.get(i));
+				if (builder.getSynonymPreferredDescriptionBuilder() != null)
+				{
+					builder.getSynonymPreferredDescriptionBuilder().addPreferredInDialectAssemblage(preferredDialects.get(i));
+				}
 			}
 			
-			List<?> createdObjects = new ArrayList<>();
+			List<ObjectChronology<? extends StampedVersion>> createdObjects = new ArrayList<>();
 			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
 
 			Optional<CommitRecord> commitRecord = Get.commitService().commit(
@@ -180,7 +210,7 @@ public class ConceptWriteAPIs
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 			
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), newCon.getPrimordialUuid());
+			return new RestWriteResponseConceptCreate(EditTokens.renew(RequestInfo.get().getEditToken()), newCon.getPrimordialUuid(), createdObjects);
 		}
 		catch (RestException e)
 		{

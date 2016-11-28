@@ -7,6 +7,12 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/11/22 - 1.9.2:
+    * Change the return type of a concept create call to RestWriteResponseConceptCreate from RestWriteResponse.  The new type carries back additional information
+        about the various objects created during a concept create.
+    * Added a calculateSemanticTag variable to the RestConceptCreateData object.  Allows control over the creation of 1 or 2 descriptions, and the automatic calculation
+        (or not) of a semantic tag
+    
 * 2016/11/16 - 1.9.1:
     * adding role-based security authentication to API classes
     * adding use of PRISME SSO APIs

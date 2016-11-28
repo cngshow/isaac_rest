@@ -104,6 +104,7 @@ import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.concept.RestWriteResponseConceptCreate;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
 import gov.vha.isaac.rest.api1.data.RestEditToken;
 import gov.vha.isaac.rest.api1.data.RestId;
@@ -1157,6 +1158,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestConceptCreateData newConceptData = new RestConceptCreateData(
 				parentIds,
 				fsn,
+				true,
 				requiredDescriptionsLanguageSequence + "",
 				requiredDescriptionsExtendedTypeSequence + "",
 				preferredDialects);
@@ -1179,7 +1181,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
-		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
+		RestWriteResponseConceptCreate newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
 		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
@@ -1193,7 +1195,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
 		RestConceptVersion newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
-		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), fsn);
+		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), fsn + " (ISAAC)");
 		Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
 		Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
 		Assert.assertTrue(
