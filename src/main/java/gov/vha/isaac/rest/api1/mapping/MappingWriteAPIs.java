@@ -139,7 +139,6 @@ public class MappingWriteAPIs
 				RequestParameters.COORDINATE_PARAM_NAMES,
 				RequestParameters.editToken);
 
-		
 		try 
 		{
 			return createMappingSet(
@@ -489,6 +488,11 @@ public class MappingWriteAPIs
 					@SuppressWarnings({ "unchecked", "rawtypes" })
 					Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
 							stampCoord);
+					if (! latest.isPresent()) {
+						// TODO remove this hack when module handling working
+						log.warn("Unable to load Description Sememe {} latest version using stamp coordinate based on edit coordinate. Attempting to retrieve latest version using passed stampCoordinate.", descriptionC.getPrimordialUuid());
+						latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, RequestInfo.get().getStampCoordinate());
+					}
 					if (latest.isPresent())
 					{
 						//TODO handle contradictions
@@ -553,6 +557,9 @@ public class MappingWriteAPIs
 								}
 							}
 						}
+					} else {
+						log.error("Cannot update Description Sememe {} becuase no latest version found", descriptionC.getPrimordialUuid());
+						throw new RuntimeException("Unable to retrieve current version for update of description sememe " + descriptionC.getPrimordialUuid());
 					}
 				}
 				catch (Exception e)
@@ -574,15 +581,15 @@ public class MappingWriteAPIs
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<DynamicSememe<?>>> latestVersion = ((SememeChronology)mappingSememe.get()).getLatestVersion(DynamicSememe.class, 
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
-		//TODO handle contradictions
-		DynamicSememe<?> latest = latestVersion.get().value();
-		
-		String currentMapPurposeValue = (latest.getData().length == 0 || latest.getData()[0] == null ? "" : latest.getData()[0].dataToString());
-
 		try
-		{
-			if (!currentMapPurposeValue.equals(mapPurpose))
+		{			
+			String currentMapPurposeValue = ((! latestVersion.isPresent() || latestVersion.get().value().getData().length == 0 || latestVersion.get().value().getData()[0] == null) ? "" : latestVersion.get().value().getData()[0].dataToString());
+
+			if (! latestVersion.isPresent() || ! currentMapPurposeValue.equals(mapPurpose))
 			{
+				if (! latestVersion.isPresent()) {
+					log.warn("Latest version not found of mapping Sememe {}. Updating unconditionally.", mappingSememe.get().getPrimordialUuid());
+				}
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)mappingSememe.get()).createMutableVersion(
 						MutableDynamicSememe.class,
@@ -591,8 +598,8 @@ public class MappingWriteAPIs
 	
 				mutable.setData(new DynamicSememeData[] {
 						(StringUtils.isBlank(mapPurpose) ? null : new DynamicSememeStringImpl(mapPurpose))});
-				Get.commitService().addUncommitted(latest.getChronology()).get();
-				changedObjects.add(latest.getChronology());
+				Get.commitService().addUncommitted(mappingSememe.get()).get();
+				changedObjects.add(mappingSememe.get());
 			}
 			
 			//Look up the current state of the mapset concept - if it differs, update the concept.
@@ -719,26 +726,34 @@ public class MappingWriteAPIs
 			EditCoordinate editCoord,
 			State state) throws IOException
 	{
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)mappingItemSememe).getLatestVersion(DynamicSememe.class, 
-				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
-		DynamicSememe<?> currentSememeVersion = latest.get().value();
-		
-		if (latest.get().contradictions().isPresent() && latest.get().contradictions().get().size() > 0) {
-			//TODO handle contradictions
-			log.warn("Updating mapping item " + mappingItemSememe.getSememeSequence() + " with " + latest.get().contradictions().get().size() + " contradictions");
-		}
-		
 		int sememeConceptSequence = mappingItemSememe.getAssemblageSequence();
-		
-		DynamicSememeData[] currentData = currentSememeVersion.getData();
 		DynamicSememeData[] newData = translateAndFixOffset(sememeConceptSequence, mappingItemTargetConcept, 
 				mappingItemQualifierConcept != null ? mappingItemQualifierConcept.getPrimordialUuid() : null, 
 				extendedDataFields == null ? new RestDynamicSememeData[] {} :extendedDataFields.toArray(new RestDynamicSememeData[extendedDataFields.size()]));
 
-		if (currentSememeVersion.getState() == state
-				&& SememeWriteAPIs.equals(currentData, newData)) {
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+		try {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)mappingItemSememe).getLatestVersion(DynamicSememe.class, 
+					stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
+
+			if (latest.isPresent()) {
+				DynamicSememe<?> currentSememeVersion = latest.get().value();
+
+				if (latest.get().contradictions().isPresent() && latest.get().contradictions().get().size() > 0) {
+					//TODO handle contradictions
+					log.warn("Updating mapping item " + mappingItemSememe.getSememeSequence() + " with " + latest.get().contradictions().get().size() + " contradictions");
+				}
+				DynamicSememeData[] currentData = currentSememeVersion.getData();
+
+				if (currentSememeVersion.getState() == state
+						&& SememeWriteAPIs.equals(currentData, newData)) {
+					return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+				}
+			} else {
+				log.warn("Latest version not found of mapping item dynamic sememe {}. Updating unconditionally.", mappingItemSememe.getPrimordialUuid());
+			}
+		} catch (Exception e) {
+			log.warn("Failed checking update against current object " + mappingItemSememe.getPrimordialUuid() + " state. Unconditionally performing update", e);
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })

@@ -38,12 +38,12 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 public class LatestVersionUtils {
 	private LatestVersionUtils() {}
 
-	public static <T extends SememeVersionImpl<T>> T getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz, StampCoordinate sc) {
+	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz, StampCoordinate sc) {
 		Optional<LatestVersion<T>> latestVersionOptional = ((SememeChronology<T>)sememeChronology).getLatestVersion(clazz, sc);
-		return latestVersionOptional.get().value(); // TODO handle contradictions
+		return latestVersionOptional.isPresent() ? Optional.of(latestVersionOptional.get().value()) : Optional.empty(); // TODO handle contradictions
 	}
 
-	public static <T extends SememeVersionImpl<T>> T getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz) throws RestException {
+	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz) throws RestException {
 		return getLatestSememeVersion(sememeChronology, clazz, Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null));
 	}
 }

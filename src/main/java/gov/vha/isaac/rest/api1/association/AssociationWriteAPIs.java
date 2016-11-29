@@ -307,27 +307,35 @@ public class AssociationWriteAPIs
 			throw new RestException("targetId", associationItemUpdateData.targetId + "", "Unable to locate the target component");
 		}
 		
-		// Retrieve current version for comparison in order to short-circuit save if unchanged
-		@SuppressWarnings("unchecked")
-		DynamicSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class);
-		DynamicSememeData currentTargetSememeData = (currentVersion.getData() != null && currentVersion.getData().length > 0) ? currentVersion.getData()[0] : null;
-		
-		UUID currentTargetUuid = null;
-		if (currentTargetSememeData != null) {
-			// Validate DynamicSememeData type
-			if (currentTargetSememeData.getDynamicSememeDataType() != DynamicSememeDataType.UUID) {
-				throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentTargetSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.UUID);
-			}
-			
-			currentTargetUuid = ((DynamicSememeUUIDImpl)currentTargetSememeData).getDataUUID();
-		}
-		UUID newTargetUuid = target.isPresent() ? target.get() : null;
+		try {
+			// Retrieve current version for comparison in order to short-circuit save if unchanged
+			@SuppressWarnings("unchecked")
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class);
+			if (currentVersion.isPresent()) {
+				DynamicSememeData currentTargetSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
 
-		// This code short-circuits update if passed data are identical to current relevant version
-		if ((newTargetUuid == currentTargetUuid && currentVersion.getState() == stateToUse)
-				|| (newTargetUuid != null && currentTargetUuid != null && newTargetUuid.equals(currentTargetUuid) && currentVersion.getState() == stateToUse)) {
-			log.debug("Not updating association sememe {} because data unchanged", associationItemSememeChronology.getPrimordialUuid());
-			return new RestWriteResponse(RequestInfo.get().getEditToken(), associationItemSememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+				UUID currentTargetUuid = null;
+				if (currentTargetSememeData != null) {
+					// Validate DynamicSememeData type
+					if (currentTargetSememeData.getDynamicSememeDataType() != DynamicSememeDataType.UUID) {
+						throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentTargetSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.UUID);
+					}
+
+					currentTargetUuid = ((DynamicSememeUUIDImpl)currentTargetSememeData).getDataUUID();
+				}
+				UUID newTargetUuid = target.isPresent() ? target.get() : null;
+
+				// This code short-circuits update if passed data are identical to current relevant version
+				if ((newTargetUuid == currentTargetUuid && currentVersion.get().getState() == stateToUse)
+						|| (newTargetUuid != null && currentTargetUuid != null && newTargetUuid.equals(currentTargetUuid) && currentVersion.get().getState() == stateToUse)) {
+					log.debug("Not updating association sememe {} because data unchanged", associationItemSememeChronology.getPrimordialUuid());
+					return new RestWriteResponse(RequestInfo.get().getEditToken(), associationItemSememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+				}
+			} else {
+				log.warn("Failed retrieving latest version of association item dynamic sememe " + id + ". Unconditionally performing update");
+			}
+		} catch (Exception e) {
+			log.warn("Failed checking update against latest association item dynamic sememe " + id + " version. Unconditionally performing update", e);
 		}
 		
 		@SuppressWarnings({ "unchecked", "rawtypes" })

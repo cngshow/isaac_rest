@@ -59,6 +59,7 @@ import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.session.LatestVersionNotFoundException;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -119,11 +120,21 @@ public class ComponentWriteAPIs
 		
 		Boolean setActive = Boolean.parseBoolean(active.trim());
 
-		return resetState(
+		try {
+			return resetState(
 				RequestInfo.get().getEditCoordinate(),
 				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
 				setActive ? State.ACTIVE : State.INACTIVE,
 				id);
+		} catch (LatestVersionNotFoundException e) {
+			// TODO eliminate this hack when modules fixed
+			log.warn(e);
+			return resetState(
+					RequestInfo.get().getEditCoordinate(),
+					RequestInfo.get().getStampCoordinate(),
+					setActive ? State.ACTIVE : State.INACTIVE,
+					id);
+		}
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -149,17 +160,19 @@ public class ComponentWriteAPIs
 		T mutableVersion = (T)rawMutableVersion;
 
 		//TODO handle contradictions
-		@SuppressWarnings("unchecked")
-		T latestVersion = (T)rawLatestVersion.get().value();
 
 		if (! rawLatestVersion.isPresent()) {
-			throw new RestException("Failed getting latest version of " + sememe.getSememeType() + " " + sememe.getSememeSequence());
-		} else if (rawLatestVersion.get().contradictions().isPresent()) {
-			// TODO properly handle contradictions
-			log.warn("Resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " with " + rawLatestVersion.get().contradictions().get().size() 
-					+ " version contradictions from " + latestVersion.getState() + " to " + state);
+			throw new LatestVersionNotFoundException("Failed getting latest version of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + ". May require different stamp or edit coordinate parameters.");
 		}
 		
+		if (rawLatestVersion.get().contradictions().isPresent()) {
+			// TODO properly handle contradictions
+			log.warn("Resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " with " + rawLatestVersion.get().contradictions().get().size() 
+					+ " version contradictions from " + rawLatestVersion.get().value().getState() + " to " + state);
+		}
+
+		@SuppressWarnings("unchecked")
+		T latestVersion = (T)rawLatestVersion.get().value();
 		if (latestVersion.getState() == state) {
 			log.warn("Not resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " from " + latestVersion.getState() + " to " + state);
 			return null;
@@ -186,21 +199,27 @@ public class ComponentWriteAPIs
 			{
 				case CONCEPT:
 					ConceptChronology cc = Get.conceptService().getConcept(nid);
-					@SuppressWarnings("unchecked")
-					Optional<LatestVersion<ConceptVersionImpl>> concept = cc.getLatestVersion(ConceptVersionImpl.class, localStamp);
-					
-					if (concept.isPresent() && concept.get().value().getState() == state) 
-					{
-						log.warn("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
+
+					try {
+						@SuppressWarnings("unchecked")
+						Optional<LatestVersion<ConceptVersionImpl>> concept = cc.getLatestVersion(ConceptVersionImpl.class, localStamp);
+
+						if (concept.isPresent() && concept.get().value().getState() == state) 
+						{
+							log.warn("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
+
+							break;
+						}
+					} catch (Exception e) {
+						log.warn("Failed checking update against current object " + id + " state. Unconditionally performing update", e);
 					}
-					else
-					{
-						cc.createMutableVersion(state, ec);
-						Get.commitService().addUncommitted(cc).get();
-						commit = true;
-					}
-					
+
+					cc.createMutableVersion(state, ec);
+					Get.commitService().addUncommitted(cc).get();
+					commit = true;
+
 					break;
+					
 				case SEMEME:
 				{
 					SememeChronology<? extends SememeVersion<?>> sememe = Get.sememeService().getSememe(nid);
