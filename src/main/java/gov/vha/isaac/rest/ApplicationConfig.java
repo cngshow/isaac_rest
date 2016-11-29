@@ -38,7 +38,6 @@ import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.metacontent.MetaContentService;
 import gov.vha.isaac.ochre.api.util.ArtifactUtilities;
 import gov.vha.isaac.ochre.api.util.DBLocator;
 import gov.vha.isaac.ochre.api.util.DownloadUnzipTask;
@@ -279,19 +278,28 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							//if database exists, rename folder
 							if (dbLocation != null && dbLocation.exists())
 							{
-								//This service was locking a file and not allowing the directory to moved/renamed.
-								//Based on where the corruption occurs there might be more services that need to be stopped.
-								LookupService.getService(MetaContentService.class).close();
+								log.info("Database deemed corrupted.  Shutdown database, move it to CORRUPT directory, download new database, and re-startup system.");
 
-								log.info("Something wrong with the existing database.  Renaming the root folder of the database to enable the database to be downloaded again.");
+								// Shutdown ISAAC
+								log.info("Shutting down database");
+								LookupService.shutdownIsaac();
+
+								// Move corrupted database
+								log.info("Moving corrupted database");
 								File corruptDbLocation = new File(stringForFortify(dbLocation.getParent() + File.separator + "CORRUPT" + File.separator + LocalDateTime.now().format(fileDateTimeFormatter)));
 								log.info("DB Location: " + dbLocation.getAbsolutePath() + " to " + corruptDbLocation.getAbsolutePath());
 								FileUtils.moveDirectoryToDirectory(dbLocation, corruptDbLocation, true);
 								FileUtils.deleteDirectory(dbLocation);
 
-								//download a new database and start ISAAC
+								//download a new database
+								log.info("Downloading new database");
 								dbLocation = downloadDB();
+								File dataStoreLocation = DBLocator.findDBFolder(dbLocation);
+								LookupService.getService(ConfigurationService.class).setDataStoreFolderPath(dataStoreLocation.toPath());
+								log.info("Setup AppContext, data store location = " + dataStoreLocation.getAbsolutePath());
 
+								// Re-start ISAAC
+								log.info("Re-starting ISAAC");
 								status_.set("Starting ISAAC");
 								LookupService.startupIsaac();
 
@@ -526,7 +534,14 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			log.debug("Renaming " + tempDbFolder.getCanonicalPath() + " to " + targetDBLocation.getCanonicalPath());
 			if (tempDbFolder.renameTo(targetDBLocation))
 			{
-				return targetDBLocation;
+				if (validateExistingDb(targetDBLocation, groupId, artifactId, version, classifier)) {
+					log.info("Using existing db folder: " + targetDBLocation.getAbsolutePath());
+
+					return targetDBLocation;
+				} else {
+					log.error("Failed to validate the new database");
+					throw new RuntimeException("Failed to validate the new DB");
+				}
 			}
 			else
 			{
