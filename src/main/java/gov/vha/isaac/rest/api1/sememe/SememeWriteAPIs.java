@@ -66,6 +66,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeLong;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
@@ -457,7 +458,7 @@ public class SememeWriteAPIs
 		DynamicSememeData[] data = RestDynamicSememeData.translate(sememeCreationData.columnData);
 		
 		SememeType type = readSememeType(assemblageConceptSequence, data);
-		//TODO add nice error messages on data mapping API assumptions (array size 1, data types, on dynamic to old maps)
+		checkTypeMap(type, data);
 		
 		switch (type)
 		{
@@ -474,7 +475,19 @@ public class SememeWriteAPIs
 				sb = Get.sememeBuilderService().getStringSememeBuilder(((DynamicSememeStringImpl)data[0]).getDataString(), referencedComponentNid, assemblageConceptSequence);
 				break;
 			case COMPONENT_NID:
-				sb = Get.sememeBuilderService().getComponentSememeBuilder(((DynamicSememeNidImpl)data[0]).getDataNid(), referencedComponentNid, assemblageConceptSequence);
+				if (data[0] instanceof DynamicSememeNid)
+				{
+					sb = Get.sememeBuilderService().getComponentSememeBuilder(((DynamicSememeNid)data[0]).getDataNid(), referencedComponentNid, assemblageConceptSequence);
+				}
+				else if (data[0] instanceof DynamicSememeUUID)
+				{
+					sb = Get.sememeBuilderService().getComponentSememeBuilder(Get.identifierService().getNidForUuids(((DynamicSememeUUID)data[0]).getDataUUID()),
+							referencedComponentNid, assemblageConceptSequence);
+				}
+				else
+				{
+					throw new RuntimeException("Should have only got to Nid from UUID or nid");
+				}
 				break;
 			case LOGIC_GRAPH:  //Unsupported below here
 			case RELATIONSHIP_ADAPTOR:
@@ -536,6 +549,23 @@ public class SememeWriteAPIs
 			throw new RestException("sememeUpdateData.columnData", null, msg);
 		}
 	}
+	
+	private void checkTypeMap(SememeType type, DynamicSememeData[] data) throws RestException
+	{
+		// Validate DynamicSememeData column array
+		// DYNAMIC must have null or 0..n
+		// MEMBER must have null or 0
+		// LONG, STRING and COMPONENT_NID must have 1
+		if (type != SememeType.DYNAMIC) {
+			int numColumns = (data == null) ? 0 : data.length;
+			int expectedNumColumns = (type == SememeType.MEMBER) ? 0 : 1;
+			if (numColumns != expectedNumColumns) {
+				String msg = "unsupported number (" + numColumns + ") of columnData for updating sememe (should be exactly " + expectedNumColumns + ")";
+				log.info(msg);
+				throw new RestException("sememeUpdateData.columnData", null, msg);
+			}
+		}
+	}
 
 	/**
 	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
@@ -572,19 +602,8 @@ public class SememeWriteAPIs
 		
 		SememeType type = sememeChronology.getSememeType();
 
-		// Validate DynamicSememeData column array
-		// DYNAMIC must have null or 0..n
-		// MEMBER must have null or 0
-		// LONG, STRING and COMPONENT_NID must have 1
-		if (type != SememeType.DYNAMIC) {
-			int numColumns = (passedData == null) ? 0 : passedData.length;
-			int expectedNumColumns = (type == SememeType.MEMBER) ? 0 : 1;
-			if (numColumns != expectedNumColumns) {
-				String msg = "unsupported number (" + numColumns + ") of columnData for updating sememe " + id + " of type " + type + " (should be exactly " + expectedNumColumns + ")";
-				log.info(msg + ": " + sememeUpdateData);
-				throw new RestException("sememeUpdateData.columnData", null, msg);
-			}
-		}
+		checkTypeMap(type, passedData);
+		
 		switch (type)
 		{
 			case DYNAMIC:
@@ -724,7 +743,8 @@ public class SememeWriteAPIs
 			{
 				return SememeType.STRING;
 			}
-			else if (data[0] instanceof DynamicSememeNid)
+			else if (data[0] instanceof DynamicSememeNid 
+					|| (data[0] instanceof DynamicSememeUUID && Get.identifierService().hasUuid(((DynamicSememeUUID)data[0]).getDataUUID())))
 			{
 				return SememeType.COMPONENT_NID;
 			}

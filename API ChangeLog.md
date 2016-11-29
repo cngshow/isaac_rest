@@ -7,6 +7,11 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/11/29 - 1.9.3:
+    * change update API methods so that they automatically ignore update requests that don't actually change any data.  Prevents creation of new (identical) versions
+    * fix an issue where passing a UUID data column (instead of a nid) when attempting to update a component nid sememe results in a failure.  Tim ran into this when 
+        trying to update a dialect.  It will now properly map either a UUID or a nid to a component_nid legacy sememe type.
+
 * 2016/11/22 - 1.9.2:
     * Change the return type of a concept create call to RestWriteResponseConceptCreate from RestWriteResponse.  The new type carries back additional information
         about the various objects created during a concept create.
