@@ -11,6 +11,7 @@ If reverse compatibility is required to be maintained, then the rest/1 or rest/w
     * change update API methods so that they automatically ignore update requests that don't actually change any data.  Prevents creation of new (identical) versions
     * fix an issue where passing a UUID data column (instead of a nid) when attempting to update a component nid sememe results in a failure.  Tim ran into this when 
         trying to update a dialect.  It will now properly map either a UUID or a nid to a component_nid legacy sememe type.
+    * Fix the prefix search implementation so that when you restrict to 'sememe' type, it will return results for "VUID", "Code" and "Snomed Integer Id"
 
 * 2016/11/22 - 1.9.2:
     * Change the return type of a concept create call to RestWriteResponseConceptCreate from RestWriteResponse.  The new type carries back additional information
