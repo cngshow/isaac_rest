@@ -62,12 +62,14 @@ import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersionCreate;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.session.LatestVersionUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -304,7 +306,30 @@ public class AssociationWriteAPIs
 		{
 			throw new RestException("targetId", associationItemUpdateData.targetId + "", "Unable to locate the target component");
 		}
+		
+		// Retrieve current version for comparison in order to short-circuit save if unchanged
+		@SuppressWarnings("unchecked")
+		DynamicSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class);
+		DynamicSememeData currentTargetSememeData = (currentVersion.getData() != null && currentVersion.getData().length > 0) ? currentVersion.getData()[0] : null;
+		
+		UUID currentTargetUuid = null;
+		if (currentTargetSememeData != null) {
+			// Validate DynamicSememeData type
+			if (currentTargetSememeData.getDynamicSememeDataType() != DynamicSememeDataType.UUID) {
+				throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentTargetSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.UUID);
+			}
+			
+			currentTargetUuid = ((DynamicSememeUUIDImpl)currentTargetSememeData).getDataUUID();
+		}
+		UUID newTargetUuid = target.isPresent() ? target.get() : null;
 
+		// This code short-circuits update if passed data are identical to current relevant version
+		if ((newTargetUuid == currentTargetUuid && currentVersion.getState() == stateToUse)
+				|| (newTargetUuid != null && currentTargetUuid != null && newTargetUuid.equals(currentTargetUuid) && currentVersion.getState() == stateToUse)) {
+			log.debug("Not updating association sememe {} because data unchanged", associationItemSememeChronology.getPrimordialUuid());
+			return new RestWriteResponse(RequestInfo.get().getEditToken(), associationItemSememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+		}
+		
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)associationItemSememeChronology).createMutableVersion(
 				MutableDynamicSememe.class,

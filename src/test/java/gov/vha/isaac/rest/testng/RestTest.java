@@ -102,6 +102,7 @@ import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.RestWriteResponseConceptCreate;
@@ -1054,8 +1055,21 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkFail(updateDescriptionResponse);
+		String updateDescriptionResponseResult = checkFail(updateDescriptionResponse).readEntity(String.class);
+		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, updateDescriptionResponseResult);
+		// Should be no detail in RestWriteResponse
+		Assert.assertTrue(StringUtils.isBlank(writeResponse.detail) || ! writeResponse.detail.equals(RestWriteResponseEnumeratedDetails.UNCHANGED));
 
+		// Attempt to update again with same data.  Should be short-circuited and return UNCHANGED in detail of RestWriteResponse
+		updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		updateDescriptionResponseResult = checkFail(updateDescriptionResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, updateDescriptionResponseResult);
+		// Should be no detail in RestWriteResponse
+		Assert.assertEquals(writeResponse.detail, RestWriteResponseEnumeratedDetails.UNCHANGED);
+		
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid);
 		Assert.assertTrue(conceptDescriptionsObject.length > 0);
@@ -1311,7 +1325,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));
-		checkFail(deactivateConceptResponse);
+		String writeResponseXml = checkFail(deactivateConceptResponse).readEntity(String.class);
+		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, writeResponseXml);
+		Assert.assertTrue(writeResponse.detail == null || ! writeResponse.detail.equals(RestWriteResponseEnumeratedDetails.UNCHANGED));
+		
+		deactivateConceptResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent 
+				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + newConceptSequenceWrapper.uuid)
+				.queryParam(RequestParameters.active, false)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));
+		writeResponseXml = checkFail(deactivateConceptResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, writeResponseXml);
+		Assert.assertEquals(writeResponse.detail, RestWriteResponseEnumeratedDetails.UNCHANGED);
 		
 		// Retrieve retired concept and validate
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
@@ -2010,7 +2036,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
-		checkFail(updateCommentResponse);
+		String restWriteResponseXml = checkFail(updateCommentResponse).readEntity(String.class);
+		RestWriteResponse restWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, restWriteResponseXml);
+		Assert.assertTrue(restWriteResponse.detail == null || ! restWriteResponse.detail.equals(RestWriteResponseEnumeratedDetails.UNCHANGED));
+	
+		// Attempt to update comment with identical data
+		updateCommentResponse = target(RestPaths.commentUpdatePathComponent + newCommentSememeSequence)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		restWriteResponseXml = checkFail(updateCommentResponse).readEntity(String.class);
+		restWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, restWriteResponseXml);
+		Assert.assertEquals(restWriteResponse.detail, RestWriteResponseEnumeratedDetails.UNCHANGED);
 		
 		// Retrieve updated comment and validate fields
 		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
@@ -3459,9 +3496,22 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					jsonIze(new String[] {"targetId", "active"}, 
 							new String[] {"", "false"})));
 		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
-		RestWriteResponse updatedAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		Assert.assertTrue(StringUtils.isBlank(writeResponse.detail) || ! writeResponse.detail.equals(RestWriteResponseEnumeratedDetails.UNCHANGED));
 		
-		Assert.assertEquals(updatedAssociationItemId.uuid, createdAssociationItemId.uuid);
+		// test update with identical data.  Should succeed but with detail in response.
+		updateAssociationItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent 
+				+ RestPaths.associationItemComponent + RestPaths.updatePathComponent + createdAssociationItemId.uuid.toString())
+			.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+			.request()
+			.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.json(
+					jsonIze(new String[] {"targetId", "active"}, 
+							new String[] {"", "false"})));
+		result = checkFail(updateAssociationItemResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		Assert.assertEquals(writeResponse.detail, RestWriteResponseEnumeratedDetails.UNCHANGED);
+		
+		Assert.assertEquals(writeResponse.uuid, createdAssociationItemId.uuid);
 		
 		//readBack
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.uuid.toString())

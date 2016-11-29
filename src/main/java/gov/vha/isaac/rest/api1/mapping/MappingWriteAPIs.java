@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Vector;
 
-import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -80,6 +80,7 @@ import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
@@ -94,6 +95,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.api1.sememe.SememeWriteAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -204,7 +206,7 @@ public class MappingWriteAPIs
 				StringUtils.isBlank(mappingSetUpdateData.inverseName) ? "" : mappingSetUpdateData.inverseName.trim(),
 				StringUtils.isBlank(mappingSetUpdateData.description) ? "" : mappingSetUpdateData.description.trim(),
 				StringUtils.isBlank(mappingSetUpdateData.purpose) ? "" : mappingSetUpdateData.purpose.trim(),
-				RequestInfo.get().getStampCoordinate(),
+				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
 				RequestInfo.get().getEditCoordinate(),
 				stateToUse);
 	}
@@ -310,7 +312,7 @@ public class MappingWriteAPIs
 					targetConcept.orElse(null),
 					qualifierConcept.isPresent() ? Get.conceptService().getConcept(qualifierConcept.get()) : null,
 					mappingItemUpdateData.mapItemExtendedFields,
-					RequestInfo.get().getStampCoordinate(),
+					Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
 					RequestInfo.get().getEditCoordinate(),
 					stateToUse);
 
@@ -408,7 +410,7 @@ public class MappingWriteAPIs
 					editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 		}
 		
-		@SuppressWarnings("rawtypes")
+		@SuppressWarnings({ "rawtypes", "unused" })
 		SememeChronology mappingAnnotation = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence(), 
 				new DynamicSememeData[] {
@@ -479,6 +481,7 @@ public class MappingWriteAPIs
 			EditCoordinate editCoord,
 			State state) throws RuntimeException, RestException 
 	{		
+		final List<Object> changedObjects = new Vector<>();
 		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
 			{
 				try
@@ -504,6 +507,7 @@ public class MappingWriteAPIs
 									mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 									mutable.setText(mapName);
 									Get.commitService().addUncommitted(ds.getChronology()).get();
+									changedObjects.add(ds.getChronology());
 								}
 							}
 							else
@@ -526,6 +530,7 @@ public class MappingWriteAPIs
 										mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 										
 										Get.commitService().addUncommitted(ds.getChronology()).get();
+										changedObjects.add(ds.getChronology());
 									}
 								}
 							}
@@ -544,6 +549,7 @@ public class MappingWriteAPIs
 									mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 									mutable.setText(mapDescription);
 									Get.commitService().addUncommitted(ds.getChronology()).get();
+									changedObjects.add(ds.getChronology());
 								}
 							}
 						}
@@ -563,7 +569,7 @@ public class MappingWriteAPIs
 		if (!mappingSememe.isPresent())
 		{
 			log.error("Couldn't find mapping refex?");
-			throw new RestException("internal error");
+			throw new RuntimeException("internal error (failed to find mapping refex)");
 		}
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<DynamicSememe<?>>> latestVersion = ((SememeChronology)mappingSememe.get()).getLatestVersion(DynamicSememe.class, 
@@ -586,26 +592,35 @@ public class MappingWriteAPIs
 				mutable.setData(new DynamicSememeData[] {
 						(StringUtils.isBlank(mapPurpose) ? null : new DynamicSememeStringImpl(mapPurpose))});
 				Get.commitService().addUncommitted(latest.getChronology()).get();
+				changedObjects.add(latest.getChronology());
 			}
 			
 			//Look up the current state of the mapset concept - if it differs, update the concept.
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Optional<LatestVersion<ConceptVersionImpl>> concept = ((ConceptChronology)mappingConcept).getLatestVersion(ConceptVersionImpl.class, stampCoord);
 			
 			if (!concept.isPresent())
 			{
-				log.error("Couldn't find mapping refex?");
-				throw new RuntimeException("internal error");
+				log.error("Couldn't find mapping concept?");
+				throw new RuntimeException("internal error (failed to find mapping concept)");
 			}
 			else if (concept.get().value().getState() != state) 
 			{
 				mappingConcept.createMutableVersion(state, editCoord);
 				Get.commitService().addUncommitted(mappingConcept).get();
+				changedObjects.add(mappingConcept);
 			}
 
-			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of mapping set " + mappingConcept.getPrimordialUuid()).get();
-			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
-			{
-				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
+			if (changedObjects.size() > 0) {
+				Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of mapping set " + mappingConcept.getPrimordialUuid()).get();
+				if (RequestInfo.get().getActiveWorkflowProcessId() != null)
+				{
+					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
+				}
+				
+				return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingConcept.getPrimordialUuid());
+			} else {
+				return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingConcept.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 			}
 		}
 		catch (RestException e)
@@ -617,7 +632,6 @@ public class MappingWriteAPIs
 			log.error("Error during commit", e);
 			throw new RestException("Unexpected internal error");
 		}
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingConcept.getPrimordialUuid());
 	}
 
 	/**
@@ -708,11 +722,23 @@ public class MappingWriteAPIs
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)mappingItemSememe).getLatestVersion(DynamicSememe.class, 
 				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
-		/* DynamicSememe<?> rdv = */ latest.get().value();
+		DynamicSememe<?> currentSememeVersion = latest.get().value();
 		
 		if (latest.get().contradictions().isPresent() && latest.get().contradictions().get().size() > 0) {
 			//TODO handle contradictions
 			log.warn("Updating mapping item " + mappingItemSememe.getSememeSequence() + " with " + latest.get().contradictions().get().size() + " contradictions");
+		}
+		
+		int sememeConceptSequence = mappingItemSememe.getAssemblageSequence();
+		
+		DynamicSememeData[] currentData = currentSememeVersion.getData();
+		DynamicSememeData[] newData = translateAndFixOffset(sememeConceptSequence, mappingItemTargetConcept, 
+				mappingItemQualifierConcept != null ? mappingItemQualifierConcept.getPrimordialUuid() : null, 
+				extendedDataFields == null ? new RestDynamicSememeData[] {} :extendedDataFields.toArray(new RestDynamicSememeData[extendedDataFields.size()]));
+
+		if (currentSememeVersion.getState() == state
+				&& SememeWriteAPIs.equals(currentData, newData)) {
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -720,14 +746,7 @@ public class MappingWriteAPIs
 				MutableDynamicSememe.class,
 				state,
 				editCoord);
-		
-		int sememeConceptSequence = mappingItemSememe.getAssemblageSequence();
-		
-		DynamicSememeData[] data = translateAndFixOffset(sememeConceptSequence, mappingItemTargetConcept, 
-				mappingItemQualifierConcept != null ? mappingItemQualifierConcept.getPrimordialUuid() : null, 
-				extendedDataFields == null ? new RestDynamicSememeData[] {} :extendedDataFields.toArray(new RestDynamicSememeData[extendedDataFields.size()]));
-
-		mutable.setData(data);
+		mutable.setData(newData);
 
 		try
 		{
@@ -737,12 +756,12 @@ public class MappingWriteAPIs
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid());
 		}
 		catch (Exception e)
 		{
 			throw new RuntimeException("Failed during commit", e);
 		}
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid());
 	}
 	
 	private static DynamicSememeData[] translateAndFixOffset(int sememeSequence, UUID targetConcept, UUID qualifierConcept, RestDynamicSememeData[] incomingExtendedDataFields) 
