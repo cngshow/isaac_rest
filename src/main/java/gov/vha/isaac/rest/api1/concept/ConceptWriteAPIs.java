@@ -247,6 +247,10 @@ public class ConceptWriteAPIs
 		
 		State stateToUse = (conceptUpdateData.active == null || conceptUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		
-		return ComponentWriteAPIs.resetState(RequestInfo.get().getEditCoordinate(), StampCoordinates.getDevelopmentLatest(), stateToUse, id);
+		return ComponentWriteAPIs.resetState(
+				RequestInfo.get().getEditCoordinate(),
+				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
+				stateToUse,
+				id);
 	}
 }

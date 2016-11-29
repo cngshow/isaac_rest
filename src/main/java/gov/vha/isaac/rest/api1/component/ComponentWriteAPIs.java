@@ -20,7 +20,6 @@ package gov.vha.isaac.rest.api1.component;
 
 import java.util.Optional;
 
-import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -46,6 +45,7 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.ComponentNidSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
@@ -56,6 +56,7 @@ import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -118,7 +119,11 @@ public class ComponentWriteAPIs
 		
 		Boolean setActive = Boolean.parseBoolean(active.trim());
 
-		return resetState(RequestInfo.get().getEditCoordinate(), RequestInfo.get().getStampCoordinate(), setActive ? State.ACTIVE : State.INACTIVE, id);
+		return resetState(
+				RequestInfo.get().getEditCoordinate(),
+				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
+				setActive ? State.ACTIVE : State.INACTIVE,
+				id);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -292,8 +297,12 @@ public class ComponentWriteAPIs
 				{
 					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord.get());
 				}
+				
+				return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get());
+			} else {
+				log.debug("Not committing update of " + id + " with unchanged state (" + state + ")");
+				return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 			}
-			return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get());
 		} 
 		catch (RestException e)
 		{

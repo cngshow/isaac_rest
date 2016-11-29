@@ -79,6 +79,7 @@ import gov.vha.isaac.rest.session.SecurityUtils;
 public class SearchAPIs
 {
 	private static Logger log = LogManager.getLogger();
+	private static final UUID codeConstant = UUID.fromString("803af596-aea8-5184-b8e1-45f801585d17");  //TODO this goes away when we can identify static sememes
 
 	@Context
 	private SecurityContext securityContext;
@@ -316,6 +317,12 @@ public class SearchAPIs
 						int conSequence = Frills.findConcept(nid);
 						if (conSequence >= 0)
 						{
+							//TODO add a sememe on all static sememes so we can identify them.  For now, hard code a few common ones.
+							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SNOMED_INTEGER_ID.getConceptSequence() == conSequence 
+									|| Get.identifierService().getConceptSequenceForUuids(codeConstant) == conSequence)
+							{
+								return true;
+							}
 							return Frills.definesDynamicSememe(conSequence);
 						}
 						return false;

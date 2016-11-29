@@ -82,6 +82,13 @@ public class RestWriteResponse
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestObjectChronologyType type;
 	
+	/**
+	 * The type of this object - concept, sememe, or unknown.  (if applicable, may be null)
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String detail;
+	
 	protected RestWriteResponse() {
 		// For JAXB
 	}
@@ -90,14 +97,32 @@ public class RestWriteResponse
 	 * If nid or uuid is populated, it will autopopulate any missing values of nid, uuid or sequence.
 	 * The UUID is checked for system validity, if provided (nid and sequence is not populated if uuid isn't valid)
 	 * 
+	 * @param editTokenIn
+	 * @param uuidIn
+	 * @param nidIn
+	 * @param sequenceIn
 	 */
-	public RestWriteResponse(RestEditToken editTokenIn, UUID uuidIn, Integer nidIn, Integer sequenceIn)
+	public RestWriteResponse(RestEditToken editTokenIn, UUID uuidIn, Integer nidIn, Integer sequenceIn) {
+		this(editTokenIn, uuidIn, nidIn, sequenceIn, (String)null);
+	}
+	/**
+	 * If nid or uuid is populated, it will autopopulate any missing values of nid, uuid or sequence.
+	 * The UUID is checked for system validity, if provided (nid and sequence is not populated if uuid isn't valid)
+	 * 
+	 * @param editTokenIn
+	 * @param uuidIn
+	 * @param nidIn
+	 * @param sequenceIn
+	 * @param detailIn
+	 */
+	public RestWriteResponse(RestEditToken editTokenIn, UUID uuidIn, Integer nidIn, Integer sequenceIn, String detailIn)
 	{
 		uuid = uuidIn;
 		nid = nidIn;
 		sequence = sequenceIn;
 		editToken = editTokenIn;
 		type = null;
+		detail = detailIn;
 		if (nid == null || sequence == null || uuid == null)
 		{
 			if (nid != null || uuid != null)
@@ -142,14 +167,27 @@ public class RestWriteResponse
 	
 	/**
 	 * Populates nid and sequence from UUID, if the UUID is in the system.
+	 * 
+	 * @param editToken
+	 * @param uuid
 	 */
-	public RestWriteResponse(EditToken editToken, UUID uuid)
+	public RestWriteResponse(EditToken editToken, UUID uuid) {
+		this(editToken, uuid, (String)null);
+	}
+	/**
+	 * Populates nid and sequence from UUID, if the UUID is in the system.
+	 * 
+	 * @param editToken
+	 * @param uuid
+	 * @param detail
+	 */
+	public RestWriteResponse(EditToken editToken, UUID uuid, String detail)
 	{
-		this(new RestEditToken(editToken), uuid, null, null);
+		this(new RestEditToken(editToken), uuid, (Integer)null, (Integer)null, detail);
 	}
 	
 	public RestWriteResponse(EditToken editToken) {
-		this(editToken, null, null, null);
+		this(editToken, (UUID)null, (Integer)null, (Integer)null);
 	}
 
 	/* (non-Javadoc)
@@ -157,7 +195,7 @@ public class RestWriteResponse
 	 */
 	@Override
 	public String toString() {
-		return "RestWriteResponse [uuid=" + uuid + ", nid=" + nid + ", sequence=" + sequence + ", editToken="
-				+ editToken + "]";
+		return "RestWriteResponse [editToken=" + editToken + ", uuid=" + uuid + ", nid=" + nid + ", sequence="
+				+ sequence + ", type=" + type + ", detail=" + detail + "]";
 	}
 }

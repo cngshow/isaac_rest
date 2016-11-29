@@ -35,6 +35,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
@@ -45,16 +48,20 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
+import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionCreate;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.session.LatestVersionUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -73,6 +80,8 @@ import gov.vha.isaac.rest.tokens.EditTokens;
 @RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
 public class CommentWriteAPIs
 {
+	private static Logger log = LogManager.getLogger(CommentWriteAPIs.class);
+			
 	@Context
 	private SecurityContext securityContext;
 
@@ -178,6 +187,45 @@ public class CommentWriteAPIs
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);
 		
+		// Retrieve current version in order to short-circuit save if data unchanged
+		@SuppressWarnings("unchecked")
+		DynamicSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class);
+		DynamicSememeData currentCommentSememeData = (currentVersion.getData() != null && currentVersion.getData().length > 0) ? currentVersion.getData()[0] : null;
+		DynamicSememeData currentCommentContextSememeData = (currentVersion.getData() != null && currentVersion.getData().length > 1) ? currentVersion.getData()[1] : null;
+		
+		String currentComment = null;
+		if (currentCommentSememeData != null) {
+			// Validate DynamicSememeData type
+			if (currentCommentSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
+				throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
+			}
+			
+			currentComment = ((DynamicSememeStringImpl)currentCommentSememeData).getDataString();
+			currentComment = StringUtils.isBlank(currentComment) ? null : currentComment;
+		}
+		String newComment = StringUtils.isBlank(dataToUpdateComment.comment) ? null : dataToUpdateComment.comment;
+
+		String currentCommentContext = null;
+		if (currentCommentContextSememeData != null) {
+			// Validate DynamicSememeData type
+			if (currentCommentContextSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
+				throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentContextSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
+			}
+			
+			currentCommentContext = ((DynamicSememeStringImpl)currentCommentContextSememeData).getDataString();
+			currentCommentContext = StringUtils.isBlank(currentCommentContext) ? null : currentCommentContext;
+		}
+		String newCommentContext = StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : dataToUpdateComment.commentContext;
+
+		// This code short-circuits update if passed data are identical to current relevant version
+		if (currentVersion.getState() == stateToUse) {
+			if (((currentComment == newComment) || (currentComment != null && newComment != null && currentComment.equals(newComment)))
+					&& ((currentCommentContext == newCommentContext) || (currentCommentContext != null && newCommentContext != null && currentCommentContext.equals(newCommentContext)))) {
+				log.debug("Not updating comment sememe {} because data unchanged", sc.getPrimordialUuid());
+				return new RestWriteResponse(RequestInfo.get().getEditToken(), sc.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+			}
+		}
+
 		@SuppressWarnings("unchecked")
 		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse, RequestInfo.get().getEditCoordinate());
 		
