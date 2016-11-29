@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe;
 
+import java.util.Arrays;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -105,4 +107,12 @@ public class RestDynamicSememeBase
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Boolean active;
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestDynamicSememeBase [columnData=" + Arrays.toString(columnData) + ", active=" + active + "]";
+	}
 }

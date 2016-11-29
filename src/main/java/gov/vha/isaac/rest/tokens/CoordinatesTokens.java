@@ -51,25 +51,25 @@ public class CoordinatesTokens {
 	private static Map<String, String> TOKEN_BY_PARAMS_CACHE = null;
 
 	private static void init(final int maxEntries) {
-		synchronized(OBJECT_BY_TOKEN_CACHE_LOCK) {
-			if (OBJECT_BY_TOKEN_CACHE == null) {
-				OBJECT_BY_TOKEN_CACHE = new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
-					private static final long serialVersionUID = -1236481390177598762L;
-					@Override
-					protected boolean removeEldestEntry(Map.Entry<String, CoordinatesToken> eldest){
-						return size() > maxEntries;
-					}
-				};
-
-				defaultCoordinatesToken = CoordinatesTokens.getOrCreate(
-						getDefaultTaxonomyCoordinate().getStampCoordinate(),
-						getDefaultTaxonomyCoordinate().getLanguageCoordinate(),
-						getDefaultTaxonomyCoordinate().getLogicCoordinate(),
-						getDefaultTaxonomyCoordinate().getTaxonomyType()
-						);
-			}
-		}
 		synchronized(TOKEN_BY_PARAMS_CACHE_LOCK) {
+			synchronized(OBJECT_BY_TOKEN_CACHE_LOCK) {
+				if (OBJECT_BY_TOKEN_CACHE == null) {
+					OBJECT_BY_TOKEN_CACHE = new LinkedHashMap<String, CoordinatesToken>(maxEntries, 0.75F, true) {
+						private static final long serialVersionUID = -1236481390177598762L;
+						@Override
+						protected boolean removeEldestEntry(Map.Entry<String, CoordinatesToken> eldest){
+							return size() > maxEntries;
+						}
+					};
+	
+					defaultCoordinatesToken = CoordinatesTokens.getOrCreate(
+							getDefaultTaxonomyCoordinate().getStampCoordinate(),
+							getDefaultTaxonomyCoordinate().getLanguageCoordinate(),
+							getDefaultTaxonomyCoordinate().getLogicCoordinate(),
+							getDefaultTaxonomyCoordinate().getTaxonomyType()
+							);
+				}
+			}
 			if (TOKEN_BY_PARAMS_CACHE == null) {
 				TOKEN_BY_PARAMS_CACHE = new LinkedHashMap<String, String>(maxEntries, 0.75F, true) {
 					private static final long serialVersionUID = -2638577900934193146L;
