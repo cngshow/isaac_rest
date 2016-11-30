@@ -44,7 +44,6 @@ import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
-import gov.vha.isaac.ochre.mapping.data.MappingSetDAO;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -119,150 +118,143 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * @param sememe
 	 * @param stampCoord
 	 */
-	public RestMappingSetVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments, UUID processId)
+	public RestMappingSetVersion(ConceptVersion<?> mappingConcept, DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments, UUID processId)
 	{
 		super();
-		Optional<ConceptVersion<?>> mappingConcept = MappingSetDAO.getMappingConcept(sememe, stampCoord); 
 		
-		if (mappingConcept.isPresent())
+		final StampCoordinate myStampCoord = stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE);
+		active = mappingConcept.getState() == State.ACTIVE;
+		identifiers = new RestIdentifiedObject(mappingConcept.getChronology());
+		//TODO whenever we make an edit to any component of the map set, we will also need to commit the concept, so that this stamp
+		//always updates with any other stamp that is updated
+		mappingSetStamp = new RestStampedVersion(mappingConcept);
+
+		if (sememe.getData().length > 0 && sememe.getData()[0] != null)
 		{
-			active = mappingConcept.get().getState() == State.ACTIVE;
-			identifiers = new RestIdentifiedObject(mappingConcept.get().getChronology());
-			//TODO whenever we make an edit to any component of the map set, we will also need to commit the concept, so that this stamp
-			//always updates with any other stamp that is updated
-			mappingSetStamp = new RestStampedVersion(mappingConcept.get());
+			purpose = ((DynamicSememeString) sememe.getData()[0]).getDataString();
+		}
+		
+		//read the extended field definition information
+		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.getNid());
+		//Columns 0 and 1 are used to store the target concept and qualifier, we shouldn't return them here.
+		for (int i = 2; i < dsud.getColumnInfo().length; i++)
+		{
+			mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsud.getColumnInfo()[i]));
+			mapItemFieldsDefinition.get(i - 2).columnOrder = mapItemFieldsDefinition.get(i - 2).columnOrder - 2; 
+		}
 
-			if (sememe.getData().length > 0 && sememe.getData()[0] != null)
+		//Read the extended fields off of the map set concept.
+		//Strings
+		Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 
+				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(stringExtensionSememe ->
 			{
-				purpose = ((DynamicSememeString) sememe.getData()[0]).getDataString();
-			}
-			
-			//read the extended field definition information
-			DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.get().getNid());
-			//Columns 0 and 1 are used to store the target concept and qualifier, we shouldn't return them here.
-			for (int i = 2; i < dsud.getColumnInfo().length; i++)
-			{
-				mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsud.getColumnInfo()[i]));
-				mapItemFieldsDefinition.get(i - 2).columnOrder = mapItemFieldsDefinition.get(i - 2).columnOrder - 2; 
-			}
-
-			//Read the extended fields off of the map set concept.
-			//Strings
-			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
-					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(stringExtensionSememe ->
+				@SuppressWarnings("rawtypes")
+				SememeChronology rawSememeChronology = (SememeChronology)stringExtensionSememe;
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, myStampCoord);
+				//TODO handle contradictions
+				if (latest.isPresent())
 				{
-					@SuppressWarnings("rawtypes")
-					SememeChronology rawSememeChronology = (SememeChronology)stringExtensionSememe;
-					@SuppressWarnings("unchecked")
-					Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, stampCoord);
+					DynamicSememe<?> ds = latest.get().value();
+					int nameNid = ((DynamicSememeNid)ds.getData(0)).getDataNid();
+					DynamicSememeData value = null;
+					if (ds.getData().length > 1)
+					{
+						value = ds.getData(1);
+					}
+					mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(1, value)));
+				}
+			}
+		);
+		
+		//Nids
+		Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 
+				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getConceptSequence()).forEach(nidExtensionSememe ->
+			{
+				@SuppressWarnings("rawtypes")
+				SememeChronology rawSememeChronology = (SememeChronology)nidExtensionSememe;
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, myStampCoord);
+				//TODO handle contradictions
+				if (latest.isPresent())
+				{
+					DynamicSememe<?> ds = latest.get().value();
+					int nameNid = ((DynamicSememeNid)ds.getData(0)).getDataNid();
+					DynamicSememeData value = null;
+					if (ds.getData().length > 1)
+					{
+						value = ds.getData(1);
+					}
+					//column number makes no sense here.
+					mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(-1, value)));
+				}
+			}
+		);
+
+		//Read the the description values
+		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
+			{
+				if (name != null && description != null && inverseName != null)
+				{
+					//noop... sigh... can't short-circuit in a forEach....
+				}
+				else
+				{
+					@SuppressWarnings({ "rawtypes", "unchecked" })
+					Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, myStampCoord);
 					//TODO handle contradictions
 					if (latest.isPresent())
 					{
-						DynamicSememe<?> ds = latest.get().value();
-						int nameNid = ((DynamicSememeNid)ds.getData(0)).getDataNid();
-						DynamicSememeData value = null;
-						if (ds.getData().length > 1)
+						DescriptionSememe<?> ds = latest.get().value();
+						if (ds.getDescriptionTypeConceptSequence() == MetaData.SYNONYM.getConceptSequence())
 						{
-							value = ds.getData(1);
-						}
-						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(1, value)));
-					}
-				}
-			);
-			
-			//Nids
-			Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.get().getNid(), 
-					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getConceptSequence()).forEach(nidExtensionSememe ->
-				{
-					@SuppressWarnings("rawtypes")
-					SememeChronology rawSememeChronology = (SememeChronology)nidExtensionSememe;
-					@SuppressWarnings("unchecked")
-					Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, stampCoord);
-					//TODO handle contradictions
-					if (latest.isPresent())
-					{
-						DynamicSememe<?> ds = latest.get().value();
-						int nameNid = ((DynamicSememeNid)ds.getData(0)).getDataNid();
-						DynamicSememeData value = null;
-						if (ds.getData().length > 1)
-						{
-							value = ds.getData(1);
-						}
-						//column number makes no sense here.
-						mapSetExtendedFields.add(new RestMappingSetExtensionValue(nameNid, RestDynamicSememeData.translate(-1, value)));
-					}
-				}
-			);
-
-			//Read the the description values
-			Get.sememeService().getSememesForComponent(mappingConcept.get().getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
-				{
-					if (name != null && description != null && inverseName != null)
-					{
-						//noop... sigh... can't short-circuit in a forEach....
-					}
-					else
-					{
-						@SuppressWarnings({ "rawtypes", "unchecked" })
-						Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, stampCoord);
-						//TODO handle contradictions
-						if (latest.isPresent())
-						{
-							DescriptionSememe<?> ds = latest.get().value();
-							if (ds.getDescriptionTypeConceptSequence() == MetaData.SYNONYM.getConceptSequence())
+							if (Frills.isDescriptionPreferred(ds.getNid(), null))
 							{
-								if (Frills.isDescriptionPreferred(ds.getNid(), null))
-								{
-									name = ds.getText();
-								}
-								else
-								//see if it is the inverse name
-								{
-									if (Get.sememeService().getSememesForComponentFromAssemblage(ds.getNid(), 
-											DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).anyMatch(sememeC -> 
-											{
-												return ds.getChronology().isLatestVersionActive(stampCoord);
-											}))
-									{
-										inverseName = ds.getText(); 
-									}
-								}
+								name = ds.getText();
 							}
-							else if (ds.getDescriptionTypeConceptSequence() == MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence())
+							else
+							//see if it is the inverse name
 							{
-								if (Frills.isDescriptionPreferred(ds.getNid(), null))
+								if (Get.sememeService().getSememesForComponentFromAssemblage(ds.getNid(), 
+										DynamicSememeConstants.get().DYNAMIC_SEMEME_ASSOCIATION_INVERSE_NAME.getSequence()).anyMatch(sememeC -> 
+										{
+											return ds.getChronology().isLatestVersionActive(myStampCoord);
+										}))
 								{
-									description = ds.getText();
+									inverseName = ds.getText(); 
 								}
 							}
 						}
+						else if (ds.getDescriptionTypeConceptSequence() == MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence())
+						{
+							if (Frills.isDescriptionPreferred(ds.getNid(), null))
+							{
+								description = ds.getText();
+							}
+						}
 					}
-				});
-			if (includeComments)
+				}
+			});
+		if (includeComments)
+		{
+			try
 			{
-				try
-				{
-					comments = CommentAPIs.readComments(mappingConcept.get().getNid() + "", processId);
-				}
-				catch (RestException e)
-				{
-					LogManager.getLogger().error("Unexpected", e);
-					throw new RuntimeException(e);
-				}
+				comments = CommentAPIs.readComments(mappingConcept.getNid() + "", processId);
 			}
-			else
+			catch (RestException e)
 			{
-				expandables = new Expandables();
-				if (RequestInfo.get().returnExpandableLinks())
-				{
-					//TODO fix this expandable link
-					expandables.add(new Expandable(ExpandUtil.comments, ""));
-				}
+				LogManager.getLogger().error("Unexpected", e);
+				throw new RuntimeException(e);
 			}
 		}
 		else
 		{
-			throw new RuntimeException("Mapping Set is not present on the given coordinates");
+			expandables = new Expandables();
+			if (RequestInfo.get().returnExpandableLinks())
+			{
+				//TODO fix this expandable link
+				expandables.add(new Expandable(ExpandUtil.comments, ""));
+			}
 		}
 	}
 
