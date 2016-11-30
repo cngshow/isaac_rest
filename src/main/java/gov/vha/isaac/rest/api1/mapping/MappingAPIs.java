@@ -21,7 +21,6 @@ package gov.vha.isaac.rest.api1.mapping;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -31,16 +30,18 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
@@ -105,15 +106,26 @@ public class MappingAPIs
 		
 		Get.sememeService().getSememesFromAssemblage(IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).forEach(sememeC -> 
 		{
+			//We don't change the state / care about the state on the sememe.  We update the state on the concept.
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
-					Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
+					RequestInfo.get().getStampCoordinate().makeAnalog(State.ACTIVE, State.INACTIVE));
 			
 			if (latest.isPresent())
 			{
-				//TODO handle contradictions
-				results.add(new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), 
-						processIdUUID));
+				ConceptChronology<? extends ConceptVersion<?>> cc = Get.conceptService().getConcept(latest.get().value().getReferencedComponentNid());
+				
+				StampCoordinate conceptCoord = Util.getPreWorkflowStampCoordinate(processIdUUID, cc.getNid());
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				Optional<LatestVersion<ConceptVersion<?>>> cv =  ((ConceptChronology) cc).getLatestVersion(ConceptVersion.class, 
+						conceptCoord);
+				
+				if (cv.isPresent())
+				{
+					//TODO handle contradictions
+					results.add(new RestMappingSetVersion(cv.get().value(), latest.get().value(), conceptCoord, 
+							RequestInfo.get().shouldExpand(ExpandUtil.comments), processIdUUID));
+				}
 			}
 		});
 		return results.toArray(new RestMappingSetVersion[results.size()]);
@@ -168,9 +180,23 @@ public class MappingAPIs
 				Util.getPreWorkflowStampCoordinate(processIdUUID, sememe.get().getNid()));
 		if (latest.isPresent())
 		{
-			//TODO handle contradictions
-			return new RestMappingSetVersion(latest.get().value(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().shouldExpand(ExpandUtil.comments), 
+			ConceptChronology<? extends ConceptVersion<?>> cc = Get.conceptService().getConcept(latest.get().value().getReferencedComponentNid());
+			
+			StampCoordinate conceptCoord = Util.getPreWorkflowStampCoordinate(processIdUUID, cc.getNid());
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			Optional<LatestVersion<ConceptVersion<?>>> cv =  ((ConceptChronology) cc).getLatestVersion(ConceptVersion.class, 
+					conceptCoord);
+			
+			if (cv.isPresent())
+			{
+				//TODO handle contradictions
+				return new RestMappingSetVersion(cv.get().value(), latest.get().value(), conceptCoord, RequestInfo.get().shouldExpand(ExpandUtil.comments), 
 					processIdUUID);
+			}
+			else 
+			{
+				throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
+			}
 		} 
 		else 
 		{

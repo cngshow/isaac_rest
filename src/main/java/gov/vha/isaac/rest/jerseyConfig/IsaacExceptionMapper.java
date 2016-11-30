@@ -108,7 +108,7 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 		}
 		else
 		{
-			log.error("Unexpected", ex);
+			log.error("Unexpected internal error", ex);
 		}
 		
 		if (ex instanceof ClientErrorException)
