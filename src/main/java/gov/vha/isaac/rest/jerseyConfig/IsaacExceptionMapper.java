@@ -108,10 +108,10 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 		}
 		else
 		{
-			log.error("Unexpected", ex);
+			log.error("Unexpected internal error", ex);
 		}
 		
-		if (ex  instanceof ClientErrorException)
+		if (ex instanceof ClientErrorException)
 		{
 			status =  Status.fromStatusCode(((ClientErrorException)ex).getResponse().getStatus());
 			RestExceptionResponse exceptionResponse = new RestExceptionResponse(
@@ -154,7 +154,7 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 
 			RestExceptionResponse exceptionResponse = new RestExceptionResponse(
 					response,
-					response,
+					ex.getLocalizedMessage(),
 					null,
 					null,
 					status);

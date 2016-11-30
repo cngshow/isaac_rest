@@ -189,7 +189,7 @@ public class SearchAPIs
 			UUID extendedDescTypeSequence = Util.convertToConceptUUID(extendedDescriptionTypeId);
 			
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
-			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, null);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, Long.MAX_VALUE);
 			
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
@@ -200,7 +200,7 @@ public class SearchAPIs
 		} else {
 			log.debug("Performing description search for '" + query + "'");
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
-			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, null);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, Long.MAX_VALUE);
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
 					pageNum,
@@ -347,7 +347,7 @@ public class SearchAPIs
 		DescriptionIndexer indexer = LookupService.get().getService(DescriptionIndexer.class);
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
-		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, null, filter);
+		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, Long.MAX_VALUE, filter);
 		
 		if (mergeOnConcepts)
 		{
@@ -523,7 +523,7 @@ public class SearchAPIs
 			
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 					.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-					limit, null);
+					limit, Long.MAX_VALUE);
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
 					pageNum,
@@ -541,7 +541,7 @@ public class SearchAPIs
 			{			
 				List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
-								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
+								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, Long.MAX_VALUE);
 				return getRestSearchResultsFromOchreSearchResults(
 						ochreSearchResults,
 						pageNum,
@@ -559,7 +559,7 @@ public class SearchAPIs
 					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
 									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
-									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
+									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, Long.MAX_VALUE);
 					return getRestSearchResultsFromOchreSearchResults(
 							ochreSearchResults,
 							pageNum,
@@ -573,7 +573,7 @@ public class SearchAPIs
 					//nope	Run it as a string search.
 					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-									limit, null);
+									limit, Long.MAX_VALUE);
 					return getRestSearchResultsFromOchreSearchResults(
 							ochreSearchResults,
 							pageNum,
@@ -676,7 +676,7 @@ public class SearchAPIs
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
 
 		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
-				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, null);
+				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, Long.MAX_VALUE);
 		return getRestSearchResultsFromOchreSearchResults(
 				ochreSearchResults,
 				pageNum,
