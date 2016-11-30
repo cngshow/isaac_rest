@@ -285,20 +285,29 @@ public class SememeWriteAPIs
 		int sememeSequence = RequestInfoUtils.getSememeSequenceFromParameter(RequestParameters.id, id);
 		SememeChronology<? extends SememeVersion<?>> sememeChronology = Get.sememeService().getOptionalSememe(sememeSequence).get();
 		
-		// This code short-circuits update if passed data are identical to current relevant version
-		@SuppressWarnings({ "unchecked" })
-		DescriptionSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class);
-		int passedCaseSignificanceConcept = RequestInfoUtils.getConceptSequenceFromParameter("descriptionSememeUpdateData.caseSignificanceConcept", descriptionSememeUpdateData.caseSignificanceConcept);
-		int passedLanguageConcept = RequestInfoUtils.getConceptSequenceFromParameter("descriptionSememeUpdateData.languageConcept", descriptionSememeUpdateData.languageConcept);
-		int passedDescriptionTypeConcept = RequestInfoUtils.getConceptSequenceFromParameter("descriptionSememeUpdateData.descriptionTypeConcept", descriptionSememeUpdateData.descriptionTypeConcept);
-		State passedState = (descriptionSememeUpdateData.active == null || descriptionSememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
-		if (passedCaseSignificanceConcept == currentVersion.getCaseSignificanceConceptSequence()
-				&& passedLanguageConcept == currentVersion.getLanguageConceptSequence()
-				&& passedDescriptionTypeConcept == currentVersion.getDescriptionTypeConceptSequence()
-				&& descriptionSememeUpdateData.text.equals(currentVersion.getText())
-				&& passedState == currentVersion.getState()) {
-			log.debug("Not updating description sememe {} because data unchanged", currentVersion.getPrimordialUuid());
-			return new RestWriteResponse(RequestInfo.get().getEditToken(), currentVersion.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+		try {
+			// This code short-circuits update if passed data are identical to current relevant version
+			@SuppressWarnings({ "unchecked" })
+			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class);
+			
+			if (currentVersion.isPresent()) {
+				int passedCaseSignificanceConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", descriptionSememeUpdateData.caseSignificanceConcept);
+				int passedLanguageConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.languageConcept", descriptionSememeUpdateData.languageConcept);
+				int passedDescriptionTypeConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.descriptionTypeConcept", descriptionSememeUpdateData.descriptionTypeConcept);
+				State passedState = (descriptionSememeUpdateData.active == null || descriptionSememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
+				if (passedCaseSignificanceConcept == currentVersion.get().getCaseSignificanceConceptSequence()
+						&& passedLanguageConcept == currentVersion.get().getLanguageConceptSequence()
+						&& passedDescriptionTypeConcept == currentVersion.get().getDescriptionTypeConceptSequence()
+						&& descriptionSememeUpdateData.text.equals(currentVersion.get().getText())
+						&& passedState == currentVersion.get().getState()) {
+					log.debug("Not updating description sememe {} because data unchanged", currentVersion.get().getPrimordialUuid());
+					return new RestWriteResponse(RequestInfo.get().getEditToken(), currentVersion.get().getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+				}
+			} else {
+				log.warn("Failed retrieving latest version of object " + id + ". Unconditionally performing update");
+			}
+		} catch (Exception e) {
+			log.warn("Failed checking update against current object " + id + " version. Unconditionally performing update", e);
 		}
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -608,13 +617,21 @@ public class SememeWriteAPIs
 		{
 			case DYNAMIC:
 			{
-				@SuppressWarnings("unchecked")
-				DynamicSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class);
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class);
 
-				// This code short-circuits update if passed data are identical to current relevant version
-				if (equals(currentVersion.getData(), passedData)) {
-					log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
-					return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+					if (currentVersion.isPresent()) {
+						// This code short-circuits update if passed data are identical to current relevant version
+						if (equals(currentVersion.get().getData(), passedData)) {
+							log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
+							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+						}
+					} else {
+						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+					}
+				} catch (Exception e) {
+					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -625,82 +642,117 @@ public class SememeWriteAPIs
 			}
 			case LONG:
 			{
-				@SuppressWarnings("unchecked")
-				LongSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class);
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class);
 
-				// Validate data type
-				validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.LONG);
-				
-				// This code short-circuits update if passed data are identical to current relevant version
-				if (currentVersion.getLongValue() == ((DynamicSememeLong)passedData[0]).getDataLong()
-						&& currentVersion.getState() == stateToUse) {
-					log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
-					return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
-				} else {
-					@SuppressWarnings({ "unchecked", "rawtypes" })
-					LongSememeImpl mutable = (LongSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableLongSememe.class,
-							stateToUse, RequestInfo.get().getEditCoordinate());
-					mutable.setLongValue(((DynamicSememeLongImpl)passedData[0]).getDataLong());
-					break;
+					if (currentVersion.isPresent()) {
+					// Validate data type
+					validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.LONG);
+
+					// This code short-circuits update if passed data are identical to current relevant version
+					if (currentVersion.get().getLongValue() == ((DynamicSememeLong)passedData[0]).getDataLong()
+							&& currentVersion.get().getState() == stateToUse) {
+						log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
+						return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+					}
+					} else {
+						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+					}
+				} catch (Exception e) {
+					log.warn("Failed checking update against current " + type + " sememe " + id + " state. Unconditionally performing update", e);
 				}
+
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				LongSememeImpl mutable = (LongSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableLongSememe.class,
+						stateToUse, RequestInfo.get().getEditCoordinate());
+				mutable.setLongValue(((DynamicSememeLongImpl)passedData[0]).getDataLong());
+
+				break;
 			}
 			case MEMBER:
 			{
-				@SuppressWarnings({ "unchecked", "rawtypes" })
-				SememeVersionImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class);
+				try {
+					@SuppressWarnings({ "unchecked", "rawtypes" })
+					Optional<SememeVersionImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class);
 
-				// This code short-circuits update if passed data are identical to current relevant version
-				if (currentVersion.getState() == stateToUse) {
-					log.debug("Not updating member sememe {} because state unchanged", sememeChronology.getPrimordialUuid());
-					return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
-				} else {
-					@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
-					SememeVersionImpl mutable = (SememeVersionImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableSememeVersion.class,
-							stateToUse, RequestInfo.get().getEditCoordinate());
-					break;
+					if (currentVersion.isPresent()) {
+						// This code short-circuits update if passed data are identical to current relevant version
+						if (currentVersion.get().getState() == stateToUse) {
+							log.debug("Not updating member sememe {} because state unchanged", sememeChronology.getPrimordialUuid());
+							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+						}
+					} else {
+						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+					}
+				} catch (Exception e) {
+					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
+
+				@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
+				SememeVersionImpl mutable = (SememeVersionImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableSememeVersion.class,
+						stateToUse, RequestInfo.get().getEditCoordinate());
+				break;
 			}
 			case STRING:
 			{
-				@SuppressWarnings("unchecked")
-				StringSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class);
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class);
 
-				// Validate data type
-				validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.STRING);
+					if (currentVersion.isPresent()) {
+						// Validate data type
+						validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.STRING);
 
-				// This code short-circuits update if passed data are identical to current relevant version
-				if (currentVersion.getString().equals(((DynamicSememeString)passedData[0]).getDataString())
-						&& currentVersion.getState() == stateToUse) {
-					log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
-					return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
-				} else {
-					@SuppressWarnings({ "unchecked", "rawtypes" })
-					StringSememeImpl mutable = (StringSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableStringSememe.class,
-							stateToUse, RequestInfo.get().getEditCoordinate());
-					mutable.setString(((DynamicSememeStringImpl)passedData[0]).getDataString());
-					break;
+						// This code short-circuits update if passed data are identical to current relevant version
+						if (currentVersion.get().getString().equals(((DynamicSememeString)passedData[0]).getDataString())
+								&& currentVersion.get().getState() == stateToUse) {
+							log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
+							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+						}
+					} else {
+						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+					}
+				} catch (Exception e) {
+					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
+
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				StringSememeImpl mutable = (StringSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableStringSememe.class,
+						stateToUse, RequestInfo.get().getEditCoordinate());
+				mutable.setString(((DynamicSememeStringImpl)passedData[0]).getDataString());
+
+				break;
 			}
 			case COMPONENT_NID:
 			{
-				@SuppressWarnings("unchecked")
-				ComponentNidSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class);
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class);
 
-				// Validate data type
-				validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.NID);
+					if (currentVersion.isPresent()) {
+						// Validate data type
+						validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.NID);
 
-				// This code short-circuits update if passed data are identical to current relevant version
-				if (currentVersion.getComponentNid() == ((DynamicSememeNidImpl)passedData[0]).getDataNid()
-						&& currentVersion.getState() == stateToUse) {
-					log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
-					return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
-				} else {
-					@SuppressWarnings({ "unchecked", "rawtypes" })
-					ComponentNidSememeImpl mutable = (ComponentNidSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableComponentNidSememe.class,
-							stateToUse, RequestInfo.get().getEditCoordinate());
-					mutable.setComponentNid(((DynamicSememeNidImpl)passedData[0]).getDataNid());
-					break;
+						// This code short-circuits update if passed data are identical to current relevant version
+						if (currentVersion.get().getComponentNid() == ((DynamicSememeNidImpl)passedData[0]).getDataNid()
+								&& currentVersion.get().getState() == stateToUse) {
+							log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
+							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+						}
+					} else {
+						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+					}
+				} catch (Exception e) {
+					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
+
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				ComponentNidSememeImpl mutable = (ComponentNidSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableComponentNidSememe.class,
+						stateToUse, RequestInfo.get().getEditCoordinate());
+				mutable.setComponentNid(((DynamicSememeNidImpl)passedData[0]).getDataNid());
+
+				break;
 			}
 			case LOGIC_GRAPH:  //Unsupported here and below
 			case RELATIONSHIP_ADAPTOR:

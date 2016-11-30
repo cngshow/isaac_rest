@@ -186,44 +186,53 @@ public class CommentWriteAPIs
 
 		@SuppressWarnings("rawtypes")
 		SememeChronology sc = SememeAPIs.findSememeChronology(id);
-		
-		// Retrieve current version in order to short-circuit save if data unchanged
-		@SuppressWarnings("unchecked")
-		DynamicSememeImpl currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class);
-		DynamicSememeData currentCommentSememeData = (currentVersion.getData() != null && currentVersion.getData().length > 0) ? currentVersion.getData()[0] : null;
-		DynamicSememeData currentCommentContextSememeData = (currentVersion.getData() != null && currentVersion.getData().length > 1) ? currentVersion.getData()[1] : null;
-		
-		String currentComment = null;
-		if (currentCommentSememeData != null) {
-			// Validate DynamicSememeData type
-			if (currentCommentSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
-				throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
-			}
-			
-			currentComment = ((DynamicSememeStringImpl)currentCommentSememeData).getDataString();
-			currentComment = StringUtils.isBlank(currentComment) ? null : currentComment;
-		}
-		String newComment = StringUtils.isBlank(dataToUpdateComment.comment) ? null : dataToUpdateComment.comment;
 
-		String currentCommentContext = null;
-		if (currentCommentContextSememeData != null) {
-			// Validate DynamicSememeData type
-			if (currentCommentContextSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
-				throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentContextSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
-			}
-			
-			currentCommentContext = ((DynamicSememeStringImpl)currentCommentContextSememeData).getDataString();
-			currentCommentContext = StringUtils.isBlank(currentCommentContext) ? null : currentCommentContext;
-		}
-		String newCommentContext = StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : dataToUpdateComment.commentContext;
+		try {
+			// Retrieve current version in order to short-circuit save if data unchanged
+			@SuppressWarnings("unchecked")
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class);
 
-		// This code short-circuits update if passed data are identical to current relevant version
-		if (currentVersion.getState() == stateToUse) {
-			if (((currentComment == newComment) || (currentComment != null && newComment != null && currentComment.equals(newComment)))
-					&& ((currentCommentContext == newCommentContext) || (currentCommentContext != null && newCommentContext != null && currentCommentContext.equals(newCommentContext)))) {
-				log.debug("Not updating comment sememe {} because data unchanged", sc.getPrimordialUuid());
-				return new RestWriteResponse(RequestInfo.get().getEditToken(), sc.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+			if (currentVersion.isPresent()) {
+				DynamicSememeData currentCommentSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
+				DynamicSememeData currentCommentContextSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 1) ? currentVersion.get().getData()[1] : null;
+
+				String currentComment = null;
+				if (currentCommentSememeData != null) {
+					// Validate DynamicSememeData type
+					if (currentCommentSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
+						throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
+					}
+
+					currentComment = ((DynamicSememeStringImpl)currentCommentSememeData).getDataString();
+					currentComment = StringUtils.isBlank(currentComment) ? null : currentComment;
+				}
+				String newComment = StringUtils.isBlank(dataToUpdateComment.comment) ? null : dataToUpdateComment.comment;
+
+				String currentCommentContext = null;
+				if (currentCommentContextSememeData != null) {
+					// Validate DynamicSememeData type
+					if (currentCommentContextSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
+						throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentContextSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
+					}
+
+					currentCommentContext = ((DynamicSememeStringImpl)currentCommentContextSememeData).getDataString();
+					currentCommentContext = StringUtils.isBlank(currentCommentContext) ? null : currentCommentContext;
+				}
+				String newCommentContext = StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : dataToUpdateComment.commentContext;
+
+				// This code short-circuits update if passed data are identical to current relevant version
+				if (currentVersion.get().getState() == stateToUse) {
+					if (((currentComment == newComment) || (currentComment != null && newComment != null && currentComment.equals(newComment)))
+							&& ((currentCommentContext == newCommentContext) || (currentCommentContext != null && newCommentContext != null && currentCommentContext.equals(newCommentContext)))) {
+						log.debug("Not updating comment sememe {} because data unchanged", sc.getPrimordialUuid());
+						return new RestWriteResponse(RequestInfo.get().getEditToken(), sc.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+					}
+				}
+			} else {
+				log.warn("Failed retrieving latest version of comment dynamic sememe " + id + ". Unconditionally performing update");
 			}
+		} catch (Exception e) {
+			log.warn("Failed checking update against current comment dynamic sememe " + id + " version. Unconditionally performing update", e);
 		}
 
 		@SuppressWarnings("unchecked")

@@ -68,6 +68,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.component.ComponentWriteAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptUpdateData;
+import gov.vha.isaac.rest.session.LatestVersionNotFoundException;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -247,10 +248,20 @@ public class ConceptWriteAPIs
 		
 		State stateToUse = (conceptUpdateData.active == null || conceptUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		
-		return ComponentWriteAPIs.resetState(
+		try {
+			return ComponentWriteAPIs.resetState(
 				RequestInfo.get().getEditCoordinate(),
 				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
 				stateToUse,
 				id);
+		} catch (LatestVersionNotFoundException e) {
+			// TODO remove this hack when modules work properly
+			log.warn(e);
+			return ComponentWriteAPIs.resetState(
+					RequestInfo.get().getEditCoordinate(),
+					RequestInfo.get().getStampCoordinate(),
+					stateToUse,
+					id);
+		}
 	}
 }
