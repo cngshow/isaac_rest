@@ -642,20 +642,20 @@ public class SememeWriteAPIs
 			}
 			case LONG:
 			{
+				// Validate data type
+				validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.LONG);
+
 				try {
 					@SuppressWarnings("unchecked")
 					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
-					// Validate data type
-					validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.LONG);
-
-					// This code short-circuits update if passed data are identical to current relevant version
-					if (currentVersion.get().getLongValue() == ((DynamicSememeLong)passedData[0]).getDataLong()
-							&& currentVersion.get().getState() == stateToUse) {
-						log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
-						return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
-					}
+						// This code short-circuits update if passed data are identical to current relevant version
+						if (currentVersion.get().getLongValue() == ((DynamicSememeLong)passedData[0]).getDataLong()
+								&& currentVersion.get().getState() == stateToUse) {
+							log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
+							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+						}
 					} else {
 						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
 					}
@@ -696,14 +696,14 @@ public class SememeWriteAPIs
 			}
 			case STRING:
 			{
+				// Validate data type
+				validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.STRING);
+
 				try {
 					@SuppressWarnings("unchecked")
 					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
-						// Validate data type
-						validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.STRING);
-
 						// This code short-circuits update if passed data are identical to current relevant version
 						if (currentVersion.get().getString().equals(((DynamicSememeString)passedData[0]).getDataString())
 								&& currentVersion.get().getState() == stateToUse) {
@@ -726,14 +726,14 @@ public class SememeWriteAPIs
 			}
 			case COMPONENT_NID:
 			{
+				// Validate data type
+				validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.NID);
+
 				try {
 					@SuppressWarnings("unchecked")
 					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
-						// Validate data type
-						validateDynamicSememeDataTypeForUpdate(sememeUpdateData, id, type, passedData[0], DynamicSememeDataType.NID);
-
 						// This code short-circuits update if passed data are identical to current relevant version
 						if (currentVersion.get().getComponentNid() == ((DynamicSememeNidImpl)passedData[0]).getDataNid()
 								&& currentVersion.get().getState() == stateToUse) {
