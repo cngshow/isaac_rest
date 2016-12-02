@@ -139,7 +139,7 @@ public class ExportAPIs
 			public void write(OutputStream output) throws IOException, WebApplicationException
 			{
 				VetsExporter ve = new VetsExporter();
-				ve.export(output, changedAfterL, changedBeforeL);
+				ve.export(output, changedAfterL, changedBeforeL, false);
 			}
 		};
 		//In order to make the file download compliant with the needed file download javascript library
