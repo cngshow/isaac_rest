@@ -487,11 +487,13 @@ public class MappingWriteAPIs
 				{
 					@SuppressWarnings({ "unchecked", "rawtypes" })
 					Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
-							stampCoord);
+							stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
 					if (! latest.isPresent()) {
 						// TODO remove this hack when module handling working
-						log.warn("Unable to load Description Sememe {} latest version using stamp coordinate based on edit coordinate. Attempting to retrieve latest version using passed stampCoordinate.", descriptionC.getPrimordialUuid());
-						latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, RequestInfo.get().getStampCoordinate());
+						log.warn("Unable to load Description Sememe {} latest version using stamp coordinate based on edit coordinate. " + 
+								"Attempting to retrieve latest version using passed stampCoordinate.", descriptionC.getPrimordialUuid());
+						latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
+								RequestInfo.get().getStampCoordinate().makeAnalog(State.ACTIVE, State.INACTIVE));
 					}
 					if (latest.isPresent())
 					{
@@ -604,7 +606,8 @@ public class MappingWriteAPIs
 			
 			//Look up the current state of the mapset concept - if it differs, update the concept.
 			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Optional<LatestVersion<ConceptVersionImpl>> concept = ((ConceptChronology)mappingConcept).getLatestVersion(ConceptVersionImpl.class, stampCoord);
+			Optional<LatestVersion<ConceptVersionImpl>> concept = ((ConceptChronology)mappingConcept).getLatestVersion(ConceptVersionImpl.class, 
+					stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
 			
 			if (!concept.isPresent())
 			{

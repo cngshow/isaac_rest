@@ -27,6 +27,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,6 +140,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
@@ -942,6 +945,278 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertTrue(foundCancelWorkflowAction);
 //		Assert.assertTrue(foundQaPassesAction);
 //	}
+	
+	@Test
+	public void testPriorVersionRetrieval() throws JsonProcessingException, IOException
+	{
+		final long preEditTime = System.currentTimeMillis();
+		
+		String preEditCoordinatesTokenXml = checkFail((target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.time, preEditTime))
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+				.readEntity(String.class);
+		RestCoordinatesToken preEditCoordinatesToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, preEditCoordinatesTokenXml);
+		
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace(); // Shouldn't happen
+		}
+		
+		// Create a random string to confirm target data are relevant
+		final UUID randomUuid = UUID.randomUUID();
+
+		// Construct new description data object
+		final int referencedConceptNid = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "nid");
+		final int initialCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
+		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
+		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+
+		// Retrieve all descriptions referring to referenced concept and just pick the first
+		final String expandParamValue = ExpandUtil.nestedSememesExpandable + "," + ExpandUtil.comments + "," + ExpandUtil.referencedDetails;
+		Map<String, Object> params = new HashMap<>();
+		params.put(RequestParameters.expand, expandParamValue);
+		RestSememeDescriptionVersion[] conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		Assert.assertTrue(conceptDescriptions.length > 0);
+		// Get first description
+		RestSememeDescriptionVersion preexistingDescription = conceptDescriptions[0];
+		
+		RestSememeDescriptionCreate initialDescriptionData =
+				new RestSememeDescriptionCreate(
+						initialCaseSignificanceConceptSequence + "",
+						initialLanguageConceptSequence + "",
+						initialDescriptionText,
+						initialDescriptionTypeConceptSequence + "",
+						null,
+						null,
+						referencedConceptNid);
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(initialDescriptionData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		// POST new description data object
+		Response createDescriptionResponse = target(RestPaths.descriptionCreatePathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		checkFail(createDescriptionResponse);
+		String descriptionSememeSequenceWrapperXml = createDescriptionResponse.readEntity(String.class);
+		final RestWriteResponse descriptionSememeSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, descriptionSememeSequenceWrapperXml);
+		final int createdDescriptionSememeSequence = descriptionSememeSequenceWrapper.sequence;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(createdDescriptionSememeSequence != 0);
+
+		// Retrieve all descriptions referring to referenced concept
+		params.clear();
+		params.put(RequestParameters.expand, expandParamValue);
+		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		Assert.assertTrue(conceptDescriptions.length > 0);
+		// Iterate description list to find new description
+		RestSememeDescriptionVersion matchingDescriptionSememeVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptions) {
+			if (version.getSememeChronology().identifiers.sequence.equals(createdDescriptionSememeSequence)) {
+				matchingDescriptionSememeVersion = version;
+				break;
+			}
+		}
+		// Validate description fields
+		Assert.assertNotNull(matchingDescriptionSememeVersion);
+		Assert.assertEquals(matchingDescriptionSememeVersion.caseSignificanceConcept.sequence.intValue(), initialCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingDescriptionSememeVersion.text, initialDescriptionText);
+		Assert.assertEquals(matchingDescriptionSememeVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingDescriptionSememeVersion.languageConcept.sequence.intValue(), initialLanguageConceptSequence);
+		Assert.assertEquals(matchingDescriptionSememeVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
+		
+		// Retrieve all descriptions referring to referenced concept from yesterday
+		// using time parameter
+		params.clear();
+		params.put(RequestParameters.time, preEditTime);
+		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		Assert.assertNotNull(conceptDescriptions);
+		Assert.assertTrue(conceptDescriptions.length > 1);
+		// Iterate description list to find new description
+		matchingDescriptionSememeVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptions) {
+			if (version.getSememeChronology().identifiers.sequence == createdDescriptionSememeSequence) {
+				matchingDescriptionSememeVersion = version;
+				break;
+			}
+		}
+		// Should not find newly-created description in older version
+		// using time parameter
+		Assert.assertNull(matchingDescriptionSememeVersion);
+		
+		// Retrieve all descriptions referring to referenced concept from yesterday
+		// using coordToken parameter
+		params.clear();
+		params.put(RequestParameters.coordToken, preEditCoordinatesToken.token);
+		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		Assert.assertNotNull(conceptDescriptions);
+		Assert.assertTrue(conceptDescriptions.length > 1);
+		// Iterate description list to find new description
+		matchingDescriptionSememeVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptions) {
+			if (version.getSememeChronology().identifiers.sequence == createdDescriptionSememeSequence) {
+				matchingDescriptionSememeVersion = version;
+				break;
+			}
+		}
+		// Should not find newly-created description in older version
+		// using coordToken parameter
+		Assert.assertNull(matchingDescriptionSememeVersion);
+				
+		//Create a comment on preexisting description
+		final String commentText = "my random comment (" + randomUuid + ")";
+		
+		// Confirm that comment with this text does not exist in preexisting description
+		// Get list of RestCommentVersion associated with preexisting description
+		Response commentVersionsByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent + preexistingDescription.getSememeChronology().identifiers.nid)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String commentVersionsByReferencedItemXml = checkFail(commentVersionsByReferencedItemResponse).readEntity(String.class);
+		RestCommentVersion[] commentVersionsByReferencedItem = XMLUtils.unmarshalObjectArray(RestCommentVersion.class, commentVersionsByReferencedItemXml);
+		RestCommentVersion matchingComment = null;
+		if (commentVersionsByReferencedItem != null) {
+			for (RestCommentVersion commentVersion : commentVersionsByReferencedItem) {
+				if (commentVersion.comment != null && commentVersion.comment.equals(commentText)) {
+					matchingComment = commentVersion;
+					break;
+				}
+			}
+		}
+		// Comment with that text should not yet exist
+		Assert.assertNull(matchingComment);
+
+		// Create new comment with specified text on preexisting description
+		String json = jsonIze(new String[] {"commentedItem", "comment"}, new String[] { preexistingDescription.getSememeChronology().identifiers.nid + "", commentText });
+		Response createCommentResponse = checkFail(target(RestPaths.commentCreatePathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(json)));
+		String createCommentResponseXml = createCommentResponse.readEntity(String.class);
+		RestWriteResponse createCommentResponseObject = XMLUtils.unmarshalObject(RestWriteResponse.class, createCommentResponseXml);
+		int newCommentSememeSequence = createCommentResponseObject.sequence;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newCommentSememeSequence > 0);
+		
+		// Confirm that comment with this text now exists in preexisting description
+		// Get list of RestCommentVersion associated with preexisting description
+		commentVersionsByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent + preexistingDescription.getSememeChronology().identifiers.nid)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		commentVersionsByReferencedItemXml = checkFail(commentVersionsByReferencedItemResponse).readEntity(String.class);
+		commentVersionsByReferencedItem = XMLUtils.unmarshalObjectArray(RestCommentVersion.class, commentVersionsByReferencedItemXml);
+		Assert.assertTrue(commentVersionsByReferencedItem != null && commentVersionsByReferencedItem.length > 0);
+		matchingComment = null;
+		for (RestCommentVersion commentVersion : commentVersionsByReferencedItem) {
+			if (commentVersion.comment != null && commentVersion.comment.equals(commentText)) {
+				matchingComment = commentVersion;
+				break;
+			}
+		}
+		// Comment with that text should exist
+		Assert.assertNotNull(matchingComment);
+
+		// Retrieve all descriptions referring to referenced concept
+		// and find new comment in preexisting description
+		params.clear();
+		params.put(RequestParameters.expand, expandParamValue);
+		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		Assert.assertNotNull(conceptDescriptions);
+		Assert.assertTrue(conceptDescriptions.length > 1);
+		// Iterate description list to find new description
+		matchingDescriptionSememeVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptions) {
+			if (version.getSememeChronology().identifiers.nid.equals(preexistingDescription.getSememeChronology().identifiers.nid)) {
+				matchingDescriptionSememeVersion = version;
+				break;
+			}
+		}
+		// Should find preexisting description
+		Assert.assertNotNull(matchingDescriptionSememeVersion);
+		
+		// Find newly created comment on latest version of preexisting description
+		Assert.assertTrue(matchingDescriptionSememeVersion.getNestedSememes().size() > 0);
+		RestDynamicSememeVersion commentDynamicSememeFoundInDescription = null;
+		for (RestDynamicSememeVersion nestedSememe : matchingDescriptionSememeVersion.getNestedSememes()) {
+			if (nestedSememe.getSememeChronology().identifiers.nid.equals(matchingComment.identifiers.nid)) {
+				commentDynamicSememeFoundInDescription = nestedSememe;
+			}
+		}
+		// Should find newly created comment on latest version of preexisting description
+		Assert.assertNotNull(commentDynamicSememeFoundInDescription);
+		
+		// Retrieve all descriptions referring to referenced concept with stamp older than comment creation time
+		// using time parameter
+		params.clear();
+		params.put(RequestParameters.time, preEditTime);
+		params.put(RequestParameters.expand, expandParamValue);
+		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		Assert.assertNotNull(conceptDescriptions);
+		Assert.assertTrue(conceptDescriptions.length > 1);
+		// Iterate description list to find new description
+		matchingDescriptionSememeVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptions) {
+			if (version.getSememeChronology().identifiers.nid.equals(preexistingDescription.getSememeChronology().identifiers.nid)) {
+				matchingDescriptionSememeVersion = version;
+				break;
+			}
+		}
+		// Should find preexisting description
+		// using time parameter
+		Assert.assertNotNull(matchingDescriptionSememeVersion);
+
+		// Look for newly created comment on older version of preexisting description
+		// using time parameter
+		commentDynamicSememeFoundInDescription = null;
+		if (matchingDescriptionSememeVersion.getNestedSememes().size() > 0) {
+			for (RestDynamicSememeVersion nestedSememe : matchingDescriptionSememeVersion.getNestedSememes()) {
+				if (nestedSememe.getSememeChronology().identifiers.nid.equals(matchingComment.identifiers.nid)) {
+					commentDynamicSememeFoundInDescription = nestedSememe;
+				}
+			}
+		}
+		// Should NOT find newly created comment on older version of preexisting description
+		// using time parameter
+		Assert.assertNull(commentDynamicSememeFoundInDescription);
+
+		// Retrieve all descriptions referring to referenced concept with stamp older than comment creation time
+		// using coordToken parameter
+		params.clear();
+		params.put(RequestParameters.coordToken, preEditCoordinatesToken.token);
+		params.put(RequestParameters.expand, expandParamValue);
+		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		Assert.assertNotNull(conceptDescriptions);
+		Assert.assertTrue(conceptDescriptions.length > 1);
+		// Iterate description list to find new description
+		matchingDescriptionSememeVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptions) {
+			if (version.getSememeChronology().identifiers.nid.equals(preexistingDescription.getSememeChronology().identifiers.nid)) {
+				matchingDescriptionSememeVersion = version;
+				break;
+			}
+		}
+		// Should find preexisting description
+		// using coordToken parameter
+		Assert.assertNotNull(matchingDescriptionSememeVersion);
+
+		// Look for newly created comment on older version of preexisting description
+		// using coordToken parameter
+		commentDynamicSememeFoundInDescription = null;
+		if (matchingDescriptionSememeVersion.getNestedSememes().size() > 0) {
+			for (RestDynamicSememeVersion nestedSememe : matchingDescriptionSememeVersion.getNestedSememes()) {
+				if (nestedSememe.getSememeChronology().identifiers.nid.equals(matchingComment.identifiers.nid)) {
+					commentDynamicSememeFoundInDescription = nestedSememe;
+				}
+			}
+		}
+		// Should NOT find newly created comment on older version of preexisting description
+		// using coordToken parameter
+		Assert.assertNull(commentDynamicSememeFoundInDescription);
+	}
 	
 	@Test
 	public void testSememeAPIs()
