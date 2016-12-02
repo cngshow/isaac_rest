@@ -19,8 +19,10 @@
 
 package gov.vha.isaac.rest.session;
 
+import java.util.EnumSet;
 import java.util.Optional;
 
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
@@ -42,8 +44,17 @@ public class LatestVersionUtils {
 		Optional<LatestVersion<T>> latestVersionOptional = ((SememeChronology<T>)sememeChronology).getLatestVersion(clazz, sc);
 		return latestVersionOptional.isPresent() ? Optional.of(latestVersionOptional.get().value()) : Optional.empty(); // TODO handle contradictions
 	}
-
-	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz) throws RestException {
-		return getLatestSememeVersion(sememeChronology, clazz, Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null));
+	
+//	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz) throws RestException {
+//		return getLatestSememeVersion(sememeChronology, clazz, (EnumSet<State>)null);
+//	}
+	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz, EnumSet<State> states) throws RestException {
+		StampCoordinate sc = Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null);
+	
+		if (states != null) {
+			sc = sc.makeAnalog(states.toArray(new State[states.size()]));
+		}
+		
+		return getLatestSememeVersion(sememeChronology, clazz, sc);
 	}
 }

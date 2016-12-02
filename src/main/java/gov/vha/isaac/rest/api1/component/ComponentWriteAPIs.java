@@ -33,6 +33,7 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
@@ -151,8 +152,11 @@ public class ComponentWriteAPIs
 	@SuppressWarnings("rawtypes")
 	private static <T extends SememeVersionImpl> SememeVersionUpdatePair<T> resetSememeState(EditCoordinate ec, StampCoordinate sc, 
 			State state, SememeChronology<? extends SememeVersion<?>> sememe, Class<T> clazz) throws RestException {
+		
+		StampCoordinate localStamp = sc.makeAnalog(State.values());
+		
 		@SuppressWarnings("unchecked")
-		Optional<LatestVersion<SememeVersionImpl>> rawLatestVersion = ((SememeChronology)sememe).getLatestVersion(clazz, sc);
+		Optional<LatestVersion<SememeVersionImpl>> rawLatestVersion = ((SememeChronology)sememe).getLatestVersion(clazz, localStamp);
 
 		@SuppressWarnings("unchecked")
 		SememeVersion rawMutableVersion = ((SememeChronology)sememe).createMutableVersion(clazz, state, ec);
