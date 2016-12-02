@@ -188,7 +188,7 @@ public class CommentWriteAPIs
 		try {
 			// Retrieve current version in order to short-circuit save if data unchanged
 			@SuppressWarnings("unchecked")
-			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class, State.ANY_STATE_SET);
 
 			if (currentVersion.isPresent()) {
 				DynamicSememeData currentCommentSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;

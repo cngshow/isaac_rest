@@ -311,7 +311,7 @@ public class AssociationWriteAPIs
 		try {
 			// Retrieve current version for comparison in order to short-circuit save if unchanged
 			@SuppressWarnings("unchecked")
-			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class, State.ANY_STATE_SET);
 			if (currentVersion.isPresent()) {
 				DynamicSememeData currentTargetSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
 

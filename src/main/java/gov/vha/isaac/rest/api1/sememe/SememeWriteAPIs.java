@@ -288,7 +288,7 @@ public class SememeWriteAPIs
 		try {
 			// This code short-circuits update if passed data are identical to current relevant version
 			@SuppressWarnings({ "unchecked" })
-			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class, State.ANY_STATE_SET);
 			
 			if (currentVersion.isPresent()) {
 				int passedCaseSignificanceConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", descriptionSememeUpdateData.caseSignificanceConcept);
@@ -619,7 +619,7 @@ public class SememeWriteAPIs
 			{
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -647,7 +647,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -674,7 +674,7 @@ public class SememeWriteAPIs
 			{
 				try {
 					@SuppressWarnings({ "unchecked", "rawtypes" })
-					Optional<SememeVersionImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+					Optional<SememeVersionImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -701,7 +701,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -731,7 +731,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class, EnumSet.of(State.ACTIVE, State.INACTIVE));
+					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
