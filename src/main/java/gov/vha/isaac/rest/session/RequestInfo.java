@@ -291,7 +291,7 @@ public class RequestInfo
 				Integer path = null;
 				UUID workflowProcessid = null;
 
-				EditCoordinate defaultEditCoordinate = EditCoordinates.getDefaultUserSolorOverlay();
+				EditCoordinate defaultEditCoordinate = EditCoordinates.getDefaultUserVeteransAdministrationExtension();
 				
 				// Set default EditToken parameters to values in passedEditToken if set, otherwise set to default
 				Optional<EditToken> passedEditToken = EditTokens.getEditTokenParameterTokenObjectValue(parameters_);
