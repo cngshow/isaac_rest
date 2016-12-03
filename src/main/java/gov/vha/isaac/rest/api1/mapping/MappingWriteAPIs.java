@@ -487,13 +487,13 @@ public class MappingWriteAPIs
 				{
 					@SuppressWarnings({ "unchecked", "rawtypes" })
 					Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
-							stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
+							stampCoord.makeAnalog(State.values()));
 					if (! latest.isPresent()) {
 						// TODO remove this hack when module handling working
 						log.warn("Unable to load Description Sememe {} latest version using stamp coordinate based on edit coordinate. " + 
 								"Attempting to retrieve latest version using passed stampCoordinate.", descriptionC.getPrimordialUuid());
 						latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
-								RequestInfo.get().getStampCoordinate().makeAnalog(State.ACTIVE, State.INACTIVE));
+								RequestInfo.get().getStampCoordinate().makeAnalog(State.values()));
 					}
 					if (latest.isPresent())
 					{
@@ -582,7 +582,7 @@ public class MappingWriteAPIs
 		}
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Optional<LatestVersion<DynamicSememe<?>>> latestVersion = ((SememeChronology)mappingSememe.get()).getLatestVersion(DynamicSememe.class, 
-				stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
+				stampCoord.makeAnalog(State.values()));
 		try
 		{			
 			String currentMapPurposeValue = ((! latestVersion.isPresent() || latestVersion.get().value().getData().length == 0 || latestVersion.get().value().getData()[0] == null) ? "" : latestVersion.get().value().getData()[0].dataToString());
@@ -607,7 +607,7 @@ public class MappingWriteAPIs
 			//Look up the current state of the mapset concept - if it differs, update the concept.
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Optional<LatestVersion<ConceptVersionImpl>> concept = ((ConceptChronology)mappingConcept).getLatestVersion(ConceptVersionImpl.class, 
-					stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
+					stampCoord.makeAnalog(State.values()));
 			
 			if (!concept.isPresent())
 			{
@@ -737,7 +737,7 @@ public class MappingWriteAPIs
 		try {
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)mappingItemSememe).getLatestVersion(DynamicSememe.class, 
-					stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
+					stampCoord.makeAnalog(State.values()));
 
 			if (latest.isPresent()) {
 				DynamicSememe<?> currentSememeVersion = latest.get().value();
