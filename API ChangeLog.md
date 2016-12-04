@@ -7,6 +7,9 @@ During development, we can increment this, so long as our client code (komet) is
 After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
 
+* 2016/12/02 - 1.9.4:
+    * Add an api for search by internal ID (UUID, Nid, Sequence)
+
 * 2016/11/29 - 1.9.3:
     * change update API methods so that they automatically ignore update requests that don't actually change any data.  Prevents creation of new (identical) versions
     * fix an issue where passing a UUID data column (instead of a nid) when attempting to update a component nid sememe results in a failure.  Tim ran into this when 

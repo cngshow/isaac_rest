@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.association;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -310,7 +311,7 @@ public class AssociationWriteAPIs
 		try {
 			// Retrieve current version for comparison in order to short-circuit save if unchanged
 			@SuppressWarnings("unchecked")
-			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class);
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class, State.ANY_STATE_SET);
 			if (currentVersion.isPresent()) {
 				DynamicSememeData currentTargetSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
 

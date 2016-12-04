@@ -480,6 +480,39 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newEditToken.getActiveWorkflowProcessId(), retrievedEditToken.getActiveWorkflowProcessId());
 	}
 
+//	@Test
+//	public void testExport()
+//	{
+//		// Get and save time before first edit
+//		final long preEditTime = System.currentTimeMillis();
+//		
+//		// Request a view coordinate token using the preEditTime
+//		String preEditCoordinatesTokenXml = checkFail((target(coordinatesTokenRequestPath)
+//				.queryParam(RequestParameters.time, preEditTime))
+//				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
+//				.readEntity(String.class);
+//		RestCoordinatesToken preEditCoordinatesToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, preEditCoordinatesTokenXml);
+//		
+//		// Sleep to ensure that initial edit occurs after preEditTime
+//		try {
+//			Thread.sleep(10);
+//		} catch (InterruptedException e1) {
+//			e1.printStackTrace(); // Shouldn't happen
+//		}
+//		
+//		// Create a random string to confirm target data are relevant
+//		final UUID randomUuid = UUID.randomUUID();
+//
+//		CREATE SOMETHING HERE;
+//		
+//		//
+//		Response exportResponse = target(RestPaths.exportAPIsPathComponent)
+//				.queryParam(RequestParameters.changedAfter, preEditTime)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		checkFail(exportResponse);
+//	}
+
 	// Dan shelved Workflow on 10/26/16
 //	@Test
 //	public void testWorkflowAPIs()
@@ -949,14 +982,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testPriorVersionRetrieval() throws JsonProcessingException, IOException
 	{
+		// Get and save time before first edit
 		final long preEditTime = System.currentTimeMillis();
 		
+		// Request a view coordinate token using the preEditTime
 		String preEditCoordinatesTokenXml = checkFail((target(coordinatesTokenRequestPath)
 				.queryParam(RequestParameters.time, preEditTime))
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		RestCoordinatesToken preEditCoordinatesToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, preEditCoordinatesTokenXml);
 		
+		// Sleep to ensure that initial edit occurs after preEditTime
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e1) {
