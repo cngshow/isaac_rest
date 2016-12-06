@@ -255,7 +255,7 @@ public class ConceptWriteAPIs
 				id);
 		} catch (LatestVersionNotFoundException e) {
 			// TODO remove this hack when modules work properly
-			log.warn(e);
+			log.warn("Concept not found on edit path, do you intend to change the module?", e);
 			return ComponentWriteAPIs.resetState(
 					RequestInfo.get().getEditCoordinate(),
 					RequestInfo.get().getStampCoordinate(),
