@@ -129,10 +129,10 @@ public class ComponentWriteAPIs
 				id);
 		} catch (LatestVersionNotFoundException e) {
 			// TODO eliminate this hack when modules fixed
-			log.warn(e);
+			log.warn("componentWriteAPI is attempting to be used to change state, while writing to a different module than it exists on", e);
 			return resetState(
 					RequestInfo.get().getEditCoordinate(),
-					RequestInfo.get().getStampCoordinate(),
+					RequestInfo.get().getStampCoordinate(),  //Use the user passed stamp coord, instead of the editCoord derived stamp for reading the item to change
 					setActive ? State.ACTIVE : State.INACTIVE,
 					id);
 		}
@@ -178,7 +178,7 @@ public class ComponentWriteAPIs
 		@SuppressWarnings("unchecked")
 		T latestVersion = (T)rawLatestVersion.get().value();
 		if (latestVersion.getState() == state) {
-			log.warn("Not resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " from " + latestVersion.getState() + " to " + state);
+			log.info("Not resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " from " + latestVersion.getState() + " to " + state);
 			return null;
 		}
 		SememeVersionUpdatePair<T> versionsHolder = new SememeVersionUpdatePair<T>();
@@ -208,14 +208,18 @@ public class ComponentWriteAPIs
 						@SuppressWarnings("unchecked")
 						Optional<LatestVersion<ConceptVersionImpl>> concept = cc.getLatestVersion(ConceptVersionImpl.class, localStamp);
 
-						if (concept.isPresent() && concept.get().value().getState() == state) 
-						{
-							log.warn("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
+						if (concept.isPresent()) {
+							if (concept.get().value().getState() == state) 
+							{
+								log.info("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
 
-							break;
+								break;
+							}
+						} else {
+							log.info("Failed retrieving latest version of concept " + id + ". Module change?  Unconditionally performing update.");
 						}
 					} catch (Exception e) {
-						log.warn("Failed checking update against current object " + id + " state. Unconditionally performing update", e);
+						log.error("Failed checking update against current object " + id + " state. Unconditionally performing update", e);
 					}
 
 					cc.createMutableVersion(state, ec);
@@ -309,7 +313,7 @@ public class ComponentWriteAPIs
 	
 				case UNKNOWN_NID:
 				default :
-					throw new RestException(RequestParameters.id, id, "Could not locate component to change the state");
+					throw new RestException(RequestParameters.id, id, "Could not locate component of unexpected type " + type + " to change its state");
 			}
 
 			if (commit)

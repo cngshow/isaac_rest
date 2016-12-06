@@ -480,7 +480,7 @@ public class MappingWriteAPIs
 			EditCoordinate editCoord,
 			State state) throws RuntimeException, RestException 
 	{		
-		final List<Object> changedObjects = new Vector<>();
+		final List<SememeChronology<? extends SememeVersion<?>>> objectsToAdd = new ArrayList<>();
 		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
 			{
 				try
@@ -489,8 +489,7 @@ public class MappingWriteAPIs
 					Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
 							stampCoord.makeAnalog(State.values()));
 					if (! latest.isPresent()) {
-						// TODO remove this hack when module handling working
-						log.warn("Unable to load Description Sememe {} latest version using stamp coordinate based on edit coordinate. " + 
+						log.info("Unable to load Description Sememe {} latest version using stamp coordinate based on edit coordinate. " + 
 								"Attempting to retrieve latest version using passed stampCoordinate.", descriptionC.getPrimordialUuid());
 						latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, 
 								RequestInfo.get().getStampCoordinate().makeAnalog(State.values()));
@@ -512,8 +511,7 @@ public class MappingWriteAPIs
 									mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
 									mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 									mutable.setText(mapName);
-									Get.commitService().addUncommitted(ds.getChronology()).get();
-									changedObjects.add(ds.getChronology());
+									objectsToAdd.add(ds.getChronology());
 								}
 							}
 							else
@@ -535,8 +533,7 @@ public class MappingWriteAPIs
 										mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
 										mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 										
-										Get.commitService().addUncommitted(ds.getChronology()).get();
-										changedObjects.add(ds.getChronology());
+										objectsToAdd.add(ds.getChronology());
 									}
 								}
 							}
@@ -554,13 +551,12 @@ public class MappingWriteAPIs
 									mutable.setDescriptionTypeConceptSequence(ds.getDescriptionTypeConceptSequence());
 									mutable.setLanguageConceptSequence(ds.getLanguageConceptSequence());
 									mutable.setText(mapDescription);
-									Get.commitService().addUncommitted(ds.getChronology()).get();
-									changedObjects.add(ds.getChronology());
+									objectsToAdd.add(ds.getChronology());
 								}
 							}
 						}
 					} else {
-						log.error("Cannot update Description Sememe {} becuase no latest version found", descriptionC.getPrimordialUuid());
+						log.error("Cannot update Description Sememe {} because no latest version found", descriptionC.getPrimordialUuid());
 						throw new RuntimeException("Unable to retrieve current version for update of description sememe " + descriptionC.getPrimordialUuid());
 					}
 				}
@@ -600,8 +596,7 @@ public class MappingWriteAPIs
 	
 				mutable.setData(new DynamicSememeData[] {
 						(StringUtils.isBlank(mapPurpose) ? null : new DynamicSememeStringImpl(mapPurpose))});
-				Get.commitService().addUncommitted(mappingSememe.get()).get();
-				changedObjects.add(mappingSememe.get());
+				objectsToAdd.add(mappingSememe.get());
 			}
 			
 			//Look up the current state of the mapset concept - if it differs, update the concept.
@@ -609,19 +604,20 @@ public class MappingWriteAPIs
 			Optional<LatestVersion<ConceptVersionImpl>> concept = ((ConceptChronology)mappingConcept).getLatestVersion(ConceptVersionImpl.class, 
 					stampCoord.makeAnalog(State.values()));
 			
-			if (!concept.isPresent())
-			{
-				log.error("Couldn't find mapping concept?");
-				throw new RuntimeException("internal error (failed to find mapping concept)");
-			}
-			else if (concept.get().value().getState() != state) 
+			boolean updatedConcept = false;
+			if (!concept.isPresent() || concept.get().value().getState() != state) 
 			{
 				mappingConcept.createMutableVersion(state, editCoord);
 				Get.commitService().addUncommitted(mappingConcept).get();
-				changedObjects.add(mappingConcept);
+				updatedConcept = true;
 			}
 
-			if (changedObjects.size() > 0) {
+			if (updatedConcept || objectsToAdd.size() > 0) {
+				//Delay all of the addUncommited, so if we fail out somewhere else, we don't end up partially added / committed.
+				for (SememeChronology<? extends SememeVersion<?>> x : objectsToAdd)
+				{
+					Get.commitService().addUncommitted(x).get();
+				}
 				Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of mapping set " + mappingConcept.getPrimordialUuid()).get();
 				if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 				{
