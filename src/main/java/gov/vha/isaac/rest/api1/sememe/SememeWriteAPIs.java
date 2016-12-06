@@ -628,12 +628,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update.");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update.");
 					}
-				} catch (RuntimeException e) {
-					String msg = "Failed checking update against current " + type + " sememe " + id + " version. Not performing update.";
-					log.error(msg, e);
-					throw new RuntimeException(msg, e);
+				} catch (Exception e) {
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -659,12 +657,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update.");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update.");
 					}
-				} catch (RuntimeException e) {
-					String msg = "Failed checking update against current " + type + " sememe " + id + " state. Not performing update.";
-					log.error(msg, e);
-					throw new RuntimeException(msg, e);
+				} catch (Exception e) {
+					log.error("Failed checking update against current " + type + " sememe " + id + " state. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -687,12 +683,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update.");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update.");
 					}
-				} catch (RuntimeException e) {
-					String msg = "Failed checking update against current " + type + " sememe " + id + " version. Not performing update";
-					log.error(msg, e);
-					throw new RuntimeException(msg, e);
+				} catch (Exception e) {
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
@@ -717,12 +711,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update");
 					}
-				} catch (RuntimeException e) {
-					String msg = "Failed checking update against current " + type + " sememe " + id + " version. Not performing update";
-					log.error(msg, e);
-					throw new RuntimeException(msg, e);
+				} catch (Exception e) {
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -749,12 +741,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update");
 					}
-				} catch (RuntimeException e) {
-					String msg = "Failed checking update against current " + type + " sememe " + id + " version. Not performing update";
-					log.error(msg, e);
-					throw new RuntimeException(msg, e);
+				} catch (Exception e) {
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })

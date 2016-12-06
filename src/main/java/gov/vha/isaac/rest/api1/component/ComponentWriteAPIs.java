@@ -129,10 +129,10 @@ public class ComponentWriteAPIs
 				id);
 		} catch (LatestVersionNotFoundException e) {
 			// TODO eliminate this hack when modules fixed
-			log.warn(e);
+			log.warn("componentWriteAPI is attempting to be used to change state, while writing to a different module than it exists on", e);
 			return resetState(
 					RequestInfo.get().getEditCoordinate(),
-					RequestInfo.get().getStampCoordinate(),
+					RequestInfo.get().getStampCoordinate(),  //Use the user passed stamp coord, instead of the editCoord derived stamp for reading the item to change
 					setActive ? State.ACTIVE : State.INACTIVE,
 					id);
 		}
@@ -216,12 +216,10 @@ public class ComponentWriteAPIs
 								break;
 							}
 						} else {
-							log.info("Failed retrieving latest version of concept " + id + ". Unconditionally performing update.");
+							log.info("Failed retrieving latest version of concept " + id + ". Module change?  Unconditionally performing update.");
 						}
-					} catch (RuntimeException e) {
-						String msg = "Failed checking update against current object " + id + " state. Not performing update";
-						log.error(msg, e);
-						throw new RuntimeException(msg, e);
+					} catch (Exception e) {
+						log.error("Failed checking update against current object " + id + " state. Unconditionally performing update", e);
 					}
 
 					cc.createMutableVersion(state, ec);

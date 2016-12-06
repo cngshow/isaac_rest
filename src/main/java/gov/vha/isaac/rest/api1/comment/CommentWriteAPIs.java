@@ -226,12 +226,10 @@ public class CommentWriteAPIs
 					}
 				}
 			} else {
-				log.info("Failed retrieving latest version of comment dynamic sememe " + id + ". Unconditionally performing update.");
+				log.info("Failed retrieving latest version of comment dynamic sememe " + id + ". Module change?  Unconditionally performing update.");
 			}
-		} catch (RuntimeException e) {
-			String msg = "Failed checking update against current comment dynamic sememe " + id + " version. Not performing update.";
-			log.warn(msg, e);
-			throw new RuntimeException(msg, e);
+		} catch (Exception e) {
+			log.error("Failed checking update against current comment dynamic sememe " + id + " version. Unconditionally performing update", e);
 		}
 
 		@SuppressWarnings("unchecked")
