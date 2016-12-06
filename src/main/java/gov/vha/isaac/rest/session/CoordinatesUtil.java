@@ -28,13 +28,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
-
 import org.apache.commons.lang3.StringUtils;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
@@ -214,25 +211,25 @@ public class CoordinatesUtil {
 					}
 				}
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("english")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.ENGLISH_LANGUAGE.getPrimordialUuid());
+				return MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("spanish")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.SPANISH_LANGUAGE.getPrimordialUuid());
+				return MetaData.SPANISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("french")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.FRENCH_LANGUAGE.getPrimordialUuid());
+				return MetaData.FRENCH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("danish")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.DANISH_LANGUAGE.getPrimordialUuid());
+				return MetaData.DANISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("polish")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.POLISH_LANGUAGE.getPrimordialUuid());
+				return MetaData.POLISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("dutch")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.DUTCH_LANGUAGE.getPrimordialUuid());
+				return MetaData.DUTCH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("lithuanian")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.LITHUANIAN_LANGUAGE.getPrimordialUuid());
+				return MetaData.LITHUANIAN_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("chinese")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.CHINESE_LANGUAGE.getPrimordialUuid());
+				return MetaData.CHINESE_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("japanese")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.JAPANESE_LANGUAGE.getPrimordialUuid());
+				return MetaData.JAPANESE_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("swedish")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.SWEDISH_LANGUAGE.getPrimordialUuid());
+				return MetaData.SWEDISH_LANGUAGE.getConceptSequence();
 			}
 		}
 
@@ -255,8 +252,8 @@ public class CoordinatesUtil {
 						int nid = Get.identifierService().getConceptNid(dialectIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
 							int seq = Get.identifierService().getConceptSequence(dialectIdIntIdOptional.get());
-							if (seq == Get.identifierService().getConceptSequenceForUuids(TermAux.US_DIALECT_ASSEMBLAGE.getPrimordialUuid())
-									|| seq == Get.identifierService().getConceptSequenceForUuids(TermAux.GB_DIALECT_ASSEMBLAGE.getPrimordialUuid())) {
+							if (seq == MetaData.US_ENGLISH_DIALECT.getConceptSequence()
+									|| seq == MetaData.GB_ENGLISH_DIALECT.getConceptSequence()) {
 								seqList.add(seq);
 								continue;
 							}
@@ -264,17 +261,17 @@ public class CoordinatesUtil {
 					} else if ((dialectUuidOptional = UUIDUtil.getUUID(dialectId.trim())).isPresent()) {
 						if (dialectUuidOptional.isPresent() && Get.identifierService().hasUuid(dialectUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(dialectUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 							int seq = Get.identifierService().getConceptSequenceForUuids(dialectUuidOptional.get());
-							if (seq == Get.identifierService().getConceptSequenceForUuids(TermAux.US_DIALECT_ASSEMBLAGE.getPrimordialUuid())
-									|| seq == Get.identifierService().getConceptSequenceForUuids(TermAux.GB_DIALECT_ASSEMBLAGE.getPrimordialUuid())) {
+							if (seq == MetaData.US_ENGLISH_DIALECT.getConceptSequence()
+									|| seq == MetaData.GB_ENGLISH_DIALECT.getConceptSequence()) {
 								seqList.add(seq);
 								continue;
 							}
 						}
 					} else if (dialectId.trim().toLowerCase(Locale.ENGLISH).startsWith("us")) {
-						seqList.add(Get.identifierService().getConceptSequenceForUuids(TermAux.US_DIALECT_ASSEMBLAGE.getPrimordialUuid()));
+						seqList.add(MetaData.US_ENGLISH_DIALECT.getConceptSequence());
 						continue;
 					} else if (dialectId.trim().toLowerCase(Locale.ENGLISH).startsWith("gb")) {
-						seqList.add(Get.identifierService().getConceptSequenceForUuids(TermAux.GB_DIALECT_ASSEMBLAGE.getPrimordialUuid()));
+						seqList.add(MetaData.GB_ENGLISH_DIALECT.getConceptSequence());
 						continue;
 					}
 
@@ -326,13 +323,13 @@ public class CoordinatesUtil {
 							}
 						}
 					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("fsn")) {
-						seqList.add(Get.identifierService().getConceptSequenceForUuids(TermAux.FULLY_SPECIFIED_DESCRIPTION_TYPE.getPrimordialUuid()));
+						seqList.add(MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 						continue;
 					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("synonym")) {
-						seqList.add(Get.identifierService().getConceptSequenceForUuids(TermAux.SYNONYM_DESCRIPTION_TYPE.getPrimordialUuid()));
+						seqList.add(MetaData.SYNONYM.getConceptSequence());
 						continue;
 					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("definition")) {
-						seqList.add(Get.identifierService().getConceptSequenceForUuids(TermAux.DEFINITION_DESCRIPTION_TYPE.getPrimordialUuid()));
+						seqList.add(MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence());
 						continue;
 					}
 
@@ -450,7 +447,6 @@ public class CoordinatesUtil {
 		if (modulesStrs == null || modulesStrs.size() == 0) {
 			return defaultValue; // default
 		} else {
-			int moduleConceptSequence = Get.identifierService().getConceptSequenceForUuids(MetaData.MODULE.getPrimordialUuid());
 			for (String moduleId : modulesStrs)
 			{
 				if (StringUtils.isNotBlank(moduleId))
@@ -460,7 +456,7 @@ public class CoordinatesUtil {
 						int nid = Get.identifierService().getConceptNid(moduleIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
 							int seq = Get.identifierService().getConceptSequence(nid);
-							if (Get.taxonomyService().getTaxonomyChildSequences(moduleConceptSequence).anyMatch((i) -> i == seq)) {
+							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 								valuesFromParameters.add(seq);
 								continue;
 							}
@@ -469,7 +465,7 @@ public class CoordinatesUtil {
 						Optional<UUID> moduleUuidOptional = UUIDUtil.getUUID(moduleId.trim());
 						if (moduleUuidOptional.isPresent() && Get.identifierService().hasUuid(moduleUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(moduleUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 							int seq = Get.identifierService().getConceptSequenceForUuids(moduleUuidOptional.get());
-							if (Get.taxonomyService().getTaxonomyChildSequences(moduleConceptSequence).anyMatch((i) -> i == seq)) {
+							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 								valuesFromParameters.add(seq);
 								continue;
 							}
@@ -500,23 +496,22 @@ public class CoordinatesUtil {
 
 			Optional<UUID> pathUuidOptional = Optional.empty();
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(pathStr.trim());
-			int pathConceptSequence = Get.identifierService().getConceptSequenceForUuids(TermAux.PATH.getPrimordialUuid());
 			if (pathIntIdOptional.isPresent()) {
 				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-				if (Get.taxonomyService().getTaxonomyChildSequences(pathConceptSequence).anyMatch((i) -> i == seq)) {
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
 					return seq;
 				}
 			} else if ((pathUuidOptional = UUIDUtil.getUUID(pathStr.trim())).isPresent()) {
 				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-					if (Get.taxonomyService().getTaxonomyChildSequences(pathConceptSequence).anyMatch((i) -> i == seq)) {
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
 						return seq;
 					}
 				}
 			} else if (pathStr.trim().equalsIgnoreCase("development")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.DEVELOPMENT_PATH.getPrimordialUuid());
+				return MetaData.DEVELOPMENT_PATH.getConceptSequence();
 			} else if (pathStr.trim().equalsIgnoreCase("master")) {
-				return Get.identifierService().getConceptSequenceForUuids(TermAux.MASTER_PATH.getPrimordialUuid());
+				return MetaData.MASTER_PATH.getConceptSequence();
 			}
 		}
 
@@ -565,16 +560,15 @@ public class CoordinatesUtil {
 
 			Optional<UUID> pathUuidOptional = Optional.empty();
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
-			int logicAssemblageConceptSequence = Get.identifierService().getConceptSequenceForUuids(MetaData.LOGIC_ASSEMBLAGE.getPrimordialUuid());
 			if (pathIntIdOptional.isPresent()) {
 				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-				if (Get.taxonomyService().getTaxonomyChildSequences(logicAssemblageConceptSequence).anyMatch((i) -> i == seq)) {
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 					return seq;
 				}
 			} else if ((pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim())).isPresent()) {
 				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-					if (Get.taxonomyService().getTaxonomyChildSequences(logicAssemblageConceptSequence).anyMatch((i) -> i == seq)) {
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 						return seq;
 					}
 				}
@@ -599,16 +593,15 @@ public class CoordinatesUtil {
 
 			Optional<UUID> pathUuidOptional = Optional.empty();
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
-			int logicAssemblageConceptSequence = Get.identifierService().getConceptSequenceForUuids(MetaData.LOGIC_ASSEMBLAGE.getPrimordialUuid());
 			if (pathIntIdOptional.isPresent()) {
 				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-				if (Get.taxonomyService().getTaxonomyChildSequences(logicAssemblageConceptSequence).anyMatch((i) -> i == seq)) {
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 					return seq;
 				}
 			} else if ((pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim())).isPresent()) {
 				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-					if (Get.taxonomyService().getTaxonomyChildSequences(logicAssemblageConceptSequence).anyMatch((i) -> i == seq)) {
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.LOGIC_ASSEMBLAGE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 						return seq;
 					}
 				}
@@ -631,12 +624,10 @@ public class CoordinatesUtil {
 				return defaultSeq;
 			}
 
-			int descriptionLogicProfileConceptSequence = Get.identifierService().getConceptSequenceForUuids(MetaData.DESCRIPTION_LOGIC_PROFILE.getPrimordialUuid());
-
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
 			if (pathIntIdOptional.isPresent()) {
 				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-				if (Get.taxonomyService().getTaxonomyChildSequences(descriptionLogicProfileConceptSequence).anyMatch((i) -> i == seq)) {
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_PROFILE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 					return seq;
 				}
 			}
@@ -644,7 +635,7 @@ public class CoordinatesUtil {
 			Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
 			if (pathUuidOptional.isPresent() && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 				int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-				if (Get.taxonomyService().getTaxonomyChildSequences(descriptionLogicProfileConceptSequence).anyMatch((i) -> i == seq)) {
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_PROFILE.getConceptSequence()).anyMatch((i) -> i == seq)) {
 					return seq;
 				}
 			}
@@ -666,19 +657,17 @@ public class CoordinatesUtil {
 				return defaultSeq;
 			}
 
-			int descriptionLogicClassifierConceptSequence = Get.identifierService().getConceptSequenceForUuids(MetaData.DESCRIPTION_LOGIC_CLASSIFIER.getPrimordialUuid());
-
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(assemblageStr.trim());
 			if (pathIntIdOptional.isPresent()) {
 				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-				if (Get.taxonomyService().getTaxonomyChildSequences(descriptionLogicClassifierConceptSequence).anyMatch((i) -> i == seq)) {
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_CLASSIFIER.getConceptSequence()).anyMatch((i) -> i == seq)) {
 					return seq;
 				}
 			} else {
 				Optional<UUID> pathUuidOptional = UUIDUtil.getUUID(assemblageStr.trim());
 				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-					if (Get.taxonomyService().getTaxonomyChildSequences(descriptionLogicClassifierConceptSequence).anyMatch((i) -> i == seq)) {
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.DESCRIPTION_LOGIC_CLASSIFIER.getConceptSequence()).anyMatch((i) -> i == seq)) {
 						return seq;
 					}
 				}
