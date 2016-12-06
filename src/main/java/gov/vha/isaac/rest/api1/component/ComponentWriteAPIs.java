@@ -211,7 +211,7 @@ public class ComponentWriteAPIs
 						if (concept.isPresent()) {
 							if (concept.get().value().getState() == state) 
 							{
-								log.warn("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
+								log.info("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
 
 								break;
 							}
