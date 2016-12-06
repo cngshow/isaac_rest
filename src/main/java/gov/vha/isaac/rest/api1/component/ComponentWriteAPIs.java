@@ -178,7 +178,7 @@ public class ComponentWriteAPIs
 		@SuppressWarnings("unchecked")
 		T latestVersion = (T)rawLatestVersion.get().value();
 		if (latestVersion.getState() == state) {
-			log.warn("Not resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " from " + latestVersion.getState() + " to " + state);
+			log.info("Not resetting state of " + sememe.getSememeType() + " " + sememe.getSememeSequence() + " from " + latestVersion.getState() + " to " + state);
 			return null;
 		}
 		SememeVersionUpdatePair<T> versionsHolder = new SememeVersionUpdatePair<T>();
@@ -208,14 +208,20 @@ public class ComponentWriteAPIs
 						@SuppressWarnings("unchecked")
 						Optional<LatestVersion<ConceptVersionImpl>> concept = cc.getLatestVersion(ConceptVersionImpl.class, localStamp);
 
-						if (concept.isPresent() && concept.get().value().getState() == state) 
-						{
-							log.warn("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
+						if (concept.isPresent()) {
+							if (concept.get().value().getState() == state) 
+							{
+								log.warn("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
 
-							break;
+								break;
+							}
+						} else {
+							log.info("Failed retrieving latest version of concept " + id + ". Unconditionally performing update.");
 						}
-					} catch (Exception e) {
-						log.warn("Failed checking update against current object " + id + " state. Unconditionally performing update", e);
+					} catch (RuntimeException e) {
+						String msg = "Failed checking update against current object " + id + " state. Not performing update";
+						log.error(msg, e);
+						throw new RuntimeException(msg, e);
 					}
 
 					cc.createMutableVersion(state, ec);
@@ -309,7 +315,7 @@ public class ComponentWriteAPIs
 	
 				case UNKNOWN_NID:
 				default :
-					throw new RestException(RequestParameters.id, id, "Could not locate component to change the state");
+					throw new RestException(RequestParameters.id, id, "Could not locate component of unexpected type " + type + " to change its state");
 			}
 
 			if (commit)

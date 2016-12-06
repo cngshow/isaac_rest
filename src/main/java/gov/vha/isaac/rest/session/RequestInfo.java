@@ -68,6 +68,8 @@ public class RequestInfo
 
 	private final static User DEFAULT_READ_ONLY_USER = new User("READ_ONLY_USER", null, UserRole.READ_ONLY);
 	
+	private final static EditCoordinate DEFAULT_EDIT_COORDINATE = EditCoordinates.getDefaultUserVeteransAdministrationExtension();
+	
 	private Map<String, List<String>> parameters_ = new HashMap<>();
 
 	private String coordinatesToken_ = null;
@@ -83,6 +85,10 @@ public class RequestInfo
 	private Set<String> expandablesForDirectExpansion_ = new HashSet<>(0);
 	//Default to this, users may override by specifying expandables=true
 	private boolean returnExpandableLinks_ = ApplicationConfig.getInstance().isDebugDeploy();
+	
+	public static EditCoordinate getDefaultEditCoordinate() {
+		return DEFAULT_EDIT_COORDINATE;
+	}
 
 	private static final ThreadLocal<RequestInfo> requestInfo = new ThreadLocal<RequestInfo>()
 	{
@@ -291,7 +297,7 @@ public class RequestInfo
 				Integer path = null;
 				UUID workflowProcessid = null;
 
-				EditCoordinate defaultEditCoordinate = EditCoordinates.getDefaultUserVeteransAdministrationExtension();
+				EditCoordinate defaultEditCoordinate = DEFAULT_EDIT_COORDINATE;
 				
 				// Set default EditToken parameters to values in passedEditToken if set, otherwise set to default
 				Optional<EditToken> passedEditToken = EditTokens.getEditTokenParameterTokenObjectValue(parameters_);

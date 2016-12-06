@@ -18,7 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.association;
 
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -333,10 +332,12 @@ public class AssociationWriteAPIs
 					return new RestWriteResponse(RequestInfo.get().getEditToken(), associationItemSememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 				}
 			} else {
-				log.warn("Failed retrieving latest version of association item dynamic sememe " + id + ". Unconditionally performing update");
+				log.info("Failed retrieving latest version of association item dynamic sememe " + id + ". Unconditionally performing update.");
 			}
-		} catch (Exception e) {
-			log.warn("Failed checking update against latest association item dynamic sememe " + id + " version. Unconditionally performing update", e);
+		} catch (RuntimeException e) {
+			String msg = "Failed checking update against latest association item dynamic sememe " + id + " version. Not performing update.";
+			log.warn(msg, e);
+			throw new RuntimeException(msg, e);
 		}
 		
 		@SuppressWarnings({ "unchecked", "rawtypes" })

@@ -18,7 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.comment;
 
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -227,10 +226,12 @@ public class CommentWriteAPIs
 					}
 				}
 			} else {
-				log.warn("Failed retrieving latest version of comment dynamic sememe " + id + ". Unconditionally performing update");
+				log.info("Failed retrieving latest version of comment dynamic sememe " + id + ". Unconditionally performing update.");
 			}
-		} catch (Exception e) {
-			log.warn("Failed checking update against current comment dynamic sememe " + id + " version. Unconditionally performing update", e);
+		} catch (RuntimeException e) {
+			String msg = "Failed checking update against current comment dynamic sememe " + id + " version. Not performing update.";
+			log.warn(msg, e);
+			throw new RuntimeException(msg, e);
 		}
 
 		@SuppressWarnings("unchecked")
