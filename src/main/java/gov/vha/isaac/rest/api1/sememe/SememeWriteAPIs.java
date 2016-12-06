@@ -774,6 +774,11 @@ public class SememeWriteAPIs
 		catch (Exception e)
 		{
 			log.error("Unexpected", e);
+			
+			//TODO need to test and see if cancel works... we mostly likely got here because of a validator failure.
+			//TODO still need to run all of the validators before we attempt to save, throw a better error on validation failure.
+			Get.commitService().cancel(sememeChronology, RequestInfo.get().getEditCoordinate());
+			
 			throw new RuntimeException("error committing", e);
 		}
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), sememeChronology.getPrimordialUuid());
