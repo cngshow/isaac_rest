@@ -190,14 +190,17 @@ public class CommentWriteAPIs
 			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class, State.ANY_STATE_SET);
 
 			if (currentVersion.isPresent()) {
-				DynamicSememeData currentCommentSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
-				DynamicSememeData currentCommentContextSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 1) ? currentVersion.get().getData()[1] : null;
+				DynamicSememeData currentCommentSememeData = (currentVersion.get().getData() != null 
+						&& currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
+				DynamicSememeData currentCommentContextSememeData = (currentVersion.get().getData() != null 
+						&& currentVersion.get().getData().length > 1) ? currentVersion.get().getData()[1] : null;
 
 				String currentComment = null;
 				if (currentCommentSememeData != null) {
 					// Validate DynamicSememeData type
 					if (currentCommentSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
-						throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
+						throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " 
+								+ currentCommentSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
 					}
 
 					currentComment = ((DynamicSememeStringImpl)currentCommentSememeData).getDataString();
@@ -209,7 +212,8 @@ public class CommentWriteAPIs
 				if (currentCommentContextSememeData != null) {
 					// Validate DynamicSememeData type
 					if (currentCommentContextSememeData.getDynamicSememeDataType() != DynamicSememeDataType.STRING) {
-						throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " + currentCommentContextSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
+						throw new RestException(RequestParameters.id, id, "Retrieved dynamic sememe contains unexpected data of type " 
+								+ currentCommentContextSememeData.getDynamicSememeDataType() + ". Expected " + DynamicSememeDataType.STRING);
 					}
 
 					currentCommentContext = ((DynamicSememeStringImpl)currentCommentContextSememeData).getDataString();
@@ -220,7 +224,8 @@ public class CommentWriteAPIs
 				// This code short-circuits update if passed data are identical to current relevant version
 				if (currentVersion.get().getState() == stateToUse) {
 					if (((currentComment == newComment) || (currentComment != null && newComment != null && currentComment.equals(newComment)))
-							&& ((currentCommentContext == newCommentContext) || (currentCommentContext != null && newCommentContext != null && currentCommentContext.equals(newCommentContext)))) {
+							&& ((currentCommentContext == newCommentContext) || (currentCommentContext != null && newCommentContext != null 
+							&& currentCommentContext.equals(newCommentContext)))) {
 						log.debug("Not updating comment sememe {} because data unchanged", sc.getPrimordialUuid());
 						return new RestWriteResponse(RequestInfo.get().getEditToken(), sc.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 					}
