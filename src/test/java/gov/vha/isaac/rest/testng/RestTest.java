@@ -131,6 +131,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionClone;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResultPage;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
@@ -1765,9 +1766,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
-		RestWriteResponse newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingSetSequenceWrapperXml);
-		UUID testMappingSetUUID = newMappingSetSequenceWrapper.uuid;
+		String writeResponseXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
+		RestWriteResponse mappingSetWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, writeResponseXml);
+		UUID testMappingSetUUID = mappingSetWriteResponse.uuid;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(testMappingSetUUID != null);
 		
@@ -1961,6 +1962,82 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 		}
 		Assert.assertNotNull(mappingItemMatchingUpdatedItem);
+		
+		// Clone
+		String cloneMappingSetName = "A clone mapping set name (" + randomUuid + ")";
+		RestMappingSetVersionClone cloneMappingSetData = new RestMappingSetVersionClone(
+				mappingSetWriteResponse.uuid.toString(),
+				cloneMappingSetName,
+				null, // newMappingSetInverseName
+				null, // newMappingSetDescription
+				null, // newMappingSetPurpose
+				null);
+
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(cloneMappingSetData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+
+		// Attempt to create clone mapping set with read_only token
+		Response cloneMappingSetResponse = target(RestPaths.mappingSetCloneAppPathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		assertResponseStatus(cloneMappingSetResponse, Status.FORBIDDEN.getStatusCode());
+
+		// Attempt to clone target mapping set
+		cloneMappingSetResponse = target(RestPaths.mappingSetCloneAppPathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		writeResponseXml = checkFail(cloneMappingSetResponse).readEntity(String.class);
+		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, writeResponseXml);
+		UUID cloneMappingSetUUID = writeResponse.uuid;
+		// Confirm returned id is valid
+		Assert.assertTrue(cloneMappingSetUUID != null);
+		
+		// Attempt to retrieve newly-created clone mapping set
+		Response getCloneMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + cloneMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		retrievedMappingSetVersionResult = checkFail(getCloneMappingSetVersionResponse).readEntity(String.class);
+		RestMappingSetVersion cloneMappingSetObject = XMLUtils.unmarshalObject(RestMappingSetVersion.class, retrievedMappingSetVersionResult);
+		Assert.assertEquals(cloneMappingSetName, cloneMappingSetObject.name); // Passed to clone API
+		Assert.assertEquals(updatedMappingSetInverseName, cloneMappingSetObject.inverseName); // Inherited from clone target
+		Assert.assertEquals(updatedMappingSetDescription, cloneMappingSetObject.description); // Inherited from clone target
+		Assert.assertEquals(updatedMappingSetPurpose, cloneMappingSetObject.purpose); // Inherited from clone target
+		
+		// Get clone target mapping items
+		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
+		RestMappingItemVersion[] cloneTargetMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		Assert.assertTrue(cloneTargetMappingItems != null && cloneTargetMappingItems.length > 0);
+
+		// Get clone mapping items
+		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + cloneMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
+		RestMappingItemVersion[] cloneMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		Assert.assertTrue(cloneMappingItems != null);
+		Assert.assertEquals(cloneMappingItems.length, cloneTargetMappingItems.length);
+		
+		// Check clone items contents
+		for (int i = 0; i < cloneTargetMappingItems.length; ++i) {
+			Assert.assertEquals(cloneMappingItems[i].qualifierConcept.nid, cloneTargetMappingItems[i].qualifierConcept.nid);
+			Assert.assertEquals(cloneMappingItems[i].sourceConcept.nid, cloneTargetMappingItems[i].sourceConcept.nid);
+			Assert.assertEquals(cloneMappingItems[i].targetConcept.nid, cloneTargetMappingItems[i].targetConcept.nid);
+
+			Assert.assertEquals(cloneMappingItems[i].mapSetConcept.uuids.iterator().next(), cloneMappingSetUUID);
+			Assert.assertEquals(cloneTargetMappingItems[i].mapSetConcept.uuids.iterator().next(), testMappingSetUUID);
+		}
 	}
 	
 	@Test
