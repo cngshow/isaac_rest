@@ -2028,6 +2028,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersion[] cloneMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
 		Assert.assertTrue(cloneMappingItems != null);
 		Assert.assertEquals(cloneMappingItems.length, cloneTargetMappingItems.length);
+		
+		for (int i = 0; i < cloneTargetMappingItems.length; ++i) {
+			Assert.assertEquals(cloneMappingItems[i].qualifierConcept.nid, cloneTargetMappingItems[i].qualifierConcept.nid);
+			Assert.assertEquals(cloneMappingItems[i].sourceConcept.nid, cloneTargetMappingItems[i].sourceConcept.nid);
+			Assert.assertEquals(cloneMappingItems[i].targetConcept.nid, cloneTargetMappingItems[i].targetConcept.nid);
+
+			Assert.assertEquals(cloneMappingItems[i].mapSetConcept.uuids.iterator().next(), cloneMappingSetUUID);
+			Assert.assertEquals(cloneTargetMappingItems[i].mapSetConcept.uuids.iterator().next(), testMappingSetUUID);
+		}
 	}
 	
 	@Test
