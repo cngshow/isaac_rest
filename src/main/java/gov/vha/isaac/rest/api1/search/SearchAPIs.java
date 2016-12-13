@@ -326,7 +326,7 @@ public class SearchAPIs
 						if (conSequence >= 0)
 						{
 							//TODO add a sememe on all static sememes so we can identify them.  For now, hard code a few common ones.
-							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SNOMED_INTEGER_ID.getConceptSequence() == conSequence 
+							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SCTID.getConceptSequence() == conSequence 
 									|| Get.identifierService().getConceptSequenceForUuids(codeConstant) == conSequence)
 							{
 								return true;
