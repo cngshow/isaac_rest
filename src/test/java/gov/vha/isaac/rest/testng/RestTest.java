@@ -131,6 +131,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionClone;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResultPage;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
@@ -158,6 +159,7 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
 import gov.vha.isaac.rest.session.PrismeUserService;
+import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.UserServiceUtils;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
@@ -366,13 +368,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	private RestSememeDescriptionVersion[] getDescriptionsForConcept(Object id) {
-		return getDescriptionsForConcept((Map<String, Object>)null, id);
+		return getDescriptionsForConcept(id, (Map<String, Object>)null);
 	}
-
-	private RestSememeDescriptionVersion[] getDescriptionsForConcept(Map<String, Object> params, Object id) {
+	private RestSememeDescriptionVersion[] getDescriptionsForConcept(Object id, Map.Entry<String, Object>...params) {
 		WebTarget webTarget = target(conceptDescriptionsRequestPath + id.toString());
 		if (params != null) {
-			for (Map.Entry<String, Object> entry : params.entrySet()) {
+			for (Map.Entry<String, Object> entry : params) {
 				webTarget = webTarget.queryParam(entry.getKey(), entry.getValue());
 			}
 		}
@@ -380,6 +381,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				webTarget.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String descriptionVersionsResult = checkFail(getDescriptionVersionsResponse).readEntity(String.class);
 		return XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, descriptionVersionsResult);
+	}
+	private RestSememeDescriptionVersion[] getDescriptionsForConcept(Object id, Map<String, Object> params) {
+		@SuppressWarnings("rawtypes")
+		Map.Entry[] entries = (params != null) ? params.entrySet().toArray(new Map.Entry[params.entrySet().size()]) : null;
+		return getDescriptionsForConcept(id, entries);
 	}
 	public String getEditTokenString(String ssoTokenString) {
 		String encodedToken = null;
@@ -1013,7 +1019,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String expandParamValue = ExpandUtil.nestedSememesExpandable + "," + ExpandUtil.comments + "," + ExpandUtil.referencedDetails;
 		Map<String, Object> params = new HashMap<>();
 		params.put(RequestParameters.expand, expandParamValue);
-		RestSememeDescriptionVersion[] conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		RestSememeDescriptionVersion[] conceptDescriptions = getDescriptionsForConcept(referencedConceptNid, params);
 		Assert.assertTrue(conceptDescriptions.length > 0);
 		// Get first description
 		RestSememeDescriptionVersion preexistingDescription = conceptDescriptions[0];
@@ -1048,7 +1054,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Retrieve all descriptions referring to referenced concept
 		params.clear();
 		params.put(RequestParameters.expand, expandParamValue);
-		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		conceptDescriptions = getDescriptionsForConcept(referencedConceptNid, params);
 		Assert.assertTrue(conceptDescriptions.length > 0);
 		// Iterate description list to find new description
 		RestSememeDescriptionVersion matchingDescriptionSememeVersion = null;
@@ -1070,7 +1076,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// using time parameter
 		params.clear();
 		params.put(RequestParameters.time, preEditTime);
-		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		conceptDescriptions = getDescriptionsForConcept(referencedConceptNid, params);
 		Assert.assertNotNull(conceptDescriptions);
 		Assert.assertTrue(conceptDescriptions.length > 1);
 		// Iterate description list to find new description
@@ -1089,7 +1095,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// using coordToken parameter
 		params.clear();
 		params.put(RequestParameters.coordToken, preEditCoordinatesToken.token);
-		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		conceptDescriptions = getDescriptionsForConcept(referencedConceptNid, params);
 		Assert.assertNotNull(conceptDescriptions);
 		Assert.assertTrue(conceptDescriptions.length > 1);
 		// Iterate description list to find new description
@@ -1160,7 +1166,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// and find new comment in preexisting description
 		params.clear();
 		params.put(RequestParameters.expand, expandParamValue);
-		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		conceptDescriptions = getDescriptionsForConcept(referencedConceptNid, params);
 		Assert.assertNotNull(conceptDescriptions);
 		Assert.assertTrue(conceptDescriptions.length > 1);
 		// Iterate description list to find new description
@@ -1190,7 +1196,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		params.clear();
 		params.put(RequestParameters.time, preEditTime);
 		params.put(RequestParameters.expand, expandParamValue);
-		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		conceptDescriptions = getDescriptionsForConcept(referencedConceptNid, params);
 		Assert.assertNotNull(conceptDescriptions);
 		Assert.assertTrue(conceptDescriptions.length > 1);
 		// Iterate description list to find new description
@@ -1224,7 +1230,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		params.clear();
 		params.put(RequestParameters.coordToken, preEditCoordinatesToken.token);
 		params.put(RequestParameters.expand, expandParamValue);
-		conceptDescriptions = getDescriptionsForConcept(params, referencedConceptNid);
+		conceptDescriptions = getDescriptionsForConcept(referencedConceptNid, params);
 		Assert.assertNotNull(conceptDescriptions);
 		Assert.assertTrue(conceptDescriptions.length > 1);
 		// Iterate description list to find new description
@@ -1317,7 +1323,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(descriptionSememeSequence != 0);
 		
 		// Retrieve all descriptions referring to referenced concept
-		RestSememeDescriptionVersion[] conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid);
+		// Restrict stamp coordinate to the module used in the default edit coordinate
+		RestSememeDescriptionVersion[] conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid, param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()));
 		Assert.assertTrue(conceptDescriptionsObject.length > 0);
 		// Iterate description list to find new description
 		RestSememeDescriptionVersion matchingVersion = null;
@@ -1382,7 +1389,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(writeResponse.detail, RestWriteResponseEnumeratedDetails.UNCHANGED);
 		
 		// Retrieve all descriptions referring to referenced concept
-		conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid);
+		conceptDescriptionsObject = getDescriptionsForConcept(referencedConceptNid, param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()));
 		Assert.assertTrue(conceptDescriptionsObject.length > 0);
 		// Iterate description list to find new description
 		matchingVersion = null;
@@ -1420,8 +1427,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject =
 				getDescriptionsForConcept(
-						buildParams(param(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation())),
-						referencedConceptNid);
+						referencedConceptNid,
+						buildParams(
+								param(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation()),
+								param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()))
+						);
 		Assert.assertTrue(conceptDescriptionsObject.length > 0);
 		// Iterate description list to find new description
 		matchingVersion = null;
@@ -1511,8 +1521,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
 		
-		// Retrieve new concept and validate fields (FSN in description)
+		// Retrieve new concept with restrictive module specification and validate fields (FSN in description)
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.queryParam(RequestParameters.includeParents, true)
 				.queryParam(RequestParameters.descriptionTypePrefs, "fsn,definition,synonym")
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
@@ -1522,6 +1533,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestConceptVersion newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
 		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), fsn + " (ISAAC)");
 		Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
+		
+		// Retrieve new concept with permissive (absent) module specification and validate fields (FSN in description)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, true)
+				.queryParam(RequestParameters.descriptionTypePrefs, "fsn,definition,synonym")
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), fsn + " (ISAAC)");
+		Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
+
 		Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
 		Assert.assertTrue(
 				(newConceptVersionObject.getParents().get(0).getConChronology().getIdentifiers().sequence == parent1Sequence
@@ -1530,7 +1554,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						&& newConceptVersionObject.getParents().get(1).getConChronology().getIdentifiers().sequence == parent1Sequence));
 
 		// Retrieve all descriptions referring to new concept
-		RestSememeDescriptionVersion[] conceptDescriptionsObject = getDescriptionsForConcept(newConceptSequence);
+		RestSememeDescriptionVersion[] conceptDescriptionsObject = getDescriptionsForConcept(
+				newConceptSequence,
+				param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()));
 		Assert.assertTrue(conceptDescriptionsObject.length >= 2);
 		// Iterate description list to find description with an extended type annotation sememe
 		boolean foundDescriptionWithCorrectExtendedType = false;
@@ -1585,14 +1611,25 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //				|| (newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent2Sequence
 //				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
 		
-		// Find new concept in taxonomy
+		// Find new concept in taxonomy with restrictive (module-specific) stamp coordinate modules parameter
 		Response taxonomyResponse = target(taxonomyRequestPath)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.queryParam(RequestParameters.id, newConceptSequence)
 				.queryParam(RequestParameters.parentHeight, 1)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		conceptVersionResult = checkFail(taxonomyResponse).readEntity(String.class);
 		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertNotNull(conceptVersionFromTaxonomy);
+		
+		// Find new concept in taxonomy without restrictive (module-specific) stamp coordinate modules parameter
+		taxonomyResponse = target(taxonomyRequestPath)
+				.queryParam(RequestParameters.id, newConceptSequence)
+				.queryParam(RequestParameters.parentHeight, 1)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(taxonomyResponse).readEntity(String.class);
+		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
 		// validate conceptVersionFromTaxonomy parents
 		Assert.assertTrue(conceptVersionFromTaxonomy.getParents().size() == 2);
 		Assert.assertTrue(
@@ -1652,6 +1689,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve retired concept and validate
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.queryParam(RequestParameters.includeParents, false)
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable)
 				.request()
@@ -1682,6 +1720,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve retired concept and validate
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.queryParam(RequestParameters.includeParents, false)
 				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable)
 				.request()
@@ -1727,14 +1766,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		String newMappingSetSequenceWrapperXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
-		RestWriteResponse newMappingSetSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newMappingSetSequenceWrapperXml);
-		UUID testMappingSetUUID = newMappingSetSequenceWrapper.uuid;
+		String writeResponseXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
+		RestWriteResponse mappingSetWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, writeResponseXml);
+		UUID testMappingSetUUID = mappingSetWriteResponse.uuid;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(testMappingSetUUID != null);
 		
 		// Retrieve new mapping set and validate fields
 		Response getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingSetVersionResult = checkFail(getNewMappingSetVersionResponse).readEntity(String.class);
@@ -1777,6 +1817,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve updated mapping set and validate fields
 		getNewMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingSetVersionResult = checkFail(getNewMappingSetVersionResponse).readEntity(String.class);
@@ -1788,6 +1829,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Get list of mapping sets
 		Response getMappingSetsResponse = target(RestPaths.mappingSetsAppPathComponent)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getMappingSetsResult = checkFail(getMappingSetsResponse).readEntity(String.class);
@@ -1845,6 +1887,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// test createNewMappingItem()
 		// Retrieve mapping item and validate fields
 		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
@@ -1856,6 +1899,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// test getMappingItems() 
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
@@ -1901,6 +1945,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		checkFail(updateMappingItemResponse);
 
 		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
@@ -1917,6 +1962,82 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 		}
 		Assert.assertNotNull(mappingItemMatchingUpdatedItem);
+		
+		// Clone
+		String cloneMappingSetName = "A clone mapping set name (" + randomUuid + ")";
+		RestMappingSetVersionClone cloneMappingSetData = new RestMappingSetVersionClone(
+				mappingSetWriteResponse.uuid.toString(),
+				cloneMappingSetName,
+				null, // newMappingSetInverseName
+				null, // newMappingSetDescription
+				null, // newMappingSetPurpose
+				null);
+
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(cloneMappingSetData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+
+		// Attempt to create clone mapping set with read_only token
+		Response cloneMappingSetResponse = target(RestPaths.mappingSetCloneAppPathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_READ_ONLY_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		assertResponseStatus(cloneMappingSetResponse, Status.FORBIDDEN.getStatusCode());
+
+		// Attempt to clone target mapping set
+		cloneMappingSetResponse = target(RestPaths.mappingSetCloneAppPathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		writeResponseXml = checkFail(cloneMappingSetResponse).readEntity(String.class);
+		RestWriteResponse writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, writeResponseXml);
+		UUID cloneMappingSetUUID = writeResponse.uuid;
+		// Confirm returned id is valid
+		Assert.assertTrue(cloneMappingSetUUID != null);
+		
+		// Attempt to retrieve newly-created clone mapping set
+		Response getCloneMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + cloneMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		retrievedMappingSetVersionResult = checkFail(getCloneMappingSetVersionResponse).readEntity(String.class);
+		RestMappingSetVersion cloneMappingSetObject = XMLUtils.unmarshalObject(RestMappingSetVersion.class, retrievedMappingSetVersionResult);
+		Assert.assertEquals(cloneMappingSetName, cloneMappingSetObject.name); // Passed to clone API
+		Assert.assertEquals(updatedMappingSetInverseName, cloneMappingSetObject.inverseName); // Inherited from clone target
+		Assert.assertEquals(updatedMappingSetDescription, cloneMappingSetObject.description); // Inherited from clone target
+		Assert.assertEquals(updatedMappingSetPurpose, cloneMappingSetObject.purpose); // Inherited from clone target
+		
+		// Get clone target mapping items
+		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
+		RestMappingItemVersion[] cloneTargetMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		Assert.assertTrue(cloneTargetMappingItems != null && cloneTargetMappingItems.length > 0);
+
+		// Get clone mapping items
+		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + cloneMappingSetUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
+		RestMappingItemVersion[] cloneMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		Assert.assertTrue(cloneMappingItems != null);
+		Assert.assertEquals(cloneMappingItems.length, cloneTargetMappingItems.length);
+		
+		// Check clone items contents
+		for (int i = 0; i < cloneTargetMappingItems.length; ++i) {
+			Assert.assertEquals(cloneMappingItems[i].qualifierConcept.nid, cloneTargetMappingItems[i].qualifierConcept.nid);
+			Assert.assertEquals(cloneMappingItems[i].sourceConcept.nid, cloneTargetMappingItems[i].sourceConcept.nid);
+			Assert.assertEquals(cloneMappingItems[i].targetConcept.nid, cloneTargetMappingItems[i].targetConcept.nid);
+
+			Assert.assertEquals(cloneMappingItems[i].mapSetConcept.uuids.iterator().next(), cloneMappingSetUUID);
+			Assert.assertEquals(cloneTargetMappingItems[i].mapSetConcept.uuids.iterator().next(), testMappingSetUUID);
+		}
 	}
 	
 	@Test
@@ -1986,6 +2107,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Read back
 		
 		result = checkFail(target(RestPaths.mappingSetAppPathComponent + createdMapSetId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -2068,6 +2190,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve new comment and validate fields
 		Response getCommentVersionResponse = checkFail(target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get());
 		String commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
@@ -2080,6 +2203,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Retrieve mapping item and validate fields
 		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
@@ -2192,6 +2316,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Read back
 		
 		result = checkFail(target(RestPaths.mappingSetAppPathComponent + createdMapSetId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -2256,6 +2381,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// test createNewMappingItem()
 		// Retrieve mapping item and validate fields
 		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
@@ -2316,6 +2442,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve new comment and validate fields
 		Response getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
@@ -2362,6 +2489,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve updated comment and validate fields
 		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
@@ -2371,6 +2499,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Get list of RestCommentVersion associated with MetaData.SNOROCKET_CLASSIFIER
 		Response getCommentVersionByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent + MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid().toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getCommentVersionByReferencedItemResult = checkFail(getCommentVersionByReferencedItemResponse).readEntity(String.class);
@@ -2410,6 +2539,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve new comment and validate fields
 		Response getCommentVersionResponse = checkFail(target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get());
 		String commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
@@ -2430,6 +2560,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Retrieve updated comment and validate fields
 		getCommentVersionResponse = target(RestPaths.commentVersionPathComponent + newCommentSememeSequence)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		commentVersionResult = checkFail(getCommentVersionResponse).readEntity(String.class);
@@ -2440,6 +2571,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Get list of RestCommentVersion associated with MetaData.AXIOM_ORIGIN
 		Response getCommentVersionByReferencedItemResponse = target(RestPaths.commentVersionByReferencedComponentPathComponent 
 				+ MetaData.AXIOM_ORIGIN.getPrimordialUuid().toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getCommentVersionByReferencedItemResult = checkFail(getCommentVersionByReferencedItemResponse).readEntity(String.class);
@@ -3728,6 +3860,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Read back
 		
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationComponent + createdAssociationId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -3738,6 +3871,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociation.associationInverseName, "inverse Test");
 		
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsComponent)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 					.queryParam(RequestParameters.expand, "referencedConcept")
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -3777,6 +3911,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//readBack
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -3826,6 +3961,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		//readBack
 		result = checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationItemComponent + createdAssociationItemId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -3870,6 +4006,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestAssociationItemVersion[] foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, 
 				checkFail(target(RestPaths.associationAPIsPathComponent 
 					+ RestPaths.associationsWithSourceComponent + MetaData.AMT_MODULE.getNid())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.queryParam(RequestParameters.expand, "referencedConcept")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
 
@@ -3880,6 +4017,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationsWithTargetComponent + MetaData.AXIOM_ORIGIN.getNid())
+			.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 			.queryParam(RequestParameters.expand, "referencedConcept")
 			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
 		
@@ -3888,6 +4026,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent 
 				+ RestPaths.associationsWithTargetComponent + MetaData.AMT_MODULE.getNid())
+			.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 			.queryParam(RequestParameters.expand, "referencedConcept")
 			.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
 
@@ -3897,6 +4036,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class, 
 				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + createdAssociationId.uuid)
+			.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 			.queryParam(RequestParameters.expand, "referencedConcept")
 			.queryParam(RequestParameters.maxPageSize, "1")
 			.queryParam(RequestParameters.pageNum, "1")
@@ -3912,6 +4052,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class, 
 				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + createdAssociationId.uuid)
+			.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 			.queryParam(RequestParameters.expand, "referencedConcept")
 			.queryParam(RequestParameters.maxPageSize, "1")
 			.queryParam(RequestParameters.pageNum, "2")
@@ -3955,6 +4096,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Read back
 		
 		result = checkFail(target(RestPaths.sememeAPIsPathComponent + RestPaths.versionComponent + createdSememeId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -4041,6 +4183,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Read back
 		
 		result = checkFail(target(RestPaths.sememeAPIsPathComponent + RestPaths.sememeDefinitionComponent + createdSememeTypeId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
@@ -4123,6 +4266,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Read back the sememe directly
 		
 		result = checkFail(target(RestPaths.sememeAPIsPathComponent + RestPaths.versionComponent + createdSememeId.uuid.toString())
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 		
