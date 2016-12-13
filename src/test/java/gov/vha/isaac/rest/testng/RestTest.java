@@ -1768,7 +1768,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String writeResponseXml = checkFail(createNewMappingSetResponse).readEntity(String.class);
 		RestWriteResponse mappingSetWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, writeResponseXml);
-		UUID testMappingSetUUID = mappingSetWriteResponse.uuid;
+		final UUID testMappingSetUUID = mappingSetWriteResponse.uuid;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(testMappingSetUUID != null);
 		
@@ -1964,9 +1964,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(mappingItemMatchingUpdatedItem);
 		
 		// Clone
+		final RestMappingSetVersion clonedMappingSetObject = updatedMappingSetObject;
+		final UUID clonedMappingSetUuid = testMappingSetUUID;
+		
 		String cloneMappingSetName = "A clone mapping set name (" + randomUuid + ")";
 		RestMappingSetVersionClone cloneMappingSetData = new RestMappingSetVersionClone(
-				mappingSetWriteResponse.uuid.toString(),
+				clonedMappingSetUuid.toString(),
 				cloneMappingSetName,
 				null, // newMappingSetInverseName
 				null, // newMappingSetDescription
@@ -2006,12 +2009,40 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		retrievedMappingSetVersionResult = checkFail(getCloneMappingSetVersionResponse).readEntity(String.class);
 		RestMappingSetVersion cloneMappingSetObject = XMLUtils.unmarshalObject(RestMappingSetVersion.class, retrievedMappingSetVersionResult);
 		Assert.assertEquals(cloneMappingSetName, cloneMappingSetObject.name); // Passed to clone API
-		Assert.assertEquals(updatedMappingSetInverseName, cloneMappingSetObject.inverseName); // Inherited from clone target
-		Assert.assertEquals(updatedMappingSetDescription, cloneMappingSetObject.description); // Inherited from clone target
-		Assert.assertEquals(updatedMappingSetPurpose, cloneMappingSetObject.purpose); // Inherited from clone target
+//		Assert.assertEquals(updatedMappingSetInverseName, cloneMappingSetObject.inverseName); // Inherited from clone target
+//		Assert.assertEquals(updatedMappingSetDescription, cloneMappingSetObject.description); // Inherited from clone target
+//		Assert.assertEquals(updatedMappingSetPurpose, cloneMappingSetObject.purpose); // Inherited from clone target
+		Assert.assertEquals(cloneMappingSetObject.active, clonedMappingSetObject.active);
+		Assert.assertEquals(cloneMappingSetObject.inverseName, clonedMappingSetObject.inverseName);
+		Assert.assertEquals(cloneMappingSetObject.description, clonedMappingSetObject.description);
+		Assert.assertEquals(cloneMappingSetObject.purpose, clonedMappingSetObject.purpose);
+		
+		// Test clone of mapItemFieldsDefinition
+		Assert.assertTrue((cloneMappingSetObject.mapItemFieldsDefinition == null && clonedMappingSetObject.mapItemFieldsDefinition == null)
+				|| (cloneMappingSetObject.mapItemFieldsDefinition != null && clonedMappingSetObject.mapItemFieldsDefinition != null));
+		if (cloneMappingSetObject.mapItemFieldsDefinition != null) {
+			Assert.assertEquals(cloneMappingSetObject.mapItemFieldsDefinition.size(), clonedMappingSetObject.mapItemFieldsDefinition.size());
+			for (int i = 0; i < cloneMappingSetObject.mapItemFieldsDefinition.size(); ++i) {
+				Assert.assertEquals(cloneMappingSetObject.mapItemFieldsDefinition.get(i).columnDescription, clonedMappingSetObject.mapItemFieldsDefinition.get(i).columnDescription);
+				Assert.assertEquals(cloneMappingSetObject.mapItemFieldsDefinition.get(i).columnName, clonedMappingSetObject.mapItemFieldsDefinition.get(i).columnName);
+				Assert.assertEquals(cloneMappingSetObject.mapItemFieldsDefinition.get(i).columnOrder, clonedMappingSetObject.mapItemFieldsDefinition.get(i).columnOrder);
+				Assert.assertEquals(cloneMappingSetObject.mapItemFieldsDefinition.get(i).columnRequired, clonedMappingSetObject.mapItemFieldsDefinition.get(i).columnRequired);
+				Assert.assertEquals(cloneMappingSetObject.mapItemFieldsDefinition.get(i).columnDataType, clonedMappingSetObject.mapItemFieldsDefinition.get(i).columnDataType);
+			}
+		}
+		Assert.assertTrue((cloneMappingSetObject.mapSetExtendedFields == null && clonedMappingSetObject.mapSetExtendedFields == null)
+				|| (cloneMappingSetObject.mapSetExtendedFields != null && clonedMappingSetObject.mapSetExtendedFields != null));
+		if (cloneMappingSetObject.mapSetExtendedFields != null) {
+			Assert.assertEquals(cloneMappingSetObject.mapSetExtendedFields.size(), clonedMappingSetObject.mapSetExtendedFields.size());
+			for (int i = 0; i < cloneMappingSetObject.mapSetExtendedFields.size(); ++i) {
+				Assert.assertEquals(cloneMappingSetObject.mapSetExtendedFields.get(i).extensionNameConceptDescription, clonedMappingSetObject.mapSetExtendedFields.get(i).extensionNameConceptDescription);
+				Assert.assertEquals(cloneMappingSetObject.mapSetExtendedFields.get(i).extensionNameConceptIdentifiers.nid, clonedMappingSetObject.mapSetExtendedFields.get(i).extensionNameConceptIdentifiers.nid);
+				Assert.assertEquals(cloneMappingSetObject.mapSetExtendedFields.get(i).extensionValue, clonedMappingSetObject.mapSetExtendedFields.get(i).extensionValue);
+			}
+		}
 		
 		// Get clone target mapping items
-		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
+		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + clonedMappingSetUuid)
 				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
@@ -2028,7 +2059,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersion[] cloneMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
 		Assert.assertTrue(cloneMappingItems != null);
 		Assert.assertEquals(cloneMappingItems.length, cloneTargetMappingItems.length);
-		
+
 		// Check clone items contents
 		for (int i = 0; i < cloneTargetMappingItems.length; ++i) {
 			Assert.assertEquals(cloneMappingItems[i].qualifierConcept.nid, cloneTargetMappingItems[i].qualifierConcept.nid);
@@ -2036,7 +2067,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertEquals(cloneMappingItems[i].targetConcept.nid, cloneTargetMappingItems[i].targetConcept.nid);
 
 			Assert.assertEquals(cloneMappingItems[i].mapSetConcept.uuids.iterator().next(), cloneMappingSetUUID);
-			Assert.assertEquals(cloneTargetMappingItems[i].mapSetConcept.uuids.iterator().next(), testMappingSetUUID);
+			Assert.assertEquals(cloneTargetMappingItems[i].mapSetConcept.uuids.iterator().next(), clonedMappingSetUuid);
 		}
 	}
 	
