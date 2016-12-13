@@ -2029,6 +2029,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(cloneMappingItems != null);
 		Assert.assertEquals(cloneMappingItems.length, cloneTargetMappingItems.length);
 		
+		// Check clone items contents
 		for (int i = 0; i < cloneTargetMappingItems.length; ++i) {
 			Assert.assertEquals(cloneMappingItems[i].qualifierConcept.nid, cloneTargetMappingItems[i].qualifierConcept.nid);
 			Assert.assertEquals(cloneMappingItems[i].sourceConcept.nid, cloneTargetMappingItems[i].sourceConcept.nid);
