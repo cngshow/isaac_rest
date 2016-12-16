@@ -234,17 +234,17 @@ public class TaxonomyAPIs
 			try
 			{
 				parentConcept = ConceptAPIs.findConceptChronology(parentSequence + "");
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, 
+						Util.getPreWorkflowStampCoordinate(processId, parentConcept.getNid()));
+				if (cv.isPresent())
+				{
+					count++;
+				}
 			}
 			catch (RestException e)
 			{
-				throw new RuntimeException("Internal Error!", e);
-			}
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, 
-					Util.getPreWorkflowStampCoordinate(processId, parentConcept.getNid()));
-			if (cv.isPresent())
-			{
-				count++;
+				log.error("Unexpected error reading parent concept " + parentSequence + " will not be included in result!", e);
 			}
 		}
 		rcv.setParentCount(count);
