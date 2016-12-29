@@ -208,7 +208,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 						DescriptionSememe<?> ds = latest.get().value();
 						if (ds.getDescriptionTypeConceptSequence() == MetaData.SYNONYM.getConceptSequence())
 						{
-							if (Frills.isDescriptionPreferred(ds.getNid(), null))
+							if (Frills.isDescriptionPreferred(ds.getNid(), myStampCoord))
 							{
 								name = ds.getText();
 							}
@@ -227,7 +227,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 						}
 						else if (ds.getDescriptionTypeConceptSequence() == MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence())
 						{
-							if (Frills.isDescriptionPreferred(ds.getNid(), null))
+							if (Frills.isDescriptionPreferred(ds.getNid(), myStampCoord))
 							{
 								description = ds.getText();
 							}
@@ -239,7 +239,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		{
 			try
 			{
-				comments = CommentAPIs.readComments(mappingConcept.getNid() + "", processId);
+				comments = CommentAPIs.readComments(mappingConcept.getNid() + "", processId, myStampCoord);
 			}
 			catch (RestException e)
 			{

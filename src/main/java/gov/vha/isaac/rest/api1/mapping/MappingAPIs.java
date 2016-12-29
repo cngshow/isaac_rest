@@ -264,7 +264,7 @@ public class MappingAPIs
 				if (latest.isPresent())
 				{
 					//TODO handle contradictions
-					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), 
 						positions.targetPos, positions.qualfierPos,
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						RequestInfo.get().shouldExpand(ExpandUtil.comments),
@@ -339,7 +339,7 @@ public class MappingAPIs
 		if (latest.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+			return new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), 
 				positions.targetPos, positions.qualfierPos,
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 				RequestInfo.get().shouldExpand(ExpandUtil.comments),
