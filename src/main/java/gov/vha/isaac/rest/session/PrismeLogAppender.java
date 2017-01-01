@@ -63,7 +63,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class PrismeLogAppender extends AbstractAppender {
 	private static final long serialVersionUID = -228479087489358210L;
 
-	private static Logger log = LogManager.getLogger(PrismeLogAppender.class);
+	//private static Logger log = LogManager.getLogger(PrismeLogAppender.class);
 	
 	private final static String PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties().getProperty("prisme_notify_url");
 
@@ -164,8 +164,9 @@ public class PrismeLogAppender extends AbstractAppender {
 			case TRACE:
 			case DEBUG:
 				prismeLevel = 1;
+				break;
 			default:
-				log.error("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
+				LOGGER.error("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
 				break;
 			}
 
@@ -183,18 +184,18 @@ public class PrismeLogAppender extends AbstractAppender {
 			try {
 				eventInputJson = jsonIze(dto);
 			} catch (IOException e) {
-				log.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: {}", dto.toString());
+				LOGGER.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: {}", dto.toString());
 
 				eventInputJson = "{ \""+ level_key + "\":\"3\", \"" + tag_key + "\":\"LOGGING ERROR\", \"" + message_key + "\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"" + application_name_key + "\":\"" + application_name_value + "\" }";
 			}
 
 			if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
-				log.error("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
+				LOGGER.error("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
 				LOGGED_PRISME_CONFIGURATION_ERROR = true; //If PRISME not configured it should log the error once and never retry
 				return;
 			}
 			
-			String targetWithPath = PRISME_NOTIFY_URL.replaceAll("\\?", "");
+			String targetWithPath = PRISME_NOTIFY_URL.replaceAll("\\?.*", "");
 			String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
 
 			boolean forceCreateNewWebTarget = false;
@@ -216,20 +217,26 @@ public class PrismeLogAppender extends AbstractAppender {
 			try {
 				map = mapper.readValue(responseJson, Map.class);
 			} catch (IOException e) {
-				log.error("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: {}", eventInputJson);
+				LOGGER.error("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: {}", eventInputJson);
 				return;
 			}
 
 			if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
 				if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null) {
-					log.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH VALIDATION ERRORS: {}, EVENT: {}", map.get(validation_errors_key).toString(), eventInputJson);
+					LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH VALIDATION ERRORS: {}, EVENT: {}", map.get(validation_errors_key).toString(), eventInputJson);
 				} else {
-					log.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH NO KNOWN VALIDATION ERRORS: {}", eventInputJson);
+					LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH NO KNOWN VALIDATION ERRORS: {}", eventInputJson);
 				}
 			} else {
-				log.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
+				LOGGER.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
 			}
 		} finally {
+//			if (client_ != null) {
+//				// This code only used if each append() should have its own Client
+//				client_.close();
+//				client_ = null;
+//				webTargetWithPath_ = null;
+//			}
 			readLock.unlock();
 		}
 	}
@@ -245,7 +252,7 @@ public class PrismeLogAppender extends AbstractAppender {
 			@PluginElement("Layout") Layout<? extends Serializable> layout,
 			@PluginAttribute("ignoreExceptions") Boolean ignoreExceptions) {
 		if (name == null) {
-			log.error("No name provided for PrismeLogAppender");
+			LOGGER.error("No name provided for PrismeLogAppender");
 			return null;
 		}
 		if (layout == null) {
