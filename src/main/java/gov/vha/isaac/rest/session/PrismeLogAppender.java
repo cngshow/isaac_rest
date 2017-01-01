@@ -72,6 +72,9 @@ public class PrismeLogAppender extends AbstractAppender {
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private final Lock readLock = rwLock.readLock();
 
+	private Client client_ = null;
+	private WebTarget webTargetWithPath_ = null;
+
 	/**
 	 * @param name
 	 * @param filter
@@ -121,6 +124,15 @@ public class PrismeLogAppender extends AbstractAppender {
 		 * 		message=broken
 		 */
 
+		final String event_logged_key = "event_logged";
+		final String validation_errors_key = "validation_errors";
+		final String level_key = "level";
+		final String application_name_key = "application_name";
+		final String application_name_value = "ISAAC";
+		final String tag_key = "tag";
+		final String message_key = "message";
+		final String security_token_key = "security_token";
+
 		/*
 		 * If PRISME not configured it should log the error once and never retry
 		 */
@@ -162,10 +174,10 @@ public class PrismeLogAppender extends AbstractAppender {
 			final byte[] bytes = getLayout().toByteArray(event);
 			String msgFromLayout = new String(bytes);
 
-			dto.put("level", prismeLevel);
-			dto.put("application_name", "ISAAC");
-			dto.put("tag", event.getLoggerName());
-			dto.put("message", event.getMessage().getFormattedMessage()); // TODO Joel should use this or msgFromLayout?
+			dto.put(level_key, prismeLevel);
+			dto.put(application_name_key, application_name_value);
+			dto.put(tag_key, event.getLoggerName());
+			dto.put(message_key, event.getMessage().getFormattedMessage()); // TODO Joel should use this or msgFromLayout?
 
 			String eventInputJson = null;
 			try {
@@ -173,7 +185,7 @@ public class PrismeLogAppender extends AbstractAppender {
 			} catch (IOException e) {
 				log.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: {}", dto.toString());
 
-				eventInputJson = "{ \"level\":\"3\", \"tag\":\"LOGGING ERROR\", \"message\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"application_name\":\"ISAAC\" }";
+				eventInputJson = "{ \""+ level_key + "\":\"3\", \"" + tag_key + "\":\"LOGGING ERROR\", \"" + message_key + "\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"" + application_name_key + "\":\"" + application_name_value + "\" }";
 			}
 
 			if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
@@ -183,15 +195,21 @@ public class PrismeLogAppender extends AbstractAppender {
 			}
 			
 			String targetWithPath = PRISME_NOTIFY_URL.replaceAll("\\?", "");
-			String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?security_token=", "");
+			String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
 
-			Client client = ClientBuilder.newClient();
-			WebTarget webTargetWithPath = client.target(targetWithPath);
+			boolean forceCreateNewWebTarget = false;
+			if (client_ == null) {
+				client_ = ClientBuilder.newClient();
+				forceCreateNewWebTarget = true;;
+			}
+			if (webTargetWithPath_ == null || forceCreateNewWebTarget) {
+				webTargetWithPath_ = client_.target(targetWithPath);
+			}
 
 			Map<String, String> params = new HashMap<>();
-			params.put("security_token", securityToken);
+			params.put(security_token_key, securityToken);
 
-			String responseJson = PrismeServiceUtils.postJsonToPrisme(webTargetWithPath, eventInputJson, params);
+			String responseJson = PrismeServiceUtils.postJsonToPrisme(webTargetWithPath_, eventInputJson, params);
 
 			ObjectMapper mapper = new ObjectMapper();
 			Map<?, ?> map = null;
@@ -202,10 +220,12 @@ public class PrismeLogAppender extends AbstractAppender {
 				return;
 			}
 
-			final String event_logged_key = "event_logged";
-
 			if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
-				log.error("FAILED PUBLISHING LOG EVENT TO PRISME: {}", eventInputJson);
+				if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null) {
+					log.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH VALIDATION ERRORS: {}, EVENT: {}", map.get(validation_errors_key).toString(), eventInputJson);
+				} else {
+					log.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH NO KNOWN VALIDATION ERRORS: {}", eventInputJson);
+				}
 			} else {
 				log.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
 			}
