@@ -57,7 +57,7 @@ package gov.vha.isaac.rest.api1.workflow;
 // */
 //@Path(RestPaths.workflowAPIsPathComponent)
 //@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
-//public class WorkflowAPIs {
+public class WorkflowAPIs {
 //
 //	private static Logger log = LogManager.getLogger(WorkflowAPIs.class);
 //
@@ -242,7 +242,7 @@ package gov.vha.isaac.rest.api1.workflow;
 //			throw new RestException(msg + ". " + e.getLocalizedMessage());
 //		}
 //	}
-//}
+}
 
 
 
