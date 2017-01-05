@@ -19,12 +19,10 @@
 package gov.vha.isaac.rest.session;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
@@ -53,7 +51,7 @@ import gov.vha.isaac.ochre.api.UserRole;
 public class PrismeIntegratedUserService implements PrismeUserService {
 	private static Logger log = LogManager.getLogger(PrismeIntegratedUserService.class);
 	
-	private Properties prismeProperties_ = null;
+	//private Properties prismeProperties_ = null;
 
 	protected PrismeIntegratedUserService() {
 		//for HK2
@@ -119,72 +117,8 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 		}
 	}
 
-	/**
-	 * Return a Properties object which contains PRISME properties. Empty if prisme.properties not found. Never returns null.
-	 * 
-	 * @return
-	 */
-	protected Properties getPrismeProperties()
-	{
-//		#if prisme.properties is present prisme must be up!
-//		#edits here require a restart to your Komet instance
-//		#Edit prisme_root to use prisme for roles.
-//		#prisme_root=http://localhost:8080/rails_prisme
-//		#prisme_all_roles_url=https://localhost:443/roles/get_all_roles.json
-//		#prisme_roles_user_url=https://localhost:443/roles/get_user_roles.json
-//		#prisme_roles_ssoi_url=https://localhost:443/roles/get_ssoi_roles.json
-//		#prisme_roles_by_token_url=https://localhost:443/roles/get_roles_by_token.json
-//		#prisme_config_url=https://localhost:443/utilities/prisme_config.json
-//		#Edit this to true to default to the prisme instead of the test roles test harness.
-//		#war_group_id=gov.vha.isaac.gui.rails
-//		#war_artifact_id=rails_komet
-//		#war_version=1.11
-//		#war_repo=releases
-//		#war_classifier=a
-//		#war_package=war
-//		#isaac_root=https://vadev.mantech.com:4848/isaac-rest/
-		if (prismeProperties_ == null) {
-			prismeProperties_ = new Properties();
-
-			InputStream stream = null;
-			try {
-				final URL propertiesFile = this.getClass().getResource("/prisme.properties");
-				
-				stream = this.getClass().getResourceAsStream("/prisme.properties");
-
-				if (stream == null)
-				{
-					log.debug("No prisme.properties file was found on the classpath");
-				}
-				else
-				{
-					log.info("Reading PRISME configuration from prisme.properties file " + propertiesFile);
-					prismeProperties_.load(stream);
-				}
-				
-				return prismeProperties_;
-			}
-			catch (Exception e)
-			{
-				log.error("Unexpected error trying to read properties from the prisme.properties file", e);
-				throw new RuntimeException(e);
-			}
-			finally {
-				if (stream != null) {
-					try {
-						stream.close();
-					} catch (Exception e) {
-						// ignore
-					}
-				}
-			}
-		}
-
-		return prismeProperties_;
-	}
-
 	protected String getPrismeAllRolesUrl() {
-		return getPrismeProperties().getProperty("prisme_all_roles_url");
+		return PrismeServiceUtils.getPrismeProperties().getProperty("prisme_all_roles_url");
 	}
 	/* (non-Javadoc)
 	 * @see gov.vha.isaac.rest.session.PrismeUserService#usePrismeForAllRoles()
@@ -194,7 +128,7 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 		return getPrismeAllRolesUrl() != null;
 	}
 	protected String getPrismeRolesByTokenUrl() {
-		return getPrismeProperties().getProperty("prisme_roles_by_token_url");
+		return PrismeServiceUtils.getPrismeProperties().getProperty("prisme_roles_by_token_url");
 	}
 	/* (non-Javadoc)
 	 * @see gov.vha.isaac.rest.session.PrismeUserService#usePrismeForRolesByToken()
@@ -204,7 +138,7 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 		return getPrismeRolesByTokenUrl() != null;
 	}
 	protected String getSsoTokenByNameUrl() {
-		return getPrismeProperties().getProperty("prisme_roles_user_url");
+		return PrismeServiceUtils.getPrismeProperties().getProperty("prisme_roles_user_url");
 	}
 	/* (non-Javadoc)
 	 * @see gov.vha.isaac.rest.session.PrismeUserService#usePrismeForSsoTokenByName()

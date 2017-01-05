@@ -135,9 +135,10 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		super();
 	}
 
-	public RestMappingItemVersion(DynamicSememe<?> sememe, StampCoordinate stampCoord, int targetColPosition, int qualifierColPosition, 
+	public RestMappingItemVersion(DynamicSememe<?> sememe, int targetColPosition, int qualifierColPosition, 
 			boolean expandDescriptions, boolean expandComments, UUID processId)
 	{
+		final StampCoordinate stampCoordinate = RequestInfo.get().getStampCoordinate();
 		identifiers = new RestIdentifiedObject(sememe.getChronology());
 		mappingItemStamp = new RestStampedVersion(sememe);
 		mapSetConcept = new RestIdentifiedObject(sememe.getAssemblageSequence(), ObjectChronologyType.CONCEPT);
@@ -189,12 +190,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		{
 			if (qualifierConcept != null)
 			{
-				qualifierDescription = Util.readBestDescription(qualifierConcept.sequence);
+				qualifierDescription = Util.readBestDescription(qualifierConcept.sequence, stampCoordinate);
 			}
-			sourceDescription = Util.readBestDescription(sourceConcept.sequence);
+			sourceDescription = Util.readBestDescription(sourceConcept.sequence, stampCoordinate);
 			if (targetConcept != null)
 			{
-				targetDescription = Util.readBestDescription(targetConcept.sequence);
+				targetDescription = Util.readBestDescription(targetConcept.sequence, stampCoordinate);
 			}
 		}
 		else
@@ -209,7 +210,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		{
 			try
 			{
-				comments = CommentAPIs.readComments(sememe.getNid() + "", processId);
+				comments = CommentAPIs.readComments(sememe.getNid() + "", processId, stampCoordinate);
 			}
 			catch (RestException e)
 			{

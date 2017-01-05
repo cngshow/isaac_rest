@@ -310,9 +310,10 @@ public class AssociationWriteAPIs
 		try {
 			// Retrieve current version for comparison in order to short-circuit save if unchanged
 			@SuppressWarnings("unchecked")
-			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class);
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class, State.ANY_STATE_SET);
 			if (currentVersion.isPresent()) {
-				DynamicSememeData currentTargetSememeData = (currentVersion.get().getData() != null && currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
+				DynamicSememeData currentTargetSememeData = (currentVersion.get().getData() != null 
+						&& currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
 
 				UUID currentTargetUuid = null;
 				if (currentTargetSememeData != null) {
@@ -332,10 +333,10 @@ public class AssociationWriteAPIs
 					return new RestWriteResponse(RequestInfo.get().getEditToken(), associationItemSememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 				}
 			} else {
-				log.warn("Failed retrieving latest version of association item dynamic sememe " + id + ". Unconditionally performing update");
+				log.info("Failed retrieving latest version of association item dynamic sememe " + id + ". Module Change?  Unconditionally performing update.");
 			}
 		} catch (Exception e) {
-			log.warn("Failed checking update against latest association item dynamic sememe " + id + " version. Unconditionally performing update", e);
+			log.error("Failed checking update against latest association item dynamic sememe " + id + " version. Unconditionally performing update", e);
 		}
 		
 		@SuppressWarnings({ "unchecked", "rawtypes" })

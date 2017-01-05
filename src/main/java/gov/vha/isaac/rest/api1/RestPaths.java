@@ -30,6 +30,7 @@ public class RestPaths
 	public static final String writePathComponent = "write/";
 	public static final String createPathComponent = "create/";
 	public static final String updatePathComponent = "update/";
+	public static final String clonePathComponent = "clone/";
 
 	public static final String chronologyComponent = "chronology/";
 	public static final String updateStateComponent = "state/";
@@ -82,6 +83,7 @@ public class RestPaths
 	public static final String mappingItemsAppPathComponent = mappingAPIsPathComponent + mappingItemsComponent;
 
 	public static final String mappingSetCreateAppPathComponent = writePathComponent+ mappingAPIsPathComponent + mappingSetComponent + createPathComponent;
+	public static final String mappingSetCloneAppPathComponent = writePathComponent+ mappingAPIsPathComponent + mappingSetComponent + clonePathComponent;
 	public static final String mappingSetUpdateAppPathComponent = writePathComponent+ mappingAPIsPathComponent + mappingSetComponent + updatePathComponent;
 	public static final String mappingItemCreateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + createPathComponent;
 	public static final String mappingItemUpdateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + updatePathComponent;

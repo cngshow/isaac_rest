@@ -165,45 +165,50 @@ public class MappingAPIs
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
+		return getMappingSet(id, processId);
+	}
+	
+	static RestMappingSetVersion getMappingSet(
+			String id,
+			String processId) throws RestException {
 		Optional<SememeChronology<? extends SememeVersion<?>>> sememe = Get.sememeService().getSememesForComponentFromAssemblage(ConceptAPIs.findConceptChronology(id).getNid(), 
-			IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
+				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getSequence()).findAny();
 
-		if (! sememe.isPresent()) 
-		{
-			throw new RestException("The map set identified by '" + id + "' is not present");
-		}
-		
-		UUID processIdUUID = Util.validateWorkflowProcess(processId);
-		
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememe.get()).getLatestVersion(DynamicSememe.class, 
-				Util.getPreWorkflowStampCoordinate(processIdUUID, sememe.get().getNid()));
-		if (latest.isPresent())
-		{
-			ConceptChronology<? extends ConceptVersion<?>> cc = Get.conceptService().getConcept(latest.get().value().getReferencedComponentNid());
-			
-			StampCoordinate conceptCoord = Util.getPreWorkflowStampCoordinate(processIdUUID, cc.getNid());
-			@SuppressWarnings({ "rawtypes", "unchecked" })
-			Optional<LatestVersion<ConceptVersion<?>>> cv =  ((ConceptChronology) cc).getLatestVersion(ConceptVersion.class, 
-					conceptCoord);
-			
-			if (cv.isPresent())
+			if (! sememe.isPresent()) 
 			{
-				//TODO handle contradictions
-				return new RestMappingSetVersion(cv.get().value(), latest.get().value(), conceptCoord, RequestInfo.get().shouldExpand(ExpandUtil.comments), 
-					processIdUUID);
+				throw new RestException("The map set identified by '" + id + "' is not present");
 			}
+			
+			UUID processIdUUID = Util.validateWorkflowProcess(processId);
+			
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememe.get()).getLatestVersion(DynamicSememe.class, 
+					Util.getPreWorkflowStampCoordinate(processIdUUID, sememe.get().getNid()));
+			if (latest.isPresent())
+			{
+				ConceptChronology<? extends ConceptVersion<?>> cc = Get.conceptService().getConcept(latest.get().value().getReferencedComponentNid());
+				
+				StampCoordinate conceptCoord = Util.getPreWorkflowStampCoordinate(processIdUUID, cc.getNid());
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				Optional<LatestVersion<ConceptVersion<?>>> cv =  ((ConceptChronology) cc).getLatestVersion(ConceptVersion.class, 
+						conceptCoord);
+				
+				if (cv.isPresent())
+				{
+					//TODO handle contradictions
+					return new RestMappingSetVersion(cv.get().value(), latest.get().value(), conceptCoord, RequestInfo.get().shouldExpand(ExpandUtil.comments), 
+						processIdUUID);
+				}
+				else 
+				{
+					throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
+				}
+			} 
 			else 
 			{
 				throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
 			}
-		} 
-		else 
-		{
-			throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
-		}
 	}
-	
 	
 	/**
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
@@ -259,7 +264,7 @@ public class MappingAPIs
 				if (latest.isPresent())
 				{
 					//TODO handle contradictions
-					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), 
 						positions.targetPos, positions.qualfierPos,
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						RequestInfo.get().shouldExpand(ExpandUtil.comments),
@@ -334,7 +339,7 @@ public class MappingAPIs
 		if (latest.isPresent())
 		{
 			//TODO handle contradictions
-			return new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), RequestInfo.get().getStampCoordinate(), 
+			return new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), 
 				positions.targetPos, positions.qualfierPos,
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 				RequestInfo.get().shouldExpand(ExpandUtil.comments),

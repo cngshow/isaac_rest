@@ -21,7 +21,6 @@ package gov.vha.isaac.rest.api1.sememe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -32,18 +31,15 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
@@ -153,12 +149,10 @@ public class SememeWriteAPIs
 				}
 			}
 			
-			if (preferredDialects.size() == 0)
-			{
-				preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getConceptSequence());
-			}
+			//Previously, we would create a US English preferred dialect here if no preferred were specified, but that made it impossible to just 
+			//add an 'acceptable' description.
 			
-			if (creationData.preferredInDialectAssemblagesIds != null)
+			if (creationData.acceptableInDialectAssemblagesIds != null)
 			{
 				for (String id : creationData.acceptableInDialectAssemblagesIds) {
 					acceptableDialects.add(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.acceptableInDialectAssemblagesIds", id));
@@ -288,7 +282,7 @@ public class SememeWriteAPIs
 		try {
 			// This code short-circuits update if passed data are identical to current relevant version
 			@SuppressWarnings({ "unchecked" })
-			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class);
+			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class, State.ANY_STATE_SET);
 			
 			if (currentVersion.isPresent()) {
 				int passedCaseSignificanceConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", descriptionSememeUpdateData.caseSignificanceConcept);
@@ -619,19 +613,19 @@ public class SememeWriteAPIs
 			{
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class);
+					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
-						if (equals(currentVersion.get().getData(), passedData)) {
+						if (equals(currentVersion.get().getData(), passedData) && currentVersion.get().getState() == stateToUse) {
 							log.debug("Not updating dynamic sememe {} because data unchanged", sememeChronology.getPrimordialUuid());
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update.");
 					}
 				} catch (Exception e) {
-					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -647,7 +641,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class);
+					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -657,10 +651,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update.");
 					}
 				} catch (Exception e) {
-					log.warn("Failed checking update against current " + type + " sememe " + id + " state. Unconditionally performing update", e);
+					log.error("Failed checking update against current " + type + " sememe " + id + " state. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -674,7 +668,7 @@ public class SememeWriteAPIs
 			{
 				try {
 					@SuppressWarnings({ "unchecked", "rawtypes" })
-					Optional<SememeVersionImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class);
+					Optional<SememeVersionImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -683,10 +677,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update.");
 					}
 				} catch (Exception e) {
-					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes", "unused" })
@@ -701,7 +695,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class);
+					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -711,10 +705,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update");
 					}
 				} catch (Exception e) {
-					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -731,7 +725,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class);
+					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class, State.ANY_STATE_SET);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -741,10 +735,10 @@ public class SememeWriteAPIs
 							return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 						}
 					} else {
-						log.warn("Failed retrieving latest version of " + type + " sememe " + id + ". Unconditionally performing update");
+						log.info("Failed retrieving latest version of " + type + " sememe " + id + ". Module change?  Unconditionally performing update");
 					}
 				} catch (Exception e) {
-					log.warn("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
+					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -774,6 +768,11 @@ public class SememeWriteAPIs
 		catch (Exception e)
 		{
 			log.error("Unexpected", e);
+			
+			//TODO need to test and see if cancel works... we mostly likely got here because of a validator failure.
+			//TODO still need to run all of the validators before we attempt to save, throw a better error on validation failure.
+			Get.commitService().cancel(sememeChronology, RequestInfo.get().getEditCoordinate());
+			
 			throw new RuntimeException("error committing", e);
 		}
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), sememeChronology.getPrimordialUuid());

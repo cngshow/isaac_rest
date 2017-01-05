@@ -181,13 +181,18 @@ public class Util
 	 */
 	public static String readBestDescription(int conceptId)
 	{
+		return readBestDescription(conceptId, RequestInfo.get().getStampCoordinate());
+	}
+
+	public static String readBestDescription(int conceptId, StampCoordinate sc)
+	{
 		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
 		
 		int conceptNid = Get.identifierService().getConceptNid(conceptId);
 		
 		descriptionOptional = RequestInfo.get().getLanguageCoordinate().getDescription(
 				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()),
-				RequestInfo.get().getStampCoordinate());
+				sc);
 		
 		if (descriptionOptional.isPresent())
 		{
@@ -250,7 +255,11 @@ public class Util
 	 */
 	public static StampCoordinate getPreWorkflowStampCoordinate(String workflowProcessId, int componentNid) throws RestException
 	{
-		return getPreWorkflowStampCoordinate(validateWorkflowProcess(workflowProcessId), componentNid);
+		return getPreWorkflowStampCoordinate(workflowProcessId, componentNid, RequestInfo.get().getStampCoordinate());
+	}
+	public static StampCoordinate getPreWorkflowStampCoordinate(String workflowProcessId, int componentNid, StampCoordinate sc) throws RestException
+	{
+		return getPreWorkflowStampCoordinate(validateWorkflowProcess(workflowProcessId), componentNid, sc);
 	}
 	
 	
@@ -264,6 +273,11 @@ public class Util
 	 * @throws RestException if the provided processId is invalid
 	 */
 	public static StampCoordinate getPreWorkflowStampCoordinate(UUID workflowProcessId, int componentNid)
+	{
+		return getPreWorkflowStampCoordinate(workflowProcessId, componentNid, RequestInfo.get().getStampCoordinate());
+	}
+
+	public static StampCoordinate getPreWorkflowStampCoordinate(UUID workflowProcessId, int componentNid, StampCoordinate sc)
 	{
 		if (componentNid >= 0) {
 			throw new RuntimeException("Internal error - sequence passed where nid required: " + componentNid);
@@ -281,7 +295,7 @@ public class Util
 			}
 			else
 			{
-				return RequestInfo.get().getStampCoordinate();
+				return sc;
 			}
 		}
 	}

@@ -59,7 +59,6 @@ import gov.vha.isaac.ochre.api.logic.LogicalExpression;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilder;
 import gov.vha.isaac.ochre.api.logic.LogicalExpressionBuilderService;
 import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
@@ -256,7 +255,7 @@ public class ConceptWriteAPIs
 				id);
 		} catch (LatestVersionNotFoundException e) {
 			// TODO remove this hack when modules work properly
-			log.warn(e);
+			log.warn("Concept not found on edit path, do you intend to change the module?", e);
 			return ComponentWriteAPIs.resetState(
 					RequestInfo.get().getEditCoordinate(),
 					RequestInfo.get().getStampCoordinate(),

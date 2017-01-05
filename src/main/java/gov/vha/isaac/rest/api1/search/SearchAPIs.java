@@ -25,8 +25,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import javax.annotation.security.RolesAllowed;
 import java.util.function.Predicate;
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -43,15 +43,23 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.LongSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
+import gov.vha.isaac.ochre.api.identity.StampedVersion;
+import gov.vha.isaac.ochre.api.index.ComponentSearchResult;
 import gov.vha.isaac.ochre.api.index.ConceptSearchResult;
 import gov.vha.isaac.ochre.api.index.SearchResult;
 import gov.vha.isaac.ochre.api.util.Interval;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
+import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.impl.utility.NumberUtilities;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
@@ -318,7 +326,7 @@ public class SearchAPIs
 						if (conSequence >= 0)
 						{
 							//TODO add a sememe on all static sememes so we can identify them.  For now, hard code a few common ones.
-							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SNOMED_INTEGER_ID.getConceptSequence() == conSequence 
+							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SCTID.getConceptSequence() == conSequence 
 									|| Get.identifierService().getConceptSequenceForUuids(codeConstant) == conSequence)
 							{
 								return true;
@@ -371,66 +379,81 @@ public class SearchAPIs
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Optional<RestSearchResult> createRestSearchResult(SearchResult sr, String query)
 	{
-		SememeChronology sc = ((SememeChronology) Get.sememeService().getSememe(sr.getNid()));
-		Integer conceptSequence = null;
-		if (sr instanceof ConceptSearchResult)
+		switch (Get.identifierService().getChronologyTypeForNid(sr.getNid()))
 		{
-			conceptSequence = ((ConceptSearchResult)sr).getConceptSequence();
+			case CONCEPT:
+				ConceptChronology cc = ((ConceptChronology) Get.conceptService().getConcept(sr.getNid()));
+				Optional<LatestVersion<ConceptVersion>> concept = cc.getLatestVersion(ConceptVersion.class, RequestInfo.get().getStampCoordinate());
+				if (concept.isPresent())
+				{
+					return Optional.of(new RestSearchResult(sr.getNid(), query, sr.getScore(), concept.get().value().getState(), cc.getConceptSequence()));
+				}
+				break;
+			case SEMEME:
+			{
+				SememeChronology sc = ((SememeChronology) Get.sememeService().getSememe(sr.getNid()));
+				Integer conceptSequence = null;
+				if (sr instanceof ConceptSearchResult)
+				{
+					conceptSequence = ((ConceptSearchResult) sr).getConceptSequence();
+				}
+
+				switch (sc.getSememeType())
+				{
+					case DESCRIPTION:
+						Optional<LatestVersion<DescriptionSememe>> text = sc.getLatestVersion(DescriptionSememe.class, RequestInfo.get().getStampCoordinate());
+						if (text.isPresent())
+						{
+							//TODO handle contradictions
+							return Optional
+									.of(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState(), conceptSequence));
+						}
+						break;
+					case LONG:
+						Optional<LatestVersion<LongSememe>> longSememe = sc.getLatestVersion(LongSememe.class, RequestInfo.get().getStampCoordinate());
+						if (longSememe.isPresent())
+						{
+							//TODO handle contradictions
+							return Optional.of(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore(),
+									longSememe.get().value().getState(), conceptSequence));
+						}
+						break;
+					case STRING:
+						Optional<LatestVersion<StringSememe>> stringSememe = sc.getLatestVersion(StringSememe.class, RequestInfo.get().getStampCoordinate());
+						if (stringSememe.isPresent())
+						{
+							return Optional.of(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore(),
+									stringSememe.get().value().getState(), conceptSequence));
+						}
+						break;
+					case DYNAMIC:
+						Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
+						if (ds.isPresent())
+						{
+							return Optional
+									.of(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore(), ds.get().value().getState(), conceptSequence));
+						}
+						break;
+					//No point in reading back details on these, they will be exactly what was searched for
+					case COMPONENT_NID: case LOGIC_GRAPH:
+						//Should never match on these, just let them fall through
+					case UNKNOWN: case MEMBER: case RELATIONSHIP_ADAPTOR:
+					default :
+						Optional<LatestVersion<SememeVersion>> sv = sc.getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
+						if (sv.isPresent())
+						{
+							return Optional.of(new RestSearchResult(sr.getNid(), query.trim(), sr.getScore(), sv.get().value().getState(), conceptSequence));
+						}
+						break;
+				}
+				break;
+			}
+			case UNKNOWN_NID:
+			default :
+				log.error("Unexpected case of unknown nid type in search result handling! nid: " + sr.getNid());
+				break;
+			
 		}
-
-		switch(sc.getSememeType())
-		{
-		case DESCRIPTION:
-			Optional<LatestVersion<DescriptionSememe>> text = sc.getLatestVersion(DescriptionSememe.class, 
-					RequestInfo.get().getStampCoordinate());
-			if (text.isPresent())
-			{
-				//TODO handle contradictions
-				return Optional.of(new RestSearchResult(sr.getNid(), text.get().value().getText(), sr.getScore(), text.get().value().getState(), conceptSequence));
-			}
-			break;
-		case LONG:
-			Optional<LatestVersion<LongSememe>> longSememe = sc.getLatestVersion(LongSememe.class, 
-					RequestInfo.get().getStampCoordinate());
-			if (longSememe.isPresent())
-			{
-				//TODO handle contradictions
-				return Optional.of(new RestSearchResult(sr.getNid(), longSememe.get().value().getLongValue() + "", sr.getScore(), 
-						longSememe.get().value().getState(), conceptSequence));
-			}
-			break;
-		case STRING:
-			Optional<LatestVersion<StringSememe>> stringSememe = sc.getLatestVersion(StringSememe.class, 
-					RequestInfo.get().getStampCoordinate());
-			if (stringSememe.isPresent())
-			{
-				return Optional.of(new RestSearchResult(sr.getNid(), stringSememe.get().value().getString(), sr.getScore(),
-						stringSememe.get().value().getState(), conceptSequence));
-			}
-			break;
-		case DYNAMIC:
-			Optional<LatestVersion<DynamicSememe>> ds = sc.getLatestVersion(DynamicSememe.class, RequestInfo.get().getStampCoordinate());
-			if (ds.isPresent())
-			{
-				return Optional.of(new RestSearchResult(sr.getNid(), ds.get().value().dataToString(), sr.getScore(),
-						ds.get().value().getState(), conceptSequence));
-			}
-			break;
-			//No point in reading back details on these, they will be exactly what was searched for
-		case COMPONENT_NID: case LOGIC_GRAPH:
-			//Should never match on these, just let them fall through
-		case UNKNOWN: case MEMBER: case RELATIONSHIP_ADAPTOR:
-		default :
-			Optional<LatestVersion<SememeVersion>> sv = sc.getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
-			if (sv.isPresent())
-			{
-				return Optional.of(new RestSearchResult(sr.getNid(), query.trim(), sr.getScore(),
-						sv.get().value().getState(), conceptSequence));
-			}
-			break;
-
-		}
-
 		return Optional.empty();
 	}
 
@@ -683,6 +706,106 @@ public class SearchAPIs
 				maxPageSize,
 				restPath,
 				nid + "");
+	}
+	
+
+	/**
+	 * Do a lookup, essentially, of a component by an internal identifier.  This supports UUIDs, NIDs, and Sequences.
+	 * Note that, despite the name of the method, this should not be used to search by external identifiers such as VUIDs or SCTIDs - for those, use 
+	 * the sememeSearch api call.
+	 * @param query The identifier to look for.  Expected to be parseable as a UUID, or an integer.  
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0
+	 * @param expand Optional Comma separated list of fields to expand or include directly in the results.  Supports:
+	 *  - 'uuid' (return the UUID of the matched sememe, rather than just the nid)
+	 *  - 'referencedConcept' (return the conceptChronology  of the nearest concept found by following the referencedComponent references 
+	 *  of the matched sememe.  In most cases, this concept  will be the concept that directly contains the sememe - but in some cases, 
+	 *  sememes may be nested under other sememes causing this to walk up until it finds a concept)
+	 *  - 'versionsLatestOnly' if 'referencedConcept' is included in the expand list, you may also include 'versionsLatestOnly' to return the 
+	 *  latest version of the referenced concept chronology.
+	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
+	 *  referencedConcept.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+
+	 * @return - the list of items that were found that matched - note that if the passed in UUID matched on a sememe - the returned top level object will
+	 * be the concept that references the sememe with the hit.  Scores are irrlevant with this call, you will either have an exact match, or no result.
+	 * Typically, there will only be one result - but if you pass a sequence, it may map to a concept and a sememe, so you may get two results.
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.idComponent)
+	public RestSearchResultPage idSearch(
+			@QueryParam(RequestParameters.query) String query,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(RequestParameters.maxPageSizeDefault) int maxPageSize,
+			@QueryParam(RequestParameters.expand) String expand,
+			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.query,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		List<SearchResult> results = new ArrayList<>();
+		final String restPath = RestPaths.searchAppPathComponent + RestPaths.idComponent + "?" + RequestParameters.query + "=" + query;
+		
+		if (StringUtils.isBlank(query))
+		{
+			throw new RestException("The parameter 'query' must be a UUID or an integer for an id query");
+		}
+		String temp = query.trim();
+		Optional<UUID> uuid = UUIDUtil.getUUID(temp);
+		if (uuid.isPresent())
+		{
+			if (Get.identifierService().hasUuid(uuid.get()))
+			{
+				results.add(new ComponentSearchResult(Get.identifierService().getNidForUuids(uuid.get()), 1));
+			}
+		}
+		else
+		{
+			Optional<Integer> intValue = NumericUtils.getInt(temp);
+			if (intValue.isPresent())
+			{
+				if (intValue.get() < 0 && Get.identifierService().getChronologyTypeForNid(intValue.get()) != ObjectChronologyType.UNKNOWN_NID)
+				{
+					Optional<? extends ObjectChronology<? extends StampedVersion>> obj = Get.identifiedObjectService().getIdentifiedObjectChronology(intValue.get());
+					if (obj.isPresent())
+					{
+						results.add(new ComponentSearchResult(obj.get().getNid(), 1));
+					}
+				}
+				else if (intValue.get() > 0)
+				{
+					if (Get.conceptService().hasConcept(intValue.get()))
+					{
+						results.add(new ComponentSearchResult(Get.identifierService().getConceptNid(intValue.get()), 1));
+					}
+					if (Get.sememeService().hasSememe(intValue.get()))
+					{
+						results.add(new ComponentSearchResult(Get.identifierService().getSememeNid(intValue.get()), 1));
+					}
+				}
+			}
+		}
+		
+		List<SearchResult> ochreSearchResults = new ArrayList<>();
+		for (ConceptSearchResult csr : LookupService.get().getService(DescriptionIndexer.class).mergeResultsOnConcept(results))
+		{
+			ochreSearchResults.add((SearchResult) csr);
+		}
+
+		return getRestSearchResultsFromOchreSearchResults(
+				ochreSearchResults,
+				pageNum,
+				maxPageSize,
+				restPath,
+				temp);
 	}
 	
 	private Integer[] processAssemblageRestrictions(Set<String> sememeAssemblageIds) throws RestException

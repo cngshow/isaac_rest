@@ -28,13 +28,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
-
 import org.apache.commons.lang3.StringUtils;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
@@ -214,25 +211,25 @@ public class CoordinatesUtil {
 					}
 				}
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("english")) {
-				return TermAux.ENGLISH_LANGUAGE.getConceptSequence();
+				return MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("spanish")) {
-				return TermAux.SPANISH_LANGUAGE.getConceptSequence();
+				return MetaData.SPANISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("french")) {
-				return TermAux.FRENCH_LANGUAGE.getConceptSequence();
+				return MetaData.FRENCH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("danish")) {
-				return TermAux.DANISH_LANGUAGE.getConceptSequence();
+				return MetaData.DANISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("polish")) {
-				return TermAux.POLISH_LANGUAGE.getConceptSequence();
+				return MetaData.POLISH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("dutch")) {
-				return TermAux.DUTCH_LANGUAGE.getConceptSequence();
+				return MetaData.DUTCH_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("lithuanian")) {
-				return TermAux.LITHUANIAN_LANGUAGE.getConceptSequence();
+				return MetaData.LITHUANIAN_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("chinese")) {
-				return TermAux.CHINESE_LANGUAGE.getConceptSequence();
+				return MetaData.CHINESE_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("japanese")) {
-				return TermAux.JAPANESE_LANGUAGE.getConceptSequence();
+				return MetaData.JAPANESE_LANGUAGE.getConceptSequence();
 			} else if (languageParamStr.trim().toLowerCase(Locale.ENGLISH).startsWith("swedish")) {
-				return TermAux.SWEDISH_LANGUAGE.getConceptSequence();
+				return MetaData.SWEDISH_LANGUAGE.getConceptSequence();
 			}
 		}
 
@@ -255,8 +252,8 @@ public class CoordinatesUtil {
 						int nid = Get.identifierService().getConceptNid(dialectIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
 							int seq = Get.identifierService().getConceptSequence(dialectIdIntIdOptional.get());
-							if (seq == TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence()
-									|| seq == TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence()) {
+							if (seq == MetaData.US_ENGLISH_DIALECT.getConceptSequence()
+									|| seq == MetaData.GB_ENGLISH_DIALECT.getConceptSequence()) {
 								seqList.add(seq);
 								continue;
 							}
@@ -264,17 +261,17 @@ public class CoordinatesUtil {
 					} else if ((dialectUuidOptional = UUIDUtil.getUUID(dialectId.trim())).isPresent()) {
 						if (dialectUuidOptional.isPresent() && Get.identifierService().hasUuid(dialectUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(dialectUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 							int seq = Get.identifierService().getConceptSequenceForUuids(dialectUuidOptional.get());
-							if (seq == TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence()
-									|| seq == TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence()) {
+							if (seq == MetaData.US_ENGLISH_DIALECT.getConceptSequence()
+									|| seq == MetaData.GB_ENGLISH_DIALECT.getConceptSequence()) {
 								seqList.add(seq);
 								continue;
 							}
 						}
 					} else if (dialectId.trim().toLowerCase(Locale.ENGLISH).startsWith("us")) {
-						seqList.add(TermAux.US_DIALECT_ASSEMBLAGE.getConceptSequence());
+						seqList.add(MetaData.US_ENGLISH_DIALECT.getConceptSequence());
 						continue;
 					} else if (dialectId.trim().toLowerCase(Locale.ENGLISH).startsWith("gb")) {
-						seqList.add(TermAux.GB_DIALECT_ASSEMBLAGE.getConceptSequence());
+						seqList.add(MetaData.GB_ENGLISH_DIALECT.getConceptSequence());
 						continue;
 					}
 
@@ -326,13 +323,13 @@ public class CoordinatesUtil {
 							}
 						}
 					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("fsn")) {
-						seqList.add(TermAux.FULLY_SPECIFIED_DESCRIPTION_TYPE.getConceptSequence());
+						seqList.add(MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 						continue;
 					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("synonym")) {
-						seqList.add(TermAux.SYNONYM_DESCRIPTION_TYPE.getConceptSequence());
+						seqList.add(MetaData.SYNONYM.getConceptSequence());
 						continue;
 					} else if (descTypeId.trim().toLowerCase(Locale.ENGLISH).startsWith("definition")) {
-						seqList.add(TermAux.DEFINITION_DESCRIPTION_TYPE.getConceptSequence());
+						seqList.add(MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence());
 						continue;
 					}
 
@@ -501,20 +498,20 @@ public class CoordinatesUtil {
 			Optional<Integer> pathIntIdOptional = NumericUtils.getInt(pathStr.trim());
 			if (pathIntIdOptional.isPresent()) {
 				int seq = Get.identifierService().getConceptSequence(pathIntIdOptional.get());
-				if (Get.taxonomyService().getTaxonomyChildSequences(TermAux.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
+				if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
 					return seq;
 				}
 			} else if ((pathUuidOptional = UUIDUtil.getUUID(pathStr.trim())).isPresent()) {
 				if (pathUuidOptional.isPresent() && Get.identifierService().hasUuid(pathUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(pathUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
 					int seq = Get.identifierService().getConceptSequenceForUuids(pathUuidOptional.get());
-					if (Get.taxonomyService().getTaxonomyChildSequences(TermAux.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
+					if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.PATH.getConceptSequence()).anyMatch((i) -> i == seq)) {
 						return seq;
 					}
 				}
 			} else if (pathStr.trim().equalsIgnoreCase("development")) {
-				return TermAux.DEVELOPMENT_PATH.getConceptSequence();
+				return MetaData.DEVELOPMENT_PATH.getConceptSequence();
 			} else if (pathStr.trim().equalsIgnoreCase("master")) {
-				return TermAux.MASTER_PATH.getConceptSequence();
+				return MetaData.MASTER_PATH.getConceptSequence();
 			}
 		}
 

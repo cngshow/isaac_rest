@@ -234,17 +234,17 @@ public class TaxonomyAPIs
 			try
 			{
 				parentConcept = ConceptAPIs.findConceptChronology(parentSequence + "");
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, 
+						Util.getPreWorkflowStampCoordinate(processId, parentConcept.getNid()));
+				if (cv.isPresent())
+				{
+					count++;
+				}
 			}
 			catch (RestException e)
 			{
-				throw new RuntimeException("Internal Error!", e);
-			}
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, 
-					Util.getPreWorkflowStampCoordinate(processId, parentConcept.getNid()));
-			if (cv.isPresent())
-			{
-				count++;
+				log.error("Unexpected error reading parent concept " + parentSequence + " will not be included in result!", e);
 			}
 		}
 		rcv.setParentCount(count);
@@ -309,30 +309,30 @@ public class TaxonomyAPIs
 				try
 				{
 					parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
+					@SuppressWarnings("unchecked")
+					Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, parentConceptChronlogy.getNid()));
+					if (cv.isPresent())
+					{
+						//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
+						//TODO handle contradictions
+						RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated(), 
+								includeSememeMembership, processId);
+						rcv.addParent(parentVersion);
+						if (remainingParentDepth > 0)
+						{
+							addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
+									perParentHandledConcepts, processId);
+						}
+						else if (countLeafParents)
+						{
+							countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, processId);
+						}
+					}
 				}
 				catch (RestException e)
 				{
-					throw new RuntimeException("Internal Error!", e);
-				}
-				@SuppressWarnings("unchecked")
-				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, 
-						Util.getPreWorkflowStampCoordinate(processId, parentConceptChronlogy.getNid()));
-				if (cv.isPresent())
-				{
-					//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
-					//TODO handle contradictions
-					RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated(), 
-							includeSememeMembership, processId);
-					rcv.addParent(parentVersion);
-					if (remainingParentDepth > 0)
-					{
-						addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
-								perParentHandledConcepts, processId);
-					}
-					else if (countLeafParents)
-					{
-						countParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, processId);
-					}
+					log.error("Unexpected error reading parent concept " + parentSequence + " will not be included in result!", e);
 				}
 				
 				// Add perParentHandledConcepts concepts back to handledConcepts

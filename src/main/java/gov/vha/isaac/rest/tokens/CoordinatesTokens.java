@@ -241,7 +241,11 @@ public class CoordinatesTokens {
 			return null;
 		} else {
 			synchronized (TOKEN_BY_PARAMS_CACHE_LOCK) {
-				return TOKEN_BY_PARAMS_CACHE.get(CoordinatesUtil.encodeCoordinateParameters(params));
+				if (TOKEN_BY_PARAMS_CACHE != null)
+				{
+					return TOKEN_BY_PARAMS_CACHE.get(CoordinatesUtil.encodeCoordinateParameters(params));
+				}
+				return null;
 			}
 		}
 	}

@@ -57,7 +57,7 @@ import gov.vha.isaac.ochre.api.UserRoleConstants;
 // */
 //@Path(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent)
 //@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
-//public class WorkflowWriteAPIs {
+public class WorkflowWriteAPIs {
 //	private static Logger log = LogManager.getLogger(WorkflowWriteAPIs.class);
 //
 //	/**
@@ -314,5 +314,5 @@ import gov.vha.isaac.ochre.api.UserRoleConstants;
 //					+ " " + e.getLocalizedMessage());
 //		}
 //	}
-//}
+}
 
