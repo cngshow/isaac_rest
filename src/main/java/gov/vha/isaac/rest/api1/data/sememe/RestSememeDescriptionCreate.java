@@ -53,14 +53,15 @@ public class RestSememeDescriptionCreate extends RestSememeDescriptionUpdate
 	
 	/**
 	 * The optional concepts (UUID, nid or sequence) that represent preferred dialects attached to this sememe.  If not specified, 
-	 * defaults to US English
+	 * no preferred dialect is added.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Collection<String> preferredInDialectAssemblagesIds = new HashSet<>();
 
 	/**
-	 * The optional concepts (UUID, nid or sequence) that represent acceptable dialects attached to this sememe.
+	 * The optional concepts (UUID, nid or sequence) that represent acceptable dialects attached to this sememe.  If not specified, 
+	 * no acceptable dialect is added.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)

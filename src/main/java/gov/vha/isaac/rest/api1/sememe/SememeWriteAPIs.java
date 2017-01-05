@@ -20,9 +20,7 @@ package gov.vha.isaac.rest.api1.sememe;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Optional;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -33,11 +31,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -153,12 +149,10 @@ public class SememeWriteAPIs
 				}
 			}
 			
-			if (preferredDialects.size() == 0)
-			{
-				preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getConceptSequence());
-			}
+			//Previously, we would create a US English preferred dialect here if no preferred were specified, but that made it impossible to just 
+			//add an 'acceptable' description.
 			
-			if (creationData.preferredInDialectAssemblagesIds != null)
+			if (creationData.acceptableInDialectAssemblagesIds != null)
 			{
 				for (String id : creationData.acceptableInDialectAssemblagesIds) {
 					acceptableDialects.add(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionCreateData.acceptableInDialectAssemblagesIds", id));

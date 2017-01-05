@@ -1,11 +1,21 @@
 ISAAC-Rest Changelog 
 
-Any time a code change is made that impacts the API returned to callers, increment the value in API ChangeLog.md, and in RestSystemInfo
+Any time a code change is made that impacts the API returned to callers, increment the value in API ChangeLog.md (here), and in RestSystemInfo
 
 During development, we can increment this, so long as our client code (komet) is aware of the changes.
 
-After an official release, any API change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
+After we gain outside customers on the API, any change should be done by bumping the major version - and creating new rest paths (/rest/2/, /rest/write/2/)
 If reverse compatibility is required to be maintained, then the rest/1 or rest/write/1 code must remain.
+
+Until that happens, however - we follow the procedure of bumping the release version if it is an API change that won't break KOMET code - such as adding a new 
+parameter.  However, any change that will break KOMET code - such as changing the operation of an existing method (which KOMET uses) - then the minor revision 
+(and/or the major revision) should be bumped, to force a KOMET runtime breakage due to the incompatibility. 
+
+Bug fixes should not be documented here, rather, than should be documented in the changelog file.
+
+* 2017/01/?? - 1.9.5:
+    * Change the behavior of the create description API, so that is no longer adds a preferred US English dialect if no preferred dialects are specified.  
+        It will now only builds the dialects specifically requested.
 
 * 2016/12/02 - 1.9.4:
     * Add an api for search by internal ID (UUID, Nid, Sequence)
