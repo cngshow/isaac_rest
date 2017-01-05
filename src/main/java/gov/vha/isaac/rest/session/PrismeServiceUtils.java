@@ -25,14 +25,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import gov.vha.isaac.ochre.api.LookupService;
 
 /**
  * 
@@ -153,8 +153,8 @@ public class PrismeServiceUtils {
 	}
 	
 	static String getResultJsonFromPrisme(String targetStr, String pathStr, Map<String, String> params) {
-		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target(targetStr);
+		ClientService clientService = LookupService.getServiceWithNoLog(ClientService.class);
+		WebTarget target = clientService.getClient().target(targetStr);
 		target = target.path(pathStr);
 		
 		return getResultJsonFromPrisme(target, params);
