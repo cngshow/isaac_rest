@@ -5,6 +5,6 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/01/?? - 1.34 - PENDING
+* 2017/01/05 - 1.34
     * Adding initial support for writing errors and warnings back to PRISME
     * API changes per the ChangeLog file.
