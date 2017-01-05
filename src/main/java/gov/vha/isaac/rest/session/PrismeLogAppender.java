@@ -116,7 +116,7 @@ public class PrismeLogAppender extends AbstractAppender {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-		EVENT_QUEUE.add(event);
+		//EVENT_QUEUE.add(event);
 	}
 	
 	static void sendEvent(LogEvent event) {
