@@ -7,4 +7,4 @@ API version number, not the release version number.
 
 * 2017/01/?? - 1.34 - PENDING
     * Adding initial support for writing errors and warnings back to PRISME
-    * 
+    * API changes per the ChangeLog file.
