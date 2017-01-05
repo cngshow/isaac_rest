@@ -153,7 +153,7 @@ public class PrismeServiceUtils {
 	}
 	
 	static String getResultJsonFromPrisme(String targetStr, String pathStr, Map<String, String> params) {
-		ClientService clientService = LookupService.getServiceWithNoLog(ClientService.class);
+		ClientService clientService = LookupService.getService(ClientService.class);
 		WebTarget target = clientService.getClient().target(targetStr);
 		target = target.path(pathStr);
 		

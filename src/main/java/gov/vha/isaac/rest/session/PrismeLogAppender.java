@@ -24,13 +24,10 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
@@ -52,8 +49,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.vha.isaac.ochre.api.LookupService;
-
 /**
  * 
  * {@link PrismeLogAppender}
@@ -66,6 +61,8 @@ public class PrismeLogAppender extends AbstractAppender {
 	private static final long serialVersionUID = -228479087489358210L;
 	
 	final static BlockingQueue<LogEvent> EVENT_QUEUE = new LinkedBlockingQueue<>();
+	
+	private static Client CLIENT = null;
 
 	final static String PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties().getProperty("prisme_notify_url");
 
@@ -211,9 +208,7 @@ public class PrismeLogAppender extends AbstractAppender {
 				String targetWithPath = PrismeLogAppender.PRISME_NOTIFY_URL.replaceAll("\\?.*", "");
 				String securityToken = PrismeLogAppender.PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
 	
-				ClientService clientService = LookupService.getServiceWithNoLog(ClientService.class);
-				WebTarget webTargetWithPath = clientService.getClient().target(targetWithPath);
-				//WebTarget webTargetWithPath = (PrismeServiceUtils.CLIENT != null ? PrismeServiceUtils.CLIENT : (PrismeServiceUtils.CLIENT = ClientBuilder.newClient())).target(targetWithPath);
+				WebTarget webTargetWithPath = (CLIENT != null ? CLIENT : (CLIENT = ClientBuilder.newClient())).target(targetWithPath);
 	
 				Map<String, String> params = new HashMap<>();
 				params.put(security_token_key, securityToken);

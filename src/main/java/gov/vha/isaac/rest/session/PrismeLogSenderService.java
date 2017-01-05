@@ -33,29 +33,29 @@ import org.jvnet.hk2.annotations.Service;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-@RunLevel(0)
+@RunLevel(1)
 @Service
 public class PrismeLogSenderService {
 	/**
 	 * 
 	 */
 	PrismeLogSenderService() {
-		while (true) { // TODO Joel should there be a shutdown hook?
-			try {
-				LogEvent nextEvent = PrismeLogAppender.EVENT_QUEUE.take();
-				
-				if (nextEvent.getLoggerName().equals("gov.vha.isaac.ochre.api.LookupService")
-						&& nextEvent.getLevel().getStandardLevel().intLevel() >= StandardLevel.WARN.intLevel()) {
-					// Avoid infinite recursion by not sending messages about log events caused by sending messages
-					//System.out.println("Not sending log event: " + nextEvent.getLoggerName() + ": " + nextEvent.getMessage());
-					continue;
-				}
-				
-				PrismeLogAppender.sendEvent(nextEvent);
-
-			} catch (InterruptedException e) {
-				// TODO Joel how to log without recursion?
-			}
-		}
+//		while (true) { // TODO Joel should there be a shutdown hook?
+//			try {
+//				LogEvent nextEvent = PrismeLogAppender.EVENT_QUEUE.take();
+//				
+//				if (nextEvent.getLoggerName().equals("gov.vha.isaac.ochre.api.LookupService")
+//						&& nextEvent.getLevel().getStandardLevel().intLevel() >= StandardLevel.WARN.intLevel()) {
+//					// Avoid infinite recursion by not sending messages about log events caused by sending messages
+//					//System.out.println("Not sending log event: " + nextEvent.getLoggerName() + ": " + nextEvent.getMessage());
+//					continue;
+//				}
+//				
+//				PrismeLogAppender.sendEvent(nextEvent);
+//
+//			} catch (InterruptedException e) {
+//				// TODO Joel how to log without recursion?
+//			}
+//		}
 	}
 }
