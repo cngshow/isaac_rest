@@ -41,6 +41,7 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -151,6 +152,11 @@ public class CommentAPIs
 	 * @throws RestException
 	 */
 	public static ArrayList<RestCommentVersion> readComments(String id, UUID processId) throws RestException
+	{
+		return readComments(id, processId, RequestInfo.get().getStampCoordinate());
+	}
+
+	public static ArrayList<RestCommentVersion> readComments(String id, UUID processId, StampCoordinate sc) throws RestException
 	{
 		ArrayList<RestCommentVersion> results = new ArrayList<>();
 		

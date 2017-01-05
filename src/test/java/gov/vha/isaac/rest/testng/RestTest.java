@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,8 +28,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -43,6 +43,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,6 +54,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -61,6 +63,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -105,7 +108,6 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
-import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.RestWriteResponseConceptCreate;
 import gov.vha.isaac.rest.api1.data.RestCoordinatesToken;
@@ -125,7 +127,6 @@ import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
@@ -141,7 +142,6 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeLogicGraphVersion;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
@@ -157,11 +157,9 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowDefinition;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.session.PrismeIntegratedUserService;
 import gov.vha.isaac.rest.session.PrismeUserService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
-import gov.vha.isaac.rest.session.UserServiceUtils;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 import gov.vha.isaac.rest.tokens.EditToken;
@@ -2009,9 +2007,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		retrievedMappingSetVersionResult = checkFail(getCloneMappingSetVersionResponse).readEntity(String.class);
 		RestMappingSetVersion cloneMappingSetObject = XMLUtils.unmarshalObject(RestMappingSetVersion.class, retrievedMappingSetVersionResult);
 		Assert.assertEquals(cloneMappingSetName, cloneMappingSetObject.name); // Passed to clone API
-//		Assert.assertEquals(updatedMappingSetInverseName, cloneMappingSetObject.inverseName); // Inherited from clone target
-//		Assert.assertEquals(updatedMappingSetDescription, cloneMappingSetObject.description); // Inherited from clone target
-//		Assert.assertEquals(updatedMappingSetPurpose, cloneMappingSetObject.purpose); // Inherited from clone target
 		Assert.assertEquals(cloneMappingSetObject.active, clonedMappingSetObject.active);
 		Assert.assertEquals(cloneMappingSetObject.inverseName, clonedMappingSetObject.inverseName);
 		Assert.assertEquals(cloneMappingSetObject.description, clonedMappingSetObject.description);
@@ -2030,6 +2025,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				Assert.assertEquals(cloneMappingSetObject.mapItemFieldsDefinition.get(i).columnDataType, clonedMappingSetObject.mapItemFieldsDefinition.get(i).columnDataType);
 			}
 		}
+		// Test clone of mapSetExtendedFields
 		Assert.assertTrue((cloneMappingSetObject.mapSetExtendedFields == null && clonedMappingSetObject.mapSetExtendedFields == null)
 				|| (cloneMappingSetObject.mapSetExtendedFields != null && clonedMappingSetObject.mapSetExtendedFields != null));
 		if (cloneMappingSetObject.mapSetExtendedFields != null) {

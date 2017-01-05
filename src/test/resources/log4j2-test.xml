@@ -9,6 +9,13 @@
 		<File name="appender-root-all" fileName="target/logs/isaac-rest-debug.log" append="false">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</File>
+		
+		<!-- the appender for PRISME -->
+		<!--
+		<PrismeLogAppender name="appender-prisme-all">
+			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
+		</PrismeLogAppender>
+		-->
 	</Appenders>
 
 	<Loggers>
@@ -16,6 +23,8 @@
 		<Root level="DEBUG">
 			<AppenderRef ref="appender-Console-all" level="INFO" />
 			<AppenderRef ref="appender-root-all" level="ALL" />
+			
+			<!-- <AppenderRef ref="appender-prisme-all" level="ALL" /> -->
 		</Root>
 
 		<!-- By default, all loggers in the system are set to WARN or worse.  To enable more verbose logging
