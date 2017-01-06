@@ -47,13 +47,29 @@ public class PrismeServiceUtils {
 	private static Properties prismeProperties_ = null;
 	
 	private PrismeServiceUtils() {}
+
 	/**
 	 * Return a Properties object which contains the PRISME properties.
 	 * Empty if prisme.properties not found. Never returns null.
 	 * 
+	 * This method logs
+	 * 
 	 * @return
-	 */
-	static Properties getPrismeProperties()
+	 */	
+	static Properties getPrismeProperties() {
+		return getPrismeProperties(true);
+	}
+
+	/**
+	 * Return a Properties object which contains the PRISME properties.
+	 * Empty if prisme.properties not found. Never returns null.
+	 * 
+	 * This method logs conditionally
+	 * 
+	 * @param doLog boolean specifying if the method should/shouldn't log
+	 * @return
+	 */	
+	static Properties getPrismeProperties(boolean doLog)
 	{
 //		#if prisme.properties is present prisme must be up!
 //		#edits here require a restart to your Komet instance
@@ -72,6 +88,7 @@ public class PrismeServiceUtils {
 //		#war_classifier=a
 //		#war_package=war
 //		#isaac_root=https://vadev.mantech.com:4848/isaac-rest/
+//		#prisme_notify_url=http://localhost:3000/log_event?security_token=%5B%22u%5Cf%5Cx92%5CxBC%5Cx17%7D%5CxD1%5CxE4%5CxFB%5CxE5%5Cx99%5CxA3%5C%22%5CxE8%5C%5CK%22%2C+%22%3E%5Cx16%5CxDE%5CxA8v%5Cx14%5CxFF%5CxD2%5CxC6%5CxDD%5CxAD%5Cx9F%5Cx1D%5CxD1cF%22%5D
 
 		if (prismeProperties_ == null) {
 			prismeProperties_ = new Properties();
@@ -84,11 +101,15 @@ public class PrismeServiceUtils {
 
 				if (stream == null)
 				{
-					log.debug("No prisme.properties file was found on the classpath");
+					if (doLog) {
+						log.debug("No prisme.properties file was found on the classpath");
+					}
 				}
 				else
 				{
-					log.info("Reading PRISME configuration from prisme.properties file " + propertiesFile);
+					if (doLog) {
+						log.info("Reading PRISME configuration from prisme.properties file " + propertiesFile);
+					}
 					prismeProperties_.load(stream);
 				}
 
@@ -96,8 +117,11 @@ public class PrismeServiceUtils {
 			}
 			catch (Exception e)
 			{
-				log.error("Unexpected error trying to read properties from the prisme.properties file", e);
-				throw new RuntimeException(e);
+				String msg = "Unexpected error trying to read properties from the prisme.properties file";
+				if (doLog) {
+					log.error(msg, e);
+				}
+				throw new RuntimeException(msg, e);
 			}
 			finally {
 				if (stream != null) {
