@@ -56,6 +56,24 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @RunLevel(1)
 @Service
 public class PrismeLogSenderService {
+	private static class BadResponseException extends RuntimeException {
+		private static final long serialVersionUID = 1482716963119375807L;
+
+		/**
+		 * @param message
+		 * @param cause
+		 */
+		public BadResponseException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		/**
+		 * @param message
+		 */
+		public BadResponseException(String message) {
+			super(message);
+		}
+	}
 	private static Logger LOGGER = LogManager.getLogger(PrismeLogSenderService.class);
 
 	final static String PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties(false).getProperty("prisme_notify_url");
@@ -88,6 +106,9 @@ public class PrismeLogSenderService {
 					EVENT_QUEUE = new LinkedBlockingQueue<>();
 				}
 
+				final int maxAttemptsForMessage = 10;
+				int attemptsForMessage = 0;
+				
 				final int initialWait = 0;
 				int wait = initialWait;
 
@@ -100,7 +121,13 @@ public class PrismeLogSenderService {
 				while (isEnabled()) {
 					try {
 						// Read log event, blocking on empty queue
-						eventToSend = (eventToSend != null) ? eventToSend : EVENT_QUEUE.take();
+						if (eventToSend != null && attemptsForMessage < maxAttemptsForMessage) {
+							attemptsForMessage++;
+							//System.out.println("PrismeLogSenderService: retrying send of log event for attempt " + attemptsForMessage + " of " + maxAttemptsForMessage + ": " + eventToSend);
+						} else {
+							attemptsForMessage = 0;
+							eventToSend = EVENT_QUEUE.take();
+						}
 
 						// Send log event
 						sendEvent(eventToSend);
@@ -245,13 +272,17 @@ public class PrismeLogSenderService {
 		} catch (IOException e) {
 			// TODO Joel log without looping
 			//LOGGER.error("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: {}", eventInputJson);
-			return;
+			throw new BadResponseException("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
 		}
 
 		if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
 			if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null) {
 				// TODO Joel log without looping
 				//LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH VALIDATION ERRORS: {}, EVENT: {}", map.get(validation_errors_key).toString(), eventInputJson);
+			} else if (map == null || (map != null && (map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("false")))) {
+				// TODO Joel log without looping
+				//LOGGER.error("INVALID RESPONSE MESSAGE FROM PRISME: {}", map);
+				throw new BadResponseException("Invalid response received from PRISME");
 			} else {
 				// TODO Joel log without looping
 				//LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH NO KNOWN VALIDATION ERRORS: {}", eventInputJson);
