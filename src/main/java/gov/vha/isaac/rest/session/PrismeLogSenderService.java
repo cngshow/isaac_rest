@@ -88,22 +88,52 @@ public class PrismeLogSenderService {
 					EVENT_QUEUE = new LinkedBlockingQueue<>();
 				}
 
+				final int initialWait = 0;
+				int wait = initialWait;
+
+				final int initialIncrement = 100;
+				int increment = initialIncrement;
+				
+				final int maxWait = 1000 * 60 * 2; // 2 minute maximum wait
+				final int maxQueueSize = 200;
+				LogEvent eventToSend = null;
 				while (isEnabled()) {
 					try {
 						// Read log event, blocking on empty queue
-						LogEvent nextEvent = EVENT_QUEUE.take();
+						eventToSend = (eventToSend != null) ? eventToSend : EVENT_QUEUE.take();
 
 						// Send log event
-						sendEvent(nextEvent);
+						sendEvent(eventToSend);
+						
+						// If sendEvent succeeded then set eventToSend = null so it won't attempt to resend
+						eventToSend = null;
+						wait = initialWait;
+						increment = initialIncrement;
 					} catch (Exception re) {
-						// disable() if failing to send
-						disable();
-						throw new RuntimeException(re);
+						if (wait > 0) {
+							try {
+								//System.out.println("PrismeLogSenderService: WAITING " + wait + " SECONDS");
+								Thread.sleep(wait);
+							} catch (InterruptedException e) {
+								// ignore
+							}
+						}
+						
+						if (wait < maxWait) {
+							wait = wait + increment;
+							increment = wait;
+						}
+						
+						if (wait >= maxWait) {
+							wait = maxWait;
+							increment = 0;
+						}
+					}
+					
+					while (EVENT_QUEUE.size() > maxQueueSize) {
+						EVENT_QUEUE.remove();
 					}
 				}
-
-				// Only get here is active_ != true
-				disable();
 			}
 		};
 
@@ -114,6 +144,11 @@ public class PrismeLogSenderService {
 	public void shutdownPrismeLogSenderService() {
 		// disable() on shutdown
 		disable();
+
+		if (CLIENT != null) {
+			CLIENT.close();
+			CLIENT = null;
+		}
 	}
 
 	private void sendEvent(LogEvent event) {
@@ -134,7 +169,7 @@ public class PrismeLogSenderService {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-
+		
 		final String event_logged_key = "event_logged";
 		final String validation_errors_key = "validation_errors";
 		final String level_key = "level";

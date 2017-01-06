@@ -20,7 +20,6 @@
 package gov.vha.isaac.rest.session;
 
 import java.io.Serializable;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -103,9 +102,9 @@ public class PrismeLogAppender extends AbstractAppender {
 	@PluginFactory
 	public static PrismeLogAppender createAppender(
 			@PluginAttribute("name") String name,
+			@PluginAttribute("ignoreExceptions") Boolean ignoreExceptions,
 			@PluginElement("Filter") final Filter filter,
-			@PluginElement("Layout") Layout<? extends Serializable> layout,
-			@PluginAttribute("ignoreExceptions") Boolean ignoreExceptions) {
+			@PluginElement("Layout") Layout<? extends Serializable> layout) {
 		if (name == null) {
 			LOGGER.error("No name provided for PrismeLogAppender");
 			return null;

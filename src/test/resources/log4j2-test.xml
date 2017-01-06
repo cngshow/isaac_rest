@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
+<Configuration packages="gov.vha.isaac.rest.session">
 	<Appenders>
 		<!-- the standard-console-appender -->
 		<Console name="appender-Console-all" target="SYSTEM_OUT">
@@ -11,11 +11,9 @@
 		</File>
 		
 		<!-- the appender for PRISME -->
-		<!--
-		<PrismeLogAppender name="appender-prisme-all">
+		<PrismeLogAppender name="appender-prisme-all" ignoreExceptions="true">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</PrismeLogAppender>
-		-->
 	</Appenders>
 
 	<Loggers>
@@ -23,10 +21,10 @@
 		<Root level="DEBUG">
 			<AppenderRef ref="appender-Console-all" level="INFO" />
 			<AppenderRef ref="appender-root-all" level="ALL" />
-			
-			<!-- <AppenderRef ref="appender-prisme-all" level="ALL" /> -->
-		</Root>
 
+			<AppenderRef ref="appender-prisme-all" level="WARN" />
+		</Root>
+			
 		<!-- By default, all loggers in the system are set to WARN or worse.  To enable more verbose logging
 			for a specific logger, or a logger package - define a 'logger' configuration as below, with the desired level. -->
 		<logger name="gov.va.isaac" level="TRACE" />
