@@ -123,7 +123,7 @@ public class PrismeLogSenderService {
 						// Read log event, blocking on empty queue
 						if (eventToSend != null && attemptsForMessage < maxAttemptsForMessage) {
 							attemptsForMessage++;
-							//System.out.println("PrismeLogSenderService: retrying send of log event for attempt " + attemptsForMessage + " of " + maxAttemptsForMessage + ": " + eventToSend);
+							LOGGER.info("PrismeLogSenderService: retrying send of log event for attempt " + attemptsForMessage + " of " + maxAttemptsForMessage + ": " + eventToSend);
 						} else {
 							attemptsForMessage = 0;
 							eventToSend = EVENT_QUEUE.take();
@@ -137,9 +137,10 @@ public class PrismeLogSenderService {
 						wait = initialWait;
 						increment = initialIncrement;
 					} catch (Exception re) {
+						LOGGER.error("FAILED SENDING LOG EVENT TO PRISME: " + eventToSend, re);
 						if (wait > 0) {
 							try {
-								//System.out.println("PrismeLogSenderService: WAITING " + wait + " SECONDS");
+								LOGGER.debug("PrismeLogSenderService: WAITING " + wait + " SECONDS");
 								Thread.sleep(wait);
 							} catch (InterruptedException e) {
 								// ignore
@@ -197,6 +198,11 @@ public class PrismeLogSenderService {
 		 * 		message=broken
 		 */
 		
+		if (event.getLoggerName().equalsIgnoreCase(LOGGER.getName())) {
+			// Ignore log messages queued from this logger to avoid recursion
+			return;
+		}
+
 		final String event_logged_key = "event_logged";
 		final String validation_errors_key = "validation_errors";
 		final String level_key = "level";
@@ -205,6 +211,7 @@ public class PrismeLogSenderService {
 		final String tag_key = "tag";
 		final String message_key = "message";
 		final String security_token_key = "security_token";
+		final String token_error_key = "token_error";
 
 		Map<String, Object> dto = new HashMap<>();
 
@@ -229,8 +236,7 @@ public class PrismeLogSenderService {
 			prismeLevel = 1;
 			break;
 		default:
-			// TODO Joel log without looping
-			//LOGGER.error("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
+			LOGGER.warn("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
 			break;
 		}
 
@@ -243,8 +249,7 @@ public class PrismeLogSenderService {
 		try {
 			eventInputJson = PrismeLogSenderService.jsonIze(dto);
 		} catch (IOException e) {
-			// TODO Joel log without looping
-			//LOGGER.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: {}", dto.toString());
+			LOGGER.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: " + dto.toString(), e);
 
 			eventInputJson = "{ \""+ level_key + "\":\"3\", \"" + tag_key + "\":\"LOGGING ERROR\", \"" + message_key + "\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"" + application_name_key + "\":\"" + application_name_value + "\" }";
 		}
@@ -270,26 +275,23 @@ public class PrismeLogSenderService {
 		try {
 			map = mapper.readValue(responseJson, Map.class);
 		} catch (IOException e) {
-			// TODO Joel log without looping
-			//LOGGER.error("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: {}", eventInputJson);
+			//LOGGER.error("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
 			throw new BadResponseException("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
 		}
 
 		if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
-			if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null) {
-				// TODO Joel log without looping
-				//LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH VALIDATION ERRORS: {}, EVENT: {}", map.get(validation_errors_key).toString(), eventInputJson);
+			if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null && ((Map<?,?>)(map.get(validation_errors_key))).size() > 0) {
+				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH {} VALIDATION ERRORS: {}, EVENT: {}", ((Map<?,?>)(map.get(validation_errors_key))).size(), ((Map<?,?>)map.get(validation_errors_key)).toString(), eventInputJson);
+			} else if (map != null && map.containsKey(token_error_key) && map.get(token_error_key) != null && StringUtils.isNotBlank(map.get(token_error_key).toString())) {
+				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH TOKEN ERROR: {}, EVENT: {}", map.toString(), eventInputJson);
 			} else if (map == null || (map != null && (map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("false")))) {
-				// TODO Joel log without looping
-				//LOGGER.error("INVALID RESPONSE MESSAGE FROM PRISME: {}", map);
+				LOGGER.error("SENDING LOG EVENT {} RETURNED INVALID RESPONSE MESSAGE FROM PRISME: {}", eventInputJson, map);
 				throw new BadResponseException("Invalid response received from PRISME");
 			} else {
-				// TODO Joel log without looping
-				//LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH NO KNOWN VALIDATION ERRORS: {}", eventInputJson);
+				LOGGER.error("FAILED PUBLISHING LOG EVENT {} TO PRISME WITH NO VALIDATION ERRORS IN RESPONSE: {}", eventInputJson, map);
 			}
 		} else {
-			// TODO Joel log without looping
-			//LOGGER.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
+			LOGGER.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
 		}
 	}
 
