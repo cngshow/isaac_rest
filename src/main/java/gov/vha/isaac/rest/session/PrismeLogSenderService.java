@@ -32,9 +32,14 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.ThreadContext.ContextStack;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.impl.ThrowableProxy;
+import org.apache.logging.log4j.message.Message;
 import org.codehaus.plexus.util.StringUtils;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
@@ -45,6 +50,8 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import gov.vha.isaac.rest.ApplicationConfig;
 
 /**
  * 
@@ -74,6 +81,28 @@ public class PrismeLogSenderService {
 			super(message);
 		}
 	}
+	
+	private final static LogEvent POISON_PILL_SHUTDOWN_MARKER = new LogEvent() {
+		private static final long serialVersionUID = 1L;
+		@Override public Map<String, String> getContextMap() { return null; }
+		@Override public ContextStack getContextStack() { return null; }
+		@Override public String getLoggerFqcn() { return null; }
+		@Override public Level getLevel() { return null; }
+		@Override public String getLoggerName() { return null; }
+		@Override public Marker getMarker() { return null; }
+		@Override public Message getMessage() { return null; }
+		@Override public long getTimeMillis() { return 0; }
+		@Override public StackTraceElement getSource() { return null; }
+		@Override public String getThreadName() { return null; }
+		@Override public Throwable getThrown() { return null; }
+		@Override public ThrowableProxy getThrownProxy() {return null;}
+		@Override public boolean isEndOfBatch() { return false; }
+		@Override public boolean isIncludeLocation() { return false; }
+		@Override public void setEndOfBatch(boolean endOfBatch) {}
+		@Override public void setIncludeLocation(boolean locationRequired) {}
+		@Override public long getNanoTime() { return 0;}
+	};
+	
 	private static Logger LOGGER = LogManager.getLogger(PrismeLogSenderService.class);
 
 	final static String PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties(false).getProperty("prisme_notify_url");
@@ -86,7 +115,12 @@ public class PrismeLogSenderService {
 		// For HK2
 	}
 	
-	public void disable() { EVENT_QUEUE = null; }
+	public void disable() {
+		if (EVENT_QUEUE != null) {
+			EVENT_QUEUE.add(POISON_PILL_SHUTDOWN_MARKER);
+			EVENT_QUEUE = null;
+		}
+	}
 	public boolean isEnabled() { return EVENT_QUEUE != null; }
 
 	@PostConstruct
@@ -127,6 +161,13 @@ public class PrismeLogSenderService {
 						} else {
 							attemptsForMessage = 0;
 							eventToSend = EVENT_QUEUE.take();
+							
+							// If read POISON_PILL_SHUTDOWN_MARKER from queue then shutdown
+							if (eventToSend == POISON_PILL_SHUTDOWN_MARKER) {
+								// Shutdown
+								disable();
+								break;
+							}
 						}
 
 						// Send log event
@@ -138,6 +179,8 @@ public class PrismeLogSenderService {
 						increment = initialIncrement;
 					} catch (Exception re) {
 						LOGGER.error("FAILED SENDING LOG EVENT TO PRISME: " + eventToSend, re);
+						
+						// Wait (Thread.sleep()), if wait > 0
 						if (wait > 0) {
 							try {
 								LOGGER.debug("PrismeLogSenderService: WAITING " + wait + " SECONDS");
@@ -147,23 +190,32 @@ public class PrismeLogSenderService {
 							}
 						}
 						
+						// If less than maxWait, then increment wait and increment
 						if (wait < maxWait) {
 							wait = wait + increment;
 							increment = wait;
 						}
 						
+						// Enforce cap on wait
 						if (wait >= maxWait) {
 							wait = maxWait;
 							increment = 0;
 						}
 					}
 					
+					// Remove and discard excess events,
+					// calling disable() and break if encountering POISON_PILL_SHUTDOWN_MARKER
 					while (EVENT_QUEUE.size() > maxQueueSize) {
-						EVENT_QUEUE.remove();
+						LogEvent eventToDiscard = EVENT_QUEUE.remove();
+						if (eventToDiscard == POISON_PILL_SHUTDOWN_MARKER) {
+							// Shutdown
+							disable();
+							break;
+						}
 					}
-				}
-			}
-		};
+				} // End run() outer while loop
+			} // End run()
+		}; // End Runnable declaration
 
 		new Thread(runnable).start();
 	}
@@ -197,7 +249,10 @@ public class PrismeLogSenderService {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-		
+		if (event == POISON_PILL_SHUTDOWN_MARKER) {
+			// Shutting down. Shouldn't even get here.
+			return;
+		}
 		if (event.getLoggerName().equalsIgnoreCase(LOGGER.getName())) {
 			// Ignore log messages queued from this logger to avoid recursion
 			return;
@@ -207,7 +262,7 @@ public class PrismeLogSenderService {
 		final String validation_errors_key = "validation_errors";
 		final String level_key = "level";
 		final String application_name_key = "application_name";
-		final String application_name_value = "ISAAC";
+		final String application_name_value = ApplicationConfig.getInstance().getContextPath();
 		final String tag_key = "tag";
 		final String message_key = "message";
 		final String security_token_key = "security_token";
@@ -240,9 +295,16 @@ public class PrismeLogSenderService {
 			break;
 		}
 
+		String tag = null;
+		try {
+			// If logger name is a class then make tag the class simple name
+			tag = Class.forName(event.getLoggerName()).getSimpleName();
+		} catch (Exception e) {
+			tag = event.getLoggerName();
+		}
 		dto.put(level_key, prismeLevel);
 		dto.put(application_name_key, application_name_value);
-		dto.put(tag_key, event.getLoggerName());
+		dto.put(tag_key, tag);
 		dto.put(message_key, event.getMessage().getFormattedMessage()); // TODO Joel should use this or msgFromLayout?
 
 		String eventInputJson = null;

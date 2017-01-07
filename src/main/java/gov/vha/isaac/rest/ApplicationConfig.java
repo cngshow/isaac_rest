@@ -577,6 +577,13 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	}
 
 	/**
+	 * @return String context path, which is a hard-coded value if in eclipse Jetty
+	 */
+	public String getContextPath() {
+		return contextPath;
+	}
+
+	/**
 	 * @return
 	 */
 	public static byte[] getSecret()
