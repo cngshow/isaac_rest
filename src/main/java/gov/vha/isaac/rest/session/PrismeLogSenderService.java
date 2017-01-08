@@ -56,32 +56,20 @@ import gov.vha.isaac.rest.ApplicationConfig;
 /**
  * 
  * {@link PrismeLogSenderService}
+ * 
+ * Create and manage a thread that performs a blocking read on a static EVENT_QUEUE populated by {@link PrismeLogAppender}
+ * and sends {@link LogEvent} events to PRISME via rest call if service prisme_notify_url is configured in PRISME properties
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- *
  */
 @RunLevel(1)
 @Service
 public class PrismeLogSenderService {
-	private static class BadResponseException extends RuntimeException {
-		private static final long serialVersionUID = 1482716963119375807L;
+	private static Logger LOGGER = LogManager.getLogger(PrismeLogSenderService.class);
 
-		/**
-		 * @param message
-		 * @param cause
-		 */
-		public BadResponseException(String message, Throwable cause) {
-			super(message, cause);
-		}
-
-		/**
-		 * @param message
-		 */
-		public BadResponseException(String message) {
-			super(message);
-		}
-	}
-	
+	/**
+	 * POISON_PILL_SHUTDOWN_MARKER ends blocking read on EVENT_QUEUE
+	 */
 	private final static LogEvent POISON_PILL_SHUTDOWN_MARKER = new LogEvent() {
 		private static final long serialVersionUID = 1L;
 		@Override public Map<String, String> getContextMap() { return null; }
@@ -103,24 +91,28 @@ public class PrismeLogSenderService {
 		@Override public long getNanoTime() { return 0;}
 	};
 	
-	private static Logger LOGGER = LogManager.getLogger(PrismeLogSenderService.class);
-
+	/*
+	 * Attempt to load PRISME notification API rest URL from PRISME properties
+	 */
 	final static String PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties(false).getProperty("prisme_notify_url");
 
+	/*
+	 * Cached Client instance
+	 */
 	static Client CLIENT = null;
 
+	/*
+	 * The static event queue.  PrismeLogAppender is a noop while this is null.
+	 */
 	static BlockingQueue<LogEvent> EVENT_QUEUE = null;
 
+	/**
+	 * Constructor to be invoked only by HK2
+	 */
 	PrismeLogSenderService() {
 		// For HK2
 	}
 	
-	public void disable() {
-		if (EVENT_QUEUE != null) {
-			EVENT_QUEUE.add(POISON_PILL_SHUTDOWN_MARKER);
-			EVENT_QUEUE = null;
-		}
-	}
 	public boolean isEnabled() { return EVENT_QUEUE != null; }
 
 	@PostConstruct
@@ -130,8 +122,8 @@ public class PrismeLogSenderService {
 			public void run() {
 				// disable() if not configured
 				if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
-					LOGGER.error("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties");
-					disable();
+					LOGGER.warn("CANNOT LOG EVENTS TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties");
+					shutdownPrismeLogSenderService();
 					return;
 				}
 
@@ -160,13 +152,13 @@ public class PrismeLogSenderService {
 							LOGGER.info("PrismeLogSenderService: retrying send of log event for attempt " + attemptsForMessage + " of " + maxAttemptsForMessage + ": " + eventToSend);
 						} else {
 							attemptsForMessage = 0;
-							eventToSend = EVENT_QUEUE.take();
+							eventToSend = EVENT_QUEUE != null ? EVENT_QUEUE.take() : POISON_PILL_SHUTDOWN_MARKER;
 							
 							// If read POISON_PILL_SHUTDOWN_MARKER from queue then shutdown
 							if (eventToSend == POISON_PILL_SHUTDOWN_MARKER) {
 								// Shutdown
-								disable();
-								break;
+								shutdownPrismeLogSenderService();
+								return; // exit thread
 							}
 						}
 
@@ -205,12 +197,12 @@ public class PrismeLogSenderService {
 					
 					// Remove and discard excess events,
 					// calling disable() and break if encountering POISON_PILL_SHUTDOWN_MARKER
-					while (EVENT_QUEUE.size() > maxQueueSize) {
+					while (EVENT_QUEUE != null && EVENT_QUEUE.size() > maxQueueSize) {
 						LogEvent eventToDiscard = EVENT_QUEUE.remove();
 						if (eventToDiscard == POISON_PILL_SHUTDOWN_MARKER) {
 							// Shutdown
-							disable();
-							break;
+							shutdownPrismeLogSenderService();
+							return; // exit thread
 						}
 					}
 				} // End run() outer while loop
@@ -220,15 +212,21 @@ public class PrismeLogSenderService {
 		new Thread(runnable).start();
 	}
 
-	@PreDestroy
-	public void shutdownPrismeLogSenderService() {
-		// disable() on shutdown
-		disable();
+	private void disable() {
+		if (EVENT_QUEUE != null) {
+			EVENT_QUEUE.clear();
+			EVENT_QUEUE.add(POISON_PILL_SHUTDOWN_MARKER);
+			EVENT_QUEUE = null;
+		}
 
 		if (CLIENT != null) {
 			CLIENT.close();
 			CLIENT = null;
 		}
+	}
+	@PreDestroy
+	public void shutdownPrismeLogSenderService() {
+		disable();
 	}
 
 	private void sendEvent(LogEvent event) {
@@ -300,47 +298,60 @@ public class PrismeLogSenderService {
 			// If logger name is a class then make tag the class simple name
 			tag = Class.forName(event.getLoggerName()).getSimpleName();
 		} catch (Exception e) {
+			// If logger name is not a class name then don't modify it
 			tag = event.getLoggerName();
 		}
 		dto.put(level_key, prismeLevel);
 		dto.put(application_name_key, application_name_value);
 		dto.put(tag_key, tag);
-		dto.put(message_key, event.getMessage().getFormattedMessage()); // TODO Joel should use this or msgFromLayout?
+		dto.put(message_key, event.getMessage().getFormattedMessage());
 
 		String eventInputJson = null;
 		try {
+			// Attempt to convert input DTO into json
 			eventInputJson = PrismeLogSenderService.jsonIze(dto);
 		} catch (IOException e) {
 			LOGGER.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: " + dto.toString(), e);
 
+			// Manually craft json for an error message about this log failure
 			eventInputJson = "{ \""+ level_key + "\":\"3\", \"" + tag_key + "\":\"LOGGING ERROR\", \"" + message_key + "\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"" + application_name_key + "\":\"" + application_name_value + "\" }";
 		}
 
+		// If PRISME_NOTIFY_URL config property is unset then disable()
 		if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
-			disable();
-			LOGGER.error("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
+			shutdownPrismeLogSenderService();
+			LOGGER.warn("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
 			return;
 		}
 
+		// Extract target with path from PRISME_NOTIFY_URL config property
 		String targetWithPath = PRISME_NOTIFY_URL.replaceAll("\\?.*", "");
+		// Extract security token  from PRISME_NOTIFY_URL config property
 		String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
 
+		// Construct WebTarget from Client CLIENT, constructing and caching new Client CLIENT if null
 		WebTarget webTargetWithPath = (CLIENT != null ? CLIENT : (CLIENT = ClientBuilder.newClient())).target(targetWithPath);
 
+		// Create map to store request params
 		Map<String, String> params = new HashMap<>();
+		// Add security token param to params map
 		params.put(security_token_key, securityToken);
 
+		// Post eventInputJson to webTargetWithPath with params
 		String responseJson = PrismeServiceUtils.postJsonToPrisme(webTargetWithPath, eventInputJson, params);
 
+		// Construct json ObjectMapper to read response
 		ObjectMapper mapper = new ObjectMapper();
 		Map<?, ?> map = null;
 		try {
+			// Read json response into Map object
 			map = mapper.readValue(responseJson, Map.class);
 		} catch (IOException e) {
-			//LOGGER.error("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
-			throw new BadResponseException("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
+			// If fail to read response then throw exception to be logged by catcher
+			throw new RuntimeException("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
 		}
 
+		// Attempt to evaluate response
 		if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
 			if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null && ((Map<?,?>)(map.get(validation_errors_key))).size() > 0) {
 				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH {} VALIDATION ERRORS: {}, EVENT: {}", ((Map<?,?>)(map.get(validation_errors_key))).size(), ((Map<?,?>)map.get(validation_errors_key)).toString(), eventInputJson);
@@ -348,7 +359,7 @@ public class PrismeLogSenderService {
 				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH TOKEN ERROR: {}, EVENT: {}", map.toString(), eventInputJson);
 			} else if (map == null || (map != null && (map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("false")))) {
 				LOGGER.error("SENDING LOG EVENT {} RETURNED INVALID RESPONSE MESSAGE FROM PRISME: {}", eventInputJson, map);
-				throw new BadResponseException("Invalid response received from PRISME");
+				throw new RuntimeException("Invalid response received from PRISME");
 			} else {
 				LOGGER.error("FAILED PUBLISHING LOG EVENT {} TO PRISME WITH NO VALIDATION ERRORS IN RESPONSE: {}", eventInputJson, map);
 			}
@@ -357,15 +368,13 @@ public class PrismeLogSenderService {
 		}
 	}
 
-	private static String toJson(ObjectNode root) throws JsonProcessingException, IOException
-	{
+	private static String toJson(ObjectNode root) throws JsonProcessingException, IOException {
 		StringWriter ws = new StringWriter();
 		new ObjectMapper().writeTree(new JsonFactory().createGenerator(ws).setPrettyPrinter(new DefaultPrettyPrinter()), root);
 		return ws.toString();
 	}
 
-	private static String jsonIze(Map<String, Object> map) throws JsonProcessingException, IOException
-	{
+	private static String jsonIze(Map<String, Object> map) throws JsonProcessingException, IOException {
 		ObjectNode root = JsonNodeFactory.instance.objectNode();
 		for (Map.Entry<String, Object> entry : map.entrySet())
 		{
