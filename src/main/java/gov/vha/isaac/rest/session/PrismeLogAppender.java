@@ -90,8 +90,8 @@ public class PrismeLogAppender extends AbstractAppender {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-		if (PrismeLogSenderService.EVENT_QUEUE != null) {
-			PrismeLogSenderService.EVENT_QUEUE.add(event);
+		if (PrismeLogSenderService.isEnabled()) {
+			PrismeLogSenderService.getEventQueue().add(event);
 		}
 	}
 	

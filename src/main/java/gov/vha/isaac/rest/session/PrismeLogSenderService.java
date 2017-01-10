@@ -28,6 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Singleton;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -41,7 +42,10 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.apache.logging.log4j.message.Message;
 import org.codehaus.plexus.util.StringUtils;
+import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
+import org.glassfish.hk2.runlevel.ErrorInformation;
 import org.glassfish.hk2.runlevel.RunLevel;
+import org.glassfish.hk2.runlevel.RunLevelFuture;
 import org.jvnet.hk2.annotations.Service;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -51,6 +55,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.rest.ApplicationConfig;
 
 /**
@@ -99,15 +104,19 @@ public class PrismeLogSenderService {
 	/*
 	 * Cached Client instance
 	 */
-	static Client CLIENT = null;
+	private static Client CLIENT = null;
 
 	/*
 	 * The static event queue.  PrismeLogAppender is a noop while this is null.
 	 */
-	static BlockingQueue<LogEvent> EVENT_QUEUE = null;
-
-	private final Object WAIT_LOCK_OBJECT = new Object();
+	private static BlockingQueue<LogEvent> EVENT_QUEUE = null;
 	
+	public synchronized static BlockingQueue<LogEvent> getEventQueue() { return EVENT_QUEUE; }
+	private synchronized static void setEventQueue() { if (EVENT_QUEUE == null) { EVENT_QUEUE = new LinkedBlockingQueue<>(); }}
+	private synchronized static void unsetEventQueue() { EVENT_QUEUE = null; }
+
+	private final Object waitLockObject_ = new Object();
+
 	/**
 	 * Constructor to be invoked only by HK2
 	 */
@@ -115,24 +124,23 @@ public class PrismeLogSenderService {
 		// For HK2
 	}
 	
-	public boolean isEnabled() { return EVENT_QUEUE != null; }
+	public static boolean isEnabled() { return getEventQueue() != null; }
 
 	@PostConstruct
 	public void startupPrismeLogSenderService() {
 		final Runnable runnable = new Runnable() {
 			@Override
 			public void run() {
+				
 				// disable() if not configured
 				if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
 					LOGGER.warn("CANNOT LOG EVENTS TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties");
-					shutdownPrismeLogSenderService();
+					disable();
 					return;
 				}
 
 				// enable if not yet enabled
-				if (EVENT_QUEUE == null) {
-					EVENT_QUEUE = new LinkedBlockingQueue<>();
-				}
+				setEventQueue();
 
 				final int maxAttemptsForMessage = 10;
 				int attemptsForMessage = 0;
@@ -154,7 +162,7 @@ public class PrismeLogSenderService {
 							LOGGER.info("PrismeLogSenderService: retrying send of log event for attempt " + attemptsForMessage + " of " + maxAttemptsForMessage + ": " + eventToSend);
 						} else {
 							attemptsForMessage = 0;
-							eventToSend = EVENT_QUEUE != null ? EVENT_QUEUE.take() : POISON_PILL_SHUTDOWN_MARKER;
+							eventToSend = isEnabled() ? getEventQueue().take() : POISON_PILL_SHUTDOWN_MARKER;
 							
 							// If read POISON_PILL_SHUTDOWN_MARKER from queue then shutdown
 							if (eventToSend == POISON_PILL_SHUTDOWN_MARKER) {
@@ -177,7 +185,7 @@ public class PrismeLogSenderService {
 						increment = initialIncrement;
 					} catch (Exception re) {
 						if (! isEnabled()) {
-							// No problem.  Just shutting down.
+							// No problem.  Just shutting down anyway.
 							return;
 						}
 						LOGGER.error("FAILED SENDING LOG EVENT TO PRISME: " + eventToSend, re);
@@ -186,8 +194,8 @@ public class PrismeLogSenderService {
 						if (wait > 0) {
 							try {
 								LOGGER.debug("PrismeLogSenderService: WAITING " + (wait/1000) + " SECONDS");
-								synchronized (WAIT_LOCK_OBJECT) {
-									WAIT_LOCK_OBJECT.wait(wait); // TODO Joel should handle spurious wakeup?
+								synchronized (waitLockObject_) {
+									waitLockObject_.wait(wait); // TODO Joel should handle spurious wakeup?
 								}
 							} catch (InterruptedException e) {
 								// ignore
@@ -209,11 +217,11 @@ public class PrismeLogSenderService {
 					
 					// Remove and discard excess events,
 					// calling disable() and break if encountering POISON_PILL_SHUTDOWN_MARKER
-					while (isEnabled() && EVENT_QUEUE.size() > maxQueueSize) {
-						LogEvent eventToDiscard = EVENT_QUEUE.remove();
+					while (isEnabled() && getEventQueue().size() > maxQueueSize) {
+						LogEvent eventToDiscard = getEventQueue().remove();
 						if (eventToDiscard == POISON_PILL_SHUTDOWN_MARKER) {
 							// Shutdown
-							shutdownPrismeLogSenderService();
+							disable();
 							return; // exit thread
 						}
 					}
@@ -221,21 +229,22 @@ public class PrismeLogSenderService {
 			} // End run()
 		}; // End Runnable declaration
 
-		 new Thread(runnable).start();
+		LOGGER.info("Starting {}...", this.getClass().getName());
+		new Thread(runnable).start();
 	}
 
 	public void disable() {
 		LOGGER.info("Disabling {}...", this.getClass().getName());
 
-		synchronized (WAIT_LOCK_OBJECT) {
-			WAIT_LOCK_OBJECT.notifyAll();
+		synchronized (waitLockObject_) {
+			waitLockObject_.notifyAll();
 		}
 
 		// End sleep wait, if waiting
-		if (EVENT_QUEUE != null) {
-			EVENT_QUEUE.clear();
-			EVENT_QUEUE.add(POISON_PILL_SHUTDOWN_MARKER);
-			EVENT_QUEUE = null;
+		if (isEnabled()) {
+			getEventQueue().clear();
+			getEventQueue().add(POISON_PILL_SHUTDOWN_MARKER);
+			unsetEventQueue();
 		}
 
 		if (CLIENT != null) {
@@ -402,5 +411,22 @@ public class PrismeLogSenderService {
 			root.put(entry.getKey(), entry.getValue() != null ? (entry.getValue() + "") : null);
 		}
 		return PrismeLogSenderService.toJson(root);
+	}
+	
+	@Service(name="PrismeLogSenderServiceRunLevelListener")
+	@Singleton
+	public static class RunLevelListener implements org.glassfish.hk2.runlevel.RunLevelListener {
+		private static Logger log = LogManager.getLogger(RunLevelListener.class);
+	
+		@Override
+		public void onProgress(ChangeableRunLevelFuture currentJob, int levelAchieved) {
+			log.info("RunLevel " + (currentJob.isDown() ? "coming down from " : "going up from ") + levelAchieved + " to " + currentJob.getProposedLevel());
+			if (levelAchieved == LookupService.ISAAC_DEPENDENTS_RUNLEVEL && currentJob.isDown()) {
+				LookupService.getService(PrismeLogSenderService.class).disable();
+			}
+		}
+
+		@Override public void onCancelled(RunLevelFuture currentJob, int levelAchieved) { /* noop */ }
+		@Override public void onError(RunLevelFuture currentJob, ErrorInformation errorInformation) { /* noop */ }
 	}
 }
