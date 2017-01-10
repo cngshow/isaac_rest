@@ -90,24 +90,26 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 	 */
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-
+		LOG.debug("Running CONTAINER REQUEST FILTER {} on request {} {}", this.getClass().getName(), requestContext.getRequest().getMethod(), requestContext.getUriInfo().getPath(true));
+		if (requestContext.getUriInfo().getPathParameters().size() > 0) {
+			LOG.debug("Path parameters: {}", requestContext.getUriInfo().getPathParameters().keySet());
+			for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getPathParameters().entrySet()) 
+			{
+				LOG.debug("Path parameter \"{}\"=\"{}\"", parameter.getKey(), parameter.getValue());
+			}
+		}
+		if (requestContext.getUriInfo().getQueryParameters().size() > 0) {
+			LOG.debug("Query parameters: {}", requestContext.getUriInfo().getQueryParameters().keySet());
+			for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getQueryParameters().entrySet()) 
+			{
+				LOG.debug("Query parameter \"{}\"=\"{}\"", parameter.getKey(), parameter.getValue());
+			}
+		}
+		
 		if (!ApplicationConfig.getInstance().isIsaacReady())
 		{
 			LOG.debug("Rejecting request as ISAAC is not yet ready");
-			throw new IOException("The system is not yet ready.  Status:  " + ApplicationConfig.getInstance().getStatusMessage());
-		}
-
-		LOG.debug("Running CONTAINER REQUEST FILTER " + this.getClass().getName() + " on request " + requestContext.getRequest().getMethod());
-		
-		LOG.debug("Path parameters: " + requestContext.getUriInfo().getPathParameters().keySet());
-		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getPathParameters().entrySet()) 
-		{
-			LOG.debug("Path parameter \"" + parameter.getKey() + "\"=\"" + parameter.getValue() + "\"");
-		}
-		LOG.debug("Query parameters: " + requestContext.getUriInfo().getQueryParameters().keySet());
-		for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getQueryParameters().entrySet()) 
-		{
-			LOG.debug("Query parameter \"" + parameter.getKey() + "\"=\"" + parameter.getValue() + "\"");
+			throw new IOException("The system is not yet ready.  Status: " + ApplicationConfig.getInstance().getStatusMessage());
 		}
 
 		try
@@ -115,14 +117,14 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
 
 			//If they are asking for an edit token, or attempting to do a write, we need a valid editToken.
-			if (requestContext.getUriInfo().getPath().contains("write/")
+			if (requestContext.getUriInfo().getPath().contains(RestPaths.writePathComponent)
 					|| requestContext.getUriInfo().getPath().contains(RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent)
 					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
 					) {
 
 				EditToken et = RequestInfo.get().getEditToken();
 				
-				if (requestContext.getUriInfo().getPath().contains("write/"))
+				if (requestContext.getUriInfo().getPath().contains(RestPaths.writePathComponent))
 				{
 					//If it is a write request, the edit token needs to be valid for write.
 					if (!et.isValidForWrite())

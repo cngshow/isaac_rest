@@ -48,7 +48,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
 
-@ApplicationPath("rest/")
+@ApplicationPath(RestPaths.appPathComponent)
 public class ApplicationConfig extends ResourceConfig implements ContainerLifecycleListener
 {
 	private static final AtomicInteger startup = new AtomicInteger(1);

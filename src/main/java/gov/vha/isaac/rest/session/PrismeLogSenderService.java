@@ -106,6 +106,8 @@ public class PrismeLogSenderService {
 	 */
 	static BlockingQueue<LogEvent> EVENT_QUEUE = null;
 
+	private final Object WAIT_LOCK_OBJECT = new Object();
+	
 	/**
 	 * Constructor to be invoked only by HK2
 	 */
@@ -157,9 +159,13 @@ public class PrismeLogSenderService {
 							// If read POISON_PILL_SHUTDOWN_MARKER from queue then shutdown
 							if (eventToSend == POISON_PILL_SHUTDOWN_MARKER) {
 								// Shutdown
-								shutdownPrismeLogSenderService();
+								disable();
 								return; // exit thread
 							}
+						}
+
+						if (! isEnabled()) {
+							return;
 						}
 
 						// Send log event
@@ -170,13 +176,19 @@ public class PrismeLogSenderService {
 						wait = initialWait;
 						increment = initialIncrement;
 					} catch (Exception re) {
+						if (! isEnabled()) {
+							// No problem.  Just shutting down.
+							return;
+						}
 						LOGGER.error("FAILED SENDING LOG EVENT TO PRISME: " + eventToSend, re);
 						
-						// Wait (Thread.sleep()), if wait > 0
+						// Wait (WAIT_LOCK_OBJECT.wait(wait)), if wait > 0
 						if (wait > 0) {
 							try {
-								LOGGER.debug("PrismeLogSenderService: WAITING " + wait + " SECONDS");
-								Thread.sleep(wait);
+								LOGGER.debug("PrismeLogSenderService: WAITING " + (wait/1000) + " SECONDS");
+								synchronized (WAIT_LOCK_OBJECT) {
+									WAIT_LOCK_OBJECT.wait(wait); // TODO Joel should handle spurious wakeup?
+								}
 							} catch (InterruptedException e) {
 								// ignore
 							}
@@ -197,7 +209,7 @@ public class PrismeLogSenderService {
 					
 					// Remove and discard excess events,
 					// calling disable() and break if encountering POISON_PILL_SHUTDOWN_MARKER
-					while (EVENT_QUEUE != null && EVENT_QUEUE.size() > maxQueueSize) {
+					while (isEnabled() && EVENT_QUEUE.size() > maxQueueSize) {
 						LogEvent eventToDiscard = EVENT_QUEUE.remove();
 						if (eventToDiscard == POISON_PILL_SHUTDOWN_MARKER) {
 							// Shutdown
@@ -209,10 +221,17 @@ public class PrismeLogSenderService {
 			} // End run()
 		}; // End Runnable declaration
 
-		new Thread(runnable).start();
+		 new Thread(runnable).start();
 	}
 
-	private void disable() {
+	public void disable() {
+		LOGGER.info("Disabling {}...", this.getClass().getName());
+
+		synchronized (WAIT_LOCK_OBJECT) {
+			WAIT_LOCK_OBJECT.notifyAll();
+		}
+
+		// End sleep wait, if waiting
 		if (EVENT_QUEUE != null) {
 			EVENT_QUEUE.clear();
 			EVENT_QUEUE.add(POISON_PILL_SHUTDOWN_MARKER);
@@ -223,6 +242,8 @@ public class PrismeLogSenderService {
 			CLIENT.close();
 			CLIENT = null;
 		}
+
+		LOGGER.info("Disabled {}", this.getClass().getName());
 	}
 	@PreDestroy
 	public void shutdownPrismeLogSenderService() {
@@ -247,7 +268,7 @@ public class PrismeLogSenderService {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-		if (event == POISON_PILL_SHUTDOWN_MARKER) {
+		if (event == POISON_PILL_SHUTDOWN_MARKER || ! isEnabled()) {
 			// Shutting down. Shouldn't even get here.
 			return;
 		}

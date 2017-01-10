@@ -162,7 +162,7 @@ public class RequestInfo
 			// Set RequestInfo coordinatesToken string to parameter value if set, otherwise set to default
 			Optional<CoordinatesToken> token = CoordinatesUtil.getCoordinatesTokenParameterTokenObjectValue(parameters);
 			if (token.isPresent()) {
-				log.debug("Applying CoordinatesToken " + RequestParameters.coordToken + " parameter \"" + token.get().getSerialized() + "\"");
+				log.debug("Applying CoordinatesToken {} parameter \"{}\"", RequestParameters.coordToken, token.get().getSerialized());
 				requestInfo.get().coordinatesToken_ = token.get().getSerialized();
 			} else {
 				log.debug("Applying default coordinates");
@@ -178,7 +178,7 @@ public class RequestInfo
 
 			// If no coordinate parameter or only coordToken value set, then use
 			if (coordinateParameters.size() == 0 || (coordinateParameters.size() == 1 && coordinateParameters.containsKey(RequestParameters.coordToken))) {
-				log.debug("No individual coordinate parameters to apply to token \"" + requestInfo.get().coordinatesToken_ + "\"");
+				log.debug("No individual coordinate parameters to apply to token \"{}\"", requestInfo.get().coordinatesToken_);
 
 			} else { // If ANY coordinate parameter other than coordToken value set, then calculate new CoordinatesToken string
 				log.debug("Applying {} individual parameters to coordinates token \"{}\": {}", requestInfo.get().coordinatesToken_, coordinateParameters.size(), coordinateParameters.toString());
@@ -223,7 +223,7 @@ public class RequestInfo
 
 				CoordinatesTokens.put(CoordinatesUtil.getCoordinateParameters(parameters), tokenObj);
 
-				log.debug("Created CoordinatesToken \"" + requestInfo.get().coordinatesToken_ + "\"");
+				log.debug("Created CoordinatesToken \"{}\"", requestInfo.get().coordinatesToken_);
 			}
 		}
 
@@ -303,7 +303,7 @@ public class RequestInfo
 				Optional<EditToken> passedEditToken = EditTokens.getEditTokenParameterTokenObjectValue(parameters_);
 				if (passedEditToken.isPresent()) {
 					// Found valid EditToken passed as parameter
-					log.debug("Applying EditToken " + RequestParameters.editToken + " parameter \"" + passedEditToken.get().getSerialized() + "\"");
+					log.debug("Applying EditToken {} parameter \"{}\"", RequestParameters.editToken, passedEditToken.get().getSerialized());
 
 					// Set local values to values from passed EditToken
 					module = passedEditToken.get().getModuleSequence();
@@ -354,7 +354,7 @@ public class RequestInfo
 						if (parameters_.containsKey(RequestParameters.userId)) {
 							throw new SecurityException(new RestException(RequestParameters.userId, parameters_.get(RequestParameters.userId) + "", "Cannot specify userId parameter when PRISME configured"));
 						}
-						log.debug("Constructing new EditToken from User from PRISME with SSO token " + parameters_.get(RequestParameters.ssoToken));
+						log.debug("Constructing new EditToken from User from PRISME with SSO token {}", parameters_.get(RequestParameters.ssoToken));
 						// Validate ssoToken parameter
 						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
 						userOptional = userService.getUser(parameters_.get(RequestParameters.ssoToken).iterator().next());
@@ -364,7 +364,7 @@ public class RequestInfo
 						// Check for passed userId parameter, which can either be a concept id (uuid, nid or sequence),
 						// the string "DEFAULT", or a valid existing username
 						if (parameters_.containsKey(RequestParameters.userId)) {
-							log.debug("Constructing new EditToken from test User with ALL ROLES with passed userId " + parameters_.get(RequestParameters.userId));
+							log.debug("Constructing new EditToken from test User with ALL ROLES with passed userId {}", parameters_.get(RequestParameters.userId));
 							// Validate userId parameter
 							RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.userId);
 							String userIdParameterValue = parameters_.get(RequestParameters.userId).iterator().next();
@@ -427,7 +427,7 @@ public class RequestInfo
 
 				editToken_ = editToken;
 
-				log.debug("Created EditToken \"" + requestInfo.get().editToken_ + "\"");
+				log.debug("Created EditToken \"{}\"", requestInfo.get().editToken_);
 			} catch (RuntimeException e) {
 				throw e;
 			} catch (Exception e) {
