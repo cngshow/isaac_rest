@@ -152,7 +152,10 @@ public class RequestParameters {
 	public final static String userId = "userId"; // UUID string
 	public final static String acquireLock = "acquireLock"; // string, "true" or "false"
 	public final static String status = "status"; //String, workflow status
-
+	public final static String includeActive = "includeActive";
+	public final static String includeCompleted = "includeCompleted";
+	public final static String includeCanceled = "includeCanceled";
+	
 	// Edit Token
 	public final static String editToken = "editToken";
 	public final static String editPath = "editPath";
@@ -210,7 +213,17 @@ public class RequestParameters {
 			inputType,
 			outputType,
 			
-			active
+			active,
+			
+			//workflow
+			definitionId,
+			processId,
+			userId,
+			acquireLock,
+			status,
+			includeActive,
+			includeCompleted,
+			includeCanceled
 			));
 		ALL_VALID_PARAMETERS = params;
 	}

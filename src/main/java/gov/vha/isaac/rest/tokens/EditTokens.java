@@ -3,7 +3,7 @@
  *
  * This is a work of the U.S. Government and is not subject to copyright
  * protection in the United States. Foreign copyrights may apply.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +36,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.session.RequestParameters;
 
 /**
- * 
+ *
  * {@link EditTokens}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
@@ -43,9 +44,9 @@ import gov.vha.isaac.rest.session.RequestParameters;
  */
 public class EditTokens {
 	private static Logger log = LogManager.getLogger(EditTokens.class);
-	
+
 	private final static Object OBJECT_BY_TOKEN_CACHE_LOCK = new Object();
-	
+
 	private static final int DEFAULT_MAX_SIZE = 50;
 	private static Map<String, EditToken> OBJECT_BY_TOKEN_CACHE = null;
 
@@ -64,10 +65,10 @@ public class EditTokens {
 	}
 
 	/**
-	 * 
+	 *
 	 * This method caches a EditToken object,
 	 * automatically serializing itself to generate its key
-	 * 
+	 *
 	 * @param value EditToken object
 	 * @throws Exception
 	 */
@@ -82,10 +83,10 @@ public class EditTokens {
 	}
 
 	/**
-	 * 
+	 *
 	 * This method attempts to retrieve the EditToken object
 	 * corresponding to the passed serialized EditToken string key.
-	 * 
+	 *
 	 * @param key serialized EditToken string
 	 * @return EditToken object
 	 * @throws Exception
@@ -100,17 +101,17 @@ public class EditTokens {
 	}
 
 	/**
-	 * 
+	 *
 	 * This method creates a new token out of the passed token,
 	 * resetting internal validation state and timers
-	 * 
+	 *
 	 * @param token
-	 * @return
+	 * @return EditToken object
 	 * @throws RestException
 	 */
 	public static EditToken renew(EditToken token) {
 		EditToken existingToken = get(token.getSerialized());
-		
+
 		if (existingToken == null) {
 			EditToken newToken = new EditToken(
 					token.getAuthorSequence(),
@@ -127,14 +128,54 @@ public class EditTokens {
 		}
 	}
 
+	/**
+	 *
+	 * Returns (if extant) or creates (if missing) an analog of the passed EditToken with the specified workflow processId.
+	 *
+	 * @param editToken
+	 * @param processId
+	 * @return EditToken object
+	 * @throws RestException
+	 */
+	public static EditToken getOrCreateWithSpecifiedProcessId(EditToken editToken, UUID processId) {
+		return getOrCreate(
+				editToken.getAuthorSequence(),
+				editToken.getModuleSequence(),
+				editToken.getPathSequence(),
+				processId,
+				editToken.getRoles()
+				);
+	}
+
+	/**
+	 *
+	 * Creates and caches a new analog of the passed EditToken with the specified workflow processId.
+	 *
+	 * @param editToken
+	 * @param processId
+	 * @return EditToken object
+	 * @throws RestException
+	 */
+	public static EditToken renewWithSpecifiedProcessId(EditToken editToken, UUID processId) {
+		EditToken token = getOrCreate(
+				editToken.getAuthorSequence(),
+				editToken.getModuleSequence(),
+				editToken.getPathSequence(),
+				processId,
+				editToken.getRoles()
+				);
+
+		return renew(token);
+	}
+
 	public static EditToken getOrCreate(String key) throws Exception {
 		EditToken token = get(key);
-		
+
 		if (token == null) {
 			token = new EditToken(key);
 			put(token);
 		}
-		
+
 		return token;
 	}
 
@@ -160,22 +201,22 @@ public class EditTokens {
 				return token;
 			}
 		}
-		
+
 		EditToken newToken = new EditToken(authorSequence, moduleSequence, pathSequence, workflowProcessId, roles);
-		
+
 		put(newToken);
-		
+
 		return newToken;
 	}
 
 	/**
-	 * 
+	 *
 	 * This method returns an Optional containing an EditToken object if its parameter exists in the parameters map.
 	 * If the parameter exists, it automatically attempts to construct and cache the EditToken object before returning it
 	 *
 	 * @param allParams parameter name to value-list map provided in UriInfo by ContainerRequestContext
 	 * @return an Optional containing a EditToken string if it exists in the parameters map
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static Optional<EditToken> getEditTokenParameterTokenObjectValue(Map<String, List<String>> allParams) throws RestException {
 		Optional<String> tokenStringOptional = getEditTokenParameterStringValue(allParams);
@@ -197,7 +238,7 @@ public class EditTokens {
 		}
 	}
 	/**
-	 * 
+	 *
 	 * This method returns an Optional containing a EditToken string if it exists in the parameters map.
 	 *
 	 * @param allParams parameter name to value-list map provided in UriInfo by ContainerRequestContext
@@ -206,13 +247,13 @@ public class EditTokens {
 	 */
 	public static Optional<String> getEditTokenParameterStringValue(Map<String, List<String>> allParams) throws RestException {
 		List<String> editTokenParameterValues = allParams.get(RequestParameters.editToken);
-		
+
 		if (editTokenParameterValues == null || editTokenParameterValues.size() == 0 || StringUtils.isBlank(editTokenParameterValues.get(0))) {
 			return Optional.empty();
 		} else if (editTokenParameterValues.size() > 1) {
-			throw new RestException(RequestParameters.editToken, "\"" + editTokenParameterValues + "\"", "too many (" + editTokenParameterValues.size() 
+			throw new RestException(RequestParameters.editToken, "\"" + editTokenParameterValues + "\"", "too many (" + editTokenParameterValues.size()
 			+ " values - should only be passed with one value");
-		}		
+		}
 		return Optional.of(editTokenParameterValues.get(0));
 	}
 }

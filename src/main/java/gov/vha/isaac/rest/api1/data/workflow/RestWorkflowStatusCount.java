@@ -18,9 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.time.LocalDate;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -29,79 +26,65 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.ochre.api.commit.Stamp;
-import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
-import gov.vha.isaac.rest.api1.data.RestStampedVersion;
-
+import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
 /**
- * A tuple containing the key/value pair constituting a map entry
- * in a map of component nids to stamps
- * A set of these constitutes a map contained in {@link RestWorkflowProcess}
  *
- * {@link RestWorkflowComponentToStampMapEntry}
  *
- * This class carries back result map
+ * {@link RestWorkflowStatusCount}
  *
- * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
+ * @author <a href="mailto:nmarques@westcoastinformatics.com">Nuno Marques</a>
  */
 @XmlRootElement
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestWorkflowComponentToStampMapEntry
-{
-	/**
-	 * The key
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	int key;
+public class RestWorkflowStatusCount {
 
 	/**
-	 * The value
+	 * Status of the workflow.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	RestStampedVersion value;
+	RestWorkflowProcessStatusType processStatus;
+
+	/**
+	 * Count of workflow processes instances.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	long count = 0L;
 
 	/**
 	 * Constructor for JAXB only
 	 */
-	protected RestWorkflowComponentToStampMapEntry()
-	{
-		//For jaxb
+	protected RestWorkflowStatusCount() {
+		// for Jaxb
+		super();
 	}
 
 	/**
-	 * @param map
+	 * @param processDetail-
+	 *            ISAAC workflow DefinitionDetail
 	 */
-	public RestWorkflowComponentToStampMapEntry(int key, RestStampedVersion value) {
-		this.key = key;
-		this.value = value;
-	}
-	public RestWorkflowComponentToStampMapEntry(Map.Entry<Integer, Stamp> entry) {
-		this(entry.getKey(), new RestStampedVersion(entry.getValue()));
+	public RestWorkflowStatusCount(RestWorkflowProcessStatusType workflowProcessStatusType, long count) {
+		this.processStatus = workflowProcessStatusType;
+		this.count = count;
 	}
 
 	/**
-	 * @return the key
+	 * @return the workflow status
 	 */
 	@XmlTransient
-	public int getKey() {
-		return key;
+	public RestWorkflowProcessStatusType getProcessStatus() {
+		return processStatus;
 	}
 
 	/**
-	 * @return the value
+	 * @return the count
 	 */
 	@XmlTransient
-	public RestStampedVersion getValue() {
-		return value;
-	}
-
-	public String getInitialEditTimeAsString() {
-		LocalDate date = LocalDate.ofEpochDay(value.time);
-		return BPMNInfo.workflowDateFormatter.format(date);
+	public long getCount() {
+		return count;
 	}
 
 
@@ -111,12 +94,14 @@ public class RestWorkflowComponentToStampMapEntry
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = 1;
-		result = prime * result + key;
+		int result = super.hashCode();
+		result = prime * result + ((processStatus == null) ? 0 : processStatus.hashCode());
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -124,24 +109,22 @@ public class RestWorkflowComponentToStampMapEntry
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
+		if (!super.equals(obj)) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		RestWorkflowComponentToStampMapEntry other = (RestWorkflowComponentToStampMapEntry) obj;
-		if (key != other.key) {
-			return false;
-		}
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "RestWorkflowComponentNidToStampsMapEntry [key=" + key + ", value=" + value + "]";
+		return "RestWorkflowStatusCount [processStatus=" + processStatus + ", count=" + count + "]";
 	}
 }

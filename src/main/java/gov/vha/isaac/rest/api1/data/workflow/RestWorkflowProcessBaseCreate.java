@@ -3,7 +3,7 @@
  *
  * This is a work of the U.S. Government and is not subject to copyright
  * protection in the United States. Foreign copyrights may apply.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,10 +31,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.rest.api1.workflow.WorkflowWriteAPIs;
+
 /**
  * Object containing fields used in creation of a new {@link RestWorkflowProcess}.
  * Passed as argument to {@link WorkflowWriteAPIs#createWorkflowProcess()}.
- * 
+ *
  * {@link RestWorkflowProcessBaseCreate}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
@@ -45,8 +47,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestWorkflowProcessBaseCreate.class)
 public class RestWorkflowProcessBaseCreate {
-	// TODO [WF] Add comment
-	
+
 	/**
 	 * The workflow definition id
 	 */
@@ -67,7 +68,7 @@ public class RestWorkflowProcessBaseCreate {
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	String description;
-	
+
 	/**
 	 * Constructor for JAXB
 	 */
