@@ -177,8 +177,12 @@ public class PrismeLogSenderService {
 							return;
 						}
 
-						// Send log event
-						sendEvent(eventToSend);
+						if (eventToSend != null) {
+							// Send log event
+							sendEvent(eventToSend);
+						} else {
+							// This should never happen
+						}
 						
 						// If sendEvent succeeded then set eventToSend = null so it won't attempt to resend
 						eventToSend = null;
@@ -189,7 +193,13 @@ public class PrismeLogSenderService {
 							// No problem.  Just shutting down anyway.
 							return;
 						}
-						LOGGER.error("FAILED SENDING LOG EVENT TO PRISME: " + eventToSend, re);
+						
+						if (eventToSend != null) {
+							LOGGER.error("FAILED SENDING LOG EVENT TO PRISME: " + eventToSend, re);
+						} else {
+							// This should never happen
+							LOGGER.error("FAILED SENDING null LOG EVENT TO PRISME", re);
+						}
 						
 						// Wait (WAIT_LOCK_OBJECT.wait(wait)), if wait > 0
 						if (wait > 0) {
@@ -278,7 +288,7 @@ public class PrismeLogSenderService {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-		if (event == POISON_PILL_SHUTDOWN_MARKER || getEventQueue() == null) {
+		if (event == POISON_PILL_SHUTDOWN_MARKER || getEventQueue() == null || event == null) {
 			// Shutting down. Shouldn't even get here.
 			return;
 		}
