@@ -105,12 +105,13 @@ public class PrismeLogSenderService {
 	 * Cached Client instance
 	 */
 	private static Client CLIENT = null;
+	private synchronized static Client getClient() { return CLIENT; }
+	private synchronized static void setClient(Client client) { CLIENT = client; }
 
 	/*
 	 * The static event queue.  PrismeLogAppender is a noop while this is null.
 	 */
 	private static BlockingQueue<LogEvent> EVENT_QUEUE = null;
-	
 	public synchronized static BlockingQueue<LogEvent> getEventQueue() { return EVENT_QUEUE; }
 	private synchronized static void setEventQueue() { if (EVENT_QUEUE == null) { EVENT_QUEUE = new LinkedBlockingQueue<>(); }}
 	private synchronized static void unsetEventQueue() { EVENT_QUEUE = null; }
@@ -124,7 +125,7 @@ public class PrismeLogSenderService {
 		// For HK2
 	}
 	
-	public static boolean isEnabled() { return getEventQueue() != null; }
+	//public static boolean isEnabled() { return getEventQueue() != null; }
 
 	@PostConstruct
 	public void startupPrismeLogSenderService() {
@@ -154,7 +155,7 @@ public class PrismeLogSenderService {
 				final int maxWait = 1000 * 60 * 2; // 2 minute maximum wait
 				final int maxQueueSize = 200;
 				LogEvent eventToSend = null;
-				while (isEnabled()) {
+				while (getEventQueue() != null) {
 					try {
 						// Read log event, blocking on empty queue
 						if (eventToSend != null && attemptsForMessage < maxAttemptsForMessage) {
@@ -162,7 +163,7 @@ public class PrismeLogSenderService {
 							LOGGER.info("PrismeLogSenderService: retrying send of log event for attempt " + attemptsForMessage + " of " + maxAttemptsForMessage + ": " + eventToSend);
 						} else {
 							attemptsForMessage = 0;
-							eventToSend = isEnabled() ? getEventQueue().take() : POISON_PILL_SHUTDOWN_MARKER;
+							eventToSend = (getEventQueue() != null) ? getEventQueue().take() : POISON_PILL_SHUTDOWN_MARKER;
 							
 							// If read POISON_PILL_SHUTDOWN_MARKER from queue then shutdown
 							if (eventToSend == POISON_PILL_SHUTDOWN_MARKER) {
@@ -172,7 +173,7 @@ public class PrismeLogSenderService {
 							}
 						}
 
-						if (! isEnabled()) {
+						if (getEventQueue() == null) {
 							return;
 						}
 
@@ -184,7 +185,7 @@ public class PrismeLogSenderService {
 						wait = initialWait;
 						increment = initialIncrement;
 					} catch (Exception re) {
-						if (! isEnabled()) {
+						if (getEventQueue() == null) {
 							// No problem.  Just shutting down anyway.
 							return;
 						}
@@ -217,7 +218,7 @@ public class PrismeLogSenderService {
 					
 					// Remove and discard excess events,
 					// calling disable() and break if encountering POISON_PILL_SHUTDOWN_MARKER
-					while (isEnabled() && getEventQueue().size() > maxQueueSize) {
+					while ((getEventQueue() != null) && getEventQueue().size() > maxQueueSize && getEventQueue().size() > 0) {
 						LogEvent eventToDiscard = getEventQueue().remove();
 						if (eventToDiscard == POISON_PILL_SHUTDOWN_MARKER) {
 							// Shutdown
@@ -241,15 +242,15 @@ public class PrismeLogSenderService {
 		}
 
 		// End sleep wait, if waiting
-		if (isEnabled()) {
+		if (getEventQueue() != null) {
 			getEventQueue().clear();
 			getEventQueue().add(POISON_PILL_SHUTDOWN_MARKER);
 			unsetEventQueue();
 		}
 
-		if (CLIENT != null) {
-			CLIENT.close();
-			CLIENT = null;
+		if (getClient() != null) {
+			getClient().close();
+			setClient(null);
 		}
 
 		LOGGER.info("Disabled {}", this.getClass().getName());
@@ -277,7 +278,7 @@ public class PrismeLogSenderService {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-		if (event == POISON_PILL_SHUTDOWN_MARKER || ! isEnabled()) {
+		if (event == POISON_PILL_SHUTDOWN_MARKER || getEventQueue() == null) {
 			// Shutting down. Shouldn't even get here.
 			return;
 		}
@@ -290,11 +291,13 @@ public class PrismeLogSenderService {
 		final String validation_errors_key = "validation_errors";
 		final String level_key = "level";
 		final String application_name_key = "application_name";
-		final String application_name_value = ApplicationConfig.getInstance().getContextPath();
 		final String tag_key = "tag";
 		final String message_key = "message";
 		final String security_token_key = "security_token";
 		final String token_error_key = "token_error";
+
+		// This must be called after ApplicationConfig.onStartup()
+		final String application_name_value = ApplicationConfig.getInstance().getContextPath();
 
 		Map<String, Object> dto = new HashMap<>();
 
@@ -359,8 +362,11 @@ public class PrismeLogSenderService {
 		// Extract security token  from PRISME_NOTIFY_URL config property
 		String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
 
-		// Construct WebTarget from Client CLIENT, constructing and caching new Client CLIENT if null
-		WebTarget webTargetWithPath = (CLIENT != null ? CLIENT : (CLIENT = ClientBuilder.newClient())).target(targetWithPath);
+		// Construct WebTarget from Client getClient(), constructing and caching new Client getClient() if null
+		if (getClient() == null) {
+			setClient(ClientBuilder.newClient());
+		}
+		WebTarget webTargetWithPath = getClient().target(targetWithPath);
 
 		// Create map to store request params
 		Map<String, String> params = new HashMap<>();
