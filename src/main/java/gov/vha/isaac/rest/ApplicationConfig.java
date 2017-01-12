@@ -48,7 +48,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
 
-@ApplicationPath("rest/")
+@ApplicationPath(RestPaths.appPathComponent)
 public class ApplicationConfig extends ResourceConfig implements ContainerLifecycleListener
 {
 	private static final AtomicInteger startup = new AtomicInteger(1);
@@ -574,6 +574,13 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	public boolean isDebugDeploy()
 	{
 		return debugMode;
+	}
+
+	/**
+	 * @return String context path, which is a hard-coded value if in eclipse Jetty
+	 */
+	public String getContextPath() {
+		return contextPath;
 	}
 
 	/**

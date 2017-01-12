@@ -19,43 +19,430 @@
 
 package gov.vha.isaac.rest.session;
 
-import javax.inject.Singleton;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.inject.Singleton;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.ThreadContext.ContextStack;
 import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.spi.StandardLevel;
+import org.apache.logging.log4j.core.impl.ThrowableProxy;
+import org.apache.logging.log4j.message.Message;
+import org.codehaus.plexus.util.StringUtils;
+import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
+import org.glassfish.hk2.runlevel.ErrorInformation;
 import org.glassfish.hk2.runlevel.RunLevel;
+import org.glassfish.hk2.runlevel.RunLevelFuture;
 import org.jvnet.hk2.annotations.Service;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.rest.ApplicationConfig;
 
 /**
  * 
  * {@link PrismeLogSenderService}
+ * 
+ * Create and manage a thread that performs a blocking read on a static EVENT_QUEUE populated by {@link PrismeLogAppender}
+ * and sends {@link LogEvent} events to PRISME via rest call if service prisme_notify_url is configured in PRISME properties
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
- *
  */
 @RunLevel(1)
 @Service
 public class PrismeLogSenderService {
+	private static Logger LOGGER = LogManager.getLogger(PrismeLogSenderService.class);
+
 	/**
-	 * 
+	 * POISON_PILL_SHUTDOWN_MARKER ends blocking read on EVENT_QUEUE
+	 */
+	private final static LogEvent POISON_PILL_SHUTDOWN_MARKER = new LogEvent() {
+		private static final long serialVersionUID = 1L;
+		@Override public Map<String, String> getContextMap() { return null; }
+		@Override public ContextStack getContextStack() { return null; }
+		@Override public String getLoggerFqcn() { return null; }
+		@Override public Level getLevel() { return null; }
+		@Override public String getLoggerName() { return null; }
+		@Override public Marker getMarker() { return null; }
+		@Override public Message getMessage() { return null; }
+		@Override public long getTimeMillis() { return 0; }
+		@Override public StackTraceElement getSource() { return null; }
+		@Override public String getThreadName() { return null; }
+		@Override public Throwable getThrown() { return null; }
+		@Override public ThrowableProxy getThrownProxy() {return null;}
+		@Override public boolean isEndOfBatch() { return false; }
+		@Override public boolean isIncludeLocation() { return false; }
+		@Override public void setEndOfBatch(boolean endOfBatch) {}
+		@Override public void setIncludeLocation(boolean locationRequired) {}
+		@Override public long getNanoTime() { return 0;}
+	};
+	
+	/*
+	 * Attempt to load PRISME notification API rest URL from PRISME properties
+	 */
+	final static String PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties(false).getProperty("prisme_notify_url");
+
+	/*
+	 * Cached Client instance
+	 */
+	private static Client CLIENT = null;
+	private synchronized static Client getClient() { return CLIENT; }
+	private synchronized static void setClient(Client client) { CLIENT = client; }
+
+	/*
+	 * The static event queue.  PrismeLogAppender is a noop while this is null.
+	 */
+	private static BlockingQueue<LogEvent> EVENT_QUEUE = null;
+	public synchronized static BlockingQueue<LogEvent> getEventQueue() { return EVENT_QUEUE; }
+	private synchronized static void setEventQueue() { if (EVENT_QUEUE == null) { EVENT_QUEUE = new LinkedBlockingQueue<>(); }}
+	private synchronized static void unsetEventQueue() { EVENT_QUEUE = null; }
+
+	private final Object waitLockObject_ = new Object();
+
+	/**
+	 * Constructor to be invoked only by HK2
 	 */
 	PrismeLogSenderService() {
-//		while (true) { // TODO Joel should there be a shutdown hook?
-//			try {
-//				LogEvent nextEvent = PrismeLogAppender.EVENT_QUEUE.take();
-//				
-//				if (nextEvent.getLoggerName().equals("gov.vha.isaac.ochre.api.LookupService")
-//						&& nextEvent.getLevel().getStandardLevel().intLevel() >= StandardLevel.WARN.intLevel()) {
-//					// Avoid infinite recursion by not sending messages about log events caused by sending messages
-//					//System.out.println("Not sending log event: " + nextEvent.getLoggerName() + ": " + nextEvent.getMessage());
-//					continue;
-//				}
-//				
-//				PrismeLogAppender.sendEvent(nextEvent);
-//
-//			} catch (InterruptedException e) {
-//				// TODO Joel how to log without recursion?
-//			}
-//		}
+		// For HK2
+	}
+	
+	//public static boolean isEnabled() { return getEventQueue() != null; }
+
+	@PostConstruct
+	public void startupPrismeLogSenderService() {
+		final Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				
+				// disable() if not configured
+				if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
+					LOGGER.warn("CANNOT LOG EVENTS TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties");
+					disable();
+					return;
+				}
+
+				// enable if not yet enabled
+				setEventQueue();
+
+				final int maxAttemptsForMessage = 10;
+				int attemptsForMessage = 0;
+				
+				final int initialWait = 0;
+				int wait = initialWait;
+
+				final int initialIncrement = 100;
+				int increment = initialIncrement;
+				
+				final int maxWait = 1000 * 60 * 2; // 2 minute maximum wait
+				final int maxQueueSize = 200;
+				LogEvent eventToSend = null;
+				while (getEventQueue() != null) {
+					try {
+						// Read log event, blocking on empty queue
+						if (eventToSend != null && attemptsForMessage < maxAttemptsForMessage) {
+							attemptsForMessage++;
+							LOGGER.info("PrismeLogSenderService: retrying send of log event for attempt " + attemptsForMessage + " of " + maxAttemptsForMessage + ": " + eventToSend);
+						} else {
+							attemptsForMessage = 0;
+							eventToSend = (getEventQueue() != null) ? getEventQueue().take() : POISON_PILL_SHUTDOWN_MARKER;
+							
+							// If read POISON_PILL_SHUTDOWN_MARKER from queue then shutdown
+							if (eventToSend == POISON_PILL_SHUTDOWN_MARKER) {
+								// Shutdown
+								disable();
+								return; // exit thread
+							}
+						}
+
+						if (getEventQueue() == null) {
+							return;
+						}
+
+						if (eventToSend != null) {
+							// Send log event
+							sendEvent(eventToSend);
+						} else {
+							// This should never happen
+						}
+						
+						// If sendEvent succeeded then set eventToSend = null so it won't attempt to resend
+						eventToSend = null;
+						wait = initialWait;
+						increment = initialIncrement;
+					} catch (Exception re) {
+						if (getEventQueue() == null) {
+							// No problem.  Just shutting down anyway.
+							return;
+						}
+						
+						if (eventToSend != null) {
+							LOGGER.error("FAILED SENDING LOG EVENT TO PRISME: " + eventToSend, re);
+						} else {
+							// This should never happen
+							LOGGER.error("FAILED SENDING null LOG EVENT TO PRISME", re);
+						}
+						
+						// Wait (WAIT_LOCK_OBJECT.wait(wait)), if wait > 0
+						if (wait > 0) {
+							try {
+								LOGGER.debug("PrismeLogSenderService: WAITING " + (wait/1000) + " SECONDS");
+								synchronized (waitLockObject_) {
+									waitLockObject_.wait(wait); // TODO Joel should handle spurious wakeup?
+								}
+							} catch (InterruptedException e) {
+								// ignore
+							}
+						}
+						
+						// If less than maxWait, then increment wait and increment
+						if (wait < maxWait) {
+							wait = wait + increment;
+							increment = wait;
+						}
+						
+						// Enforce cap on wait
+						if (wait >= maxWait) {
+							wait = maxWait;
+							increment = 0;
+						}
+					}
+					
+					// Remove and discard excess events,
+					// calling disable() and break if encountering POISON_PILL_SHUTDOWN_MARKER
+					while ((getEventQueue() != null) && getEventQueue().size() > maxQueueSize && getEventQueue().size() > 0) {
+						LogEvent eventToDiscard = getEventQueue().remove();
+						if (eventToDiscard == POISON_PILL_SHUTDOWN_MARKER) {
+							// Shutdown
+							disable();
+							return; // exit thread
+						}
+					}
+				} // End run() outer while loop
+			} // End run()
+		}; // End Runnable declaration
+
+		LOGGER.info("Starting {}...", this.getClass().getName());
+		new Thread(runnable).start();
+	}
+
+	public void disable() {
+		LOGGER.info("Disabling {}...", this.getClass().getName());
+
+		synchronized (waitLockObject_) {
+			waitLockObject_.notifyAll();
+		}
+
+		// End sleep wait, if waiting
+		if (getEventQueue() != null) {
+			getEventQueue().clear();
+			getEventQueue().add(POISON_PILL_SHUTDOWN_MARKER);
+			unsetEventQueue();
+		}
+
+		if (getClient() != null) {
+			getClient().close();
+			setClient(null);
+		}
+
+		LOGGER.info("Disabled {}", this.getClass().getName());
+	}
+	@PreDestroy
+	public void shutdownPrismeLogSenderService() {
+		disable();
+	}
+
+	private void sendEvent(LogEvent event) {
+		/*
+		 * property name:
+		 * 		prisme_notify_url
+		 * 
+		 * example property:
+		 * 		prisme_notify_url=http://localhost:3000/log_event?security_token=%5B%22u%5Cf%5Cx92%5CxBC%5Cx17%7D%5CxD1%5CxE4%5CxFB%5CxE5%5Cx99%5CxA3%5C%22%5CxE8%5C%5CK%22%2C+%22%3E%5Cx16%5CxDE%5CxA8v%5Cx14%5CxFF%5CxD2%5CxC6%5CxDD%5CxAD%5Cx9F%5Cx1D%5CxD1cF%22%5D
+		 * 
+		 * example target with path:
+		 * 		http://localhost:3000/log_event
+		 * 
+		 * example parameters and values:
+		 * 		security_token=%5B%22u%5Cf%5Cx92%5CxBC%5Cx17%7D%5CxD1%5CxE4%5CxFB%5CxE5%5Cx99%5CxA3%5C%22%5CxE8%5C%5CK%22%2C+%22%3E%5Cx16%5CxDE%5CxA8v%5Cx14%5CxFF%5CxD2%5CxC6%5CxDD%5CxAD%5Cx9F%5Cx1D%5CxD1cF%22%5D
+		 * 		application_name=isaac
+		 * 		level=1
+		 * 		tag=SOME_TAG
+		 * 		message=broken
+		 */
+		if (event == POISON_PILL_SHUTDOWN_MARKER || getEventQueue() == null || event == null) {
+			// Shutting down. Shouldn't even get here.
+			return;
+		}
+		if (event.getLoggerName().equalsIgnoreCase(LOGGER.getName())) {
+			// Ignore log messages queued from this logger to avoid recursion
+			return;
+		}
+
+		final String event_logged_key = "event_logged";
+		final String validation_errors_key = "validation_errors";
+		final String level_key = "level";
+		final String application_name_key = "application_name";
+		final String tag_key = "tag";
+		final String message_key = "message";
+		final String security_token_key = "security_token";
+		final String token_error_key = "token_error";
+
+		// This must be called after ApplicationConfig.onStartup()
+		final String application_name_value = ApplicationConfig.getInstance().getContextPath();
+
+		Map<String, Object> dto = new HashMap<>();
+
+		int prismeLevel = 1; // ALWAYS
+
+		// LEVELS = {ALWAYS: 1, WARN: 2, ERROR: 3, FATAL: 4}
+		switch(event.getLevel().getStandardLevel()) {
+		case FATAL:
+			prismeLevel = 4;
+			break;
+		case ERROR:
+			prismeLevel = 3;
+			break;
+		case WARN:
+			prismeLevel = 2;
+			break;
+		case ALL:
+		case INFO:
+		case OFF:
+		case TRACE:
+		case DEBUG:
+			prismeLevel = 1;
+			break;
+		default:
+			LOGGER.warn("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
+			break;
+		}
+
+		String tag = null;
+		try {
+			// If logger name is a class then make tag the class simple name
+			tag = Class.forName(event.getLoggerName()).getSimpleName();
+		} catch (Exception e) {
+			// If logger name is not a class name then don't modify it
+			tag = event.getLoggerName();
+		}
+		dto.put(level_key, prismeLevel);
+		dto.put(application_name_key, application_name_value);
+		dto.put(tag_key, tag);
+		dto.put(message_key, event.getMessage().getFormattedMessage());
+
+		String eventInputJson = null;
+		try {
+			// Attempt to convert input DTO into json
+			eventInputJson = PrismeLogSenderService.jsonIze(dto);
+		} catch (IOException e) {
+			LOGGER.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: " + dto.toString(), e);
+
+			// Manually craft json for an error message about this log failure
+			eventInputJson = "{ \""+ level_key + "\":\"3\", \"" + tag_key + "\":\"LOGGING ERROR\", \"" + message_key + "\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"" + application_name_key + "\":\"" + application_name_value + "\" }";
+		}
+
+		// If PRISME_NOTIFY_URL config property is unset then disable()
+		if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
+			shutdownPrismeLogSenderService();
+			LOGGER.warn("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
+			return;
+		}
+
+		// Extract target with path from PRISME_NOTIFY_URL config property
+		String targetWithPath = PRISME_NOTIFY_URL.replaceAll("\\?.*", "");
+		// Extract security token  from PRISME_NOTIFY_URL config property
+		String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
+
+		// Construct WebTarget from Client getClient(), constructing and caching new Client getClient() if null
+		if (getClient() == null) {
+			setClient(ClientBuilder.newClient());
+		}
+		WebTarget webTargetWithPath = getClient().target(targetWithPath);
+
+		// Create map to store request params
+		Map<String, String> params = new HashMap<>();
+		// Add security token param to params map
+		params.put(security_token_key, securityToken);
+
+		// Post eventInputJson to webTargetWithPath with params
+		String responseJson = PrismeServiceUtils.postJsonToPrisme(webTargetWithPath, eventInputJson, params);
+
+		// Construct json ObjectMapper to read response
+		ObjectMapper mapper = new ObjectMapper();
+		Map<?, ?> map = null;
+		try {
+			// Read json response into Map object
+			map = mapper.readValue(responseJson, Map.class);
+		} catch (IOException e) {
+			// If fail to read response then throw exception to be logged by catcher
+			throw new RuntimeException("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
+		}
+
+		// Attempt to evaluate response
+		if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
+			if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null && ((Map<?,?>)(map.get(validation_errors_key))).size() > 0) {
+				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH {} VALIDATION ERRORS: {}, EVENT: {}", ((Map<?,?>)(map.get(validation_errors_key))).size(), ((Map<?,?>)map.get(validation_errors_key)).toString(), eventInputJson);
+			} else if (map != null && map.containsKey(token_error_key) && map.get(token_error_key) != null && StringUtils.isNotBlank(map.get(token_error_key).toString())) {
+				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH TOKEN ERROR: {}, EVENT: {}", map.toString(), eventInputJson);
+			} else if (map == null || (map != null && (map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("false")))) {
+				LOGGER.error("SENDING LOG EVENT {} RETURNED INVALID RESPONSE MESSAGE FROM PRISME: {}", eventInputJson, map);
+				throw new RuntimeException("Invalid response received from PRISME");
+			} else {
+				LOGGER.error("FAILED PUBLISHING LOG EVENT {} TO PRISME WITH NO VALIDATION ERRORS IN RESPONSE: {}", eventInputJson, map);
+			}
+		} else {
+			LOGGER.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
+		}
+	}
+
+	private static String toJson(ObjectNode root) throws JsonProcessingException, IOException {
+		StringWriter ws = new StringWriter();
+		new ObjectMapper().writeTree(new JsonFactory().createGenerator(ws).setPrettyPrinter(new DefaultPrettyPrinter()), root);
+		return ws.toString();
+	}
+
+	private static String jsonIze(Map<String, Object> map) throws JsonProcessingException, IOException {
+		ObjectNode root = JsonNodeFactory.instance.objectNode();
+		for (Map.Entry<String, Object> entry : map.entrySet())
+		{
+			root.put(entry.getKey(), entry.getValue() != null ? (entry.getValue() + "") : null);
+		}
+		return PrismeLogSenderService.toJson(root);
+	}
+	
+	@Service(name="PrismeLogSenderServiceRunLevelListener")
+	@Singleton
+	public static class RunLevelListener implements org.glassfish.hk2.runlevel.RunLevelListener {
+		private static Logger log = LogManager.getLogger(RunLevelListener.class);
+	
+		@Override
+		public void onProgress(ChangeableRunLevelFuture currentJob, int levelAchieved) {
+			log.info("RunLevel " + (currentJob.isDown() ? "coming down from " : "going up from ") + levelAchieved + " to " + currentJob.getProposedLevel());
+			if (levelAchieved == LookupService.ISAAC_DEPENDENTS_RUNLEVEL && currentJob.isDown()) {
+				LookupService.getService(PrismeLogSenderService.class).disable();
+			}
+		}
+
+		@Override public void onCancelled(RunLevelFuture currentJob, int levelAchieved) { /* noop */ }
+		@Override public void onError(RunLevelFuture currentJob, ErrorInformation errorInformation) { /* noop */ }
 	}
 }

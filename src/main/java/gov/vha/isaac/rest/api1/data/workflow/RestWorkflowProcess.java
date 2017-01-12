@@ -3,7 +3,7 @@
  *
  * This is a work of the U.S. Government and is not subject to copyright
  * protection in the United States. Foreign copyrights may apply.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -32,14 +28,13 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.ochre.api.commit.Stamp;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 
 /**
  * The metadata associated with a given workflow process (or workflow instance). This doesn't
  * include its history which is available via {@link RestWorkflowProcessHistory}
- * 
+ *
  * {@link RestWorkflowProcess}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
@@ -61,8 +56,8 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	UUID creatorId; 
-	
+	UUID creatorId;
+
 	/**
 	 * The time workflow process created
 	 */
@@ -90,13 +85,28 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestWorkflowProcessStatusType processStatus;
-	
+
 	/**
 	 * The workflow process owner
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	UUID ownerId;
+
+	/**
+	 * Indicate if process is available to the user
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	String userAvailability;
+
+	/**
+	 * Indicate the state of the process such Ready for Approval,
+	 * Ready for Review, or Ready for Edit.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	String state;
 
 
 	/**
@@ -180,6 +190,39 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 		return ownerId;
 	}
 
+	/**
+	 * @return the userAvailability
+	 */
+	@XmlTransient
+	public String getUserAvailability() {
+		return userAvailability;
+	}
+
+	/**
+	 * @return the state
+	 */
+	@XmlTransient
+	public String getStage() {
+		return state;
+	}
+
+
+	/**
+	 * @param the userAvailability
+	 */
+	//@XmlTransient
+	public void setUserAvailability(String userAvailability) {
+		this.userAvailability = userAvailability;
+	}
+
+	/**
+	 * @param the process state
+	 */
+	//@XmlTransient
+	public void setStage(String state) {
+		this.state = state;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -196,18 +239,23 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!super.equals(obj))
+		}
+		if (!super.equals(obj)) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		RestWorkflowProcess other = (RestWorkflowProcess) obj;
 		if (id == null) {
-			if (other.id != null)
+			if (other.id != null) {
 				return false;
-		} else if (!id.equals(other.id))
+			}
+		} else if (!id.equals(other.id)) {
 			return false;
+		}
 		return true;
 	}
 
@@ -220,6 +268,6 @@ public class RestWorkflowProcess extends RestWorkflowProcessBaseCreate
 				+ super.toString()
 				+ "id=" + id + ", creatorId=" + creatorId + ", timeCreated=" + timeCreated + ", timeLaunched=" + timeLaunched
 				+ ", timeCancelledOrConcluded=" + timeCancelledOrConcluded + ", processStatus=" + processStatus
-				+ ", ownerId=" + ownerId + "]";
+				+ ", ownerId=" + ownerId + ", userAvailability=" + userAvailability + ", state=" + state + "]";
 	}
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
+<Configuration packages="gov.vha.isaac.rest.session">
 	<Appenders>
 		<!-- the standard-console-appender -->
 		<Console name="appender-Console-all" target="SYSTEM_OUT">
@@ -15,7 +15,7 @@
 
 		<!-- the appender for PRISME -->
 		<!--
-		<PrismeLogAppender name="appender-prisme-all">
+		<PrismeLogAppender name="appender-prisme-all" ignoreExceptions="true">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</PrismeLogAppender>
 		-->
@@ -28,7 +28,7 @@
 			<AppenderRef ref="appender-root-all" level="ALL" />
 			<AppenderRef ref="appender-root-error" level="WARN" />
 			
-			<!-- <AppenderRef ref="appender-prisme-all" level="ALL" /> -->
+			<!-- <AppenderRef ref="appender-prisme-all" level="WARN" /> -->
 		</Root>
 
 		<!-- By default, all loggers in the system are set to WARN or worse.  To enable more verbose logging
