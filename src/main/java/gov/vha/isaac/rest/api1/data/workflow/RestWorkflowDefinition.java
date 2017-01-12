@@ -3,7 +3,7 @@
  *
  * This is a work of the U.S. Government and is not subject to copyright
  * protection in the United States. Foreign copyrights may apply.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,7 +38,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestUserRoleType;
 /**
  * The metadata defining a given workflow definition. These are defined based on
  * BPMN2 Imports.
- * 
+ *
  * {@link RestWorkflowDefinition}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
@@ -152,67 +152,82 @@ public class RestWorkflowDefinition {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = prime * +((id == null) ? 0 : id.hashCode()) + bpmn2Id.hashCode() + name.hashCode()
-				+ namespace.hashCode() + version.hashCode() + roles.hashCode();
+		+ namespace.hashCode() + version.hashCode() + roles.hashCode();
 		return result;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!super.equals(obj))
+		}
+		if (!super.equals(obj)) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		RestWorkflowDefinition other = (RestWorkflowDefinition) obj;
 		if (id == null) {
-			if (other.id != null)
+			if (other.id != null) {
 				return false;
-		} else if (!id.equals(other.id))
+			}
+		} else if (!id.equals(other.id)) {
 			return false;
+		}
 		if (bpmn2Id == null) {
-			if (other.bpmn2Id != null)
+			if (other.bpmn2Id != null) {
 				return false;
-		} else if (!bpmn2Id.equals(other.bpmn2Id))
+			}
+		} else if (!bpmn2Id.equals(other.bpmn2Id)) {
 			return false;
+		}
 		if (name == null) {
-			if (other.name != null)
+			if (other.name != null) {
 				return false;
-		} else if (!name.equals(other.name))
+			}
+		} else if (!name.equals(other.name)) {
 			return false;
+		}
 		if (namespace == null) {
-			if (other.namespace != null)
+			if (other.namespace != null) {
 				return false;
-		} else if (!namespace.equals(other.namespace))
+			}
+		} else if (!namespace.equals(other.namespace)) {
 			return false;
+		}
 		if (version == null) {
-			if (other.version != null)
+			if (other.version != null) {
 				return false;
-		} else if (!version.equals(other.version))
+			}
+		} else if (!version.equals(other.version)) {
 			return false;
+		}
 		if (roles == null) {
-			if (other.roles != null)
+			if (other.roles != null) {
 				return false;
-		} else if (!roles.equals(other.roles))
+			}
+		} else if (!roles.equals(other.roles)) {
 			return false;
+		}
 		return true;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

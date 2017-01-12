@@ -3,7 +3,7 @@
  *
  * This is a work of the U.S. Government and is not subject to copyright
  * protection in the United States. Foreign copyrights may apply.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
  */
 package gov.vha.isaac.rest.api1;
 /**
- * 
+ *
  * {@link RestPaths}
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
@@ -34,7 +34,7 @@ public class RestPaths
 
 	public static final String chronologyComponent = "chronology/";
 	public static final String updateStateComponent = "state/";
-	public static final String versionsComponent = "versions/";	
+	public static final String versionsComponent = "versions/";
 	public static final String versionComponent = "version/";
 	public static final String objectChronologyTypeComponent = "objectChronologyType/";
 	public static final String identifiedObjectsComponent = "identifiedObjects/";
@@ -53,24 +53,23 @@ public class RestPaths
 	public static final String termRequestComponent = "termRequest/";
 	public static final String userComponent = "user/";
 	public static final String vetsXMLComponent = "vetsXML/";
-	
+
 	// Workflow Based Calls
 	public static final String workflowAPIsPathComponent = apiVersionComponent + "workflow/";
 	public static final String definition = "definition/";
 	public static final String process = "process/";
-
-	public static final String allDefinitions = definition + "all/";
-
+	public static final String workflowCountSummary = "workflowCountSummary/";
+	//public static final String allDefinitions = definition + "all/";
 	public static final String history = process + "history/";
 	public static final String locked = process + "locked/";
 	public static final String actions = process + "actions/";
-	public static final String available = process + "available/";
+	public static final String list = process + "list/";
 	public static final String createProcess = process + "create/";
 	public static final String advanceProcess = process + "advance/";
-	public static final String removeComponent = process + "component/";
+	public static final String processComponent = process + "component/";
 	public static final String componentSummary = process + "component/summary/" ;
 	public static final String lock = "lock/";
-	
+
 	// Mapping Based Calls
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
 	public static final String mappingSetComponent = "mappingSet/";
@@ -87,7 +86,7 @@ public class RestPaths
 	public static final String mappingSetUpdateAppPathComponent = writePathComponent+ mappingAPIsPathComponent + mappingSetComponent + updatePathComponent;
 	public static final String mappingItemCreateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + createPathComponent;
 	public static final String mappingItemUpdateAppPathComponent = writePathComponent + mappingAPIsPathComponent + mappingItemComponent + updatePathComponent;
-	
+
 	public static final String associationAPIsPathComponent = apiVersionComponent + "association/";
 	public static final String associationComponent = "type/";
 	public static final String associationItemComponent = "item/";
@@ -95,7 +94,7 @@ public class RestPaths
 	public static final String associationsWithTypeComponent = "withType/";
 	public static final String associationsWithSourceComponent = "withSource/";
 	public static final String associationsWithTargetComponent = "withTarget/";
-	
+
 	public static final String enumerationComponent = "enumeration/";
 	public static final String enumerationRestDynamicSememeDataTypeComponent = enumerationComponent + "restDynamicSememeDataType/";
 	public static final String enumerationRestDynamicSememeValidatorTypeComponent = enumerationComponent + "restDynamicSememeValidatorType/";
@@ -104,15 +103,15 @@ public class RestPaths
 	public static final String enumerationRestConcreteDomainOperatorTypes = enumerationComponent + "restConcreteDomainOperatorTypes/";
 	public static final String enumerationRestNodeSemanticTypes = enumerationComponent + "restNodeSemanticType/";
 	public static final String enumerationRestSupportedIdTypes = enumerationComponent + "restSupportedIdTypes/";
-	
+
 	public static final String conceptAPIsPathComponent = apiVersionComponent + "concept/";
 	public static final String conceptChronologyAppPathComponent = conceptAPIsPathComponent + chronologyComponent;
 	public static final String conceptVersionsAppPathComponent = appPathComponent + conceptAPIsPathComponent + versionsComponent;
 	public static final String conceptVersionAppPathComponent = appPathComponent + conceptAPIsPathComponent +versionComponent;
 	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptAPIsPathComponent +descriptionsComponent;
 	public static final String conceptCreateAppPathComponent = writePathComponent + conceptAPIsPathComponent + createPathComponent;
-	
-	
+
+
 	public static final String sememeAPIsPathComponent = apiVersionComponent + "sememe/";
 	public static final String sememeChronologyAppPathComponent = appPathComponent + sememeAPIsPathComponent + chronologyComponent;
 	public static final String sememeVersionsAppPathComponent = appPathComponent + sememeAPIsPathComponent + versionsComponent;
@@ -121,17 +120,17 @@ public class RestPaths
 
 	public static final String descriptionCreatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + createPathComponent;
 	public static final String descriptionUpdatePathComponent = writePathComponent + sememeAPIsPathComponent + descriptionComponent + updatePathComponent;
-	
+
 	public static final String searchComponent = "search/";
 	public static final String searchAPIsPathComponent = apiVersionComponent + searchComponent;
 	public static final String searchAppPathComponent = appPathComponent + searchAPIsPathComponent;
-	
+
 	public static final String taxonomyAPIsPathComponent = apiVersionComponent + "taxonomy/";
-	
+
 	public static final String idComponent = "id/";
 	public static final String idAPIsPathComponent = apiVersionComponent + idComponent;
 	public static final String idAppPathComponent = appPathComponent + apiVersionComponent + idComponent;
-	
+
 	public static final String systemAPIsPathComponent = apiVersionComponent + "system/";
 	public static final String commentAPIsPathComponent = apiVersionComponent + "comment/";
 	public static final String contentRequestAPIsPathComponent = apiVersionComponent + "request/";
