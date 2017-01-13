@@ -288,127 +288,129 @@ public class PrismeLogSenderService {
 		 * 		tag=SOME_TAG
 		 * 		message=broken
 		 */
-		if (
-				event != POISON_PILL_SHUTDOWN_MARKER && getEventQueue() != null // Shutting down
-				&& event != null // Should never happen
-				&& !event.getLoggerName().equalsIgnoreCase(LOGGER.getName()) // Ignore log messages queued from this logger to avoid recursion
-				) {
+		if (event == POISON_PILL_SHUTDOWN_MARKER || getEventQueue() == null || event == null) {
+			// Shutting down. Shouldn't even get here.
+			return;
+		}
+		if (event.getLoggerName().equalsIgnoreCase(LOGGER.getName())) {
+			// Ignore log messages queued from this logger to avoid recursion
+			return;
+		}
 
-			final String event_logged_key = "event_logged";
-			final String validation_errors_key = "validation_errors";
-			final String level_key = "level";
-			final String application_name_key = "application_name";
-			final String tag_key = "tag";
-			final String message_key = "message";
-			final String security_token_key = "security_token";
-			final String token_error_key = "token_error";
+		final String event_logged_key = "event_logged";
+		final String validation_errors_key = "validation_errors";
+		final String level_key = "level";
+		final String application_name_key = "application_name";
+		final String tag_key = "tag";
+		final String message_key = "message";
+		final String security_token_key = "security_token";
+		final String token_error_key = "token_error";
 
-			// This must be called after ApplicationConfig.onStartup()
-			final String application_name_value = ApplicationConfig.getInstance().getContextPath();
+		// This must be called after ApplicationConfig.onStartup()
+		final String application_name_value = ApplicationConfig.getInstance().getContextPath();
 
-			Map<String, Object> dto = new HashMap<>();
+		Map<String, Object> dto = new HashMap<>();
 
-			int prismeLevel = 1; // ALWAYS
+		int prismeLevel = 1; // ALWAYS
 
-			// LEVELS = {ALWAYS: 1, WARN: 2, ERROR: 3, FATAL: 4}
-			switch(event.getLevel().getStandardLevel()) {
-			case FATAL:
-				prismeLevel = 4;
-				break;
-			case ERROR:
-				prismeLevel = 3;
-				break;
-			case WARN:
-				prismeLevel = 2;
-				break;
-			case ALL:
-			case INFO:
-			case OFF:
-			case TRACE:
-			case DEBUG:
-				prismeLevel = 1;
-				break;
-			default:
-				LOGGER.warn("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
-				break;
-			}
+		// LEVELS = {ALWAYS: 1, WARN: 2, ERROR: 3, FATAL: 4}
+		switch(event.getLevel().getStandardLevel()) {
+		case FATAL:
+			prismeLevel = 4;
+			break;
+		case ERROR:
+			prismeLevel = 3;
+			break;
+		case WARN:
+			prismeLevel = 2;
+			break;
+		case ALL:
+		case INFO:
+		case OFF:
+		case TRACE:
+		case DEBUG:
+			prismeLevel = 1;
+			break;
+		default:
+			LOGGER.warn("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
+			break;
+		}
 
-			String tag = null;
-			try {
-				// If logger name is a class then make tag the class simple name
-				tag = Class.forName(event.getLoggerName()).getSimpleName();
-			} catch (Exception e) {
-				// If logger name is not a class name then don't modify it
-				tag = event.getLoggerName();
-			}
-			dto.put(level_key, prismeLevel);
-			dto.put(application_name_key, application_name_value);
-			dto.put(tag_key, tag);
-			dto.put(message_key, event.getMessage().getFormattedMessage());
+		String tag = null;
+		try {
+			// If logger name is a class then make tag the class simple name
+			tag = Class.forName(event.getLoggerName()).getSimpleName();
+		} catch (Exception e) {
+			// If logger name is not a class name then don't modify it
+			tag = event.getLoggerName();
+		}
+		dto.put(level_key, prismeLevel);
+		dto.put(application_name_key, application_name_value);
+		dto.put(tag_key, tag);
+		dto.put(message_key, event.getMessage().getFormattedMessage());
 
-			String eventInputJson = null;
-			try {
-				// Attempt to convert input DTO into json
-				eventInputJson = PrismeLogSenderService.jsonIze(dto);
-			} catch (IOException e) {
-				LOGGER.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: " + dto.toString(), e);
+		String eventInputJson = null;
+		try {
+			// Attempt to convert input DTO into json
+			eventInputJson = PrismeLogSenderService.jsonIze(dto);
+		} catch (IOException e) {
+			LOGGER.error("FAILED GENERATING LOG EVENT JSON FROM MAP OF PRISME LOGGER API PARAMETERS: " + dto.toString(), e);
 
-				// Manually craft json for an error message about this log failure
-				eventInputJson = "{ \""+ level_key + "\":\"3\", \"" + tag_key + "\":\"LOGGING ERROR\", \"" + message_key + "\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"" + application_name_key + "\":\"" + application_name_value + "\" }";
-			}
+			// Manually craft json for an error message about this log failure
+			eventInputJson = "{ \""+ level_key + "\":\"3\", \"" + tag_key + "\":\"LOGGING ERROR\", \"" + message_key + "\":\"FAILED TO LOG EVENT TO PRISME. CHECK ISAAC LOGS.\", \"" + application_name_key + "\":\"" + application_name_value + "\" }";
+		}
 
-			// If PRISME_NOTIFY_URL config property is unset then disable()
-			if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
-				shutdownPrismeLogSenderService();
-				LOGGER.warn("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
-				return;
-			}
+		// If PRISME_NOTIFY_URL config property is unset then disable()
+		if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
+			shutdownPrismeLogSenderService();
+			LOGGER.warn("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
+			return;
+		}
 
-			// Extract target with path from PRISME_NOTIFY_URL config property
-			String targetWithPath = PRISME_NOTIFY_URL.replaceAll("\\?.*", "");
-			// Extract security token  from PRISME_NOTIFY_URL config property
-			String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
+		// Extract target with path from PRISME_NOTIFY_URL config property
+		String targetWithPath = PRISME_NOTIFY_URL.replaceAll("\\?.*", "");
+		// Extract security token  from PRISME_NOTIFY_URL config property
+		String securityToken = PRISME_NOTIFY_URL.replaceFirst(".*\\?" + security_token_key + "=", "");
 
-			// Construct WebTarget from Client getClient(), constructing and caching new Client getClient() if null
-			if (getClient() == null) {
-				setClient(ClientBuilder.newClient());
-			}
-			WebTarget webTargetWithPath = getClient().target(targetWithPath);
+		// Construct WebTarget from Client getClient(), constructing and caching new Client getClient() if null
+		if (getClient() == null) {
+			setClient(ClientBuilder.newClient());
+		}
+		WebTarget webTargetWithPath = getClient().target(targetWithPath);
 
-			// Create map to store request params
-			Map<String, String> params = new HashMap<>();
-			// Add security token param to params map
-			params.put(security_token_key, securityToken);
+		// Create map to store request params
+		Map<String, String> params = new HashMap<>();
+		// Add security token param to params map
+		params.put(security_token_key, securityToken);
 
-			// Post eventInputJson to webTargetWithPath with params
-			String responseJson = PrismeServiceUtils.postJsonToPrisme(webTargetWithPath, eventInputJson, params);
+		// Post eventInputJson to webTargetWithPath with params
+		String responseJson = PrismeServiceUtils.postJsonToPrisme(webTargetWithPath, eventInputJson, params);
 
-			// Construct json ObjectMapper to read response
-			ObjectMapper mapper = new ObjectMapper();
-			Map<?, ?> map = null;
-			try {
-				// Read json response into Map object
-				map = mapper.readValue(responseJson, Map.class);
-			} catch (IOException e) {
-				// If fail to read response then throw exception to be logged by catcher
-				throw new RuntimeException("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
-			}
+		// Construct json ObjectMapper to read response
+		ObjectMapper mapper = new ObjectMapper();
+		Map<?, ?> map = null;
+		try {
+			// Read json response into Map object
+			map = mapper.readValue(responseJson, Map.class);
+		} catch (IOException e) {
+			// If fail to read response then throw exception to be logged by catcher
+			throw new RuntimeException("FAILED TO READ RESPONSE TO SUBMISSION OF LOG EVENT TO PRISME: " + eventInputJson, e);
+		}
 
-			// Attempt to evaluate response
-			if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
-				if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null && ((Map<?,?>)(map.get(validation_errors_key))).size() > 0) {
-					LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH {} VALIDATION ERRORS: {}, EVENT: {}", ((Map<?,?>)(map.get(validation_errors_key))).size(), ((Map<?,?>)map.get(validation_errors_key)).toString(), eventInputJson);
-				} else if (map != null && map.containsKey(token_error_key) && map.get(token_error_key) != null && StringUtils.isNotBlank(map.get(token_error_key).toString())) {
-					LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH TOKEN ERROR: {}, EVENT: {}", map.toString(), eventInputJson);
-				} else if (map == null || (map != null && (map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("false")))) {
-					LOGGER.error("SENDING LOG EVENT {} RETURNED INVALID RESPONSE MESSAGE FROM PRISME: {}", eventInputJson, map);
-					throw new RuntimeException("Invalid response received from PRISME");
-				} else {
-					LOGGER.error("FAILED PUBLISHING LOG EVENT {} TO PRISME WITH NO VALIDATION ERRORS IN RESPONSE: {}", eventInputJson, map);
-				}
+		// Attempt to evaluate response
+		if (map == null || map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("true")) {
+			if (map != null && map.containsKey(validation_errors_key) && map.get(validation_errors_key) != null && ((Map<?,?>)(map.get(validation_errors_key))).size() > 0) {
+				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH {} VALIDATION ERRORS: {}, EVENT: {}", ((Map<?,?>)(map.get(validation_errors_key))).size(), ((Map<?,?>)map.get(validation_errors_key)).toString(), eventInputJson);
+			} else if (map != null && map.containsKey(token_error_key) && map.get(token_error_key) != null && StringUtils.isNotBlank(map.get(token_error_key).toString())) {
+				LOGGER.error("FAILED PUBLISHING LOG EVENT TO PRISME WITH TOKEN ERROR: {}, EVENT: {}", map.toString(), eventInputJson);
+			} else if (map == null || (map != null && (map.get(event_logged_key) == null || !map.get(event_logged_key).toString().equalsIgnoreCase("false")))) {
+				LOGGER.error("SENDING LOG EVENT {} RETURNED INVALID RESPONSE MESSAGE FROM PRISME: {}", eventInputJson, map);
+				throw new RuntimeException("Invalid response received from PRISME");
 			} else {
-				LOGGER.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
+				LOGGER.error("FAILED PUBLISHING LOG EVENT {} TO PRISME WITH NO VALIDATION ERRORS IN RESPONSE: {}", eventInputJson, map);
 			}
+		} else {
+			LOGGER.debug("SUCCEEDED publishing log event to PRISME: {}", eventInputJson);
 		}
 	}
 
