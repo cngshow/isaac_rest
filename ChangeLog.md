@@ -5,8 +5,17 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/01/?? - 1.35 - PENDING
+* 2017/01/?? - 1.36 - PENDING
     *
+
+* 2017/01/12 - 1.35
+    * Making redundant null pointer checks for Fortify which is dumb.
+    * Synchronizing access to CLIENT and eliminating very unlikely-to-occur null pointer exception.
+    * Workflow changes to align with web, correct time conversion.
+    * Multiple Prisme log service and runlevel modifications
+    * Improving documentation, logging and shutdown, adding null check on shutdown.
+    * Enabling logging from within the PrismeLogSenderService.
+    * Adding per-event maximum retries.
 
 * 2017/01/05 - 1.34
     * Adding initial support for writing errors and warnings back to PRISME
