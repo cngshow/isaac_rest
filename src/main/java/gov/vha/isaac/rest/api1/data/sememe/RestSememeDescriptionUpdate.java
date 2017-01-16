@@ -25,8 +25,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 
 
 /**

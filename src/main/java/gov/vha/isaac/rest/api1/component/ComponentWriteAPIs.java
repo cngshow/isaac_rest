@@ -39,6 +39,7 @@ import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -46,6 +47,7 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.ComponentNidSememeImpl;
@@ -188,20 +190,22 @@ public class ComponentWriteAPIs
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static RestWriteResponse resetState(EditCoordinate ec, StampCoordinate sc, State state, String id) throws RestException {
-
+	public static ObjectChronology resetStateWithNoCommit(EditCoordinate ec, StampCoordinate sc, State state, String id) throws RestException {
 		StampCoordinate localStamp = sc.makeAnalog(State.values());
 		int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.id, id);
 		
 		ObjectChronologyType type = Get.identifierService().getChronologyTypeForNid(nid);
-		
-		boolean commit = false;
 
+		ObjectChronology objectToCommit = null;
+
+		State priorState = null;
+		
 		try 
 		{
 			switch (type)
 			{
 				case CONCEPT:
+				{
 					ConceptChronology cc = Get.conceptService().getConcept(nid);
 
 					try {
@@ -209,7 +213,8 @@ public class ComponentWriteAPIs
 						Optional<LatestVersion<ConceptVersionImpl>> concept = cc.getLatestVersion(ConceptVersionImpl.class, localStamp);
 
 						if (concept.isPresent()) {
-							if (concept.get().value().getState() == state) 
+							priorState = concept.get().value().getState();
+							if (priorState == state) 
 							{
 								log.info("Not resetting state of concept " + cc.getConceptSequence() + " from " + concept.get().value().getState() + " to " + state);
 
@@ -223,10 +228,10 @@ public class ComponentWriteAPIs
 					}
 
 					cc.createMutableVersion(state, ec);
-					Get.commitService().addUncommitted(cc).get();
-					commit = true;
+					objectToCommit = cc;
 
 					break;
+				}
 					
 				case SEMEME:
 				{
@@ -238,11 +243,12 @@ public class ComponentWriteAPIs
 							SememeVersionUpdatePair<DescriptionSememeImpl> sememeUpdatePair = resetSememeState(ec, localStamp, state, sememe, DescriptionSememeImpl.class);
 		
 							if (sememeUpdatePair != null) {
+								priorState = sememeUpdatePair.latest.getState();
 								sememeUpdatePair.mutable.setCaseSignificanceConceptSequence(sememeUpdatePair.latest.getCaseSignificanceConceptSequence());
 								sememeUpdatePair.mutable.setDescriptionTypeConceptSequence(sememeUpdatePair.latest.getDescriptionTypeConceptSequence());
 								sememeUpdatePair.mutable.setLanguageConceptSequence(sememeUpdatePair.latest.getLanguageConceptSequence());
 								sememeUpdatePair.mutable.setText(sememeUpdatePair.latest.getText());
-								commit = true;
+								objectToCommit = sememe;
 							}
 							break;
 						}
@@ -250,8 +256,9 @@ public class ComponentWriteAPIs
 							SememeVersionUpdatePair<StringSememeImpl> sememeUpdatePair = resetSememeState(ec, localStamp, state, sememe, StringSememeImpl.class);
 		
 							if (sememeUpdatePair != null) {
+								priorState = sememeUpdatePair.latest.getState();
 								sememeUpdatePair.mutable.setString(sememeUpdatePair.latest.getString());
-								commit = true;
+								objectToCommit = sememe;
 							} 
 		
 							break;
@@ -260,8 +267,9 @@ public class ComponentWriteAPIs
 							SememeVersionUpdatePair<DynamicSememeImpl> sememeUpdatePair = resetSememeState(ec, localStamp, state, sememe, DynamicSememeImpl.class);
 		
 							if (sememeUpdatePair != null) {
+								priorState = sememeUpdatePair.latest.getState();
 								sememeUpdatePair.mutable.setData(sememeUpdatePair.latest.getData());
-								commit = true;
+								objectToCommit = sememe;
 							}
 							break;
 						}
@@ -269,8 +277,9 @@ public class ComponentWriteAPIs
 							SememeVersionUpdatePair<ComponentNidSememeImpl> sememeUpdatePair = resetSememeState(ec, localStamp, state, sememe, ComponentNidSememeImpl.class);
 		
 							if (sememeUpdatePair != null) {
+								priorState = sememeUpdatePair.latest.getState();
 								sememeUpdatePair.mutable.setComponentNid(sememeUpdatePair.latest.getComponentNid());
-								commit = true;
+								objectToCommit = sememe;
 							} 
 							break;
 						}
@@ -278,8 +287,9 @@ public class ComponentWriteAPIs
 							SememeVersionUpdatePair<LogicGraphSememeImpl> sememeUpdatePair = resetSememeState(ec, localStamp, state, sememe, LogicGraphSememeImpl.class);
 		
 							if (sememeUpdatePair != null) {
+								priorState = sememeUpdatePair.latest.getState();
 								sememeUpdatePair.mutable.setGraphData(sememeUpdatePair.latest.getGraphData());
-								commit = true;
+								objectToCommit = sememe;
 							}
 							break;
 						}
@@ -287,8 +297,9 @@ public class ComponentWriteAPIs
 							SememeVersionUpdatePair<LongSememeImpl> sememeUpdatePair = resetSememeState(ec, localStamp, state, sememe, LongSememeImpl.class);
 		
 							if (sememeUpdatePair != null) {
+								priorState = sememeUpdatePair.latest.getState();
 								sememeUpdatePair.mutable.setLongValue(sememeUpdatePair.latest.getLongValue());
-								commit = true;
+								objectToCommit = sememe;
 							}
 							break;
 						}
@@ -296,17 +307,14 @@ public class ComponentWriteAPIs
 							SememeVersionUpdatePair<SememeVersionImpl> sememeUpdatePair = resetSememeState(ec, localStamp, state, sememe, SememeVersionImpl.class);
 							
 							if (sememeUpdatePair != null) {
-								commit = true;
+								priorState = sememeUpdatePair.latest.getState();
+								objectToCommit = sememe;
 							}
 							break;
 						case RELATIONSHIP_ADAPTOR:
 						case UNKNOWN:
 						default:
 							throw new RestException(RequestParameters.id, id, "Unsupported sememe of type " + sememe.getSememeType());
-					}
-					if (commit)
-					{
-						Get.commitService().addUncommitted(sememe).get();
 					}
 					break;
 				}
@@ -315,21 +323,14 @@ public class ComponentWriteAPIs
 				default :
 					throw new RestException(RequestParameters.id, id, "Could not locate component of unexpected type " + type + " to change its state");
 			}
-
-			if (commit)
-			{
-				Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating id " + id + " to " + state);
-	
-				if (RequestInfo.get().getActiveWorkflowProcessId() != null)
-				{
-					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord.get());
-				}
-				
-				return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get());
+			
+			if (objectToCommit != null) {
+				log.debug("Built updated version of " + type + " " + id + " with state changed (from " + priorState + " to " + state + ")");
 			} else {
-				log.debug("Not committing update of " + id + " with unchanged state (" + state + ")");
-				return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+				log.debug("No need to commit update of " + type + " " + id + " with unchanged state (" + state + ")");
 			}
+
+			return objectToCommit;
 		} 
 		catch (RestException e)
 		{
@@ -337,7 +338,44 @@ public class ComponentWriteAPIs
 		} 
 		catch (Exception e) {	
 			log.error("Unexpected", e);
-			throw new RestException("Failed updating sememe " + id + " state to " + state + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			throw new RestException("Failed updating " + type + " " + id + " state to " + state + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static RestWriteResponse resetState(EditCoordinate ec, StampCoordinate sc, State state, String id) throws RestException {
+		ObjectChronology objectToCommit = resetStateWithNoCommit(ec, sc, state, id);
+
+		int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.id, id);
+
+		if (objectToCommit != null)
+		{
+			if (objectToCommit.getOchreObjectType() == OchreExternalizableObjectType.CONCEPT) {
+				Get.commitService().addUncommitted((ConceptChronology)objectToCommit);
+			} else if (objectToCommit.getOchreObjectType() == OchreExternalizableObjectType.SEMEME) {
+				Get.commitService().addUncommitted((SememeChronology)objectToCommit);
+			} else {
+				throw new RuntimeException("Cannot addUncommitted() for commit object with id=" + id + " of unsupported OchreObjectType " + objectToCommit.getOchreObjectType());
+			}
+
+			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating " + objectToCommit.getOchreObjectType() + " with id " + id + " to " + state);
+
+			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
+			{
+				try {
+					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord.get());
+				} catch (RestException re) {
+					throw re;
+				} catch (Exception e) {
+					log.error("Unexpected", e);
+					throw new RestException("Failed updating " + objectToCommit.getOchreObjectType() + " " + id + " state to " + state + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+				}
+			} 
+
+			return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get());
+		} else {
+			log.debug("Not committing update of " + id + " with unchanged state (" + state + ")");
+			return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 		}
 	}
 }
