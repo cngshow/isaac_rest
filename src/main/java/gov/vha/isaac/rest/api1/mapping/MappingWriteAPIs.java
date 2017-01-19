@@ -20,10 +20,11 @@ package gov.vha.isaac.rest.api1.mapping;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
@@ -66,6 +67,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
@@ -88,14 +90,16 @@ import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.component.ComponentWriteAPIs;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValue;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionClone;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
@@ -328,7 +332,7 @@ public class MappingWriteAPIs
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.mappingSetComponent + RestPaths.updatePathComponent + "{" + RequestParameters.id + "}")
 	public RestWriteResponse updateMapSet(
-		RestMappingSetVersionBase mappingSetUpdateData,
+		RestMappingSetVersionBaseUpdate mappingSetUpdateData,
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.editToken) String editToken) throws RestException
 	{
@@ -362,7 +366,8 @@ public class MappingWriteAPIs
 				StringUtils.isBlank(mappingSetUpdateData.purpose) ? "" : mappingSetUpdateData.purpose.trim(),
 				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
 				RequestInfo.get().getEditCoordinate(),
-				stateToUse);
+				stateToUse,
+				mappingSetUpdateData.mapSetExtendedFields);
 	}
 	
 	/**
@@ -485,6 +490,48 @@ public class MappingWriteAPIs
 		
 	}
 	
+	@SuppressWarnings({ "rawtypes" })
+	private static SememeChronology buildMappingSetExtensionValue(
+			int mapSetConceptNid,
+			String conceptSequenceParamName,
+			String extensionNameConcept,
+			RestDynamicSememeData extensionValue,
+			EditCoordinate editCoord) throws RestException {
+		SememeChronology extension = null;
+		if (extensionValue instanceof RestDynamicSememeString)
+		{
+			extension = Get.sememeBuilderService().getDynamicSememeBuilder(mapSetConceptNid,
+					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
+					new DynamicSememeData[] {
+							new DynamicSememeNidImpl(
+									Get.identifierService().getConceptNid(
+											RequestInfoUtils.getConceptSequenceFromParameter(conceptSequenceParamName, 
+													extensionNameConcept))),
+							new DynamicSememeStringImpl(((RestDynamicSememeString)extensionValue).getString())}).build(
+					editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
+		}
+		else if (extensionValue instanceof RestDynamicSememeNid || extensionValue instanceof RestDynamicSememeUUID)
+		{
+			extension = Get.sememeBuilderService().getDynamicSememeBuilder(mapSetConceptNid,
+					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getSequence(), 
+					new DynamicSememeData[] {
+							new DynamicSememeNidImpl(Get.identifierService().getConceptNid(
+									RequestInfoUtils.getConceptSequenceFromParameter(conceptSequenceParamName, 
+											extensionNameConcept))),
+							new DynamicSememeNidImpl(
+									(extensionValue instanceof RestDynamicSememeNid ? 
+										((RestDynamicSememeNid)extensionValue).getNid() :
+										Get.identifierService().getNidForUuids(((RestDynamicSememeUUID)extensionValue).getUUID())))
+											}).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
+		}
+		else
+		{
+			throw new RuntimeException("Unsupported map set extension field type");
+		}
+		
+		return extension;
+	}
+
 	/**
 	 * Create and store a new mapping set in the DB.
 	 * @param mappingName - The name of the mapping set (used for the FSN and preferred term of the underlying concept)
@@ -575,38 +622,12 @@ public class MappingWriteAPIs
 		{
 			for (RestMappingSetExtensionValueCreate field : mapSetExtendedFields)
 			{
-				if (field.extensionValue instanceof RestDynamicSememeString)
-				{
-					@SuppressWarnings({ "rawtypes", "unused" })
-					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
-							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
-							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(
-											Get.identifierService().getConceptNid(
-													RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
-															field.extensionNameConcept))),
-									new DynamicSememeStringImpl(((RestDynamicSememeString)field.extensionValue).getString())}).build(
-							editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
-				}
-				else if (field.extensionValue instanceof RestDynamicSememeNid || field.extensionValue instanceof RestDynamicSememeUUID)
-				{
-					@SuppressWarnings({ "rawtypes", "unused" })
-					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
-							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getSequence(), 
-							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(
-											RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
-													field.extensionNameConcept))),
-									new DynamicSememeNidImpl(
-											(field.extensionValue instanceof RestDynamicSememeNid ? 
-												((RestDynamicSememeNid)field.extensionValue).getNid() :
-												Get.identifierService().getNidForUuids(((RestDynamicSememeUUID)field.extensionValue).getUUID())))
-													}).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
-				}
-				else
-				{
-					throw new RuntimeException("Unsupported map set extension field type");
-				}
+				buildMappingSetExtensionValue(
+						Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
+						"RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept",
+						field.extensionNameConcept,
+						field.extensionValue,
+						editCoord);
 			}
 		}
 		
@@ -625,6 +646,18 @@ public class MappingWriteAPIs
 		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
 				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
+
+	private static int getNameNid(DynamicSememe<?> ds) {
+		return ((DynamicSememeNid)ds.getData(0)).getDataNid();
+	}
+	private static RestDynamicSememeData getData(DynamicSememe<?> ds) {
+		DynamicSememeData value = null;
+		if (ds.getData().length > 1)
+		{
+			value = ds.getData(1);
+		}
+		return RestDynamicSememeData.translate(1, value);
+	}
 	private static RestWriteResponse updateMappingSet(
 			ConceptChronology<?> mappingConcept,
 			String mapName,
@@ -633,7 +666,8 @@ public class MappingWriteAPIs
 			String mapPurpose,
 			StampCoordinate stampCoord,
 			EditCoordinate editCoord,
-			State state) throws RuntimeException, RestException 
+			State state,
+			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields) throws RuntimeException, RestException 
 	{		
 		final List<SememeChronology<? extends SememeVersion<?>>> objectsToAdd = new ArrayList<>();
 		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
@@ -752,7 +786,83 @@ public class MappingWriteAPIs
 						(StringUtils.isBlank(mapPurpose) ? null : new DynamicSememeStringImpl(mapPurpose))});
 				objectsToAdd.add(mappingSememe.get());
 			}
-			
+
+			if (mapSetExtendedFields != null && mapSetExtendedFields.size() > 0) {
+				// get existing extended fields
+				Map<Integer, DynamicSememe<?>> existingExtensionValues = new HashMap<>();
+				Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 
+						IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(stringExtensionSememe ->
+						{
+							@SuppressWarnings("rawtypes")
+							SememeChronology rawSememeChronology = (SememeChronology)stringExtensionSememe;
+							@SuppressWarnings("unchecked") // Get only active values
+							Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, stampCoord.makeAnalog(State.ACTIVE, State.INACTIVE));
+							//TODO handle contradictions
+							if (latest.isPresent())
+							{
+								DynamicSememe<?> ds = latest.get().value();
+								int nameNid = ((DynamicSememeNid)ds.getData(0)).getDataNid();
+								existingExtensionValues.put(nameNid, ds);
+							}
+						}
+				);
+				
+				for (RestMappingSetExtensionValueUpdate update : mapSetExtendedFields) {
+					int passedNid = RequestInfoUtils.getNidFromUuidOrNidParameter("RestMappingSetExtensionValueUpdate.extensionNameConcept", update.extensionNameConcept);
+					DynamicSememe<?> existingDynamicSememe = existingExtensionValues.get(passedNid);
+					
+					@SuppressWarnings("rawtypes")
+					SememeChronology sememeToCommit = null;
+					if (existingDynamicSememe == null) {
+						if (update.active != null && ! update.active) {
+							// FAIL on a completely new extension value that is specified as INACTIVE (active == false)
+							throw new RestException("RestMappingSetExtensionValueUpdate.active", update.active + "", "cannot create new extension value with inactive state (active == false)");
+						}
+						// This is an entirely new extension value
+						sememeToCommit = buildMappingSetExtensionValue(
+								mappingConcept.getNid(),
+								"RestMappingSetVersionBaseUpdate.mapSetExtendedFields.extensionNameConcept",
+								update.extensionNameConcept,
+								update.extensionValue,
+								editCoord);
+					} else {
+						// This corresponds to an existing extension value
+						if (update.active != null && ! update.active) {
+							// Deactivate/retire this extension value
+							sememeToCommit = (SememeChronology<?>)ComponentWriteAPIs.resetStateWithNoCommit(editCoord, stampCoord.makeAnalog(State.values()), State.INACTIVE, existingDynamicSememe.getNid() + "");
+						} else {
+							RestDynamicSememeData existingData = getData(existingDynamicSememe);
+							RestDynamicSememeData updatedData = update.extensionValue;
+
+							if (! (updatedData.getClass().isInstance(existingData))) {
+								// Validate RestDynamicSememeData type as consistent with existing value
+								throw new RestException("RestMappingSetExtensionValueUpdate.extensionValue", updatedData.data + "", "attempting to update extension value dynamic sememe with data of differing type");
+							}
+							
+							DynamicSememeData[] newDataArray = new DynamicSememeData[2];
+							newDataArray[0] = new DynamicSememeNidImpl(passedNid);
+							if (updatedData instanceof RestDynamicSememeString) {
+								newDataArray[1] = new DynamicSememeStringImpl(((RestDynamicSememeString)updatedData).getString());
+							} else if (updatedData instanceof RestDynamicSememeNid) {
+								newDataArray[1] = new DynamicSememeNidImpl(((RestDynamicSememeNid)updatedData).getNid());
+							} else {
+								// Only support RestDynamicSememeString or RestDynamicSememeNid
+								throw new RuntimeException(updatedData.getClass().getName() + " NOT SUPPORTED");
+							}
+							
+							@SuppressWarnings({ "unchecked", "rawtypes" })
+							DynamicSememeImpl sememeToUpdate = (DynamicSememeImpl)((SememeChronology)existingDynamicSememe.getChronology()).createMutableVersion(DynamicSememeImpl.class, State.ACTIVE, editCoord);
+							sememeToUpdate.setData(newDataArray);
+							sememeToCommit = sememeToUpdate.getChronology();
+						}
+						
+						if (sememeToCommit != null) {
+							Get.commitService().addUncommitted(sememeToCommit).get();
+						}
+					}
+				}
+			}
+
 			//Look up the current state of the mapset concept - if it differs, update the concept.
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Optional<LatestVersion<ConceptVersionImpl>> concept = ((ConceptChronology)mappingConcept).getLatestVersion(ConceptVersionImpl.class, 

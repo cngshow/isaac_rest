@@ -135,6 +135,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionClone;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResultPage;
@@ -1763,7 +1764,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String updatedMappingSetInverseName = null; //"An updated mapping set inverse name (" + randomUuid + ")";
 		String updatedMappingSetDescription = "An updated mapping set description (" + randomUuid + ")";
 		String updatedMappingSetPurpose = "An updated mapping set purpose (" + randomUuid + ")";
-		RestMappingSetVersionBase updatedMappingSetData = new RestMappingSetVersionBase(
+		RestMappingSetVersionBaseUpdate updatedMappingSetData = new RestMappingSetVersionBaseUpdate(
 				updatedMappingSetName,
 				updatedMappingSetInverseName,
 				updatedMappingSetDescription,

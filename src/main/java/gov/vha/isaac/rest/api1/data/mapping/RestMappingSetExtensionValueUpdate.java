@@ -20,12 +20,14 @@ package gov.vha.isaac.rest.api1.data.mapping;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 
 /**
  * 
- * {@link RestMappingSetExtensionValueCreate}
+ * {@link RestMappingSetExtensionValueUpdate}
  * 
  * This stub class is used for callers as part of creating {@link RestMappingSetExtensionValue} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
  * contains the fields that may be set during the initial create. 
@@ -33,8 +35,8 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueCreate.class)
-public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionValueBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueUpdate.class)
+public class RestMappingSetExtensionValueUpdate extends RestMappingSetExtensionValueBase
 {
 	/**
 	 * The concept (uuid, nid or sequence) that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
@@ -42,23 +44,40 @@ public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionV
 	 */
 	@XmlElement
 	public String extensionNameConcept;
-	
-	public RestMappingSetExtensionValueCreate()
+
+	/**
+	 * True to indicate the extension value should be set as active, false for inactive.  
+	 * This field is optional, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
+
+	public RestMappingSetExtensionValueUpdate()
 	{
 		//for Jaxb
 		super();
 	}
 	
-	public RestMappingSetExtensionValueCreate(String extensionNameConcept)
+	public RestMappingSetExtensionValueUpdate(String extensionNameConcept)
 	{
-		super();
-		this.extensionNameConcept = extensionNameConcept;
+		this(extensionNameConcept, (RestDynamicSememeData)null);
+	}
+	public RestMappingSetExtensionValueUpdate(String extensionNameConcept, Boolean active)
+	{
+		this(extensionNameConcept, (RestDynamicSememeData)null, active);
 	}
 	
-	public RestMappingSetExtensionValueCreate(String extensionNameConcept, RestDynamicSememeData extensionValue)
+	public RestMappingSetExtensionValueUpdate(String extensionNameConcept, RestDynamicSememeData extensionValue)
+	{
+		this(extensionNameConcept, extensionValue, true);
+	}
+
+	public RestMappingSetExtensionValueUpdate(String extensionNameConcept, RestDynamicSememeData extensionValue, Boolean active)
 	{
 		super(extensionValue);
 		this.extensionNameConcept = extensionNameConcept;
+		this.active = (active != null) ? active : true;
 	}
 
 	/* (non-Javadoc)
@@ -66,7 +85,11 @@ public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionV
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetExtensionValueCreate [extensionNameConcept=" + extensionNameConcept + ", extensionValue="
-				+ extensionValue + "]";
+		return "RestMappingSetExtensionValueUpdate "
+				+ "["
+				+ "extensionNameConcept=" + extensionNameConcept
+				+ ", extensionValue=" + extensionValue
+				+ ", active=" + active
+				+ "]";
 	}
 }

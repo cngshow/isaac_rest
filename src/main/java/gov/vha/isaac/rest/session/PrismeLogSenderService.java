@@ -41,6 +41,7 @@ import org.apache.logging.log4j.ThreadContext.ContextStack;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.spi.StandardLevel;
 import org.codehaus.plexus.util.StringUtils;
 import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
 import org.glassfish.hk2.runlevel.ErrorInformation;
@@ -296,7 +297,11 @@ public class PrismeLogSenderService {
 			// Shutting down. Shouldn't even get here.
 			return;
 		}
-		if (event.getLoggerName().equalsIgnoreCase(LOGGER.getName())) {
+		if (event.getMessage() == null || event.getMessage().getFormattedMessage() == null) {
+			// Ignore events with null log messages
+			return;
+		}
+		if (event.getLoggerName() != null && event.getLoggerName().equalsIgnoreCase(LOGGER.getName())) {
 			// Ignore log messages queued from this logger to avoid recursion
 			return;
 		}
@@ -317,8 +322,9 @@ public class PrismeLogSenderService {
 
 		int prismeLevel = 1; // ALWAYS
 
+		StandardLevel standardLevel = event.getLevel() != null ? event.getLevel().getStandardLevel() : StandardLevel.ALL;
 		// LEVELS = {ALWAYS: 1, WARN: 2, ERROR: 3, FATAL: 4}
-		switch(event.getLevel().getStandardLevel()) {
+		switch(standardLevel) {
 		case FATAL:
 			prismeLevel = 4;
 			break;
@@ -336,7 +342,7 @@ public class PrismeLogSenderService {
 			prismeLevel = 1;
 			break;
 		default:
-			LOGGER.warn("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", event.getLevel().getStandardLevel());
+			LOGGER.warn("ENCOUNTERED UNEXPECTED/UNSUPPORTED LogEvent StandardLevel VALUE: {}", standardLevel);
 			break;
 		}
 
@@ -346,7 +352,7 @@ public class PrismeLogSenderService {
 			tag = Class.forName(event.getLoggerName()).getSimpleName();
 		} catch (Exception e) {
 			// If logger name is not a class name then don't modify it
-			tag = event.getLoggerName();
+			tag = event.getLoggerName() != null ? event.getLoggerName() : "";
 		}
 		dto.put(level_key, prismeLevel);
 		dto.put(application_name_key, application_name_value);
@@ -366,7 +372,7 @@ public class PrismeLogSenderService {
 
 		// If PRISME_NOTIFY_URL config property is unset then disable()
 		if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
-			shutdownPrismeLogSenderService();
+			disable();
 			LOGGER.warn("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
 			return;
 		}
