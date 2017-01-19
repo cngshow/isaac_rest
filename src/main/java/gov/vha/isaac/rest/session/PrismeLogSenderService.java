@@ -372,7 +372,7 @@ public class PrismeLogSenderService {
 
 		// If PRISME_NOTIFY_URL config property is unset then disable()
 		if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
-			disable();
+			shutdownPrismeLogSenderService();
 			LOGGER.warn("CANNOT LOG EVENT TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties: {}", dto.toString());
 			return;
 		}
