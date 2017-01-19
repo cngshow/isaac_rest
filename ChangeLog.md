@@ -6,7 +6,9 @@ on all changes - including bug fixes.  The API Changelog will only contain docum
 API version number, not the release version number.
 
 * 2017/01/?? - 1.36 - PENDING
-    *
+    * Bugfixes in prisme log sending
+    * Add git changeset integration (436032)
+    * API changes from 1.9.6
 
 * 2017/01/12 - 1.35
     * Making redundant null pointer checks for Fortify which is dumb.
