@@ -21,7 +21,6 @@ package gov.vha.isaac.rest.api1.data.mapping;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;

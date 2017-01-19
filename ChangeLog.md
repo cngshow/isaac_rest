@@ -5,6 +5,11 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/01/19 - 1.36
+    * Bugfixes in prisme log sending
+    * Add git changeset integration (436032)
+    * API changes from 1.9.6
+
 * 2017/01/12 - 1.35
     * Making redundant null pointer checks for Fortify which is dumb.
     * Synchronizing access to CLIENT and eliminating very unlikely-to-occur null pointer exception.

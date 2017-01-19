@@ -28,13 +28,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
 
 /**
  * 
- * {@link RestMappingSetVersionBaseCreate}
- * This stub class is used for callers to create {@link RestMappingSetVersion} objects.  This class, in combination with {@link RestMappingSetVersionBase} 
- * contains the fields that can be populated for creation.  
+ * {@link RestMappingSetVersionBaseUpdate}
+ * This stub class is used for callers to edit {@link RestMappingSetVersion} objects.  It only contains the fields that may be edited after creation.
  * 
  * The API never returns this class.
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
@@ -42,27 +40,19 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetVersionBaseCreate.class)
-public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetVersionBaseUpdate.class)
+public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 {
 	/**
 	 * The (optional) extended fields which carry additional information about this map set definition. 
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestMappingSetExtensionValueCreate> mapSetExtendedFields;
-	
-	/**
-	 * The (optional) extended fields that are declared for each map item instance that is created using this map set definition.  
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition;
-		
-	protected RestMappingSetVersionBaseCreate()
+	public List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields;
+
+	protected RestMappingSetVersionBaseUpdate()
 	{
 		//for Jaxb
-		super();
 	}
 
 	/**
@@ -70,10 +60,16 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 * @param inverseName
 	 * @param description
 	 * @param purpose
+	 * @param active
 	 */
-	public RestMappingSetVersionBaseCreate(String name, String inverseName, String description, String purpose, Boolean active) 
-	{
+	public RestMappingSetVersionBaseUpdate(
+			String name,
+			String inverseName,
+			String description,
+			String purpose,
+			Boolean active) {
 		super(name, inverseName, description, purpose, active);
+		this.mapSetExtendedFields = null;
 	}
 
 	/* (non-Javadoc)
@@ -81,8 +77,8 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetVersionBaseCreate [mapSetExtendedFields=" + mapSetExtendedFields
-				+ ", mapItemExtendedFieldsDefinition="+ mapItemExtendedFieldsDefinition 
-				+ ", name=" + name + ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
+		return "RestMappingSetVersionBaseUpdate [name=" + name
+				+ ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + ", active="
+				+ active + ", mapSetExtendedFields=" + mapSetExtendedFields + "]";
 	}
 }

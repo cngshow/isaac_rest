@@ -73,26 +73,7 @@ public class PrismeLogAppender extends AbstractAppender {
 	 */
 	@Override
 	public void append(LogEvent event) {
-		/*
-		 * property name:
-		 * 		prisme_notify_url
-		 * 
-		 * example property:
-		 * 		prisme_notify_url=http://localhost:3000/log_event?security_token=%5B%22u%5Cf%5Cx92%5CxBC%5Cx17%7D%5CxD1%5CxE4%5CxFB%5CxE5%5Cx99%5CxA3%5C%22%5CxE8%5C%5CK%22%2C+%22%3E%5Cx16%5CxDE%5CxA8v%5Cx14%5CxFF%5CxD2%5CxC6%5CxDD%5CxAD%5Cx9F%5Cx1D%5CxD1cF%22%5D
-		 * 
-		 * example target with path:
-		 * 		http://localhost:3000/log_event
-		 * 
-		 * example parameters and values:
-		 * 		security_token=%5B%22u%5Cf%5Cx92%5CxBC%5Cx17%7D%5CxD1%5CxE4%5CxFB%5CxE5%5Cx99%5CxA3%5C%22%5CxE8%5C%5CK%22%2C+%22%3E%5Cx16%5CxDE%5CxA8v%5Cx14%5CxFF%5CxD2%5CxC6%5CxDD%5CxAD%5Cx9F%5Cx1D%5CxD1cF%22%5D
-		 * 		application_name=isaac
-		 * 		level=1
-		 * 		tag=SOME_TAG
-		 * 		message=broken
-		 */
-		if (PrismeLogSenderService.getEventQueue() != null) {
-			PrismeLogSenderService.getEventQueue().add(event);
-		}
+		PrismeLogSenderService.enqueue(event);
 	}
 	
 	// Custom appenders need to declare a factory method

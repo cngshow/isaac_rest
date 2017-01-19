@@ -52,24 +52,8 @@ public class PrismeServiceUtils {
 	 * Return a Properties object which contains the PRISME properties.
 	 * Empty if prisme.properties not found. Never returns null.
 	 * 
-	 * This method logs
-	 * 
-	 * @return
-	 */	
-	static Properties getPrismeProperties() {
-		return getPrismeProperties(true);
-	}
-
-	/**
-	 * Return a Properties object which contains the PRISME properties.
-	 * Empty if prisme.properties not found. Never returns null.
-	 * 
-	 * This method logs conditionally
-	 * 
-	 * @param doLog boolean specifying if the method should/shouldn't log
-	 * @return
-	 */	
-	static Properties getPrismeProperties(boolean doLog)
+	*/
+	public static Properties getPrismeProperties()
 	{
 //		#if prisme.properties is present prisme must be up!
 //		#edits here require a restart to your Komet instance
@@ -101,15 +85,11 @@ public class PrismeServiceUtils {
 
 				if (stream == null)
 				{
-					if (doLog) {
-						log.debug("No prisme.properties file was found on the classpath");
-					}
+					log.debug("No prisme.properties file was found on the classpath");
 				}
 				else
 				{
-					if (doLog) {
-						log.info("Reading PRISME configuration from prisme.properties file " + propertiesFile);
-					}
+					log.info("Reading PRISME configuration from prisme.properties file " + propertiesFile);
 					prismeProperties_.load(stream);
 				}
 
@@ -118,9 +98,7 @@ public class PrismeServiceUtils {
 			catch (Exception e)
 			{
 				String msg = "Unexpected error trying to read properties from the prisme.properties file";
-				if (doLog) {
-					log.error(msg, e);
-				}
+				log.error(msg, e);
 				throw new RuntimeException(msg, e);
 			}
 			finally {
