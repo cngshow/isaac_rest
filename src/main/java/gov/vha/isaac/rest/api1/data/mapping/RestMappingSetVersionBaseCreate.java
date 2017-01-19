@@ -76,20 +76,6 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 		super(name, inverseName, description, purpose, active);
 	}
 
-	/**
-	 * @param mapSetExtendedFieldsType
-	 * @param mapSetExtendedFields
-	 * @param mapItemExtendedFieldsType
-	 */
-	public RestMappingSetVersionBaseCreate(String name, String inverseName, String description, String purpose, Boolean active,
-			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields, List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition) 
-	{
-		super(name, inverseName, description, purpose, active);
-
-		this.mapSetExtendedFields = mapSetExtendedFields;
-		this.mapItemExtendedFieldsDefinition = mapItemExtendedFieldsDefinition;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

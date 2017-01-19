@@ -72,25 +72,6 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 		this.mapSetExtendedFields = null;
 	}
 
-	/**
-	 * @param name
-	 * @param inverseName
-	 * @param description
-	 * @param purpose
-	 * @param active
-	 * @param mapSetExtendedFields
-	 */
-	public RestMappingSetVersionBaseUpdate(
-			String name,
-			String inverseName,
-			String description,
-			String purpose,
-			Boolean active,
-			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields) {
-		super(name, inverseName, description, purpose, active);
-		this.mapSetExtendedFields = mapSetExtendedFields;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
