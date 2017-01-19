@@ -50,6 +50,13 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields;
 
+	/**
+	 * The (optional) ordered list of fields to be displayed for the mapping set
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public List<RestMappingSetFieldCreate> mapSetFields;
+
 	protected RestMappingSetVersionBaseUpdate()
 	{
 		//for Jaxb
@@ -70,6 +77,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			Boolean active) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = null;
+		this.mapSetFields = null;
 	}
 
 	/**
@@ -86,9 +94,11 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			String description,
 			String purpose,
 			Boolean active,
-			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields) {
+			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields,
+			List<RestMappingSetFieldCreate> mapSetFields) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = mapSetExtendedFields;
+		this.mapSetFields = mapSetFields;
 	}
 
 	/* (non-Javadoc)
@@ -96,8 +106,8 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetVersionBaseUpdate [name=" + name
-				+ ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + ", active="
-				+ active + ", mapSetExtendedFields=" + mapSetExtendedFields + "]";
+		return "RestMappingSetVersionBaseUpdate [mapSetExtendedFields=" + mapSetExtendedFields + ", mapSetFields="
+				+ mapSetFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
+				+ ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }

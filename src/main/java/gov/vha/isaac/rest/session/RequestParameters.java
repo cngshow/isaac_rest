@@ -170,6 +170,8 @@ public class RequestParameters {
 	public final static String changedAfter = "changedAfter";
 	public final static String changedBefore = "changedBefore";
 	
+	public final static String field = "field";
+
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */
@@ -223,7 +225,9 @@ public class RequestParameters {
 			status,
 			includeActive,
 			includeCompleted,
-			includeCanceled
+			includeCanceled,
+			
+			field
 			));
 		ALL_VALID_PARAMETERS = params;
 	}

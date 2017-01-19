@@ -19,6 +19,8 @@
 package gov.vha.isaac.rest.api1.mapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
@@ -33,6 +35,7 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -49,7 +52,9 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
+import gov.vha.isaac.rest.session.MapSetFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -69,6 +74,39 @@ public class MappingAPIs
 
 	@Context
 	private SecurityContext securityContext;
+
+	/**
+	 * @return array of {@link RestMappingSetField} available for ordering and displaying mapping set output
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingFieldsComponent)
+	public RestMappingSetField[] getAvailableMappingSetFields() throws RestException {
+		MapSetFieldsService service = LookupService.getService(MapSetFieldsService.class);
+		Collection<MapSetFieldsService.Field> fields = service.getAllFields();
+		List<RestMappingSetField> restFields = new ArrayList<>();
+		for (MapSetFieldsService.Field field : fields) {
+			restFields.add(new RestMappingSetField(field.getObject(), field.isComputed()));
+		}
+		
+		return restFields.toArray(new RestMappingSetField[restFields.size()]);
+	}
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingFieldComponent)
+	public RestMappingSetField getMappingSetField(
+			@QueryParam(RequestParameters.field) String field
+			) throws RestException {
+		MapSetFieldsService service = LookupService.getService(MapSetFieldsService.class);
+		MapSetFieldsService.Field existingField = service.getFieldByIdOrNameIfNotId(field);
+		
+		if (field == null) {
+			throw new RestException(RequestParameters.field, field, "Invalid or unsupported map set field name. Should be one of " + service.getAllFieldNames());
+		}
+		
+		return new RestMappingSetField(existingField);
+	}
 
 	/**
 	 * 

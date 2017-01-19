@@ -128,7 +128,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	@XmlElement
 	public List<RestCommentVersion> comments;
 	
-		
+	/**
+	 * Optional list of fields available for ordering and display 
+	 */
+	@XmlElement
+	public List<RestMappingSetField> fields;
+	
 	protected RestMappingItemVersion()
 	{
 		//for Jaxb

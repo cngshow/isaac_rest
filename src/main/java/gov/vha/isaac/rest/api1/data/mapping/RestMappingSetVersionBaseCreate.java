@@ -58,7 +58,14 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition;
-		
+
+	/**
+	 * The (optional) ordered list of fields to be displayed for the mapping set
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public List<RestMappingSetFieldCreate> mapSetFields;
+	
 	protected RestMappingSetVersionBaseCreate()
 	{
 		//for Jaxb
@@ -77,17 +84,29 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	}
 
 	/**
-	 * @param mapSetExtendedFieldsType
+	 * @param name
+	 * @param inverseName
+	 * @param description
+	 * @param purpose
+	 * @param active
 	 * @param mapSetExtendedFields
-	 * @param mapItemExtendedFieldsType
+	 * @param mapItemExtendedFieldsDefinition
 	 */
-	public RestMappingSetVersionBaseCreate(String name, String inverseName, String description, String purpose, Boolean active,
-			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields, List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition) 
+	public RestMappingSetVersionBaseCreate(
+			String name,
+			String inverseName,
+			String description,
+			String purpose,
+			Boolean active,
+			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
+			List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition,
+			List<RestMappingSetFieldCreate> mapSetFields) 
 	{
 		super(name, inverseName, description, purpose, active);
 
 		this.mapSetExtendedFields = mapSetExtendedFields;
 		this.mapItemExtendedFieldsDefinition = mapItemExtendedFieldsDefinition;
+		this.mapSetFields = mapSetFields;
 	}
 
 	/* (non-Javadoc)
@@ -96,7 +115,8 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	@Override
 	public String toString() {
 		return "RestMappingSetVersionBaseCreate [mapSetExtendedFields=" + mapSetExtendedFields
-				+ ", mapItemExtendedFieldsDefinition="+ mapItemExtendedFieldsDefinition 
-				+ ", name=" + name + ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
+				+ ", mapItemExtendedFieldsDefinition=" + mapItemExtendedFieldsDefinition + ", mapSetFields="
+				+ mapSetFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
+				+ ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }

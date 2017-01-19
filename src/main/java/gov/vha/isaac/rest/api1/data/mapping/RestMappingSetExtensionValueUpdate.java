@@ -32,7 +32,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  * This stub class is used for callers as part of creating {@link RestMappingSetExtensionValue} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
  * contains the fields that may be set during the initial create. 
  *
- * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
+ * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueUpdate.class)
