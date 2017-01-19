@@ -90,6 +90,16 @@ public class LocalJettyRunner
 		
 		
 		System.out.println("ISAAC is starting in a background thread, it may be some time before it can serve requests");
-		Thread.currentThread().join();
+		
+		System.out.println("You're using Eclipse; click in this console and " + "press ENTER to call System.exit() and run the shutdown routine.");
+		try
+		{
+			System.in.read();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		System.exit(0);
 	}
 }

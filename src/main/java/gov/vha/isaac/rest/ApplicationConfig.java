@@ -1,10 +1,8 @@
 package gov.vha.isaac.rest;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
-
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -13,7 +11,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
@@ -22,7 +19,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -33,17 +29,18 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.RemoteServiceInfo;
 import gov.vha.isaac.ochre.api.util.ArtifactUtilities;
 import gov.vha.isaac.ochre.api.util.DBLocator;
 import gov.vha.isaac.ochre.api.util.DownloadUnzipTask;
 import gov.vha.isaac.ochre.api.util.WorkExecutors;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
+import gov.vha.isaac.rest.session.PrismeServiceUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
@@ -207,13 +204,45 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 			Runnable r = new Runnable()
 			{
-
 				@Override
 				public void run()
 				{
 					try
 					{
 						log.info("ISAAC Init thread begins");
+						
+						//Place git config info into the configuration service
+						RemoteServiceInfo gitConfig = new RemoteServiceInfo()
+						{
+							private String gitUsername, url;
+							private char[] gitPw;
+							
+							{
+								Properties props = PrismeServiceUtils.getPrismeProperties();
+								url =  props.getProperty("git_root", "");
+								gitUsername = props.getProperty("git_user", "");
+								gitPw = props.getProperty("git_pwd", "").toCharArray();
+							}
+							
+							@Override
+							public String getUsername()
+							{
+								return gitUsername;
+							}
+							
+							@Override
+							public String getURL()
+							{
+								return url;
+							}
+							
+							@Override
+							public char[] getPassword()
+							{
+								return gitPw;
+							}
+						};
+						Get.configurationService().setGitConfiguration(gitConfig);
 
 						databaseRootLocation = stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
 						if (StringUtils.isBlank(databaseRootLocation) || !Files.isDirectory(Paths.get(databaseRootLocation)))
@@ -330,7 +359,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						status_.set("Ready");
 						System.out.println("Done setting up ISAAC");
 
-						System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C",
+						System.out.println(String.format("Application started.\nTry out %s%s\nStop the application by pressing enter.",
 								"http://localhost:8180/", RestPaths.conceptVersionAppPathComponent + MetaData.CONCRETE_DOMAIN_OPERATOR.getNid()));
 					}
 					catch (Exception e)
@@ -440,17 +469,16 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			String classifier = null;
 
 			//First, see if there is a properties file embedded in the war (PRISME places this during deployment)
-			Properties props = new Properties();
-			try (final InputStream stream = this.getClass().getResourceAsStream("/prisme.properties"))
+			Properties props = PrismeServiceUtils.getPrismeProperties();
+			try 
 			{
-				if (stream == null)
+				if (props.size() == 0)
 				{
 					log.info("No prisme.properties file was found on the classpath");
 				}
 				else
 				{
 					log.info("Reading database configuration from prisme.properties file");
-					props.load(stream);
 					baseMavenURL = props.getProperty("nexus_repository_url");
 					mavenUsername = props.getProperty("nexus_user");
 					mavenPwd = props.getProperty("nexus_pwd");

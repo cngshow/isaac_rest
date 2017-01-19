@@ -29,8 +29,8 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  * 
  * {@link RestMappingSetExtensionValueUpdate}
  * 
- * This stub class is used for callers as part of creating {@link RestMappingSetExtensionValue} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
- * contains the fields that may be set during the initial create. 
+ * This stub class is used for callers as part of updating {@link RestMappingSetExtensionValue} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
+ * contains the fields that may be set during an update. 
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */

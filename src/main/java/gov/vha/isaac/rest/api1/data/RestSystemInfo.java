@@ -19,21 +19,13 @@
 package gov.vha.isaac.rest.api1.data;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -51,11 +43,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gov.vha.isaac.ochre.api.ConfigurationService;
-import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.util.metainf.MavenArtifactInfo;
+import gov.vha.isaac.ochre.api.util.metainf.MetaInfReader;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
@@ -89,7 +80,7 @@ public class RestSystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.9.5"};
+	String[] supportedAPIVersions = new String[] {"1.9.6"};
 	
 	/**
 	 * REST API Implementation Version - aka the version number of the software running here.
@@ -139,7 +130,10 @@ public class RestSystemInfo
 		try
 		{
 			loadIsaacMetdata();
-			loadDbMetadata();
+			MavenArtifactInfo mai = MetaInfReader.readDbMetadata();
+			isaacDbDependency = new RestDependencyInfo(mai);
+			mai.dbLicenses.forEach(mli -> dbLicenses.add(new RestLicenseInfo(mli)));
+			mai.dbDependencies.forEach(dd -> dbDependencies.add(new RestDependencyInfo(dd)));
 		}
 		catch (Exception ex)
 		{
@@ -161,142 +155,7 @@ public class RestSystemInfo
 	}
 	
 	// Read the DB metadata
-	private void loadDbMetadata() throws IOException {
-		//Read the db metadata
-		AtomicBoolean readDbMetadataFromProperties = new AtomicBoolean(false);
-		AtomicBoolean readDbMetadataFromPom = new AtomicBoolean(false);
-		
-		java.nio.file.Path dbLocation = LookupService.get().getService(ConfigurationService.class).getChronicleFolderPath().getParent();
-		//find the pom.properties file in the hierarchy
-		File dbMetadata = new File(dbLocation.toFile(), "META-INF");
-		AtomicReference<String> metadataVersion = new AtomicReference<String>("");
-		if (dbMetadata.isDirectory())
-		{
-			Files.walkFileTree(dbMetadata.toPath(), new SimpleFileVisitor<java.nio.file.Path>()
-			{
-				/**
-				 * @see java.nio.file.SimpleFileVisitor#visitFile(java.lang.Object, java.nio.file.attribute.BasicFileAttributes)
-				 */
-				@Override
-				public FileVisitResult visitFile(java.nio.file.Path path, BasicFileAttributes attrs) throws IOException
-				{
-					File f = path.toFile();
-					if (f.isFile() && f.getName().toLowerCase(Locale.ENGLISH).equals("pom.properties"))
-					{
-						Properties p = new Properties();
-						FileReader fileReader = null;
-						try {
-							p.load(fileReader = new FileReader(f));
-						} finally {
-							if (fileReader != null) {
-								fileReader.close();
-							}
-						}
 
-						isaacDbDependency =
-								new RestDependencyInfo(
-										p.getProperty("project.groupId"),
-										p.getProperty("project.artifactId"),
-										p.getProperty("project.version"),
-										p.getProperty("resultArtifactClassifier"),
-										p.getProperty("chronicles.type"));
-						
-						metadataVersion.set(p.getProperty("isaac-metadata.version"));
-						readDbMetadataFromProperties.set(true);
-						return readDbMetadataFromPom.get() ? FileVisitResult.TERMINATE : FileVisitResult.CONTINUE;
-					} else if (f.isFile() && f.getName().toLowerCase(Locale.ENGLISH).equals("pom.xml")) {
-						DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-						DocumentBuilder builder;
-						Document dDoc = null;
-						XPath xPath = XPathFactory.newInstance().newXPath();
-
-						try {
-							domFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-							builder = domFactory.newDocumentBuilder();
-							
-							dDoc = builder.parse(f);
-							
-							{
-								NodeList dbLicensesNodes = ((NodeList) xPath.evaluate("/project/licenses/license/name", dDoc, XPathConstants.NODESET));
-
-								log_.debug("Found {} license names in DB pom.xml", dbLicensesNodes.getLength());
-								for (int i = 0; i < dbLicensesNodes.getLength(); i++) {
-									Node currentLicenseNameNode = dbLicensesNodes.item(i);
-									String name = currentLicenseNameNode.getTextContent();
-
-									RestLicenseInfo license =
-											new RestLicenseInfo(
-													name,
-													((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/url", dDoc, XPathConstants.NODE)).getTextContent(),
-													((Node)xPath.evaluate("/project/licenses/license[name='" + name + "']/comments", dDoc, XPathConstants.NODE)).getTextContent());
-									dbLicenses.add(license);
-
-									log_.debug("Extracted license \"{}\" from DB pom.xml: {}", name, license.toString());
-								}
-							}
-							
-							{
-								NodeList dbDependenciesNodes = ((NodeList) xPath.evaluate("/project/dependencies/dependency/artifactId", dDoc, XPathConstants.NODESET));
-
-								log_.debug("Found {} dependency artifactIds in DB pom.xml", dbDependenciesNodes.getLength());
-								for (int i = 0; i < dbDependenciesNodes.getLength(); i++) {
-									Node currentDbDependencyArtifactIdNode = dbDependenciesNodes.item(i);
-									
-									String artifactId = currentDbDependencyArtifactIdNode.getTextContent();
-									String groupId = ((Node)xPath.evaluate("/project/dependencies/dependency[artifactId='" + artifactId + "']/groupId", dDoc, XPathConstants.NODE)).getTextContent();
-									String version = ((Node)xPath.evaluate("/project/dependencies/dependency[artifactId='" + artifactId + "']/version", dDoc, XPathConstants.NODE)).getTextContent();
-						
-									String classifier = null;
-									try {
-										classifier = ((Node)xPath.evaluate("/project/dependencies/dependency[artifactId='" + artifactId + "']/classifier", dDoc, XPathConstants.NODE)).getTextContent();
-									} catch (Throwable t) {
-										log_.debug("Problem reading \"classifier\" element for {}", artifactId);
-									}
-									String type = null;
-									try {
-										type = ((Node)xPath.evaluate("/project/dependencies/dependency[artifactId='" + artifactId + "']/type", dDoc, XPathConstants.NODE)).getTextContent();
-									} catch (Throwable t) {
-										log_.debug("Problem reading \"type\" element for {}", artifactId);
-									}
-
-									RestDependencyInfo dependencyInfo = new RestDependencyInfo(groupId, artifactId, version, classifier, type);
-									dbDependencies.add(dependencyInfo);
-
-									log_.debug("Extracted dependency \"{}\" from DB pom.xml: {}", artifactId, dependencyInfo.toString());
-								}
-							}
-						} catch (XPathExpressionException | SAXException | ParserConfigurationException e) {
-							throw new IOException(e);
-						}
-
-						readDbMetadataFromPom.set(true);
-						return readDbMetadataFromProperties.get() ? FileVisitResult.TERMINATE : FileVisitResult.CONTINUE;
-					}
-
-					return FileVisitResult.CONTINUE;
-				}
-			});
-		}
-
-		if (!readDbMetadataFromProperties.get())
-		{
-			log_.error("Failed to read the metadata about the database from the database package.");
-		}
-		else
-		{
-			//Due to a quirk in how the DB poms are set up, we need to fill in this property
-			for (RestDependencyInfo dependency : dbDependencies)
-			{
-				if (dependency.version != null && "${isaac-metadata.version}".equals(dependency.version))
-				{
-					dependency.version = metadataVersion.get();
-					break;
-				}
-			}
-			log_.debug("Successfully read db properties from maven config files.  dbGroupId: {} dbArtifactId: {} dbVersion: {} dbClassifier: {} dbType: {}", 
-					isaacDbDependency.groupId, isaacDbDependency.artifactId, isaacDbDependency.version, isaacDbDependency.classifier, isaacDbDependency.type);
-		}
-	}
 	
 	private void loadIsaacMetdata() throws ParserConfigurationException, SAXException, IOException, DOMException, XPathExpressionException {
 		//read the ISAAC metadata

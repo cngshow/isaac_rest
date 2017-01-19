@@ -13,7 +13,11 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
-* 2017/01/?? - 1.9.5:
+* 2017/01/18 - 1.9.6:
+    * Workflow API returns with various changes / corrections.
+    * Added the ability to update mapping set extended values
+
+* 2017/01/05 - 1.9.5:
     * Change the behavior of the create description API, so that is no longer adds a preferred US English dialect if no preferred dialects are specified.  
         It will now only builds the dialects specifically requested.
 

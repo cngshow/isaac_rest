@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.ochre.api.util.metainf.MavenArtifactInfo;
 
 /**
  * {@link RestDependencyInfo}
@@ -83,6 +84,19 @@ public class RestDependencyInfo
 		this.version = version;
 		this.classifier = classifier;
 		this.type = type;
+	}
+
+	/**
+	 * @param mai
+	 */
+	public RestDependencyInfo(MavenArtifactInfo mai)
+	{
+		super();
+		this.groupId = mai.groupId;
+		this.artifactId = mai.artifactId;
+		this.version = mai.version;
+		this.classifier = mai.classifier;
+		this.type = mai.type;
 	}
 
 	/* (non-Javadoc)

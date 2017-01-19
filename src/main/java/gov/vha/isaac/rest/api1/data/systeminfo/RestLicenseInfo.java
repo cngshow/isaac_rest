@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.ochre.api.util.metainf.MavenLicenseInfo;
 
 /**
  * {@link RestLicenseInfo}
@@ -67,6 +68,17 @@ public class RestLicenseInfo
 		this.name = name;
 		this.url = url;
 		this.comments = comments;
+	}
+
+	/**
+	 * @param mli
+	 */
+	public RestLicenseInfo(MavenLicenseInfo mli)
+	{
+		super();
+		this.name = mli.name;
+		this.url = mli.url;
+		this.comments = mli.comments;
 	}
 
 	/* (non-Javadoc)

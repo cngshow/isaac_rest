@@ -216,6 +216,7 @@ public class MappingWriteAPIs
 		
 		List<RestMappingSetExtensionValueCreate> extensionCreateDTOs = new ArrayList<>();
 		for (RestMappingSetExtensionValue extensionDTO : cloneTargetMappingSetVersion.mapSetExtendedFields) {
+			//TODO JOEL this isn't honoring active / inactive on extensions
 			RestMappingSetExtensionValueCreate extensionCreateDTO = new RestMappingSetExtensionValueCreate(extensionDTO.extensionNameConceptIdentifiers.sequence + "", extensionDTO.extensionValue);
 			extensionCreateDTOs.add(extensionCreateDTO);
 		}
@@ -499,6 +500,8 @@ public class MappingWriteAPIs
 		SememeChronology extension = null;
 		if (extensionValue instanceof RestDynamicSememeString)
 		{
+			//TODO this isn't honoring active / inactive of the extensions.
+			//TODO why is this code duplicated?  From about 500 lines below...
 			extension = Get.sememeBuilderService().getDynamicSememeBuilder(mapSetConceptNid,
 					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
 					new DynamicSememeData[] {
@@ -893,6 +896,7 @@ public class MappingWriteAPIs
 							throw new RestException("RestMappingSetExtensionValueUpdate.active", update.active + "", "cannot create new extension value with inactive state (active == false)");
 						}
 						// This is an entirely new extension value
+						//TODO not honoring active / inactive on update
 						sememeToCommit = buildMappingSetExtensionValue(
 								mappingConcept.getNid(),
 								"RestMappingSetVersionBaseUpdate.mapSetExtendedFields.extensionNameConcept",
@@ -1067,6 +1071,7 @@ public class MappingWriteAPIs
 
 		if (mapSetExtendedFields != null)
 		{
+			//TODO this isn't honoring the active / inactive of the create info
 			for (RestMappingSetExtensionValueCreate field : mapSetExtendedFields)
 			{
 				if (field.extensionValue instanceof RestDynamicSememeString)

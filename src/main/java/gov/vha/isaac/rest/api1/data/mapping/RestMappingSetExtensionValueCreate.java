@@ -18,7 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
@@ -27,38 +26,27 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
  * 
  * {@link RestMappingSetExtensionValueCreate}
  * 
- * This stub class is used for callers as part of creating {@link RestMappingSetExtensionValue} objects.  This, combined with {@link RestMappingSetExtensionValueBase}
+ * This stub class is used for callers as part of creating {@link RestMappingSetExtensionValue} objects.  This, combined with {@link RestMappingSetExtensionValueUpdate}
  * contains the fields that may be set during the initial create. 
+ * 
+ * In practice, for this API, Create and Update are identical - there are no fields that may not be updated, as this extension is being stored 
+ * in a way that doesn't fit our normal patterns.
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetExtensionValueCreate.class)
-public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionValueBase
+public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionValueUpdate
 {
-	/**
-	 * The concept (uuid, nid or sequence) that describes the purpose of this extended field on a map set definition.  The descriptions from this concept
-	 * will be used as the label of the extension.
-	 */
-	@XmlElement
-	public String extensionNameConcept;
-	
 	public RestMappingSetExtensionValueCreate()
 	{
 		//for Jaxb
 		super();
 	}
 	
-	public RestMappingSetExtensionValueCreate(String extensionNameConcept)
-	{
-		super();
-		this.extensionNameConcept = extensionNameConcept;
-	}
-	
 	public RestMappingSetExtensionValueCreate(String extensionNameConcept, RestDynamicSememeData extensionValue)
 	{
-		super(extensionValue);
-		this.extensionNameConcept = extensionNameConcept;
+		super(extensionNameConcept, extensionValue);
 	}
 
 	/* (non-Javadoc)
