@@ -437,7 +437,6 @@ public class SystemAPIs
 
 	/**
 	 * ISAAC, REST API and related DB metadata.  These values are cached.
-	 * TODO move functionality in getSystemInfo() into OCHRE
 	 * @throws RestException 
 	 */
 	@GET
