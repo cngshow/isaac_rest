@@ -55,7 +55,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestMappingSetFieldCreate> mapSetFields;
+	public List<RestMappingSetDisplayFieldBase> mapSetFields;
 
 	protected RestMappingSetVersionBaseUpdate()
 	{
@@ -95,7 +95,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			String purpose,
 			Boolean active,
 			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields,
-			List<RestMappingSetFieldCreate> mapSetFields) {
+			List<RestMappingSetDisplayFieldBase> mapSetFields) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = mapSetExtendedFields;
 		this.mapSetFields = mapSetFields;

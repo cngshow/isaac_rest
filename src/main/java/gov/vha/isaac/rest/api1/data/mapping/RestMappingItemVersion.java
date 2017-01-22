@@ -132,7 +132,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 * Optional list of fields available for ordering and display 
 	 */
 	@XmlElement
-	public List<RestMappingSetField> fields;
+	public List<RestMappingSetDisplayField> fields;
 	
 	protected RestMappingItemVersion()
 	{

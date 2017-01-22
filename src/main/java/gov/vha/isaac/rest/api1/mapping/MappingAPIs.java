@@ -44,17 +44,23 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.util.StringUtils;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeArrayImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
+import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetField;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
-import gov.vha.isaac.rest.session.MapSetFieldsService;
+import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -74,39 +80,6 @@ public class MappingAPIs
 
 	@Context
 	private SecurityContext securityContext;
-
-	/**
-	 * @return array of {@link RestMappingSetField} available for ordering and displaying mapping set output
-	 * @throws RestException 
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.mappingFieldsComponent)
-	public RestMappingSetField[] getAvailableMappingSetFields() throws RestException {
-		MapSetFieldsService service = LookupService.getService(MapSetFieldsService.class);
-		Collection<MapSetFieldsService.Field> fields = service.getAllFields();
-		List<RestMappingSetField> restFields = new ArrayList<>();
-		for (MapSetFieldsService.Field field : fields) {
-			restFields.add(new RestMappingSetField(field.getObject(), field.isComputed()));
-		}
-		
-		return restFields.toArray(new RestMappingSetField[restFields.size()]);
-	}
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.mappingFieldComponent)
-	public RestMappingSetField getMappingSetField(
-			@QueryParam(RequestParameters.field) String field
-			) throws RestException {
-		MapSetFieldsService service = LookupService.getService(MapSetFieldsService.class);
-		MapSetFieldsService.Field existingField = service.getFieldByIdOrNameIfNotId(field);
-		
-		if (field == null) {
-			throw new RestException(RequestParameters.field, field, "Invalid or unsupported map set field name. Should be one of " + service.getAllFieldNames());
-		}
-		
-		return new RestMappingSetField(existingField);
-	}
 
 	/**
 	 * 
@@ -247,7 +220,57 @@ public class MappingAPIs
 				throw new RestException("The map set identified by '" + id + "' is not present at the given stamp");
 			}
 	}
-	
+
+	/**
+	 * @return array of {@link RestMappingSetDisplayField} available for ordering and displaying mapping set fields
+	 * 
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingFieldsComponent)
+	public RestMappingSetDisplayField[] getAvailableMappingSetDisplayFields() throws RestException {
+		SecurityUtils.validateRole(securityContext, getClass());
+		
+		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
+		Collection<MapSetDisplayFieldsService.Field> fields = service.getAllFields();
+		List<RestMappingSetDisplayField> restFields = new ArrayList<>();
+		for (MapSetDisplayFieldsService.Field field : fields) {
+			restFields.add(new RestMappingSetDisplayField(field.getObject(), field.isComputed()));
+		}
+		
+		return restFields.toArray(new RestMappingSetDisplayField[restFields.size()]);
+	}
+
+	/**
+	 * @param field - name or id (UUID, sequence or NID) identifying a map set field
+	 * 
+	 * @return a {@link RestMappingSetDisplayField} available for use in ordering and displaying mapping set fields
+	 * 
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingFieldComponent)
+	public RestMappingSetDisplayField getMappingSetDisplayField(
+			@QueryParam(RequestParameters.field) String field
+			) throws RestException {
+		SecurityUtils.validateRole(securityContext, getClass());
+		
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.field);
+		
+		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
+		MapSetDisplayFieldsService.Field existingField = service.getFieldByIdOrNameIfNotId(field);
+		
+		if (field == null) {
+			throw new RestException(RequestParameters.field, field, "Invalid or unsupported map set field name. Should be one of " + service.getAllFieldNames());
+		}
+		
+		return new RestMappingSetDisplayField(existingField);
+	}
+
 	/**
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
@@ -389,5 +412,35 @@ public class MappingAPIs
 		}
 	}
 	
-	//TODO will need to add APIs for editing and/or removing extended field information from the map set definition.  Not currently possible
+	public static List<RestMappingSetDisplayField> getMappingSetDisplayFieldsFromMappingSet(
+			int mappingConceptNid,
+			StampCoordinate stampCoord) {
+		List<RestMappingSetDisplayField> fields = new ArrayList<>();
+		Optional<SememeChronology<? extends SememeVersion<?>>> mapSetFieldsSememe = Frills.getAnnotationSememe(mappingConceptNid, IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence());
+		if (mapSetFieldsSememe.isPresent()) {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<DynamicSememeImpl>> existingVersionOptionalLatest = ((SememeChronology)mapSetFieldsSememe.get()).getLatestVersion(DynamicSememeImpl.class, stampCoord);
+			if (! existingVersionOptionalLatest.isPresent()) { // TODO Handle contradictions
+				throw new RuntimeException("No latest version of mapSetFieldsSememe " + mapSetFieldsSememe.get().getNid() + " found for specified stamp coordinate " + stampCoord);
+			}
+			DynamicSememeData[] existingData = existingVersionOptionalLatest.get().value().getData();
+			@SuppressWarnings("unchecked")
+			DynamicSememeArrayImpl<DynamicSememeStringImpl> mapSetFieldsSememeDataArray = (DynamicSememeArrayImpl<DynamicSememeStringImpl>)existingData[0];
+			if (mapSetFieldsSememeDataArray != null && mapSetFieldsSememeDataArray.getDataArray() != null && mapSetFieldsSememeDataArray.getDataArray().length > 0) {
+				for (DynamicSememeStringImpl stringSememe : (DynamicSememeStringImpl[])mapSetFieldsSememeDataArray.getDataArray()) {
+					String[] fieldComponents = stringSememe.getDataString().split(":");
+					String name = fieldComponents[0];
+					Boolean source = StringUtils.isBlank(fieldComponents[1]) ? null : Boolean.parseBoolean(fieldComponents[1]);
+
+					try {
+						fields.add(new RestMappingSetDisplayField(name, source));
+					} catch (RestException e) {
+						throw new RuntimeException("Failed constructing RestMappingSetField from stored data", e);
+					}
+				}
+			}
+		}
+		
+		return fields;
+	}
 }

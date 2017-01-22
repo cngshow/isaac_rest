@@ -64,7 +64,7 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestMappingSetFieldCreate> mapSetFields;
+	public List<RestMappingSetDisplayFieldBase> mapSetFields;
 	
 	protected RestMappingSetVersionBaseCreate()
 	{
@@ -100,7 +100,7 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 			Boolean active,
 			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
 			List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition,
-			List<RestMappingSetFieldCreate> mapSetFields) 
+			List<RestMappingSetDisplayFieldBase> mapSetFields) 
 	{
 		super(name, inverseName, description, purpose, active);
 
