@@ -25,19 +25,19 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.session.MapSetFieldsService;
+import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 
 /**
  * 
- * {@link RestMappingSetFieldBase}
+ * {@link RestMappingSetDisplayFieldBase}
  * 
  * This class is used to convey available mapping fields.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetFieldBase.class)
-public class RestMappingSetFieldBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetDisplayFieldBase.class)
+public class RestMappingSetDisplayFieldBase
 {
 	/**
 	 * Name that identifies this field within set of known fields
@@ -52,22 +52,22 @@ public class RestMappingSetFieldBase
 	@XmlElement
 	public Boolean source;
 
-	RestMappingSetFieldBase()
+	RestMappingSetDisplayFieldBase()
 	{
 		//for Jaxb
 		super();
 	}
 
-	RestMappingSetFieldBase(String name) throws RestException
+	public RestMappingSetDisplayFieldBase(String name) throws RestException
 	{
 		this(name, (Boolean)null);
 	}
-	RestMappingSetFieldBase(String name, Boolean source) throws RestException
+	public RestMappingSetDisplayFieldBase(String name, Boolean source) throws RestException
 	{
 		//for Jaxb
 		super();
-		MapSetFieldsService service = LookupService.getService(MapSetFieldsService.class);
-		MapSetFieldsService.Field field = service.getFieldByIdOrNameIfNotId(name);
+		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
+		MapSetDisplayFieldsService.Field field = service.getFieldByIdOrNameIfNotId(name);
 		if (field == null) {
 			throw new RestException("RestMappingSetFieldBase.name", name, "Unsupported MapSet field. Should be one of " + service.getAllFieldNames());
 		} else {
@@ -75,7 +75,7 @@ public class RestMappingSetFieldBase
 		}
 		this.source = source;
 	}
-	RestMappingSetFieldBase(MapSetFieldsService.Field field) {
+	public RestMappingSetDisplayFieldBase(MapSetDisplayFieldsService.Field field) {
 		this.name = field.getName();
 		this.source = null;
 	}

@@ -19,69 +19,36 @@
 
 package gov.vha.isaac.rest.session;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.inject.Singleton;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.ThreadContext.ContextStack;
-import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.impl.ThrowableProxy;
-import org.apache.logging.log4j.message.Message;
-import org.apache.logging.log4j.spi.StandardLevel;
-import org.codehaus.plexus.util.StringUtils;
-import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
-import org.glassfish.hk2.runlevel.ErrorInformation;
 import org.glassfish.hk2.runlevel.RunLevel;
-import org.glassfish.hk2.runlevel.RunLevelFuture;
 import org.jvnet.hk2.annotations.Service;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
-import gov.vha.isaac.rest.ApplicationConfig;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetField;
 
 /**
  * 
- * {@link MapSetFieldsService}
+ * {@link MapSetDisplayFieldsService}
  * 
- * Return a new, uncached list of map set fields for use in ordering
+ * Return available immutable map set display fields for use in ordering and displaying map set data
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @RunLevel(LookupService.ISAAC_DEPENDENTS_RUNLEVEL)
 @Service
-@Singleton
-public class MapSetFieldsService {
+public class MapSetDisplayFieldsService {
 	public static class Field {
 		private final String name;
 		private final boolean computed;
@@ -131,7 +98,7 @@ public class MapSetFieldsService {
 
 	private Map<String, Field> fields_;
 	
-	MapSetFieldsService() {
+	MapSetDisplayFieldsService() {
 		// For HK2
 	}
 

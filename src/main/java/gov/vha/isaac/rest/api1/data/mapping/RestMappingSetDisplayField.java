@@ -26,59 +26,62 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
-import gov.vha.isaac.rest.session.MapSetFieldsService;
+import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 
 /**
  * 
- * {@link RestMappingSetField}
+ * {@link RestMappingSetDisplayField}
  * 
- * This class is used to convey available mapping fields.
+ * This class is used to convey available mapping set display fields.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetField.class)
-public class RestMappingSetField extends RestMappingSetFieldBase
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetDisplayField.class)
+public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 {
 	/**
-	 * Optional identifiers of an optional concept that describes the purpose of this field.
+	 * Optional identifiers of an optional concept that describes the purpose of this display field.
 	 * The description from this concept, if set, will be used as the name of the field.
 	 * Either fieldNameConceptIdentifiers or name must be passed, but not both.
 	 */
 	@XmlElement
 	public RestIdentifiedObject fieldNameConceptIdentifiers;
 	
+	/**
+	 * Indicates whether or not the corresponding mapping set display field is a computed value
+	 */
 	@XmlElement
 	public boolean computed = false;
 
-	RestMappingSetField()
+	RestMappingSetDisplayField()
 	{
 		//for Jaxb
 		super();
 	}
 
-	public RestMappingSetField(String name) throws RestException {
+	public RestMappingSetDisplayField(String name) throws RestException {
 		this(name, (IdentifiedObject)null, (Boolean)null, false);
 	}
-	public RestMappingSetField(String name, boolean computed) throws RestException {
+	public RestMappingSetDisplayField(String name, boolean computed) throws RestException {
 		this(name, (IdentifiedObject)null, (Boolean)null, computed);
 	}
-	public RestMappingSetField(String name, boolean source, boolean computed) throws RestException {
+	public RestMappingSetDisplayField(String name, boolean source, boolean computed) throws RestException {
 		this(name, (IdentifiedObject)null, source, computed);
 	}
-	public RestMappingSetField(IdentifiedObject fieldNameConcept, boolean computed) throws RestException {
+	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, boolean computed) throws RestException {
 		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, (Boolean)null, computed);
 	}
-	public RestMappingSetField(IdentifiedObject fieldNameConcept, boolean source, boolean computed) throws RestException {
+	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, boolean source, boolean computed) throws RestException {
 		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, source, computed);
 	}
-	public RestMappingSetField(MapSetFieldsService.Field field, boolean source) throws RestException {
+	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field, boolean source) throws RestException {
 		this(field.getName(), field.getObject(), source, field.isComputed());
 	}
-	public RestMappingSetField(MapSetFieldsService.Field field) throws RestException {
+	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field) throws RestException {
 		this(field.getName(), field.getObject(), null, field.isComputed());
 	}
-	private RestMappingSetField(String name, IdentifiedObject fieldNameConcept, Boolean source, boolean computed) throws RestException
+	private RestMappingSetDisplayField(String name, IdentifiedObject fieldNameConcept, Boolean source, boolean computed) throws RestException
 	{
 		//for Jaxb
 		super(name, source);
