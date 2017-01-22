@@ -412,6 +412,7 @@ public class MappingAPIs
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static List<RestMappingSetDisplayField> getMappingSetDisplayFieldsFromMappingSet(
 			int mappingConceptNid,
 			StampCoordinate stampCoord) {
@@ -424,9 +425,11 @@ public class MappingAPIs
 				throw new RuntimeException("No latest version of mapSetFieldsSememe " + mapSetFieldsSememe.get().getNid() + " found for specified stamp coordinate " + stampCoord);
 			}
 			DynamicSememeData[] existingData = existingVersionOptionalLatest.get().value().getData();
-			@SuppressWarnings("unchecked")
-			DynamicSememeArrayImpl<DynamicSememeStringImpl> mapSetFieldsSememeDataArray = (DynamicSememeArrayImpl<DynamicSememeStringImpl>)existingData[0];
-			if (mapSetFieldsSememeDataArray != null && mapSetFieldsSememeDataArray.getDataArray() != null && mapSetFieldsSememeDataArray.getDataArray().length > 0) {
+			DynamicSememeArrayImpl<DynamicSememeStringImpl> mapSetFieldsSememeDataArray = (existingData != null && existingData.length > 0) ? (DynamicSememeArrayImpl<DynamicSememeStringImpl>)existingData[0] : null;
+			if (
+					mapSetFieldsSememeDataArray != null
+					&& mapSetFieldsSememeDataArray.getDataArray() != null
+					&& mapSetFieldsSememeDataArray.getDataArray().length > 0) {
 				for (DynamicSememeStringImpl stringSememe : (DynamicSememeStringImpl[])mapSetFieldsSememeDataArray.getDataArray()) {
 					String[] fieldComponents = stringSememe.getDataString().split(":");
 					String name = fieldComponents[0];
