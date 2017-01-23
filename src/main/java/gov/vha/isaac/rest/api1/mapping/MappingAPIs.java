@@ -235,8 +235,8 @@ public class MappingAPIs
 		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
 		Collection<MapSetDisplayFieldsService.Field> fields = service.getAllFields();
 		List<RestMappingSetDisplayField> restFields = new ArrayList<>();
-		for (MapSetDisplayFieldsService.Field field : fields) {
-			restFields.add(new RestMappingSetDisplayField(field.getObject(), field.isComputed()));
+		for (MapSetDisplayFieldsService.Field field : fields) {			
+			restFields.add(new RestMappingSetDisplayField(field.getName()));
 		}
 		
 		return restFields.toArray(new RestMappingSetDisplayField[restFields.size()]);
@@ -412,6 +412,14 @@ public class MappingAPIs
 		}
 	}
 	
+	/**
+	 * This method retrieves the map set display fields on the respective sememe attached to the map set concept,
+	 * if it exists
+	 *  
+	 * @param mappingConceptNid the NID for the map set concept from which to extract the list of RestMappingSetDisplayField
+	 * @param stampCoord the StampCoordinate with which to request the latest version of the display fields sememe, if it exists
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static List<RestMappingSetDisplayField> getMappingSetDisplayFieldsFromMappingSet(
 			int mappingConceptNid,
@@ -419,7 +427,7 @@ public class MappingAPIs
 		List<RestMappingSetDisplayField> fields = new ArrayList<>();
 		Optional<SememeChronology<? extends SememeVersion<?>>> mapSetFieldsSememe = Frills.getAnnotationSememe(mappingConceptNid, IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence());
 		if (mapSetFieldsSememe.isPresent()) {
-			@SuppressWarnings({ "unchecked", "rawtypes" })
+			@SuppressWarnings({ "rawtypes" })
 			Optional<LatestVersion<DynamicSememeImpl>> existingVersionOptionalLatest = ((SememeChronology)mapSetFieldsSememe.get()).getLatestVersion(DynamicSememeImpl.class, stampCoord);
 			if (! existingVersionOptionalLatest.isPresent()) { // TODO Handle contradictions
 				throw new RuntimeException("No latest version of mapSetFieldsSememe " + mapSetFieldsSememe.get().getNid() + " found for specified stamp coordinate " + stampCoord);
@@ -430,11 +438,12 @@ public class MappingAPIs
 					mapSetFieldsSememeDataArray != null
 					&& mapSetFieldsSememeDataArray.getDataArray() != null
 					&& mapSetFieldsSememeDataArray.getDataArray().length > 0) {
+				MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
+
 				for (DynamicSememeStringImpl stringSememe : (DynamicSememeStringImpl[])mapSetFieldsSememeDataArray.getDataArray()) {
 					String[] fieldComponents = stringSememe.getDataString().split(":");
 					String name = fieldComponents[0];
-					Boolean source = StringUtils.isBlank(fieldComponents[1]) ? null : Boolean.parseBoolean(fieldComponents[1]);
-
+					Boolean source = (fieldComponents.length < 2 || StringUtils.isBlank(fieldComponents[1])) ? null : Boolean.parseBoolean(fieldComponents[1]);
 					try {
 						fields.add(new RestMappingSetDisplayField(name, source));
 					} catch (RestException e) {

@@ -328,7 +328,7 @@ public class MappingWriteAPIs
 	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
 	 * provided now, the new version will have that field stored as blank.
 	 * 
-	 * @param mappingSetUpdateData - object containing data used to update existing mapping set
+	 * @param mappingSetUpdateData - object containing data used to update existing mapping set.
 	 * @param id - id of mapping set concept to update
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
@@ -375,7 +375,7 @@ public class MappingWriteAPIs
 				RequestInfo.get().getEditCoordinate(),
 				stateToUse,
 				mappingSetUpdateData.mapSetExtendedFields,
-				mappingSetUpdateData.mapSetFields);
+				mappingSetUpdateData.mapSetDisplayFields);
 	}
 	
 	/**
@@ -548,7 +548,7 @@ public class MappingWriteAPIs
 		if (existingField == null) {
 			throw new RestException("RestMappingSetFieldCreate.name", passedField.name, "Invalid or unsupported map set field name. Must be one of " + service.getAllFieldNames());
 		}
-		String dataString = existingField.getName() + ":" + passedField.source != null ? passedField.source.toString() : "";
+		String dataString = existingField.getName() + ":" + ((passedField.source != null) ? passedField.source.toString() : "");
 		return new DynamicSememeStringImpl(dataString);
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -557,15 +557,19 @@ public class MappingWriteAPIs
 		
 		if (passedFields != null) {
 			for (RestMappingSetDisplayFieldBase passedMapSetField : passedFields) {
-				fieldSpecificationStrings.add(getDynamicSememeStringFromMapSetField(passedMapSetField));
+				DynamicSememeStringImpl dynamicSememeString = getDynamicSememeStringFromMapSetField(passedMapSetField);
+				fieldSpecificationStrings.add(dynamicSememeString);
 			}
 		}
 		
+		DynamicSememeArrayImpl dynamicSememeArray = null;
 		if (fieldSpecificationStrings.size() > 0) {
-			return new DynamicSememeArrayImpl(fieldSpecificationStrings.toArray(new DynamicSememeStringImpl[fieldSpecificationStrings.size()]));
+			dynamicSememeArray = new DynamicSememeArrayImpl(fieldSpecificationStrings.toArray(new DynamicSememeStringImpl[fieldSpecificationStrings.size()]));
 		} else {
-			return new DynamicSememeArrayImpl(new DynamicSememeStringImpl[0]); // TODO Joel determine if this is ever ok
+			dynamicSememeArray = new DynamicSememeArrayImpl(new DynamicSememeStringImpl[0]); // TODO Joel determine if this is ever ok
 		}
+		
+		return dynamicSememeArray;
 	}
 	@SuppressWarnings({ "rawtypes" })
 	private static SememeChronology buildNewMapSetFieldsSememe(
@@ -574,11 +578,12 @@ public class MappingWriteAPIs
 			EditCoordinate editCoord) throws RestException {
 		SememeChronology newMapSetFieldsSememe = null;
 		if (mapSetFields != null && mapSetFields.size() > 0) {
+			DynamicSememeArrayImpl fields = getDynamicSememeArrayImplFromMapSetFields(mapSetFields);
 			newMapSetFieldsSememe = Get.sememeBuilderService().getDynamicSememeBuilder(
 					mapSetConceptNid,
 					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence(), 
 					new DynamicSememeData[] {
-							getDynamicSememeArrayImplFromMapSetFields(mapSetFields)
+							fields
 					}).build(
 							editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
 		}
@@ -595,7 +600,7 @@ public class MappingWriteAPIs
 		if (! mapSetFieldsSememe.isPresent()) {
 			return buildNewMapSetFieldsSememe(mapSetConceptNid, mapSetFields, editCoord);
 		} else {
-			if (mapSetFields.size() == 0) {
+			if (mapSetFields == null || mapSetFields.size() == 0) {
 				// If no field passed in update then retire the sememe
 				ComponentWriteAPIs.resetStateWithNoCommit(editCoord, stampCoord, State.INACTIVE, mapSetFieldsSememe.get().getPrimordialUuid() + "");
 				return mapSetFieldsSememe.get();

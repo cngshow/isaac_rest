@@ -13,6 +13,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/01/23 - 1.9.7:
+    * Mapping APIs allow creation, update and retrieval of map set display fields 
+
 * 2017/01/18 - 1.9.6:
     * Workflow API returns with various changes / corrections.
     * Added the ability to update mapping set extended values

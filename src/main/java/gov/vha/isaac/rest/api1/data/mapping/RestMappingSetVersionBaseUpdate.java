@@ -51,11 +51,13 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	public List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields;
 
 	/**
-	 * The (optional) ordered list of fields to be displayed for the mapping set
+	 * The (optional) ordered list of fields to be displayed for the mapping set.
+	 * The passed map set display fields will replace, not update, any existing set.
+	 * If no fields are passed, then any existing display fields on the map set concept will be removed.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestMappingSetDisplayFieldBase> mapSetFields;
+	public List<RestMappingSetDisplayFieldBase> mapSetDisplayFields;
 
 	protected RestMappingSetVersionBaseUpdate()
 	{
@@ -77,7 +79,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			Boolean active) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = null;
-		this.mapSetFields = null;
+		this.mapSetDisplayFields = null;
 	}
 
 	/**
@@ -87,6 +89,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 * @param purpose
 	 * @param active
 	 * @param mapSetExtendedFields
+	 * @param mapSetDisplayFields
 	 */
 	public RestMappingSetVersionBaseUpdate(
 			String name,
@@ -95,10 +98,10 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			String purpose,
 			Boolean active,
 			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields,
-			List<RestMappingSetDisplayFieldBase> mapSetFields) {
+			List<RestMappingSetDisplayFieldBase> mapSetDisplayFields) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = mapSetExtendedFields;
-		this.mapSetFields = mapSetFields;
+		this.mapSetDisplayFields = mapSetDisplayFields;
 	}
 
 	/* (non-Javadoc)
@@ -106,8 +109,8 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetVersionBaseUpdate [mapSetExtendedFields=" + mapSetExtendedFields + ", mapSetFields="
-				+ mapSetFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
+		return "RestMappingSetVersionBaseUpdate [mapSetExtendedFields=" + mapSetExtendedFields + ", mapSetDisplayFields="
+				+ mapSetDisplayFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
 				+ ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }

@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.mapping;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.LookupService;
@@ -37,6 +38,7 @@ import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetDisplayFieldBase.class)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class RestMappingSetDisplayFieldBase
 {
 	/**
@@ -78,5 +80,13 @@ public class RestMappingSetDisplayFieldBase
 	public RestMappingSetDisplayFieldBase(MapSetDisplayFieldsService.Field field) {
 		this.name = field.getName();
 		this.source = null;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestMappingSetDisplayFieldBase [name=" + name + ", source=" + source + "]";
 	}
 }

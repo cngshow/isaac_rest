@@ -21,8 +21,10 @@ package gov.vha.isaac.rest.api1.data.mapping;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
@@ -38,6 +40,7 @@ import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetDisplayField.class)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 {
 	/**
@@ -61,19 +64,16 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	}
 
 	public RestMappingSetDisplayField(String name) throws RestException {
-		this(name, (IdentifiedObject)null, (Boolean)null, false);
+		this(name, (IdentifiedObject)null, (Boolean)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed());
 	}
-	public RestMappingSetDisplayField(String name, boolean computed) throws RestException {
-		this(name, (IdentifiedObject)null, (Boolean)null, computed);
+	public RestMappingSetDisplayField(String name, Boolean source) throws RestException {
+		this(name, (IdentifiedObject)null, source, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed());
 	}
-	public RestMappingSetDisplayField(String name, boolean source, boolean computed) throws RestException {
-		this(name, (IdentifiedObject)null, source, computed);
+	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept) throws RestException {
+		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, (Boolean)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed());
 	}
-	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, boolean computed) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, (Boolean)null, computed);
-	}
-	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, boolean source, boolean computed) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, source, computed);
+	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, boolean source) throws RestException {
+		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, source, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed());
 	}
 	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field, boolean source) throws RestException {
 		this(field.getName(), field.getObject(), source, field.isComputed());
@@ -87,5 +87,14 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 		super(name, source);
 		this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
 		this.computed = computed;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestMappingSetDisplayField [name=" + name + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + ", computed="
+				+ computed + ", source=" + source + "]";
 	}
 }

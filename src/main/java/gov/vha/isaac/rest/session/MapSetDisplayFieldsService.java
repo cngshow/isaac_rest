@@ -94,6 +94,14 @@ public class MapSetDisplayFieldsService {
 		public IdentifiedObject getObject() {
 			return object;
 		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return "Field [name=" + name + ", computed=" + computed + ", object=" + object + "]";
+		}
 	}
 
 	private Map<String, Field> fields_;
