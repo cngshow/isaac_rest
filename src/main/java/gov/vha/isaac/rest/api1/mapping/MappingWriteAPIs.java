@@ -564,7 +564,7 @@ public class MappingWriteAPIs
 		if (fieldSpecificationStrings.size() > 0) {
 			return new DynamicSememeArrayImpl(fieldSpecificationStrings.toArray(new DynamicSememeStringImpl[fieldSpecificationStrings.size()]));
 		} else {
-			return new DynamicSememeArrayImpl(new DynamicSememeStringImpl[0]);
+			return new DynamicSememeArrayImpl(new DynamicSememeStringImpl[0]); // TODO Joel determine if this is ever ok
 		}
 	}
 	@SuppressWarnings({ "rawtypes" })
@@ -572,13 +572,16 @@ public class MappingWriteAPIs
 			int mapSetConceptNid,
 			List<RestMappingSetDisplayFieldBase> mapSetFields,
 			EditCoordinate editCoord) throws RestException {
-		SememeChronology newMapSetFieldsSememe = Get.sememeBuilderService().getDynamicSememeBuilder(
-				mapSetConceptNid,
-				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence(), 
-				new DynamicSememeData[] {
-						getDynamicSememeArrayImplFromMapSetFields(mapSetFields)
-						}).build(
-					editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
+		SememeChronology newMapSetFieldsSememe = null;
+		if (mapSetFields != null && mapSetFields.size() > 0) {
+			newMapSetFieldsSememe = Get.sememeBuilderService().getDynamicSememeBuilder(
+					mapSetConceptNid,
+					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence(), 
+					new DynamicSememeData[] {
+							getDynamicSememeArrayImplFromMapSetFields(mapSetFields)
+					}).build(
+							editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
+		}
 		return newMapSetFieldsSememe;
 	}
 
@@ -592,25 +595,31 @@ public class MappingWriteAPIs
 		if (! mapSetFieldsSememe.isPresent()) {
 			return buildNewMapSetFieldsSememe(mapSetConceptNid, mapSetFields, editCoord);
 		} else {
-			DynamicSememeData[] updatedData = new DynamicSememeData[1];
-			updatedData[0] = getDynamicSememeArrayImplFromMapSetFields(mapSetFields);
-			
-			Optional<LatestVersion<DynamicSememeImpl>> existingVersionOptionalLatest = ((SememeChronology)mapSetFieldsSememe.get()).getLatestVersion(DynamicSememeImpl.class, stampCoord);
-			if (! existingVersionOptionalLatest.isPresent()) { // TODO Handle contradictions
-				throw new RuntimeException("No latest version of mapSetFieldsSememe " + mapSetFieldsSememe.get().getNid() + " found for specified stamp coordinate " + stampCoord);
-			}
-			DynamicSememeData[] existingData = existingVersionOptionalLatest.get().value().getData();
+			if (mapSetFields.size() == 0) {
+				// If no field passed in update then retire the sememe
+				ComponentWriteAPIs.resetStateWithNoCommit(editCoord, stampCoord, State.INACTIVE, mapSetFieldsSememe.get().getPrimordialUuid() + "");
+				return mapSetFieldsSememe.get();
+			} else {
+				DynamicSememeData[] updatedData = new DynamicSememeData[1];
+				updatedData[0] = getDynamicSememeArrayImplFromMapSetFields(mapSetFields);
 
-			DynamicSememeArrayImpl updatedArray = (DynamicSememeArrayImpl)updatedData[0];
-			DynamicSememeArrayImpl existingArray = (DynamicSememeArrayImpl)existingData[0];
-			if (existingArray != null && Arrays.equals(updatedArray.getData(), existingArray.getData())) {
-				return null; // No need to update
-			}
+				Optional<LatestVersion<DynamicSememeImpl>> existingVersionOptionalLatest = ((SememeChronology)mapSetFieldsSememe.get()).getLatestVersion(DynamicSememeImpl.class, stampCoord);
+				if (! existingVersionOptionalLatest.isPresent()) { // TODO Handle contradictions
+					throw new RuntimeException("No latest version of mapSetFieldsSememe " + mapSetFieldsSememe.get().getNid() + " found for specified stamp coordinate " + stampCoord);
+				}
+				DynamicSememeData[] existingData = existingVersionOptionalLatest.get().value().getData();
 
-			DynamicSememeImpl mutableVersion = (DynamicSememeImpl)((SememeChronology)mapSetFieldsSememe.get()).createMutableVersion(DynamicSememeImpl.class, State.ACTIVE, editCoord);
-			mutableVersion.setData(updatedData);
-			
-			return mutableVersion.getChronology();
+				DynamicSememeArrayImpl updatedArray = (DynamicSememeArrayImpl)updatedData[0];
+				DynamicSememeArrayImpl existingArray = (DynamicSememeArrayImpl)existingData[0];
+				if (existingArray != null && Arrays.equals(updatedArray.getData(), existingArray.getData())) {
+					return null; // No need to update
+				}
+
+				DynamicSememeImpl mutableVersion = (DynamicSememeImpl)((SememeChronology)mapSetFieldsSememe.get()).createMutableVersion(DynamicSememeImpl.class, State.ACTIVE, editCoord);
+				mutableVersion.setData(updatedData);
+
+				return mutableVersion.getChronology();
+			}
 		}
 	}
 
@@ -713,10 +722,12 @@ public class MappingWriteAPIs
 			}
 		}
 		
-		buildNewMapSetFieldsSememe(
-				Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
-				mapSetFields,
-				editCoord);
+		if (mapSetFields != null && mapSetFields.size() > 0) {
+			buildNewMapSetFieldsSememe(
+					Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
+					mapSetFields,
+					editCoord);
+		}
 		
 		try
 		{
@@ -1122,11 +1133,14 @@ public class MappingWriteAPIs
 				}
 			}
 		}
-		
-		buildNewMapSetFieldsSememe(
-				Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
-				mapSetFields,
-				editCoord);
+
+		if (mapSetFields.size() > 0) {
+			buildNewMapSetFieldsSememe(
+					Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
+					mapSetFields,
+					editCoord);
+		}
+
 //		try
 //		{
 //			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of mapping set " + rdud.getDynamicSememeName()).get();
