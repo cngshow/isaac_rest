@@ -108,7 +108,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * The (optional) ordered list of fields to display
 	 */
 	@XmlElement
-	public List<RestMappingSetDisplayField> mapSetDisplayFields = new ArrayList<>();
+	public List<RestMappingSetDisplayField> displayFields = new ArrayList<>();
 
 	/**
 	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
@@ -247,7 +247,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 				}
 			});
 
-		mapSetDisplayFields.addAll(MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(mappingConcept.getNid(), stampCoord));
+		displayFields.addAll(MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(mappingConcept.getNid(), stampCoord));
 
 		if (includeComments)
 		{
@@ -288,7 +288,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	public String toString() {
 		return "RestMappingSetVersion [expandables=" + expandables + ", identifiers=" + identifiers
 				+ ", mappingSetStamp=" + mappingSetStamp + ", mapSetExtendedFields=" + mapSetExtendedFields
-				+ ", mapItemFieldsDefinition=" + mapItemFieldsDefinition + ", mapSetFields=" + mapSetDisplayFields
+				+ ", mapItemFieldsDefinition=" + mapItemFieldsDefinition + ", mapSetFields=" + displayFields
 				+ ", comments=" + comments + ", name=" + name + ", inverseName=" + inverseName + ", description="
 				+ description + ", purpose=" + purpose + ", active=" + active + "]";
 	}

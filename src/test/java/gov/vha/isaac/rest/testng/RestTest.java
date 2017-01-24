@@ -129,6 +129,8 @@ import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
+import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
@@ -137,10 +139,10 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionClone;
@@ -173,6 +175,7 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
+import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.PrismeUserService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -1733,9 +1736,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingSetDisplayField[] mappingSetDisplayFieldsFromMapSetDisplayFieldsService = XMLUtils.unmarshalObjectArray(RestMappingSetDisplayField.class, retrievedMappingSetDisplayFieldsResult);
 		Assert.assertNotNull(mappingSetDisplayFieldsFromMapSetDisplayFieldsService);
 		Assert.assertTrue(mappingSetDisplayFieldsFromMapSetDisplayFieldsService.length == 7);
-		List<RestMappingSetDisplayFieldBase> mapSetDisplayFieldCreateDTOs = new ArrayList<>();
+		List<RestMappingSetDisplayFieldCreate> mapSetDisplayFieldCreateDTOs = new ArrayList<>();
 		for (RestMappingSetDisplayField displayField : mappingSetDisplayFieldsFromMapSetDisplayFieldsService) {
-			mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldBase(displayField.name));
+			mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(displayField.name, new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
 		}
 		
 		RestMappingSetVersionBaseCreate newMappingSetData = new RestMappingSetVersionBaseCreate(
@@ -1784,10 +1787,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newMappingSetInverseName, retrievedMappingSetVersion.inverseName);
 		Assert.assertEquals(newMappingSetDescription, retrievedMappingSetVersion.description);
 		Assert.assertEquals(newMappingSetPurpose, retrievedMappingSetVersion.purpose);
-		Assert.assertNotNull(retrievedMappingSetVersion.mapSetDisplayFields);
-		Assert.assertTrue(retrievedMappingSetVersion.mapSetDisplayFields.size() == mappingSetDisplayFieldsFromMapSetDisplayFieldsService.length);
+		Assert.assertNotNull(retrievedMappingSetVersion.displayFields);
+		Assert.assertTrue(retrievedMappingSetVersion.displayFields.size() == mappingSetDisplayFieldsFromMapSetDisplayFieldsService.length);
 		Set<String> displayFieldNamesFromMapSetVersion = new HashSet<>();
-		for (RestMappingSetDisplayField field : retrievedMappingSetVersion.mapSetDisplayFields) {
+		for (RestMappingSetDisplayField field : retrievedMappingSetVersion.displayFields) {
 			displayFieldNamesFromMapSetVersion.add(field.name);
 		}
 		Set<String> displayFieldNamesFromMapSetDisplayFieldsService = new HashSet<>();
@@ -1802,8 +1805,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String updatedMappingSetDescription = "An updated mapping set description (" + randomUuid + ")";
 		String updatedMappingSetPurpose = "An updated mapping set purpose (" + randomUuid + ")";
 		mapSetDisplayFieldCreateDTOs.clear();
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldBase(MetaData.VUID.getPrimordialUuid().toString()));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldBase(MetaData.CODE.getPrimordialUuid().toString()));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.VUID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.VUID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.PREFERRED_TERM, new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.PREFERRED_TERM, new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
 		RestMappingSetVersionBaseUpdate updatedMappingSetData = new RestMappingSetVersionBaseUpdate(
 				updatedMappingSetName,
 				updatedMappingSetInverseName,
@@ -1845,10 +1854,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(updatedMappingSetDescription, updatedMappingSetObject.description);
 		Assert.assertEquals(updatedMappingSetPurpose, updatedMappingSetObject.purpose);
 
-		Assert.assertNotNull(updatedMappingSetObject.mapSetDisplayFields);
-		Assert.assertTrue(updatedMappingSetObject.mapSetDisplayFields.size() == mapSetDisplayFieldCreateDTOs.size());
+		Assert.assertNotNull(updatedMappingSetObject.displayFields);
+		Assert.assertTrue(updatedMappingSetObject.displayFields.size() == mapSetDisplayFieldCreateDTOs.size());
 		displayFieldNamesFromMapSetVersion = new HashSet<>();
-		for (RestMappingSetDisplayField field : updatedMappingSetObject.mapSetDisplayFields) {
+		for (RestMappingSetDisplayField field : updatedMappingSetObject.displayFields) {
 			displayFieldNamesFromMapSetVersion.add(field.name);
 		}
 		Set<String> displayFieldNamesFromUpdateDTO = new HashSet<>();

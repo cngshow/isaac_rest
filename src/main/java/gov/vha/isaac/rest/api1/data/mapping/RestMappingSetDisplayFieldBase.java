@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 
 /**
@@ -48,11 +49,12 @@ public class RestMappingSetDisplayFieldBase
 	public String name; // TODO should this be private so that set method and ctor can enforce validation?
 
 	/**
-	 * Optional specification that field should contain data from either source or target.
-	 * This will be null unless associated with a specific mapping set.
+	 * Optional specification that field should contain data from specified component.
+	 * This will be null in the MapSetDisplayFieldsService and non null in mapping sets and items.
+	 * This field is only optional for internal use, being required by the API.
 	 */
 	@XmlElement
-	public Boolean source;
+	public RestMapSetItemComponentType componentType;
 
 	RestMappingSetDisplayFieldBase()
 	{
@@ -62,9 +64,9 @@ public class RestMappingSetDisplayFieldBase
 
 	public RestMappingSetDisplayFieldBase(String name) throws RestException
 	{
-		this(name, (Boolean)null);
+		this(name, (RestMapSetItemComponentType)null);
 	}
-	public RestMappingSetDisplayFieldBase(String name, Boolean source) throws RestException
+	public RestMappingSetDisplayFieldBase(String name, RestMapSetItemComponentType componentType) throws RestException
 	{
 		//for Jaxb
 		super();
@@ -75,11 +77,11 @@ public class RestMappingSetDisplayFieldBase
 		} else {
 			this.name = field.getName();
 		}
-		this.source = source;
+		this.componentType = componentType;
 	}
 	public RestMappingSetDisplayFieldBase(MapSetDisplayFieldsService.Field field) {
 		this.name = field.getName();
-		this.source = null;
+		this.componentType = null;
 	}
 
 	/* (non-Javadoc)
@@ -87,6 +89,6 @@ public class RestMappingSetDisplayFieldBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayFieldBase [name=" + name + ", source=" + source + "]";
+		return "RestMappingSetDisplayFieldBase [name=" + name + ", component=" + componentType + "]";
 	}
 }

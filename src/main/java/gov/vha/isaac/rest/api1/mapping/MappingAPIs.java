@@ -61,6 +61,8 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
+import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
@@ -442,30 +444,12 @@ public class MappingAPIs
 					mapSetFieldsSememeDataArray != null
 					&& mapSetFieldsSememeDataArray.getDataArray() != null
 					&& mapSetFieldsSememeDataArray.getDataArray().length > 0) {
-				MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
-
 				for (DynamicSememeStringImpl stringSememe : (DynamicSememeStringImpl[])mapSetFieldsSememeDataArray.getDataArray()) {
 					String[] fieldComponents = stringSememe.getDataString().split(":");
 					String name = fieldComponents[0];
-					Boolean source = (fieldComponents.length < 2 || StringUtils.isBlank(fieldComponents[1])) ? null : Boolean.parseBoolean(fieldComponents[1]);
+					RestMapSetItemComponentType componentType = new RestMapSetItemComponentType(MapSetItemComponent.valueOf(fieldComponents[1]));
 					try {
-						String value = null;
-//						if (name.equals(MetaData.SCTID.getPrimordialUuid().toString())
-//								|| name.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())
-//								|| name.equals(MetaData.RXCUI.getPrimordialUuid().toString())
-//								|| name.equals(MetaData.VUID.getPrimordialUuid().toString())
-//								|| name.equals(MetaData.CODE.getPrimordialUuid().toString())) {
-//							value = getDynamicFieldValue(UUID.fromString(name), mappingConceptNid,stampCoord);
-//						} else if (name.equals(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString())) {
-//							ConceptChronology<?> cc = Get.conceptService().getConcept(mappingConceptNid);
-//							Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), stampCoord);
-//							value = desc.get().value().getText(); // TODO handle missing values and contradictions
-//						} else if (name.equals(MapSetDisplayFieldsService.Field.PREFERRED_TERM)) {
-//							ConceptChronology<?> cc = Get.conceptService().getConcept(mappingConceptNid);
-//							Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), stampCoord);
-//							value = desc.get().value().getText(); // TODO handle missing values and contradictions
-//						}
-						fields.add(new RestMappingSetDisplayField(name, value, source));
+						fields.add(new RestMappingSetDisplayField(name, null, componentType));
 					} catch (RestException e) {
 						throw new RuntimeException("Failed constructing RestMappingSetField from stored data", e);
 					}
@@ -474,19 +458,5 @@ public class MappingAPIs
 		}
 		
 		return fields;
-	}
-	public static String getDynamicFieldValue(UUID fieldConceptSpecUuid, int componentNid, StampCoordinate stamp) {
-		try {
-			int fieldConceptSpecSeq = Get.identifierService().getConceptSequenceForUuids(fieldConceptSpecUuid);
-			Optional<LatestVersion<StringSememeImpl>> sememe = Get.sememeService().getSnapshot(StringSememeImpl.class, stamp)
-					.getLatestSememeVersionsForComponentFromAssemblage(componentNid,
-							fieldConceptSpecSeq).findFirst();
-			if (sememe.isPresent()) {
-				return sememe.get().value().getString();
-			}
-		} catch (Exception e) {
-			log.error("Unexpected error trying to find assemblage " + fieldConceptSpecUuid + " value for concept " + componentNid, e);
-		}
-		return null;
 	}
 }

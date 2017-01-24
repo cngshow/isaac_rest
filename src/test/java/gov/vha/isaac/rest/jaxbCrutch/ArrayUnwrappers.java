@@ -28,6 +28,7 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
@@ -215,6 +216,19 @@ public class ArrayUnwrappers
 		public Object[] getValues()
 		{
 			return restMappingSetDisplayFieldBase;
+		}
+	}
+
+	@XmlRootElement
+	public static class RestMappingSetDisplayFieldCreates implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestMappingSetDisplayFieldCreate[] restMappingSetDisplayFieldCreate;
+
+		@Override
+		public Object[] getValues()
+		{
+			return restMappingSetDisplayFieldCreate;
 		}
 	}
 }

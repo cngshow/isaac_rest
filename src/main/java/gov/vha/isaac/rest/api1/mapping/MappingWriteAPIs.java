@@ -100,6 +100,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseUpdate;
@@ -224,9 +225,9 @@ public class MappingWriteAPIs
 		
 		int cloneTargetConceptId = RequestInfoUtils.getConceptSequenceFromParameter("mappingSetCloneData.cloneTargetConcept", mappingSetCloneData.cloneTargetConcept);
 		List<RestMappingSetDisplayField> existingMapSetFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(Get.identifierService().getConceptNid(cloneTargetConceptId), RequestInfo.get().getStampCoordinate());
-		List<RestMappingSetDisplayFieldBase> mapSetFieldCreateDTOs = new ArrayList<>();
+		List<RestMappingSetDisplayFieldCreate> mapSetFieldCreateDTOs = new ArrayList<>();
 		for (RestMappingSetDisplayField existingField : existingMapSetFields) {
-			mapSetFieldCreateDTOs.add(new RestMappingSetDisplayFieldBase(existingField.name, existingField.source));
+			mapSetFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(existingField.name, existingField.componentType));
 		}
 		ConceptChronology<? extends ConceptVersion<?>> mappingSetAssemblageConcept = null;
 		try 
@@ -548,11 +549,11 @@ public class MappingWriteAPIs
 		if (existingField == null) {
 			throw new RestException("RestMappingSetFieldCreate.name", passedField.name, "Invalid or unsupported map set field name. Must be one of " + service.getAllFieldNames());
 		}
-		String dataString = existingField.getName() + ":" + ((passedField.source != null) ? passedField.source.toString() : "");
+		String dataString = existingField.getName() + ":" + passedField.componentType.toString();
 		return new DynamicSememeStringImpl(dataString);
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static DynamicSememeArrayImpl getDynamicSememeArrayImplFromMapSetFields(List<RestMappingSetDisplayFieldBase> passedFields) throws RestException {
+	private static DynamicSememeArrayImpl getDynamicSememeArrayImplFromMapSetFields(List<RestMappingSetDisplayFieldCreate> passedFields) throws RestException {
 		List<DynamicSememeStringImpl> fieldSpecificationStrings = new ArrayList<>();
 		
 		if (passedFields != null) {
@@ -574,7 +575,7 @@ public class MappingWriteAPIs
 	@SuppressWarnings({ "rawtypes" })
 	private static SememeChronology buildNewMapSetFieldsSememe(
 			int mapSetConceptNid,
-			List<RestMappingSetDisplayFieldBase> mapSetFields,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
 			EditCoordinate editCoord) throws RestException {
 		SememeChronology newMapSetFieldsSememe = null;
 		if (mapSetFields != null && mapSetFields.size() > 0) {
@@ -593,7 +594,7 @@ public class MappingWriteAPIs
 	@SuppressWarnings({ "rawtypes" })
 	private static SememeChronology updateMapSetFieldsSememe(
 			int mapSetConceptNid,
-			List<RestMappingSetDisplayFieldBase> mapSetFields,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
 			StampCoordinate stampCoord,
 			EditCoordinate editCoord) throws RestException {
 		Optional<SememeChronology<? extends SememeVersion<?>>> mapSetFieldsSememe = Frills.getAnnotationSememe(mapSetConceptNid, IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence());
@@ -644,7 +645,7 @@ public class MappingWriteAPIs
 			String description,
 			List<RestDynamicSememeColumnInfoCreate> extendedFields,
 			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
-			List<RestMappingSetDisplayFieldBase> mapSetFields,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
 			StampCoordinate stampCoord, 
 			EditCoordinate editCoord) throws IOException
 	{
@@ -773,7 +774,7 @@ public class MappingWriteAPIs
 			EditCoordinate editCoord,
 			State state,
 			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields,
-			List<RestMappingSetDisplayFieldBase> mapSetFields) throws RuntimeException, RestException 
+			List<RestMappingSetDisplayFieldCreate> mapSetFields) throws RuntimeException, RestException 
 	{		
 		final List<SememeChronology<? extends SememeVersion<?>>> objectsToAdd = new ArrayList<>();
 		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
@@ -1026,7 +1027,7 @@ public class MappingWriteAPIs
 			String description,
 			List<RestDynamicSememeColumnInfoCreate> extendedFields,
 			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
-			List<RestMappingSetDisplayFieldBase> mapSetFields,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
 			StampCoordinate stampCoord, 
 			EditCoordinate editCoord) throws IOException
 	{
