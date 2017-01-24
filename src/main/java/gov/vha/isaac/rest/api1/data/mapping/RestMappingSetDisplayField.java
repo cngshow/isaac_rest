@@ -57,36 +57,43 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	@XmlElement
 	public boolean computed = false;
 
+	/**
+	 * Optional value corresponding to field
+	 */
+	@XmlElement
+	public String value;
+
 	RestMappingSetDisplayField()
 	{
 		//for Jaxb
 		super();
 	}
 
-	public RestMappingSetDisplayField(String name) throws RestException {
-		this(name, (IdentifiedObject)null, (Boolean)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed());
+	public RestMappingSetDisplayField(String name, String value) throws RestException {
+		this(name, (IdentifiedObject)null, (Boolean)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed(), value);
 	}
-	public RestMappingSetDisplayField(String name, Boolean source) throws RestException {
-		this(name, (IdentifiedObject)null, source, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed());
+	public RestMappingSetDisplayField(String name, String value, Boolean source) throws RestException {
+		this(name, (IdentifiedObject)null, source, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed(), value);
 	}
-	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, (Boolean)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed());
+	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, String value) throws RestException {
+		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, (Boolean)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed(), value);
 	}
-	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, boolean source) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, source, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed());
+	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, String value, boolean source) throws RestException {
+		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, source, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed(), value);
 	}
-	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field, boolean source) throws RestException {
-		this(field.getName(), field.getObject(), source, field.isComputed());
+	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field, String value, boolean source) throws RestException {
+		this(field.getName(), field.getObject(), source, field.isComputed(), value);
 	}
-	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field) throws RestException {
-		this(field.getName(), field.getObject(), null, field.isComputed());
+	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field, String value) throws RestException {
+		this(field.getName(), field.getObject(), null, field.isComputed(), value);
 	}
-	private RestMappingSetDisplayField(String name, IdentifiedObject fieldNameConcept, Boolean source, boolean computed) throws RestException
+	private RestMappingSetDisplayField(String name, IdentifiedObject fieldNameConcept, Boolean source, boolean computed, String value) throws RestException
 	{
 		//for Jaxb
 		super(name, source);
 		this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
 		this.computed = computed;
+		this.value = value;
 	}
 
 	/* (non-Javadoc)

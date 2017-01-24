@@ -34,6 +34,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
@@ -42,6 +44,7 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -52,6 +55,7 @@ import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeArrayImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -236,7 +240,7 @@ public class MappingAPIs
 		Collection<MapSetDisplayFieldsService.Field> fields = service.getAllFields();
 		List<RestMappingSetDisplayField> restFields = new ArrayList<>();
 		for (MapSetDisplayFieldsService.Field field : fields) {			
-			restFields.add(new RestMappingSetDisplayField(field.getName()));
+			restFields.add(new RestMappingSetDisplayField(field.getName(), (String)null));
 		}
 		
 		return restFields.toArray(new RestMappingSetDisplayField[restFields.size()]);
@@ -268,7 +272,7 @@ public class MappingAPIs
 			throw new RestException(RequestParameters.field, field, "Invalid or unsupported map set field name. Should be one of " + service.getAllFieldNames());
 		}
 		
-		return new RestMappingSetDisplayField(existingField);
+		return new RestMappingSetDisplayField(existingField, (String)null);
 	}
 
 	/**
@@ -445,7 +449,23 @@ public class MappingAPIs
 					String name = fieldComponents[0];
 					Boolean source = (fieldComponents.length < 2 || StringUtils.isBlank(fieldComponents[1])) ? null : Boolean.parseBoolean(fieldComponents[1]);
 					try {
-						fields.add(new RestMappingSetDisplayField(name, source));
+						String value = null;
+//						if (name.equals(MetaData.SCTID.getPrimordialUuid().toString())
+//								|| name.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())
+//								|| name.equals(MetaData.RXCUI.getPrimordialUuid().toString())
+//								|| name.equals(MetaData.VUID.getPrimordialUuid().toString())
+//								|| name.equals(MetaData.CODE.getPrimordialUuid().toString())) {
+//							value = getDynamicFieldValue(UUID.fromString(name), mappingConceptNid,stampCoord);
+//						} else if (name.equals(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString())) {
+//							ConceptChronology<?> cc = Get.conceptService().getConcept(mappingConceptNid);
+//							Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), stampCoord);
+//							value = desc.get().value().getText(); // TODO handle missing values and contradictions
+//						} else if (name.equals(MapSetDisplayFieldsService.Field.PREFERRED_TERM)) {
+//							ConceptChronology<?> cc = Get.conceptService().getConcept(mappingConceptNid);
+//							Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), stampCoord);
+//							value = desc.get().value().getText(); // TODO handle missing values and contradictions
+//						}
+						fields.add(new RestMappingSetDisplayField(name, value, source));
 					} catch (RestException e) {
 						throw new RuntimeException("Failed constructing RestMappingSetField from stored data", e);
 					}
@@ -454,5 +474,19 @@ public class MappingAPIs
 		}
 		
 		return fields;
+	}
+	public static String getDynamicFieldValue(UUID fieldConceptSpecUuid, int componentNid, StampCoordinate stamp) {
+		try {
+			int fieldConceptSpecSeq = Get.identifierService().getConceptSequenceForUuids(fieldConceptSpecUuid);
+			Optional<LatestVersion<StringSememeImpl>> sememe = Get.sememeService().getSnapshot(StringSememeImpl.class, stamp)
+					.getLatestSememeVersionsForComponentFromAssemblage(componentNid,
+							fieldConceptSpecSeq).findFirst();
+			if (sememe.isPresent()) {
+				return sememe.get().value().getString();
+			}
+		} catch (Exception e) {
+			log.error("Unexpected error trying to find assemblage " + fieldConceptSpecUuid + " value for concept " + componentNid, e);
+		}
+		return null;
 	}
 }

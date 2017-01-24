@@ -50,6 +50,8 @@ import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 @Service
 public class MapSetDisplayFieldsService {
 	public static class Field {
+		public final static String PREFERRED_TERM = "PREFERRED_TERM";
+		
 		private final String name;
 		private final boolean computed;
 		private final IdentifiedObject object;
