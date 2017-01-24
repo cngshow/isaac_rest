@@ -105,7 +105,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	public List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = new ArrayList<>();
 	
 	/**
-	 * The (optional) ordered list of fields to display
+	 * Specifies display fields that should populate each item and respective order
 	 */
 	@XmlElement
 	public List<RestMappingSetDisplayField> displayFields = new ArrayList<>();

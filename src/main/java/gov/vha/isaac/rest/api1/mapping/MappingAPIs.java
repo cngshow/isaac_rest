@@ -228,7 +228,7 @@ public class MappingAPIs
 	}
 
 	/**
-	 * @return array of {@link RestMappingSetDisplayField} available for ordering and displaying mapping set fields
+	 * @return array of {@link RestMappingSetDisplayField} available for ordering and displaying mapping set item fields
 	 * 
 	 * @throws RestException
 	 */
@@ -249,9 +249,9 @@ public class MappingAPIs
 	}
 
 	/**
-	 * @param field - name or id (UUID, sequence or NID) identifying a map set field
+	 * @param field - name or id (UUID, sequence or NID) identifying a map set item field
 	 * 
-	 * @return a {@link RestMappingSetDisplayField} available for use in ordering and displaying mapping set fields
+	 * @return a {@link RestMappingSetDisplayField} available for use in ordering and displaying mapping set item fields
 	 * 
 	 * @throws RestException
 	 */

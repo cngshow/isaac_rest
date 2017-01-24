@@ -143,7 +143,8 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	public List<RestCommentVersion> comments;
 	
 	/**
-	 * Optional list of fields available for ordering and display 
+	 * Optional list of fields available for ordering and display.
+	 * Populated and ordered based on respective fields, if any, in corresponding map set.
 	 */
 	@XmlElement
 	public List<RestMappingSetDisplayField> displayFields;

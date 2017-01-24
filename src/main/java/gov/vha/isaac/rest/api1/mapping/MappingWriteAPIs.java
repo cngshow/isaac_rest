@@ -166,7 +166,7 @@ public class MappingWriteAPIs
 					mappingSetCreationData.description,
 					mappingSetCreationData.mapItemExtendedFieldsDefinition,
 					mappingSetCreationData.mapSetExtendedFields,
-					mappingSetCreationData.mapSetFields,
+					mappingSetCreationData.displayFields,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate());
 		} 
@@ -376,7 +376,7 @@ public class MappingWriteAPIs
 				RequestInfo.get().getEditCoordinate(),
 				stateToUse,
 				mappingSetUpdateData.mapSetExtendedFields,
-				mappingSetUpdateData.mapSetDisplayFields);
+				mappingSetUpdateData.displayFields);
 	}
 	
 	/**

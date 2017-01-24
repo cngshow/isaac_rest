@@ -44,13 +44,14 @@ public class RestMappingSetDisplayFieldBase
 {
 	/**
 	 * Name that identifies this field within set of known fields
+	 * Must be non null and be one of values returned by MapSetDisplayFieldsService.getAllFieldNames()
 	 */
 	@XmlElement
 	public String name; // TODO should this be private so that set method and ctor can enforce validation?
 
 	/**
 	 * Optional specification that field should contain data from specified component.
-	 * This will be null in the MapSetDisplayFieldsService and non null in mapping sets and items.
+	 * This will be null in the MapSetDisplayFieldsService and non null in RestMappingSetDisplayFieldCreate.
 	 * This field is only optional for internal use, being required by the API.
 	 */
 	@XmlElement
@@ -62,10 +63,24 @@ public class RestMappingSetDisplayFieldBase
 		super();
 	}
 
+	/**
+	 * This constructor should only be called when initializing MapSetDisplayFieldsService
+	 *  
+	 * @param name required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
+	 * @throws RestException
+	 */
 	public RestMappingSetDisplayFieldBase(String name) throws RestException
 	{
 		this(name, (RestMapSetItemComponentType)null);
 	}
+
+	/**
+	 * This is the only constructor that should be called by derived classes
+	 * 
+	 * @param name required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
+	 * @param componentType required to be non null only for RestMappingSetDisplayFieldCreate
+	 * @throws RestException
+	 */
 	public RestMappingSetDisplayFieldBase(String name, RestMapSetItemComponentType componentType) throws RestException
 	{
 		//for Jaxb
@@ -79,6 +94,13 @@ public class RestMappingSetDisplayFieldBase
 		}
 		this.componentType = componentType;
 	}
+
+	/**
+	 * This constructor should only be called when initializing MapSetDisplayFieldsService
+	 * 
+	 * @param field required to be one of the values returned by MapSetDisplayFieldsService.getAllFields()
+	 * @throws RestException
+	 */
 	public RestMappingSetDisplayFieldBase(MapSetDisplayFieldsService.Field field) {
 		this.name = field.getName();
 		this.componentType = null;

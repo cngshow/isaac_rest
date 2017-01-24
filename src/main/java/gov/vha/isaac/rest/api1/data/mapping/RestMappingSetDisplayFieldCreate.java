@@ -46,12 +46,22 @@ public class RestMappingSetDisplayFieldCreate extends RestMappingSetDisplayField
 		super();
 	}
 
-	public RestMappingSetDisplayFieldCreate(String name, RestMapSetItemComponentType component) throws RestException
+	/**
+	 * @param name required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
+	 * @param componentType required to be non null
+	 * @throws RestException
+	 */
+	public RestMappingSetDisplayFieldCreate(String name, RestMapSetItemComponentType componentType) throws RestException
 	{
-		super(name, component);
+		super(name, validateAndReturnRestMapSetItemComponentType(name, componentType));
 	}
-	public RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field field, RestMapSetItemComponentType component) throws RestException {
-		this(field.getName(), component);
+	/**
+	 * @param field required to be one of the values returned by MapSetDisplayFieldsService.getAllFields()
+	 * @param componentType required to be non null
+	 * @throws RestException
+	 */
+	public RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field field, RestMapSetItemComponentType componentType) throws RestException {
+		this(field.getName(), componentType);
 	}
 
 	/* (non-Javadoc)
@@ -59,6 +69,14 @@ public class RestMappingSetDisplayFieldCreate extends RestMappingSetDisplayField
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayFieldCreate [name=" + name + ", component=" + componentType + "]";
+		return "RestMappingSetDisplayFieldCreate [name=" + name + ", componentType=" + componentType + "]";
+	}
+
+	private static RestMapSetItemComponentType validateAndReturnRestMapSetItemComponentType(String name, RestMapSetItemComponentType componentType) throws RestException {
+		if (componentType != null) {
+			return componentType;
+		} else {
+			throw new RestException("Cannon construct RestMappingSetDisplayFieldCreate " + name + " with null RestMapSetItemComponentType");
+		}
 	}
 }

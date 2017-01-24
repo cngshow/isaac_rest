@@ -13,6 +13,11 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/01/24 - 1.9.8:
+    * Modifying Mapping item display fields APIs to populate item fields
+    * Changing some map item display field related DTO member names
+    * Changing to allow specification of map item display field component by enum
+
 * 2017/01/23 - 1.9.7:
     * Mapping APIs allow creation, update and retrieval of map set display fields 
 

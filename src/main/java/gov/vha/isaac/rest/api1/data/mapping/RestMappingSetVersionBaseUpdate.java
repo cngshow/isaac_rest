@@ -57,7 +57,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestMappingSetDisplayFieldCreate> mapSetDisplayFields;
+	public List<RestMappingSetDisplayFieldCreate> displayFields;
 
 	protected RestMappingSetVersionBaseUpdate()
 	{
@@ -79,7 +79,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			Boolean active) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = null;
-		this.mapSetDisplayFields = null;
+		this.displayFields = null;
 	}
 
 	/**
@@ -89,7 +89,7 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 * @param purpose
 	 * @param active
 	 * @param mapSetExtendedFields
-	 * @param mapSetDisplayFields
+	 * @param displayFields specifies display fields that should populate each item and respective order
 	 */
 	public RestMappingSetVersionBaseUpdate(
 			String name,
@@ -98,10 +98,10 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			String purpose,
 			Boolean active,
 			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields,
-			List<RestMappingSetDisplayFieldCreate> mapSetDisplayFields) {
+			List<RestMappingSetDisplayFieldCreate> displayFields) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = mapSetExtendedFields;
-		this.mapSetDisplayFields = mapSetDisplayFields;
+		this.displayFields = displayFields;
 	}
 
 	/* (non-Javadoc)
@@ -109,8 +109,8 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetVersionBaseUpdate [mapSetExtendedFields=" + mapSetExtendedFields + ", mapSetDisplayFields="
-				+ mapSetDisplayFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
+		return "RestMappingSetVersionBaseUpdate [mapSetExtendedFields=" + mapSetExtendedFields + ", displayFields="
+				+ displayFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
 				+ ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }

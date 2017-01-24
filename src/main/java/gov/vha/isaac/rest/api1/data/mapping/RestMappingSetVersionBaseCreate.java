@@ -60,11 +60,11 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	public List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition;
 
 	/**
-	 * The (optional) ordered list of fields to be displayed for the mapping set
+	 * Specifies display fields that should populate each item and respective order
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public List<RestMappingSetDisplayFieldCreate> mapSetFields;
+	public List<RestMappingSetDisplayFieldCreate> displayFields;
 	
 	protected RestMappingSetVersionBaseCreate()
 	{
@@ -91,6 +91,7 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	 * @param active
 	 * @param mapSetExtendedFields
 	 * @param mapItemExtendedFieldsDefinition
+	 * @param displayFields specifies display fields that should populate each item and respective order
 	 */
 	public RestMappingSetVersionBaseCreate(
 			String name,
@@ -100,13 +101,13 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 			Boolean active,
 			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
 			List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition,
-			List<RestMappingSetDisplayFieldCreate> mapSetFields) 
+			List<RestMappingSetDisplayFieldCreate> displayFields) 
 	{
 		super(name, inverseName, description, purpose, active);
 
 		this.mapSetExtendedFields = mapSetExtendedFields;
 		this.mapItemExtendedFieldsDefinition = mapItemExtendedFieldsDefinition;
-		this.mapSetFields = mapSetFields;
+		this.displayFields = displayFields;
 	}
 
 	/* (non-Javadoc)
@@ -115,8 +116,8 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	@Override
 	public String toString() {
 		return "RestMappingSetVersionBaseCreate [mapSetExtendedFields=" + mapSetExtendedFields
-				+ ", mapItemExtendedFieldsDefinition=" + mapItemExtendedFieldsDefinition + ", mapSetFields="
-				+ mapSetFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
+				+ ", mapItemExtendedFieldsDefinition=" + mapItemExtendedFieldsDefinition + ", displayFields="
+				+ displayFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
 				+ ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }
