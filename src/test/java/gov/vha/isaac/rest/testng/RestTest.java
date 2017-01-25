@@ -72,7 +72,9 @@ import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
+import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
@@ -1717,7 +1719,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	@Test
-	public void testMappingAPIs() throws RestException
+	public void testMappingAPIs() throws Exception
 	{
 		// Create a random string to confirm target data are relevant
 		UUID randomUuid = UUID.randomUUID();
@@ -1892,6 +1894,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String targetConceptSeq = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), "conceptSequence") + "";
 		String qualifierConceptUuid = IsaacMappingConstants.MAPPING_QUALIFIER_BROADER.getPrimordialUuid().toString();
 
+		// Add synthetic VUID and SCTID to test concepts to test display field value population
+		String editTokenString = getEditTokenString(TEST_SSO_TOKEN);
+		EditToken token = EditTokens.getOrCreate(editTokenString);
+		final String ITEM_SOURCE_CONCEPT_FAKE_VUID = 12345L + "";
+		final String ITEM_SOURCE_CONCEPT_FAKE_SCTID = 23456L + "";
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_SOURCE_CONCEPT_FAKE_VUID, MetaData.SNOROCKET_CLASSIFIER.getNid(), MetaData.VUID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_SOURCE_CONCEPT_FAKE_SCTID, MetaData.SNOROCKET_CLASSIFIER.getNid(), MetaData.SCTID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		final String ITEM_TARGET_CONCEPT_FAKE_VUID = 54321L + "";
+		final String ITEM_TARGET_CONCEPT_FAKE_SCTID = 65432L + "";
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_VUID, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.VUID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_SCTID, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.SCTID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		Get.commitService().commit("VUID and SCTID for SNOROCKET_CLASSIFIER and ENGLISH_LANGUAGE for testing only");
+
 		RestMappingItemVersionCreate newMappingSetItemData = new RestMappingItemVersionCreate(
 				targetConceptSeq,
 				qualifierConceptUuid,
@@ -1935,6 +1950,38 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(targetConceptSeq.equals(retrievedMappingItemVersion.targetConcept.sequence + ""));
 		Assert.assertTrue(qualifierConceptUuid.equals(retrievedMappingItemVersion.qualifierConcept.getFirst().toString()));
 		Assert.assertEquals(updatedMappingSetObject.identifiers.sequence, retrievedMappingItemVersion.mapSetConcept.sequence);
+		Assert.assertEquals(retrievedMappingItemVersion.displayFields.size(), mapSetDisplayFieldCreateDTOs.size());
+		boolean foundSourceVuidDisplayField = false;
+		boolean foundSourceSctIdDisplayField = false;
+		boolean foundTargetVuidDisplayField = false;
+		boolean foundTargetSctIdDisplayField = false;
+		for (RestMappingSetDisplayField displayField : retrievedMappingItemVersion.displayFields) {
+			if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
+					&& displayField.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_VUID);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.VUID.getNid());
+				foundSourceVuidDisplayField = true;
+			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
+					&& displayField.name.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_SCTID);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
+				foundSourceSctIdDisplayField = true;
+			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
+					&& displayField.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_VUID);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.VUID.getNid());
+				foundTargetVuidDisplayField = true;
+			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
+					&& displayField.name.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_SCTID);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
+				foundTargetSctIdDisplayField = true;
+			}
+		}
+		Assert.assertTrue(foundSourceVuidDisplayField);
+		Assert.assertTrue(foundSourceSctIdDisplayField);
+		Assert.assertTrue(foundTargetVuidDisplayField);
+		Assert.assertTrue(foundTargetSctIdDisplayField);
 
 		// test getMappingItems()
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)

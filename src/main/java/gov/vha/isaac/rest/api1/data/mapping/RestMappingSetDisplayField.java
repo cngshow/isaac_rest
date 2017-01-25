@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -25,7 +27,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
@@ -92,7 +97,20 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	{
 		//for Jaxb
 		super(name, component);
-		this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.name);
+		if (cc.isPresent()) {
+			if (fieldNameConcept != null) {
+				if (fieldNameConcept.getNid() != cc.get().getNid()) {
+					throw new RuntimeException("fieldNameConcept NID " + fieldNameConcept.getNid() + " does not match NID " + cc.get().getNid() + " for concept corresponding to name \"" + this.name + "\"");
+				}
+				if (fieldNameConcept.getPrimordialUuid().equals(cc.get().getPrimordialUuid())) {
+					throw new RuntimeException("fieldNameConcept UUID " + fieldNameConcept.getPrimordialUuid() + " does not match UUID " + cc.get().getPrimordialUuid() + " for concept corresponding to name \"" + this.name + "\"");
+				}
+			}
+			this.fieldNameConceptIdentifiers = new RestIdentifiedObject(cc.get().getPrimordialUuid());
+		} else {
+			this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
+		}
 		this.computed = computed;
 		this.value = value;
 	}
