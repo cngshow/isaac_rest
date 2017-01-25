@@ -93,6 +93,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.component.ComponentWriteAPIs;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValue;
@@ -549,7 +550,10 @@ public class MappingWriteAPIs
 		if (existingField == null) {
 			throw new RestException("RestMappingSetFieldCreate.name", passedField.name, "Invalid or unsupported map set field name. Must be one of " + service.getAllFieldNames());
 		}
-		String dataString = existingField.getName() + ":" + passedField.componentType.toString();
+		if (passedField.componentType == null) {
+			throw new RestException("RestMappingSetFieldCreate.componentType", "null", "null map set display field component type. Must be one of " + MapSetItemComponent.values());
+		}
+		String dataString = existingField.getName() + ":" + passedField.componentType.enumName;
 		return new DynamicSememeStringImpl(dataString);
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
