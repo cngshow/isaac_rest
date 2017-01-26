@@ -103,7 +103,7 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 				if (fieldNameConcept.getNid() != cc.get().getNid()) {
 					throw new RuntimeException("fieldNameConcept NID " + fieldNameConcept.getNid() + " does not match NID " + cc.get().getNid() + " for concept corresponding to name \"" + this.name + "\"");
 				}
-				if (fieldNameConcept.getPrimordialUuid().equals(cc.get().getPrimordialUuid())) {
+				if (! fieldNameConcept.getPrimordialUuid().equals(cc.get().getPrimordialUuid())) {
 					throw new RuntimeException("fieldNameConcept UUID " + fieldNameConcept.getPrimordialUuid() + " does not match UUID " + cc.get().getPrimordialUuid() + " for concept corresponding to name \"" + this.name + "\"");
 				}
 			}

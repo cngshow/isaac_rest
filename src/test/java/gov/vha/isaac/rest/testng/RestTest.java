@@ -1899,14 +1899,23 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		EditToken token = EditTokens.getOrCreate(editTokenString);
 		final String ITEM_SOURCE_CONCEPT_FAKE_VUID = 12345L + "";
 		final String ITEM_SOURCE_CONCEPT_FAKE_SCTID = 23456L + "";
+		final String ITEM_SOURCE_CONCEPT_FAKE_CODE = "SRC_FAKE_CODE";
+		final String ITEM_SOURCE_CONCEPT_FAKE_RXCUI = "SRCRXCUI";
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_SOURCE_CONCEPT_FAKE_VUID, MetaData.SNOROCKET_CLASSIFIER.getNid(), MetaData.VUID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_SOURCE_CONCEPT_FAKE_SCTID, MetaData.SNOROCKET_CLASSIFIER.getNid(), MetaData.SCTID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_SOURCE_CONCEPT_FAKE_CODE, MetaData.SNOROCKET_CLASSIFIER.getNid(), MetaData.CODE.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_SOURCE_CONCEPT_FAKE_RXCUI, MetaData.SNOROCKET_CLASSIFIER.getNid(), MetaData.RXCUI.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
 		final String ITEM_TARGET_CONCEPT_FAKE_VUID = 54321L + "";
 		final String ITEM_TARGET_CONCEPT_FAKE_SCTID = 65432L + "";
+		final String ITEM_TARGET_CONCEPT_FAKE_CODE = "TARGET_FAKE_CODE";
+		final String ITEM_TARGET_CONCEPT_FAKE_RXCUI = "TGTRXCUI";
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_VUID, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.VUID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_SCTID, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.SCTID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
-		Get.commitService().commit("VUID and SCTID for SNOROCKET_CLASSIFIER and ENGLISH_LANGUAGE for testing only");
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_CODE, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.CODE.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_RXCUI, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.RXCUI.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
+		Get.commitService().commit("VUID, SCTID, CODE and RXCUI for SNOROCKET_CLASSIFIER and ENGLISH_LANGUAGE for testing only");
 
+		
 		RestMappingItemVersionCreate newMappingSetItemData = new RestMappingItemVersionCreate(
 				targetConceptSeq,
 				qualifierConceptUuid,
@@ -1953,8 +1962,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(retrievedMappingItemVersion.displayFields.size(), mapSetDisplayFieldCreateDTOs.size());
 		boolean foundSourceVuidDisplayField = false;
 		boolean foundSourceSctIdDisplayField = false;
+		boolean foundSourceCodeDisplayField = false;
+		boolean foundSourceRxcuiDisplayField = false;
 		boolean foundTargetVuidDisplayField = false;
 		boolean foundTargetSctIdDisplayField = false;
+		boolean foundTargetCodeDisplayField = false;
+		boolean foundTargetRxcuiDisplayField = false;
 		for (RestMappingSetDisplayField displayField : retrievedMappingItemVersion.displayFields) {
 			if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
 					&& displayField.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
@@ -1966,6 +1979,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_SCTID);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
 				foundSourceSctIdDisplayField = true;
+			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
+					&& displayField.name.equals(MetaData.CODE.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_CODE);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.CODE.getNid());
+				foundSourceCodeDisplayField = true;
+			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
+					&& displayField.name.equals(MetaData.RXCUI.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_RXCUI);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.RXCUI.getNid());
+				foundSourceRxcuiDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
 					&& displayField.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
 				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_VUID);
@@ -1976,12 +1999,26 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_SCTID);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
 				foundTargetSctIdDisplayField = true;
+			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
+					&& displayField.name.equals(MetaData.CODE.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_CODE);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.CODE.getNid());
+				foundTargetCodeDisplayField = true;
+			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
+					&& displayField.name.equals(MetaData.RXCUI.getPrimordialUuid().toString())) {
+				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_RXCUI);
+				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.RXCUI.getNid());
+				foundTargetRxcuiDisplayField = true;
 			}
 		}
 		Assert.assertTrue(foundSourceVuidDisplayField);
 		Assert.assertTrue(foundSourceSctIdDisplayField);
+		//Assert.assertTrue(foundSourceCodeDisplayField);
+		//Assert.assertTrue(foundSourceRxcuiDisplayField);
 		Assert.assertTrue(foundTargetVuidDisplayField);
 		Assert.assertTrue(foundTargetSctIdDisplayField);
+		//Assert.assertTrue(foundTargetCodeDisplayField);
+		//Assert.assertTrue(foundTargetRxcuiDisplayField);
 
 		// test getMappingItems()
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)

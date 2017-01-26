@@ -225,17 +225,22 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 				}
 				if (fieldFromMapSet.name.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())
 						|| fieldFromMapSet.name.equals(MetaData.RXCUI.getPrimordialUuid().toString())
-						|| fieldFromMapSet.name.equals(MetaData.CODE.getPrimordialUuid().toString())) {
+//						|| fieldFromMapSet.name.equals(MetaData.VUID.getPrimordialUuid().toString())
+//						|| fieldFromMapSet.name.equals(MetaData.SCTID.getPrimordialUuid().toString())
+						|| fieldFromMapSet.name.equals(MetaData.CODE.getPrimordialUuid().toString())
+						) {
 					// TODO fix this so it works
-					Optional<String> valueOptional = Frills.getDynamicFieldStringValue(UUID.fromString(fieldFromMapSet.name), componentNid, RequestInfo.get().getStampCoordinate());
+					Optional<String> valueOptional = Frills.getAnnotationStringValue(Frills.getConceptForUnknownIdentifier(fieldFromMapSet.name).get().getNid(), componentNid, RequestInfo.get().getStampCoordinate());
 					value = valueOptional.isPresent() ? valueOptional.get() : null;
-				} else if (fieldFromMapSet.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
+				}
+				else if (fieldFromMapSet.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
 					Optional<Long> vuidOptional = Frills.getVuId(componentNid, RequestInfo.get().getStampCoordinate());
 					value = vuidOptional.isPresent() ? vuidOptional.get() + "" : null;
 				} else if (fieldFromMapSet.name.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
 					Optional<Long> sctIdOptional = Frills.getSctId(componentNid, RequestInfo.get().getStampCoordinate());
 					value = sctIdOptional.isPresent() ? sctIdOptional.get() + "" : null;
-				} else if (fieldFromMapSet.name.equals(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString())) {
+				}
+				else if (fieldFromMapSet.name.equals(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString())) {
 					ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
 					Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
 					// TODO handle missing values and contradictions
