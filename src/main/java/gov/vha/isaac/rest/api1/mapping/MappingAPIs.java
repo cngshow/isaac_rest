@@ -65,6 +65,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -276,7 +277,21 @@ public class MappingAPIs
 		
 		return new RestMappingSetDisplayField(existingField, (String)null);
 	}
+	
+	/**
+	 * @return array of {@link RestMapSetItemComponentType} values available for use in constructing a {@link RestMappingSetDisplayFieldCreate}
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingFieldComponentTypesComponent)
+	public RestMapSetItemComponentType[] getAvailableMappingSetDisplayFieldComponentTypes() throws RestException {
+		SecurityUtils.validateRole(securityContext, getClass());
+		
+		return RestMapSetItemComponentType.getAll();
+	}
 
+	
 	/**
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions

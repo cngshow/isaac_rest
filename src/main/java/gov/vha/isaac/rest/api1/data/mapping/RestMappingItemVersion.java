@@ -245,7 +245,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 					Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
 					// TODO handle missing values and contradictions
 					value = desc.isPresent() ? desc.get().value().getText() : null;
-				} else if (fieldFromMapSet.name.equals(MapSetDisplayFieldsService.Field.PREFERRED_TERM)) {
+				} else if (fieldFromMapSet.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
 					ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
 					Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
 					 // TODO handle missing values and contradictions

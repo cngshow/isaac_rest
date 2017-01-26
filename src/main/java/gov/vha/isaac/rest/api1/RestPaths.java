@@ -78,6 +78,7 @@ public class RestPaths
 	public static final String mappingItemsComponent = "mappingItems/";
 	public static final String mappingFieldsComponent = "fields/";
 	public static final String mappingFieldComponent = "field/";
+	public static final String mappingFieldComponentTypesComponent = "fieldComponentTypes/";
 	public static final String mappingSetAppPathComponent = mappingAPIsPathComponent + mappingSetComponent;
 	public static final String mappingSetsAppPathComponent = mappingAPIsPathComponent + mappingSetsComponent;
 	public static final String mappingItemAppPathComponent = mappingAPIsPathComponent + mappingItemComponent;

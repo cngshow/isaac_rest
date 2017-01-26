@@ -1813,8 +1813,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.PREFERRED_TERM, new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.PREFERRED_TERM, new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
 		RestMappingSetVersionBaseUpdate updatedMappingSetData = new RestMappingSetVersionBaseUpdate(
 				updatedMappingSetName,
 				updatedMappingSetInverseName,

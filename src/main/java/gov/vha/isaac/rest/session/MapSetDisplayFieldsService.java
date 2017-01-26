@@ -50,7 +50,19 @@ import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 @Service
 public class MapSetDisplayFieldsService {
 	public static class Field {
-		public final static String PREFERRED_TERM = "PREFERRED_TERM";
+		public static enum NonConceptFieldName {
+			PREFERRED_TERM("Preferred Term");
+			
+			private String description;
+			
+			private NonConceptFieldName(String description) {
+				this.description = description;
+			}
+			
+			public String getDescription() {
+				return description;
+			}
+		}
 		
 		private final String name;
 		private final boolean computed;

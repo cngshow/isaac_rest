@@ -64,10 +64,20 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	public boolean computed = false;
 
 	/**
+	 * Description of this field
+	 * If the field name is the ID of an assemblage concept then it will be the description of that concept.
+	 * If the field name is a string literal then the description will be MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(name).getDescription()
+	 * 
+	 */
+	@XmlElement
+	public String description;
+
+	/**
 	 * Optional value corresponding to field
 	 */
 	@XmlElement
 	public String value;
+
 
 	RestMappingSetDisplayField()
 	{
@@ -113,6 +123,16 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 		}
 		this.computed = computed;
 		this.value = value;
+		description = getDescriptionFromName(this.name);
+	}
+
+	private static String getDescriptionFromName(String name) {
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(name);
+		if (cc.isPresent()) {
+			return Frills.getDescription(cc.get().getNid()).get();
+		} else {
+			return MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(name).getDescription();
+		}
 	}
 
 	/* (non-Javadoc)
