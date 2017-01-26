@@ -50,6 +50,15 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields;
 
+	/**
+	 * The (optional) ordered list of fields to be displayed for the mapping set.
+	 * The passed map set display fields will replace, not update, any existing set.
+	 * If no fields are passed, then any existing display fields on the map set concept will be removed.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public List<RestMappingSetDisplayFieldCreate> displayFields;
+
 	protected RestMappingSetVersionBaseUpdate()
 	{
 		//for Jaxb
@@ -70,6 +79,29 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 			Boolean active) {
 		super(name, inverseName, description, purpose, active);
 		this.mapSetExtendedFields = null;
+		this.displayFields = null;
+	}
+
+	/**
+	 * @param name
+	 * @param inverseName
+	 * @param description
+	 * @param purpose
+	 * @param active
+	 * @param mapSetExtendedFields
+	 * @param displayFields specifies display fields that should populate each item and respective order
+	 */
+	public RestMappingSetVersionBaseUpdate(
+			String name,
+			String inverseName,
+			String description,
+			String purpose,
+			Boolean active,
+			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields,
+			List<RestMappingSetDisplayFieldCreate> displayFields) {
+		super(name, inverseName, description, purpose, active);
+		this.mapSetExtendedFields = mapSetExtendedFields;
+		this.displayFields = displayFields;
 	}
 
 	/* (non-Javadoc)
@@ -77,8 +109,8 @@ public class RestMappingSetVersionBaseUpdate extends RestMappingSetVersionBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetVersionBaseUpdate [name=" + name
-				+ ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + ", active="
-				+ active + ", mapSetExtendedFields=" + mapSetExtendedFields + "]";
+		return "RestMappingSetVersionBaseUpdate [mapSetExtendedFields=" + mapSetExtendedFields + ", displayFields="
+				+ displayFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
+				+ ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }

@@ -22,11 +22,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.logging.log4j.LogManager;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
@@ -55,6 +59,7 @@ import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.rest.api1.mapping.MappingAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -100,6 +105,12 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	public List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = new ArrayList<>();
 	
 	/**
+	 * Specifies display fields that should populate each item and respective order
+	 */
+	@XmlElement
+	public List<RestMappingSetDisplayField> displayFields = new ArrayList<>();
+
+	/**
 	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
 	 */
 	@XmlElement
@@ -117,7 +128,9 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 * This code expects to read a sememe of type {@link IsaacMappingConstants#DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE}
 	 * @param sememe
 	 * @param stampCoord
+	 * @throws RestException 
 	 */
+	@SuppressWarnings("rawtypes")
 	public RestMappingSetVersion(ConceptVersion<?> mappingConcept, DynamicSememe<?> sememe, StampCoordinate stampCoord, boolean includeComments, UUID processId)
 	{
 		super();
@@ -148,7 +161,6 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 
 				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(stringExtensionSememe ->
 			{
-				@SuppressWarnings("rawtypes")
 				SememeChronology rawSememeChronology = (SememeChronology)stringExtensionSememe;
 				@SuppressWarnings("unchecked")
 				Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, myStampCoord);
@@ -171,7 +183,6 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 
 				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getConceptSequence()).forEach(nidExtensionSememe ->
 			{
-				@SuppressWarnings("rawtypes")
 				SememeChronology rawSememeChronology = (SememeChronology)nidExtensionSememe;
 				@SuppressWarnings("unchecked")
 				Optional<LatestVersion<DynamicSememe<?>>> latest = (rawSememeChronology).getLatestVersion(DynamicSememe.class, myStampCoord);
@@ -200,7 +211,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 				}
 				else
 				{
-					@SuppressWarnings({ "rawtypes", "unchecked" })
+					@SuppressWarnings({ "unchecked" })
 					Optional<LatestVersion<DescriptionSememe<?>>> latest = ((SememeChronology)descriptionC).getLatestVersion(DescriptionSememe.class, myStampCoord);
 					//TODO handle contradictions
 					if (latest.isPresent())
@@ -235,6 +246,9 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 					}
 				}
 			});
+
+		displayFields.addAll(MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(mappingConcept.getNid(), stampCoord));
+
 		if (includeComments)
 		{
 			try
@@ -272,8 +286,10 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetVersion [identifiers=" + identifiers + ", mappingSetStamp=" + mappingSetStamp
-				+ ", mapSetExtendedFields=" + mapSetExtendedFields + ", mapItemFieldsDefinition=" + mapItemFieldsDefinition 
-				+ ", name=" + name + ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
+		return "RestMappingSetVersion [expandables=" + expandables + ", identifiers=" + identifiers
+				+ ", mappingSetStamp=" + mappingSetStamp + ", mapSetExtendedFields=" + mapSetExtendedFields
+				+ ", mapItemFieldsDefinition=" + mapItemFieldsDefinition + ", mapSetFields=" + displayFields
+				+ ", comments=" + comments + ", name=" + name + ", inverseName=" + inverseName + ", description="
+				+ description + ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }

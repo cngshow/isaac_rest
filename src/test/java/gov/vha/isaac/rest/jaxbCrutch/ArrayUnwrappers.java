@@ -20,11 +20,15 @@ package gov.vha.isaac.rest.jaxbCrutch;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowAvailableAction;
@@ -186,6 +190,45 @@ public class ArrayUnwrappers
 		public Object[] getValues()
 		{
 			return restWorkflowProcess;
+		}
+	}
+	
+	@XmlRootElement
+	public static class RestMappingSetDisplayFields implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestMappingSetDisplayField[] restMappingSetDisplayField;
+
+		@Override
+		public Object[] getValues()
+		{
+			return restMappingSetDisplayField;
+		}
+	}
+
+	@XmlRootElement
+	public static class RestMappingSetDisplayFieldBases implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestMappingSetDisplayFieldBase[] restMappingSetDisplayFieldBase;
+
+		@Override
+		public Object[] getValues()
+		{
+			return restMappingSetDisplayFieldBase;
+		}
+	}
+
+	@XmlRootElement
+	public static class RestMappingSetDisplayFieldCreates implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestMappingSetDisplayFieldCreate[] restMappingSetDisplayFieldCreate;
+
+		@Override
+		public Object[] getValues()
+		{
+			return restMappingSetDisplayFieldCreate;
 		}
 	}
 }

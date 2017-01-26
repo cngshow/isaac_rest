@@ -42,6 +42,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
  * @see RestDynamicSememeDataType
  * @see RestDynamicSememeValidatorType
  * @see RestExternalizableObjectType
+ * @see RestMapSetItemComponentType
  * @see RestNodeSemanticType
  * @see RestObjectChronologyType
  * @see RestStampPrecedenceType
@@ -66,6 +67,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 	RestDynamicSememeDataType.class,
 	RestDynamicSememeValidatorType.class,
 	RestExternalizableObjectType.class,
+	RestMapSetItemComponentType.class,
 	RestNodeSemanticType.class,
 	RestObjectChronologyType.class,
 	RestStampPrecedenceType.class,
@@ -83,6 +85,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionVersion;
 	RestDynamicSememeDataType.class,
 	RestDynamicSememeValidatorType.class,
 	RestExternalizableObjectType.class,
+	RestMapSetItemComponentType.class,
 	RestNodeSemanticType.class,
 	RestObjectChronologyType.class,
 	RestStampPrecedenceType.class,

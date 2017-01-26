@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.mapping;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,11 +93,15 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.component.ComponentWriteAPIs;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValue;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueUpdate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseUpdate;
@@ -109,6 +114,7 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.api1.sememe.SememeWriteAPIs;
+import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -161,6 +167,7 @@ public class MappingWriteAPIs
 					mappingSetCreationData.description,
 					mappingSetCreationData.mapItemExtendedFieldsDefinition,
 					mappingSetCreationData.mapSetExtendedFields,
+					mappingSetCreationData.displayFields,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate());
 		} 
@@ -217,6 +224,12 @@ public class MappingWriteAPIs
 			extensionCreateDTOs.add(extensionCreateDTO);
 		}
 		
+		int cloneTargetConceptId = RequestInfoUtils.getConceptSequenceFromParameter("mappingSetCloneData.cloneTargetConcept", mappingSetCloneData.cloneTargetConcept);
+		List<RestMappingSetDisplayField> existingMapSetFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(Get.identifierService().getConceptNid(cloneTargetConceptId), RequestInfo.get().getStampCoordinate());
+		List<RestMappingSetDisplayFieldCreate> mapSetFieldCreateDTOs = new ArrayList<>();
+		for (RestMappingSetDisplayField existingField : existingMapSetFields) {
+			mapSetFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(existingField.name, existingField.componentType));
+		}
 		ConceptChronology<? extends ConceptVersion<?>> mappingSetAssemblageConcept = null;
 		try 
 		{
@@ -227,6 +240,7 @@ public class MappingWriteAPIs
 					StringUtils.isBlank(mappingSetCloneData.description) ? cloneTargetMappingSetVersion.description : mappingSetCloneData.description,
 					mapItemFieldsDefinitionCreateDTOs,
 					extensionCreateDTOs,
+					mapSetFieldCreateDTOs,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate());
 		} catch (IOException e) {
@@ -293,12 +307,6 @@ public class MappingWriteAPIs
 					built = sb.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE).getNoThrow();
 
 					itemsToCommit.add((SememeChronology<?>)built);
-//					Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing creation of mapping item " + built.getPrimordialUuid() 
-//					+ " for mapping set " + mappingSetUuid.get()).get();
-//					if (RequestInfo.get().getActiveWorkflowProcessId() != null)
-//					{
-//						LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
-//					}
 				}
 				catch (IllegalArgumentException e1)
 				{
@@ -322,7 +330,7 @@ public class MappingWriteAPIs
 	 * All fields are overwritten with the provided values - for example, if there was previously a value for an optional field, and it is not 
 	 * provided now, the new version will have that field stored as blank.
 	 * 
-	 * @param mappingSetUpdateData - object containing data used to update existing mapping set
+	 * @param mappingSetUpdateData - object containing data used to update existing mapping set.
 	 * @param id - id of mapping set concept to update
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to getEditToken()
@@ -368,7 +376,8 @@ public class MappingWriteAPIs
 				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
 				RequestInfo.get().getEditCoordinate(),
 				stateToUse,
-				mappingSetUpdateData.mapSetExtendedFields);
+				mappingSetUpdateData.mapSetExtendedFields,
+				mappingSetUpdateData.displayFields);
 	}
 	
 	/**
@@ -535,6 +544,95 @@ public class MappingWriteAPIs
 		return extension;
 	}
 
+	private static DynamicSememeStringImpl getDynamicSememeStringFromMapSetField(RestMappingSetDisplayFieldBase passedField) throws RestException {
+		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
+		MapSetDisplayFieldsService.Field existingField = service.getFieldByIdOrNameIfNotId(passedField.name);
+		if (existingField == null) {
+			throw new RestException("RestMappingSetFieldCreate.name", passedField.name, "Invalid or unsupported map set field name. Must be one of " + service.getAllFieldNames());
+		}
+		if (passedField.componentType == null) {
+			throw new RestException("RestMappingSetFieldCreate.componentType", "null", "null map set display field component type. Must be one of " + MapSetItemComponent.values());
+		}
+		String dataString = existingField.getName() + ":" + passedField.componentType.enumName;
+		return new DynamicSememeStringImpl(dataString);
+	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static DynamicSememeArrayImpl getDynamicSememeArrayImplFromMapSetFields(List<RestMappingSetDisplayFieldCreate> passedFields) throws RestException {
+		List<DynamicSememeStringImpl> fieldSpecificationStrings = new ArrayList<>();
+		
+		if (passedFields != null) {
+			for (RestMappingSetDisplayFieldBase passedMapSetField : passedFields) {
+				DynamicSememeStringImpl dynamicSememeString = getDynamicSememeStringFromMapSetField(passedMapSetField);
+				fieldSpecificationStrings.add(dynamicSememeString);
+			}
+		}
+		
+		DynamicSememeArrayImpl dynamicSememeArray = null;
+		if (fieldSpecificationStrings.size() > 0) {
+			dynamicSememeArray = new DynamicSememeArrayImpl(fieldSpecificationStrings.toArray(new DynamicSememeStringImpl[fieldSpecificationStrings.size()]));
+		} else {
+			dynamicSememeArray = new DynamicSememeArrayImpl(new DynamicSememeStringImpl[0]); // TODO Joel determine if this is ever ok
+		}
+		
+		return dynamicSememeArray;
+	}
+	@SuppressWarnings({ "rawtypes" })
+	private static SememeChronology buildNewMapSetFieldsSememe(
+			int mapSetConceptNid,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
+			EditCoordinate editCoord) throws RestException {
+		SememeChronology newMapSetFieldsSememe = null;
+		if (mapSetFields != null && mapSetFields.size() > 0) {
+			DynamicSememeArrayImpl fields = getDynamicSememeArrayImplFromMapSetFields(mapSetFields);
+			newMapSetFieldsSememe = Get.sememeBuilderService().getDynamicSememeBuilder(
+					mapSetConceptNid,
+					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence(), 
+					new DynamicSememeData[] {
+							fields
+					}).build(
+							editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
+		}
+		return newMapSetFieldsSememe;
+	}
+
+	@SuppressWarnings({ "rawtypes" })
+	private static SememeChronology updateMapSetFieldsSememe(
+			int mapSetConceptNid,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
+			StampCoordinate stampCoord,
+			EditCoordinate editCoord) throws RestException {
+		Optional<SememeChronology<? extends SememeVersion<?>>> mapSetFieldsSememe = Frills.getAnnotationSememe(mapSetConceptNid, IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence());
+		if (! mapSetFieldsSememe.isPresent()) {
+			return buildNewMapSetFieldsSememe(mapSetConceptNid, mapSetFields, editCoord);
+		} else {
+			if (mapSetFields == null || mapSetFields.size() == 0) {
+				// If no field passed in update then retire the sememe
+				ComponentWriteAPIs.resetStateWithNoCommit(editCoord, stampCoord, State.INACTIVE, mapSetFieldsSememe.get().getPrimordialUuid() + "");
+				return mapSetFieldsSememe.get();
+			} else {
+				DynamicSememeData[] updatedData = new DynamicSememeData[1];
+				updatedData[0] = getDynamicSememeArrayImplFromMapSetFields(mapSetFields);
+
+				Optional<LatestVersion<DynamicSememeImpl>> existingVersionOptionalLatest = ((SememeChronology)mapSetFieldsSememe.get()).getLatestVersion(DynamicSememeImpl.class, stampCoord);
+				if (! existingVersionOptionalLatest.isPresent()) { // TODO Handle contradictions
+					throw new RuntimeException("No latest version of mapSetFieldsSememe " + mapSetFieldsSememe.get().getNid() + " found for specified stamp coordinate " + stampCoord);
+				}
+				DynamicSememeData[] existingData = existingVersionOptionalLatest.get().value().getData();
+
+				DynamicSememeArrayImpl updatedArray = (DynamicSememeArrayImpl)updatedData[0];
+				DynamicSememeArrayImpl existingArray = (DynamicSememeArrayImpl)existingData[0];
+				if (existingArray != null && Arrays.equals(updatedArray.getData(), existingArray.getData())) {
+					return null; // No need to update
+				}
+
+				DynamicSememeImpl mutableVersion = (DynamicSememeImpl)((SememeChronology)mapSetFieldsSememe.get()).createMutableVersion(DynamicSememeImpl.class, State.ACTIVE, editCoord);
+				mutableVersion.setData(updatedData);
+
+				return mutableVersion.getChronology();
+			}
+		}
+	}
+
 	/**
 	 * Create and store a new mapping set in the DB.
 	 * @param mappingName - The name of the mapping set (used for the FSN and preferred term of the underlying concept)
@@ -551,11 +649,11 @@ public class MappingWriteAPIs
 			String description,
 			List<RestDynamicSememeColumnInfoCreate> extendedFields,
 			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
 			StampCoordinate stampCoord, 
 			EditCoordinate editCoord) throws IOException
 	{
 		//We need to create a new concept - which itself is defining a dynamic sememe - so set that up here.
-		
 		if (StringUtils.isBlank(mappingName))
 		{
 			throw new RestException("The parameter 'name' is required");
@@ -634,8 +732,16 @@ public class MappingWriteAPIs
 			}
 		}
 		
+		if (mapSetFields != null && mapSetFields.size() > 0) {
+			buildNewMapSetFieldsSememe(
+					Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
+					mapSetFields,
+					editCoord);
+		}
+		
 		try
 		{
+			// TODO do we need to perform addUncommitted on the objects first?
 			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of mapping set " + rdud.getDynamicSememeName()).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
@@ -650,9 +756,9 @@ public class MappingWriteAPIs
 				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
 
-	private static int getNameNid(DynamicSememe<?> ds) {
-		return ((DynamicSememeNid)ds.getData(0)).getDataNid();
-	}
+//	private static int getNameNid(DynamicSememe<?> ds) {
+//		return ((DynamicSememeNid)ds.getData(0)).getDataNid();
+//	}
 	private static RestDynamicSememeData getData(DynamicSememe<?> ds) {
 		DynamicSememeData value = null;
 		if (ds.getData().length > 1)
@@ -661,6 +767,7 @@ public class MappingWriteAPIs
 		}
 		return RestDynamicSememeData.translate(1, value);
 	}
+	@SuppressWarnings("unchecked")
 	private static RestWriteResponse updateMappingSet(
 			ConceptChronology<?> mappingConcept,
 			String mapName,
@@ -670,7 +777,8 @@ public class MappingWriteAPIs
 			StampCoordinate stampCoord,
 			EditCoordinate editCoord,
 			State state,
-			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields) throws RuntimeException, RestException 
+			List<RestMappingSetExtensionValueUpdate> mapSetExtendedFields,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields) throws RuntimeException, RestException 
 	{		
 		final List<SememeChronology<? extends SememeVersion<?>>> objectsToAdd = new ArrayList<>();
 		Get.sememeService().getSememesForComponent(mappingConcept.getNid()).filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(descriptionC ->
@@ -861,7 +969,9 @@ public class MappingWriteAPIs
 						}
 						
 						if (sememeToCommit != null) {
-							Get.commitService().addUncommitted(sememeToCommit).get();
+							@SuppressWarnings("unchecked")
+							SememeChronology<? extends SememeVersion<?>> sc = sememeToCommit;
+							objectsToAdd.add(sc);
 						}
 					}
 				}
@@ -880,6 +990,12 @@ public class MappingWriteAPIs
 				updatedConcept = true;
 			}
 
+			@SuppressWarnings("rawtypes")
+			SememeChronology updatedMapSetFieldSememe = updateMapSetFieldsSememe(mappingConcept.getNid(), mapSetFields, stampCoord.makeAnalog(State.values()), editCoord);
+			if (updatedMapSetFieldSememe != null) {
+				objectsToAdd.add(updatedMapSetFieldSememe);
+			}
+			
 			if (updatedConcept || objectsToAdd.size() > 0) {
 				//Delay all of the addUncommited, so if we fail out somewhere else, we don't end up partially added / committed.
 				for (SememeChronology<? extends SememeVersion<?>> x : objectsToAdd)
@@ -915,6 +1031,7 @@ public class MappingWriteAPIs
 			String description,
 			List<RestDynamicSememeColumnInfoCreate> extendedFields,
 			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
+			List<RestMappingSetDisplayFieldCreate> mapSetFields,
 			StampCoordinate stampCoord, 
 			EditCoordinate editCoord) throws IOException
 	{
@@ -1026,7 +1143,14 @@ public class MappingWriteAPIs
 				}
 			}
 		}
-		
+
+		if (mapSetFields.size() > 0) {
+			buildNewMapSetFieldsSememe(
+					Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
+					mapSetFields,
+					editCoord);
+		}
+
 //		try
 //		{
 //			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing create of mapping set " + rdud.getDynamicSememeName()).get();

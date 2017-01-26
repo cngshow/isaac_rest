@@ -58,7 +58,14 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition;
-		
+
+	/**
+	 * Specifies display fields that should populate each item and respective order
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public List<RestMappingSetDisplayFieldCreate> displayFields;
+	
 	protected RestMappingSetVersionBaseCreate()
 	{
 		//for Jaxb
@@ -76,13 +83,41 @@ public class RestMappingSetVersionBaseCreate extends RestMappingSetVersionBase
 		super(name, inverseName, description, purpose, active);
 	}
 
+	/**
+	 * @param name
+	 * @param inverseName
+	 * @param description
+	 * @param purpose
+	 * @param active
+	 * @param mapSetExtendedFields
+	 * @param mapItemExtendedFieldsDefinition
+	 * @param displayFields specifies display fields that should populate each item and respective order
+	 */
+	public RestMappingSetVersionBaseCreate(
+			String name,
+			String inverseName,
+			String description,
+			String purpose,
+			Boolean active,
+			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
+			List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldsDefinition,
+			List<RestMappingSetDisplayFieldCreate> displayFields) 
+	{
+		super(name, inverseName, description, purpose, active);
+
+		this.mapSetExtendedFields = mapSetExtendedFields;
+		this.mapItemExtendedFieldsDefinition = mapItemExtendedFieldsDefinition;
+		this.displayFields = displayFields;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
 		return "RestMappingSetVersionBaseCreate [mapSetExtendedFields=" + mapSetExtendedFields
-				+ ", mapItemExtendedFieldsDefinition="+ mapItemExtendedFieldsDefinition 
-				+ ", name=" + name + ", inverseName=" + inverseName + ", description=" + description + ", purpose=" + purpose + "]";
+				+ ", mapItemExtendedFieldsDefinition=" + mapItemExtendedFieldsDefinition + ", displayFields="
+				+ displayFields + ", name=" + name + ", inverseName=" + inverseName + ", description=" + description
+				+ ", purpose=" + purpose + ", active=" + active + "]";
 	}
 }
