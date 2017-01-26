@@ -5,8 +5,9 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/01/?? - 1.37 - PENDING
-    *
+* 2017/01/26 - 1.37
+    * Many RestMapSet changes
+    * Validation and tests added for mapping code
 
 * 2017/01/19 - 1.36
     * Bugfixes in prisme log sending
