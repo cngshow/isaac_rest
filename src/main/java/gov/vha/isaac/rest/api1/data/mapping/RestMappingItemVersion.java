@@ -19,9 +19,12 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.logging.log4j.LogManager;
@@ -36,12 +39,22 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
+import gov.vha.isaac.ochre.api.component.sememe.SememeService;
+import gov.vha.isaac.ochre.api.component.sememe.SememeSnapshotService;
+import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.sememe.version.ComponentNidSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -225,27 +238,20 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 				}
 				if (fieldFromMapSet.name.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())
 						|| fieldFromMapSet.name.equals(MetaData.RXCUI.getPrimordialUuid().toString())
-//						|| fieldFromMapSet.name.equals(MetaData.VUID.getPrimordialUuid().toString())
-//						|| fieldFromMapSet.name.equals(MetaData.SCTID.getPrimordialUuid().toString())
+						|| fieldFromMapSet.name.equals(MetaData.VUID.getPrimordialUuid().toString())
+						|| fieldFromMapSet.name.equals(MetaData.SCTID.getPrimordialUuid().toString())
 						|| fieldFromMapSet.name.equals(MetaData.CODE.getPrimordialUuid().toString())
 						) {
-					// TODO fix this so it works
-					Optional<String> valueOptional = Frills.getAnnotationStringValue(Frills.getConceptForUnknownIdentifier(fieldFromMapSet.name).get().getNid(), componentNid, RequestInfo.get().getStampCoordinate());
+					// TODO test LOINC_NUM
+					Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, Frills.getConceptForUnknownIdentifier(fieldFromMapSet.name).get().getNid(), RequestInfo.get().getStampCoordinate());
 					value = valueOptional.isPresent() ? valueOptional.get() : null;
 				}
-				else if (fieldFromMapSet.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
-					Optional<Long> vuidOptional = Frills.getVuId(componentNid, RequestInfo.get().getStampCoordinate());
-					value = vuidOptional.isPresent() ? vuidOptional.get() + "" : null;
-				} else if (fieldFromMapSet.name.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
-					Optional<Long> sctIdOptional = Frills.getSctId(componentNid, RequestInfo.get().getStampCoordinate());
-					value = sctIdOptional.isPresent() ? sctIdOptional.get() + "" : null;
-				}
-				else if (fieldFromMapSet.name.equals(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString())) {
+				else if (fieldFromMapSet.name.equals(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString())) { // TODO test FULLY_SPECIFIED_NAME
 					ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
 					Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
 					// TODO handle missing values and contradictions
 					value = desc.isPresent() ? desc.get().value().getText() : null;
-				} else if (fieldFromMapSet.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
+				} else if (fieldFromMapSet.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) { // TODO test PREFERRED_TERM
 					ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
 					Optional<LatestVersion<DescriptionSememe<?>>> desc = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
 					 // TODO handle missing values and contradictions
