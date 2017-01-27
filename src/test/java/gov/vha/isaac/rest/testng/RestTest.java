@@ -1811,11 +1811,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.CODE.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.RXCUI.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.LOINC_NUM.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
 		
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.VUID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.CODE.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.RXCUI.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.LOINC_NUM.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
 		
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
@@ -2037,12 +2039,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(foundSourceSctIdDisplayField);
 		Assert.assertTrue(foundSourceCodeDisplayField);
 		Assert.assertTrue(foundSourceRxcuiDisplayField);
-		//Assert.assertTrue(foundSourceLoincNumDisplayField);
+		Assert.assertTrue(foundSourceLoincNumDisplayField);
 		Assert.assertTrue(foundTargetVuidDisplayField);
 		Assert.assertTrue(foundTargetSctIdDisplayField);
 		Assert.assertTrue(foundTargetCodeDisplayField);
 		Assert.assertTrue(foundTargetRxcuiDisplayField);
-		//Assert.assertTrue(foundTargetLoincNumDisplayField);
+		Assert.assertTrue(foundTargetLoincNumDisplayField);
 
 		// test getMappingItems()
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)

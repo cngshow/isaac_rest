@@ -242,7 +242,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 						|| fieldFromMapSet.name.equals(MetaData.SCTID.getPrimordialUuid().toString())
 						|| fieldFromMapSet.name.equals(MetaData.CODE.getPrimordialUuid().toString())
 						) {
-					// TODO test LOINC_NUM
 					Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, Frills.getConceptForUnknownIdentifier(fieldFromMapSet.name).get().getNid(), RequestInfo.get().getStampCoordinate());
 					value = valueOptional.isPresent() ? valueOptional.get() : null;
 				}
