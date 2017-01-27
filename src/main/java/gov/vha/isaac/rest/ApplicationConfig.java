@@ -384,7 +384,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		//We need to validate <groupId>, <artifactId>, <version> and <resultArtifactClassifier> keeping in mind that classifer
 		//is optional
 
-		log.info("Checking specified parameters against existing db in folder: " + targetDBLocation.getAbsolutePath() + "...");
+		log.info("Checking specified parameters against existing db in folder: " + targetDBLocation.getAbsolutePath() + " - expecting to find content for " 
+				+ "group {}, artifact {}, version {} and classifier {}", groupId, artifactId, version, classifier );
 
 		status_.set("Validating existing DB directory");
 
@@ -399,12 +400,17 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			if (file.isDirectory() && file.getName().endsWith(".data")) {
 				pomFile = new File(stringForFortify(file.getAbsolutePath() + File.separatorChar + "META-INF" + File.separatorChar + "maven" + File.separatorChar + groupId + File.separatorChar + artifactId  + File.separatorChar + "pom.xml"));
 				if (pomFile.exists() && pomFile.isFile()) {
+					log.info("Found the expected existing pom file at: {}" + pomFile.getAbsoluteFile());
 					break;
+				}
+				else
+				{
+					pomFile = null;
 				}
 			}
 		}
 		if (pomFile == null || ! pomFile.isFile()) {
-			log.warn("Validation of existing DB failed. Invalid pom file: {}", pomFile != null ? pomFile.getAbsoluteFile() : null);
+			log.warn("Validation of existing DB failed.  " + (pomFile == null ? "The expected pom file was not found." : "The expected pom file location is not a file")); 
 			return false;
 		}
 
