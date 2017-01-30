@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
@@ -57,12 +56,6 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	 */
 	@XmlElement
 	public RestIdentifiedObject fieldNameConceptIdentifiers;
-	
-	/**
-	 * Indicates whether or not the corresponding mapping set display field is a computed value
-	 */
-	@XmlElement
-	public boolean computed = false;
 
 	/**
 	 * Description of this field
@@ -73,38 +66,22 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	@XmlElement
 	public String description;
 
-	/**
-	 * Optional value corresponding to field
-	 */
-	@XmlElement
-	public String value;
-
-
 	RestMappingSetDisplayField()
 	{
 		//for Jaxb
 		super();
 	}
 
-	public RestMappingSetDisplayField(String name, String value) throws RestException {
-		this(name, (IdentifiedObject)null, (RestMapSetItemComponentType)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed(), value);
+	public RestMappingSetDisplayField(String name) throws RestException {
+		this(name, (IdentifiedObject)null, (RestMapSetItemComponentType)null);
 	}
-	public RestMappingSetDisplayField(String name, String value, RestMapSetItemComponentType component) throws RestException {
-		this(name, (IdentifiedObject)null, component, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed(), value);
+	public RestMappingSetDisplayField(String name, RestMapSetItemComponentType component) throws RestException {
+		this(name, (IdentifiedObject)null, component);
 	}
-	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, String value) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, (RestMapSetItemComponentType)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed(), value);
+	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field) throws RestException {
+		this(field.getName(), field.getObject(), null);
 	}
-	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, String value, RestMapSetItemComponentType component) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, component, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed(), value);
-	}
-	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field, String value, RestMapSetItemComponentType component) throws RestException {
-		this(field.getName(), field.getObject(), component, field.isComputed(), value);
-	}
-	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field, String value) throws RestException {
-		this(field.getName(), field.getObject(), null, field.isComputed(), value);
-	}
-	private RestMappingSetDisplayField(String name, IdentifiedObject fieldNameConcept, RestMapSetItemComponentType component, boolean computed, String value) throws RestException
+	private RestMappingSetDisplayField(String name, IdentifiedObject fieldNameConcept, RestMapSetItemComponentType component) throws RestException
 	{
 		//for Jaxb
 		super(name, component); // MapSetDisplayFieldsService performs validation
@@ -122,8 +99,6 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 		} else {
 			this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
 		}
-		this.computed = computed;
-		this.value = value;
 		description = getDescriptionFromName(this.name);
 	}
 
@@ -153,7 +128,6 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	@Override
 	public String toString() {
 		return "RestMappingSetDisplayField [name=" + name + ", componentType=" + componentType + ", description="
-				+ description + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + ", computed="
-				+ computed + ", value=" + value + "]";
+				+ description + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + "]";
 	}
 }

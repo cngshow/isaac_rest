@@ -13,6 +13,12 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+
+* 2017/01/30 - 1.9.12:
+	* Changing map display fields returned within RestMappingItemVersion to be of type RestMappingItemDisplayField
+	* Removing value member from RestMappingSetDisplayField
+	* Removing "calculated" member from RestMappingSetDisplayField
+
 * 2017/01/30 - 1.9.11:
 	* Added isaacDbId to the RestSystemInfo - this tells you the globally unique ID assigned to the database that this instance is deployed on top of.
 

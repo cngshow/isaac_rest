@@ -149,7 +149,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 * Populated and ordered based on respective fields, if any, in corresponding map set.
 	 */
 	@XmlElement
-	public List<RestMappingSetDisplayField> displayFields;
+	public List<RestMappingItemDisplayField> displayFields;
 	
 	protected RestMappingItemVersion()
 	{
@@ -264,7 +264,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		}
 	}
 
-	private static RestMappingSetDisplayField constructDisplayField(int sourceConceptNid, int targetConceptNid, String fieldName, MapSetItemComponent componentType) {
+	private static RestMappingItemDisplayField constructDisplayField(int sourceConceptNid, int targetConceptNid, String fieldName, MapSetItemComponent componentType) {
 		Integer componentNid = null;
 		String value = null;
 		switch(componentType) {
@@ -308,7 +308,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		}
 		
 		try {
-			return new RestMappingSetDisplayField(fieldName, value, new RestMapSetItemComponentType(componentType));
+			return new RestMappingItemDisplayField(fieldName, value, new RestMapSetItemComponentType(componentType));
 		} catch (RestException e) {
 			log.error(e);
 			throw new RuntimeException(e);

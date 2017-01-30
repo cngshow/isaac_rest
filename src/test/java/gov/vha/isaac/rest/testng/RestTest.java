@@ -138,6 +138,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
@@ -2012,7 +2013,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		boolean foundTargetLoincNumDisplayField = false;
 		boolean foundTargetFullySpecifiedNameDisplayField = false;
 		boolean foundTargetPreferredTermDisplayField = false;
-		for (RestMappingSetDisplayField displayField : retrievedMappingItemVersion.displayFields) {
+		for (RestMappingItemDisplayField displayField : retrievedMappingItemVersion.displayFields) {
 			// Source fields
 			if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
 					&& displayField.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {

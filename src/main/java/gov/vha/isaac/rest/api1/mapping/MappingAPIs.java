@@ -243,7 +243,7 @@ public class MappingAPIs
 		Collection<MapSetDisplayFieldsService.Field> fields = service.getAllFields();
 		List<RestMappingSetDisplayField> restFields = new ArrayList<>();
 		for (MapSetDisplayFieldsService.Field field : fields) {			
-			restFields.add(new RestMappingSetDisplayField(field.getName(), (String)null));
+			restFields.add(new RestMappingSetDisplayField(field.getName()));
 		}
 		
 		return restFields.toArray(new RestMappingSetDisplayField[restFields.size()]);
@@ -275,7 +275,7 @@ public class MappingAPIs
 			throw new RestException(RequestParameters.field, field, "Invalid or unsupported map set field name. Should be one of " + service.getAllFieldNames());
 		}
 		
-		return new RestMappingSetDisplayField(existingField, (String)null);
+		return new RestMappingSetDisplayField(existingField);
 	}
 	
 	/**
@@ -464,7 +464,7 @@ public class MappingAPIs
 					String name = fieldComponents[0];
 					RestMapSetItemComponentType componentType = new RestMapSetItemComponentType(MapSetItemComponent.valueOf(fieldComponents[1]));
 					try {
-						fields.add(new RestMappingSetDisplayField(name, null, componentType));
+						fields.add(new RestMappingSetDisplayField(name, componentType));
 					} catch (RestException e) {
 						throw new RuntimeException("Failed constructing RestMappingSetField from stored data", e);
 					}
