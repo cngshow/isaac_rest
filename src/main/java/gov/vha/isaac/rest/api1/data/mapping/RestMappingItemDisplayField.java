@@ -24,7 +24,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
@@ -55,25 +54,7 @@ public class RestMappingItemDisplayField extends RestMappingSetDisplayField
 		super();
 	}
 
-	public RestMappingItemDisplayField(String name, String value) throws RestException {
-		this(name, (IdentifiedObject)null, (RestMapSetItemComponentType)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed(), value);
-	}
-	public RestMappingItemDisplayField(String name, String value, RestMapSetItemComponentType component) throws RestException {
-		this(name, (IdentifiedObject)null, component, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(name).isComputed(), value);
-	}
-	public RestMappingItemDisplayField(IdentifiedObject fieldNameConcept, String value) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, (RestMapSetItemComponentType)null, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed(), value);
-	}
-	public RestMappingItemDisplayField(IdentifiedObject fieldNameConcept, String value, RestMapSetItemComponentType component) throws RestException {
-		this(fieldNameConcept.getPrimordialUuid().toString(), fieldNameConcept, component, LookupService.getService(MapSetDisplayFieldsService.class).getFieldByIdOrNameIfNotId(fieldNameConcept.getPrimordialUuid().toString()).isComputed(), value);
-	}
-	public RestMappingItemDisplayField(MapSetDisplayFieldsService.Field field, String value, RestMapSetItemComponentType component) throws RestException {
-		this(field.getName(), field.getObject(), component, field.isComputed(), value);
-	}
-	public RestMappingItemDisplayField(MapSetDisplayFieldsService.Field field, String value) throws RestException {
-		this(field.getName(), field.getObject(), null, field.isComputed(), value);
-	}
-	private RestMappingItemDisplayField(String name, IdentifiedObject fieldNameConcept, RestMapSetItemComponentType component, boolean computed, String value) throws RestException
+	public RestMappingItemDisplayField(String name, RestMapSetItemComponentType component, String value) throws RestException
 	{
 		//for Jaxb
 		super(name, component); 

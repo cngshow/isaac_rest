@@ -308,7 +308,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		}
 		
 		try {
-			return new RestMappingItemDisplayField(fieldName, value, new RestMapSetItemComponentType(componentType));
+			return new RestMappingItemDisplayField(fieldName, new RestMapSetItemComponentType(componentType), value);
 		} catch (RestException e) {
 			log.error(e);
 			throw new RuntimeException(e);

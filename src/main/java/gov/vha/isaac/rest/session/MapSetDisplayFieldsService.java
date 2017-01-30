@@ -79,15 +79,14 @@ public class MapSetDisplayFieldsService {
 		}
 		
 		private final String name;
-		private final boolean computed;
 		private final IdentifiedObject object;
 
-		private Field(IdentifiedObject object, boolean computed) {
-			this(object.getPrimordialUuid().toString(), computed, object);
+		private Field(IdentifiedObject object) {
+			this(object.getPrimordialUuid().toString(), object);
 		}
 		
-		private Field(String name, boolean computed) {
-			this(name, computed, null);
+		private Field(String name) {
+			this(name, null);
 		}
 
 		/**
@@ -95,10 +94,9 @@ public class MapSetDisplayFieldsService {
 		 * @param computed
 		 * @param object
 		 */
-		private Field(String name, boolean computed, IdentifiedObject object) {
+		private Field(String name, IdentifiedObject object) {
 			super();
 			this.name = name;
-			this.computed = computed;
 			this.object = object;
 		}
 
@@ -107,13 +105,6 @@ public class MapSetDisplayFieldsService {
 		 */
 		public String getName() {
 			return name;
-		}
-
-		/**
-		 * @return the computed
-		 */
-		public boolean isComputed() {
-			return computed;
 		}
 
 		/**
@@ -128,7 +119,7 @@ public class MapSetDisplayFieldsService {
 		 */
 		@Override
 		public String toString() {
-			return "Field [name=" + name + ", computed=" + computed + ", object=" + object + "]";
+			return "Field [name=" + name + ", object=" + object + "]";
 		}
 	}
 	
@@ -148,19 +139,19 @@ public class MapSetDisplayFieldsService {
 				 */
 
 				// Non-concept fields
-				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name(), true);
-				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name(), true);
+				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name());
+				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name());
 
 				for (ConceptChronology<?> cc : getAnnotationConcepts(StampCoordinates.getDevelopmentLatest())) {
-					add(cc, true);
+					add(cc);
 				}
 
 				// TODO Find a way to find and add these assemblages automatically
-				add(MetaData.SCTID, true);
-				add(MetaData.LOINC_NUM, true);
-				add(MetaData.RXCUI, true);
-				add(MetaData.VUID, true);
-				add(MetaData.CODE, true);
+				add(MetaData.SCTID);
+				add(MetaData.LOINC_NUM);
+				add(MetaData.RXCUI);
+				add(MetaData.VUID);
+				add(MetaData.CODE);
 			}
 
 			return fields_;
@@ -202,12 +193,12 @@ public class MapSetDisplayFieldsService {
 		}
 	}
 
-	synchronized private void add(IdentifiedObject object, boolean computed) {
-		Field field = new Field(object, computed);
+	synchronized private void add(IdentifiedObject object) {
+		Field field = new Field(object);
 		fields_.put(field.name, field);
 	}
-	synchronized private void add(String name, boolean computed) {
-		Field field = new Field(name, computed, null);
+	synchronized private void add(String name) {
+		Field field = new Field(name, null);
 		fields_.put(field.name, field);
 	}
 
