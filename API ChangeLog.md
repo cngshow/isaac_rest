@@ -20,7 +20,9 @@ Bug fixes should not be documented here, rather, than should be documented in th
 	* Removing "calculated" member from RestMappingSetDisplayField
 
 * 2017/01/30 - 1.9.11:
-	* Added isaacDbId to the RestSystemInfo - this tells you the globally unique ID assigned to the database that this instance is deployed on top of.
+    * Added isaacDbId to the RestSystemInfo - this tells you the globally unique ID assigned to the database that this instance is deployed on top of.
+    * Added warId to the RestSystemInfo - this tells you the UUID assigned by PRISME during deployment (this is read from prisme.properties: war_uuid)
+        This only populated if deployed via PRISME.
 
 * 2017/01/24 - 1.9.10:
     * Changing identifier for fully specified name description map item display field to a string ("FULLY_SPECIFIED_NAME") literal rather than a UUID ("00791270-77c9-32b6-b34f-d932569bd2bf")
