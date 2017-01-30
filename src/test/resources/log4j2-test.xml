@@ -6,9 +6,15 @@
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</Console>
 		<!-- the appenders for root -->
-		<File name="appender-root-all" fileName="target/logs/isaac-rest-debug.log" append="false">
+		<RollingFile name="appender-root-all" fileName="target/logs/isaac-rest-debug.log" 
+			filePattern="target/logs/isaac-rest-debug-%i.log">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
-		</File>
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="500 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="20"/>
+		</RollingFile>
 		
 		<!-- the appender for PRISME -->
 		<PrismeLogAppender name="appender-prisme-all" ignoreExceptions="true">
