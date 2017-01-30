@@ -5,6 +5,9 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/01/?? - ???
+    * Fixed the root cause of 439352, which was (sometimes) occurring when isaac-rest was deployed - especially if it needed to download a new database.
+
 * 2017/01/26 - 1.37
     * Many RestMapSet changes
     * Validation and tests added for mapping code
