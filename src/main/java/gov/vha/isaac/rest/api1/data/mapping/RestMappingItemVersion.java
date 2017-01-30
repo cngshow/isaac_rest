@@ -19,14 +19,13 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,29 +33,16 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
-import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
-import gov.vha.isaac.ochre.api.component.sememe.SememeService;
-import gov.vha.isaac.ochre.api.component.sememe.SememeSnapshotService;
-import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
-import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
-import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.model.sememe.version.ComponentNidSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -67,6 +53,7 @@ import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
+import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.mapping.MappingAPIs;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
@@ -222,55 +209,11 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 
 		List<RestMappingSetDisplayField> displayFieldsFromMapSet = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(mapSetConcept.nid, RequestInfo.get().getStampCoordinate());
 		if (displayFieldsFromMapSet != null && displayFieldsFromMapSet.size() > 0) {
-			String value = null;
 			for (RestMappingSetDisplayField fieldFromMapSet : displayFieldsFromMapSet) {
-				Integer componentNid = null;
-				MapSetItemComponent componentType = MapSetItemComponent.valueOf(fieldFromMapSet.componentType.enumName);
-				switch(componentType) {
-				case SOURCE:
-					componentNid = sourceConcept.nid;
-					break;
-				case TARGET:
-					componentNid = targetConcept.nid;
-					break;
-				default:
-					String msg = "Invalid/unsupported MapSetItemComponent value \"" + componentType + "\".  Should be one of " + MapSetItemComponent.values();
-					log.error(msg);
-					throw new RuntimeException(msg);
+				if (displayFields == null) {
+					displayFields = new ArrayList<>();
 				}
-				if (fieldFromMapSet.name.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())
-						|| fieldFromMapSet.name.equals(MetaData.RXCUI.getPrimordialUuid().toString())
-						|| fieldFromMapSet.name.equals(MetaData.VUID.getPrimordialUuid().toString())
-						|| fieldFromMapSet.name.equals(MetaData.SCTID.getPrimordialUuid().toString())
-						|| fieldFromMapSet.name.equals(MetaData.CODE.getPrimordialUuid().toString())
-						) {
-					Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, Frills.getConceptForUnknownIdentifier(fieldFromMapSet.name).get().getNid(), RequestInfo.get().getStampCoordinate());
-					// TODO handle missing values and contradictions
-					value = valueOptional.isPresent() ? valueOptional.get() : null;
-				}
-				else if (fieldFromMapSet.name.equals(MetaData.FULLY_SPECIFIED_NAME.getPrimordialUuid().toString())) { // TODO test FULLY_SPECIFIED_NAME
-					ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
-					Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
-					// TODO handle missing values and contradictions
-					value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
-				} else if (fieldFromMapSet.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) { // TODO test PREFERRED_TERM
-					ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
-					Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
-					 // TODO handle missing values and contradictions
-					value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
-				} else {
-					throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldFromMapSet.name + "\"");
-				}
-				
-				try {
-					if (displayFields == null) {
-						displayFields = new ArrayList<>();
-					}
-					displayFields.add(new RestMappingSetDisplayField(fieldFromMapSet.name, value, fieldFromMapSet.componentType));
-				} catch (RestException e) {
-					log.error(e);
-					throw new RuntimeException(e);
-				}
+				displayFields.add(constructDisplayField(sourceConcept.nid, targetConcept.nid, fieldFromMapSet.name, MapSetItemComponent.valueOf(fieldFromMapSet.componentType.enumName)));
 			}
 		}
 
@@ -318,6 +261,57 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		if (expandables.size() == 0)
 		{
 			expandables = null;
+		}
+	}
+
+	private static RestMappingSetDisplayField constructDisplayField(int sourceConceptNid, int targetConceptNid, String fieldName, MapSetItemComponent componentType) {
+		Integer componentNid = null;
+		String value = null;
+		switch(componentType) {
+		case SOURCE:
+			componentNid = sourceConceptNid;
+			break;
+		case TARGET:
+			componentNid = targetConceptNid;
+			break;
+		default:
+			String msg = "Invalid/unsupported MapSetItemComponent value \"" + componentType + "\".  Should be one of " + MapSetItemComponent.values();
+			log.error(msg);
+			throw new RuntimeException(msg);
+		}
+		/*
+		 * Fields must correspond to entries returned by MapSetDisplayFieldsService.getAllFields()
+		 */
+		UUID annotationConceptUuid = null;
+		try {
+			annotationConceptUuid = UUID.fromString(fieldName);
+		} catch (Exception e) {
+			// ignore
+		}
+		if (annotationConceptUuid != null) {
+			Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, Get.conceptService().getConcept(annotationConceptUuid).getNid(), RequestInfo.get().getStampCoordinate());
+			// TODO handle missing values and contradictions
+			value = valueOptional.isPresent() ? valueOptional.get() : null;
+		}
+		else if (fieldName.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
+			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
+			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
+			// TODO handle missing values and contradictions
+			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
+		} else if (fieldName.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
+			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
+			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
+			 // TODO handle missing values and contradictions
+			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
+		} else {
+			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldName + "\"");
+		}
+		
+		try {
+			return new RestMappingSetDisplayField(fieldName, value, new RestMapSetItemComponentType(componentType));
+		} catch (RestException e) {
+			log.error(e);
+			throw new RuntimeException(e);
 		}
 	}
 
