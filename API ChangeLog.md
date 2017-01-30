@@ -13,6 +13,10 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/01/24 - 1.9.10:
+    * Changing FULLY_SPECIFIED_NAME to be a non-concept RestMappingSetDisplayField
+    * Adding dynamic addition of single DYNAMIC_SEMEME_EXTENSION_DEFINITION annotation sememes as map item display fields
+
 * 2017/01/24 - 1.9.9:
     * Adding description to RestMappingSetDisplayField
     * Adding MappingAPIs.getAvailableMappingSetDisplayFieldComponentTypes() (fieldComponentTypes/)
