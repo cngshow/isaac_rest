@@ -13,6 +13,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/01/24 - 1.9.10:
+	* Added isaacDbId to the RestSystemInfo - this tells you the globally unique ID assigned to the database that this instance is deployed on top of.
+
 * 2017/01/24 - 1.9.9:
     * Adding description to RestMappingSetDisplayField
     * Adding MappingAPIs.getAvailableMappingSetDisplayFieldComponentTypes() (fieldComponentTypes/)

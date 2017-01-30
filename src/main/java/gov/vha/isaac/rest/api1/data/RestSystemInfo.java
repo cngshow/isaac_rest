@@ -45,6 +45,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.util.metainf.MavenArtifactInfo;
 import gov.vha.isaac.ochre.api.util.metainf.MetaInfReader;
 import gov.vha.isaac.rest.ApplicationConfig;
@@ -80,7 +81,7 @@ public class RestSystemInfo
 	 * data structure. 
 	 */
 	@XmlElement
-	String[] supportedAPIVersions = new String[] {"1.9.9"};
+	String[] supportedAPIVersions = new String[] {"1.9.10"};
 	
 	/**
 	 * REST API Implementation Version - aka the version number of the software running here.
@@ -94,6 +95,13 @@ public class RestSystemInfo
 	@XmlElement
 	RestDependencyInfo isaacDbDependency;
 
+	/**
+	 * The globally unique UUID assigned to the database (and changesets) that this instance of isaac-rest is running
+	 * on top of 
+	 */
+	@XmlElement
+	String isaacDbId;
+	
 	/**
 	 * Source Code Management URL that contains the source code for the software running here.
 	 */
@@ -132,6 +140,7 @@ public class RestSystemInfo
 			loadIsaacMetdata();
 			MavenArtifactInfo mai = MetaInfReader.readDbMetadata();
 			isaacDbDependency = new RestDependencyInfo(mai);
+			isaacDbId = Get.conceptService().getDataStoreId().toString();
 			mai.dbLicenses.forEach(mli -> dbLicenses.add(new RestLicenseInfo(mli)));
 			mai.dbDependencies.forEach(dd -> dbDependencies.add(new RestDependencyInfo(dd)));
 		}
