@@ -14,16 +14,16 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 * 2017/01/24 - 1.9.10:
-    * Changing FULLY_SPECIFIED_NAME to be a non-concept RestMappingSetDisplayField
-    * Adding dynamic addition of single DYNAMIC_SEMEME_EXTENSION_DEFINITION annotation sememes as map item display fields
+    * Changing identifier for fully specified name description map item display field to a string ("FULLY_SPECIFIED_NAME") literal rather than a UUID ("00791270-77c9-32b6-b34f-d932569bd2bf")
+    * Dynamically adding availability of some potential map item display fields
 
 * 2017/01/24 - 1.9.9:
-    * Adding description to RestMappingSetDisplayField
-    * Adding MappingAPIs.getAvailableMappingSetDisplayFieldComponentTypes() (fieldComponentTypes/)
+    * Adding user friendly description to map item display fields
+    * Adding API MappingAPIs.getAvailableMappingSetDisplayFieldComponentTypes() (fieldComponentTypes/) to return available map item display field component types (i.e. "SOURCE", "TARGET")
 
 * 2017/01/24 - 1.9.8:
     * Modifying Mapping item display fields APIs to populate item fields
-    * Changing some map item display field related DTO member names
+    * Changing some map item display field related data transfer object member names
     * Changing to allow specification of map item display field component by enum
 
 * 2017/01/23 - 1.9.7:
