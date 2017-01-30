@@ -51,6 +51,7 @@ import gov.vha.isaac.ochre.api.util.metainf.MetaInfReader;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestDependencyInfo;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestLicenseInfo;
+import gov.vha.isaac.rest.session.PrismeServiceUtils;
 
 /**
  * {@link RestSystemInfo}
@@ -103,6 +104,13 @@ public class RestSystemInfo
 	String isaacDbId;
 	
 	/**
+	 * The globally unique UUID assigned to the deployment of isaac-rest.  This is assigned by PRISME at the time that PRISME 
+	 * is deployed (and will only be available if PRISME deployed the service).  This is read from prisme.properties: war_uuid
+	 */
+	@XmlElement
+	String warId;
+	
+	/**
 	 * Source Code Management URL that contains the source code for the software running here.
 	 */
 	@XmlElement
@@ -141,6 +149,7 @@ public class RestSystemInfo
 			MavenArtifactInfo mai = MetaInfReader.readDbMetadata();
 			isaacDbDependency = new RestDependencyInfo(mai);
 			isaacDbId = Get.conceptService().getDataStoreId().toString();
+			warId = PrismeServiceUtils.getPrismeProperties().getProperty("war_uuid", "");
 			mai.dbLicenses.forEach(mli -> dbLicenses.add(new RestLicenseInfo(mli)));
 			mai.dbDependencies.forEach(dd -> dbDependencies.add(new RestDependencyInfo(dd)));
 		}
