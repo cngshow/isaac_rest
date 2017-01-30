@@ -18,13 +18,22 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
@@ -88,13 +97,23 @@ public class RestMappingSetDisplayFieldBase
 		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
 		MapSetDisplayFieldsService.Field field = service.getFieldByIdOrNameIfNotId(name);
 		if (field == null) {
-			throw new RestException("RestMappingSetFieldBase.name", name, "Unsupported MapSet field. Should be one of " + service.getAllFieldNames());
+			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(name);
+			throw new RestException("RestMappingSetFieldBase.name", name, "Unsupported MapSet field \"" + name + "\"" + (cc.isPresent() ? " (" + Get.conceptDescriptionText(cc.get().getNid()) + ") " : "") + "\". Should be one of " + getFieldNamesWithDescriptions(service.getAllFields()));
 		} else {
 			this.name = field.getName();
 		}
 		this.componentType = componentType;
 	}
 
+	private static Map<Object, String> getFieldNamesWithDescriptions(Collection<MapSetDisplayFieldsService.Field> fields) {
+		Map<Object, String> descriptionsByName = new HashMap<>();
+		
+		for (MapSetDisplayFieldsService.Field field : fields) {
+			descriptionsByName.put(field.getName(), field.getObject() != null ? Get.conceptDescriptionText(field.getObject().getNid()) : MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(field.getName()).getDescription());
+		}
+		
+		return descriptionsByName;
+	}
 	/**
 	 * This constructor should only be called when initializing MapSetDisplayFieldsService
 	 * 

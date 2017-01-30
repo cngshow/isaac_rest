@@ -35,6 +35,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
+import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
  * 
@@ -106,7 +107,7 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	private RestMappingSetDisplayField(String name, IdentifiedObject fieldNameConcept, RestMapSetItemComponentType component, boolean computed, String value) throws RestException
 	{
 		//for Jaxb
-		super(name, component);
+		super(name, component); // MapSetDisplayFieldsService performs validation
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.name);
 		if (cc.isPresent()) {
 			if (fieldNameConcept != null) {
@@ -129,9 +130,20 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	private static String getDescriptionFromName(String name) {
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(name);
 		if (cc.isPresent()) {
-			return Frills.getDescription(cc.get().getNid()).get();
+			Optional<String> desc = Frills.getDescription(cc.get().getNid(), RequestInfo.get().getTaxonomyCoordinate());
+			if (desc.isPresent()) {
+				return desc.get();
+			} else {
+				throw new RuntimeException("Frills.getDescription() failed to find description for concept id=" + name + " (UUID=" + cc.get().getPrimordialUuid() + ")");
+			}
 		} else {
-			return MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(name).getDescription();
+			MapSetDisplayFieldsService.Field.NonConceptFieldName nonConceptFieldName = null;
+			try {
+				nonConceptFieldName = MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(name);
+				return nonConceptFieldName.getDescription();
+			} catch (Exception e) {
+				throw new RuntimeException("getDescriptionFromName() Failed to find map item display field description for name=\"" + name + "\"");
+			}
 		}
 	}
 
@@ -140,7 +152,8 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayField [name=" + name + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + ", computed="
-				+ computed + ", component=" + componentType + "]";
+		return "RestMappingSetDisplayField [name=" + name + ", componentType=" + componentType + ", description="
+				+ description + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + ", computed="
+				+ computed + ", value=" + value + "]";
 	}
 }
