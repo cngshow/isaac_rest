@@ -13,6 +13,12 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/01/31 - 1.9.13:
+	* Adding support for QUALIFIER and ITEM_EXTENDED RestMapSetItemComponentType type
+	* Adding support for ITEM_EXTENDED RestMapSetItemComponentType type, in which "id" refers to extended field column order
+	* Adding support for UUID map item display field
+	* Changing map set and item display fields member from "name" to "id"
+	* Adding new RestMappingItemDisplayFieldWithValue to allow returning some fields with value and others (of ITEM_EXTENDED RestMapSetItemComponentType) without values
 
 * 2017/01/30 - 1.9.12:
 	* Changing map display fields returned within RestMappingItemVersion to be of type RestMappingItemDisplayField

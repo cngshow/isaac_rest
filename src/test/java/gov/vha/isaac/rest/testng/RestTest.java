@@ -139,6 +139,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemDisplayField;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemDisplayFieldWithValue;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
@@ -1752,7 +1753,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(mappingSetDisplayFieldsFromMapSetDisplayFieldsService.length > 0);
 		List<RestMappingSetDisplayFieldCreate> mapSetDisplayFieldCreateDTOs = new ArrayList<>();
 		for (RestMappingSetDisplayField displayField : mappingSetDisplayFieldsFromMapSetDisplayFieldsService) {
-			mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(displayField.name, new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+			mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(displayField.id, MapSetItemComponent.SOURCE));
 		}
 		
 		RestMappingSetVersionBaseCreate newMappingSetData = new RestMappingSetVersionBaseCreate(
@@ -1805,11 +1806,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(retrievedMappingSetVersion.displayFields.size() == mappingSetDisplayFieldsFromMapSetDisplayFieldsService.length);
 		Set<String> displayFieldNamesFromMapSetVersion = new HashSet<>();
 		for (RestMappingSetDisplayField field : retrievedMappingSetVersion.displayFields) {
-			displayFieldNamesFromMapSetVersion.add(field.name);
+			displayFieldNamesFromMapSetVersion.add(field.id);
 		}
 		Set<String> displayFieldNamesFromMapSetDisplayFieldsService = new HashSet<>();
 		for (RestMappingSetDisplayField field : mappingSetDisplayFieldsFromMapSetDisplayFieldsService) {
-			displayFieldNamesFromMapSetDisplayFieldsService.add(field.name);
+			displayFieldNamesFromMapSetDisplayFieldsService.add(field.id);
 		}
 		Assert.assertEquals(displayFieldNamesFromMapSetVersion, displayFieldNamesFromMapSetDisplayFieldsService);
 		
@@ -1819,21 +1820,21 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String updatedMappingSetDescription = "An updated mapping set description (" + randomUuid + ")";
 		String updatedMappingSetPurpose = "An updated mapping set purpose (" + randomUuid + ")";
 		mapSetDisplayFieldCreateDTOs.clear();
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.VUID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.CODE.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.RXCUI.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.LOINC_NUM.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name(), new RestMapSetItemComponentType(MapSetItemComponent.SOURCE)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.VUID.getPrimordialUuid().toString(), MapSetItemComponent.SOURCE));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), MapSetItemComponent.SOURCE));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.CODE.getPrimordialUuid().toString(), MapSetItemComponent.SOURCE));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.RXCUI.getPrimordialUuid().toString(), MapSetItemComponent.SOURCE));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.LOINC_NUM.getPrimordialUuid().toString(), MapSetItemComponent.SOURCE));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name(), MapSetItemComponent.SOURCE));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name(), MapSetItemComponent.SOURCE));
 		
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.VUID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.CODE.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.RXCUI.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.LOINC_NUM.getPrimordialUuid().toString(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
-		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name(), new RestMapSetItemComponentType(MapSetItemComponent.TARGET)));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.VUID.getPrimordialUuid().toString(), MapSetItemComponent.TARGET));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.SCTID.getPrimordialUuid().toString(), MapSetItemComponent.TARGET));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.CODE.getPrimordialUuid().toString(), MapSetItemComponent.TARGET));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.RXCUI.getPrimordialUuid().toString(), MapSetItemComponent.TARGET));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.LOINC_NUM.getPrimordialUuid().toString(), MapSetItemComponent.TARGET));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name(), MapSetItemComponent.TARGET));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name(), MapSetItemComponent.TARGET));
 		RestMappingSetVersionBaseUpdate updatedMappingSetData = new RestMappingSetVersionBaseUpdate(
 				updatedMappingSetName,
 				updatedMappingSetInverseName,
@@ -1879,11 +1880,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(updatedMappingSetObject.displayFields.size() == mapSetDisplayFieldCreateDTOs.size());
 		displayFieldNamesFromMapSetVersion = new HashSet<>();
 		for (RestMappingSetDisplayField field : updatedMappingSetObject.displayFields) {
-			displayFieldNamesFromMapSetVersion.add(field.name);
+			displayFieldNamesFromMapSetVersion.add(field.id);
 		}
 		Set<String> displayFieldNamesFromUpdateDTO = new HashSet<>();
 		for (RestMappingSetDisplayFieldBase field : mapSetDisplayFieldCreateDTOs) {
-			displayFieldNamesFromUpdateDTO.add(field.name);
+			displayFieldNamesFromUpdateDTO.add(field.id);
 		}
 		Assert.assertEquals(displayFieldNamesFromMapSetVersion, displayFieldNamesFromUpdateDTO);
 		
@@ -1991,9 +1992,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Retrieve mapping item and validate fields
 		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+				.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
-		RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		//RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
+		RestMappingItemVersion retrievedMappingItemVersion = new ObjectMapper().readValue(retrievedMappingItemVersionResult, RestMappingItemVersion.class);
 		Assert.assertTrue(sourceConceptSeq == retrievedMappingItemVersion.sourceConcept.sequence);
 		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept.sequence);
 		Assert.assertTrue(qualifierConceptUuid.equals(retrievedMappingItemVersion.qualifierConcept.getFirst().toString()));
@@ -2016,76 +2018,76 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (RestMappingItemDisplayField displayField : retrievedMappingItemVersion.displayFields) {
 			// Source fields
 			if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
-					&& displayField.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_VUID);
+					&& displayField.id.equals(MetaData.VUID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_VUID);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.VUID.getNid());
 				foundSourceVuidDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
-					&& displayField.name.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_SCTID);
+					&& displayField.id.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_SCTID);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
 				foundSourceSctIdDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
-					&& displayField.name.equals(MetaData.CODE.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_CODE);
+					&& displayField.id.equals(MetaData.CODE.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_CODE);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.CODE.getNid());
 				foundSourceCodeDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
-					&& displayField.name.equals(MetaData.RXCUI.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_RXCUI);
+					&& displayField.id.equals(MetaData.RXCUI.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_RXCUI);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.RXCUI.getNid());
 				foundSourceRxcuiDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
-					&& displayField.name.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_SOURCE_CONCEPT_FAKE_LOINC_NUM);
+					&& displayField.id.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_LOINC_NUM);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.LOINC_NUM.getNid());
 				foundSourceLoincNumDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
-					&& displayField.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
-				Assert.assertTrue(StringUtils.isNotBlank(displayField.value));
-				Assert.assertEquals(displayField.value, sourceConceptFsn);
+					&& displayField.id.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
+				Assert.assertTrue(StringUtils.isNotBlank(((RestMappingItemDisplayFieldWithValue)displayField).value));
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, sourceConceptFsn);
 				foundSourceFullySpecifiedNameDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
-					&& displayField.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
-				Assert.assertTrue(StringUtils.isNotBlank(displayField.value));
-				Assert.assertEquals(displayField.value, sourceConceptPreferredTerm);
+					&& displayField.id.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
+				Assert.assertTrue(StringUtils.isNotBlank(((RestMappingItemDisplayFieldWithValue)displayField).value));
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, sourceConceptPreferredTerm);
 				foundSourcePreferredTermDisplayField = true;
 			}
 			// Target fields
 			else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
-					&& displayField.name.equals(MetaData.VUID.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_VUID);
+					&& displayField.id.equals(MetaData.VUID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_TARGET_CONCEPT_FAKE_VUID);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.VUID.getNid());
 				foundTargetVuidDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
-					&& displayField.name.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_SCTID);
+					&& displayField.id.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_TARGET_CONCEPT_FAKE_SCTID);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
 				foundTargetSctIdDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
-					&& displayField.name.equals(MetaData.CODE.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_CODE);
+					&& displayField.id.equals(MetaData.CODE.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_TARGET_CONCEPT_FAKE_CODE);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.CODE.getNid());
 				foundTargetCodeDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
-					&& displayField.name.equals(MetaData.RXCUI.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_RXCUI);
+					&& displayField.id.equals(MetaData.RXCUI.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_TARGET_CONCEPT_FAKE_RXCUI);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.RXCUI.getNid());
 				foundTargetRxcuiDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
-					&& displayField.name.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())) {
-				Assert.assertEquals(displayField.value, ITEM_TARGET_CONCEPT_FAKE_LOINC_NUM);
+					&& displayField.id.equals(MetaData.LOINC_NUM.getPrimordialUuid().toString())) {
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, ITEM_TARGET_CONCEPT_FAKE_LOINC_NUM);
 				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.LOINC_NUM.getNid());
 				foundTargetLoincNumDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
-					&& displayField.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
-				Assert.assertTrue(StringUtils.isNotBlank(displayField.value));
-				Assert.assertEquals(displayField.value, targetConceptFsn);
+					&& displayField.id.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
+				Assert.assertTrue(StringUtils.isNotBlank(((RestMappingItemDisplayFieldWithValue)displayField).value));
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, targetConceptFsn);
 				foundTargetFullySpecifiedNameDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
-					&& displayField.name.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
-				Assert.assertTrue(StringUtils.isNotBlank(displayField.value));
-				Assert.assertEquals(displayField.value, targetConceptPreferredTerm);
+					&& displayField.id.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
+				Assert.assertTrue(StringUtils.isNotBlank(((RestMappingItemDisplayFieldWithValue)displayField).value));
+				Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, targetConceptPreferredTerm);
 				foundTargetPreferredTermDisplayField = true;
 			}
 		}

@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 
 /**
@@ -51,7 +51,7 @@ public class RestMappingSetDisplayFieldCreate extends RestMappingSetDisplayField
 	 * @param componentType required to be non null
 	 * @throws RestException
 	 */
-	public RestMappingSetDisplayFieldCreate(String name, RestMapSetItemComponentType componentType) throws RestException
+	public RestMappingSetDisplayFieldCreate(String name, MapSetItemComponent componentType) throws RestException
 	{
 		super(name, validateAndReturnRestMapSetItemComponentType(name, componentType));
 	}
@@ -60,8 +60,8 @@ public class RestMappingSetDisplayFieldCreate extends RestMappingSetDisplayField
 	 * @param componentType required to be non null
 	 * @throws RestException
 	 */
-	public RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field field, RestMapSetItemComponentType componentType) throws RestException {
-		this(field.getName(), componentType);
+	public RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field field, MapSetItemComponent componentType) throws RestException {
+		this(field.getId(), componentType);
 	}
 
 	/* (non-Javadoc)
@@ -69,14 +69,14 @@ public class RestMappingSetDisplayFieldCreate extends RestMappingSetDisplayField
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayFieldCreate [name=" + name + ", componentType=" + componentType + "]";
+		return "RestMappingSetDisplayFieldCreate [name=" + id + ", componentType=" + componentType + "]";
 	}
 
-	private static RestMapSetItemComponentType validateAndReturnRestMapSetItemComponentType(String name, RestMapSetItemComponentType componentType) throws RestException {
+	private static MapSetItemComponent validateAndReturnRestMapSetItemComponentType(String name, MapSetItemComponent componentType) throws RestException {
 		if (componentType != null) {
 			return componentType;
 		} else {
-			throw new RestException("Cannon construct RestMappingSetDisplayFieldCreate " + name + " with null RestMapSetItemComponentType");
+			throw new RestException("Cannot construct RestMappingSetDisplayFieldCreate " + name + " with null RestMapSetItemComponentType");
 		}
 	}
 }

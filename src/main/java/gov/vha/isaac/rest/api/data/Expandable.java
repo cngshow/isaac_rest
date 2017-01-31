@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api.data;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -35,13 +36,15 @@ public class Expandable
 	 * The name of the item that is expandable (pass this to have this value expanded directly by the call that produced this)
 	 */
 	@XmlElement
-	String name;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String name;
 	
 	/**
 	 * The url to call to get the expanded item separately
 	 */
 	@XmlElement
-	String url;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String url;
 	
 	Expandable() {
 		// For JAXB only

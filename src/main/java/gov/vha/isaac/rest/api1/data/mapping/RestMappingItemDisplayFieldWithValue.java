@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -28,32 +29,34 @@ import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 
 /**
  * 
- * {@link RestMappingItemDisplayField}
+ * {@link RestMappingItemDisplayFieldWithValue}
  * 
  * This class is used to convey available mapping set display fields.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemDisplayField.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemDisplayFieldWithValue.class)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class RestMappingItemDisplayField extends RestMappingSetDisplayField
+public class RestMappingItemDisplayFieldWithValue extends RestMappingItemDisplayField
 {
-	RestMappingItemDisplayField()
+	/**
+	 * Value corresponding to field
+	 */
+	@XmlElement
+	public String value;
+
+	RestMappingItemDisplayFieldWithValue()
 	{
 		//for Jaxb
 		super();
 	}
 
-	public RestMappingItemDisplayField(String name, MapSetItemComponent component) throws RestException
+	public RestMappingItemDisplayFieldWithValue(String name, MapSetItemComponent component, String value) throws RestException
 	{
 		//for Jaxb
-		this(name, component, (String)null);
-	}
-	public RestMappingItemDisplayField(String name, MapSetItemComponent component, String description) throws RestException
-	{
-		//for Jaxb
-		super(name, component, description);
+		super(name, component); 
+		this.value = value;
 	}
 
 	/* (non-Javadoc)
@@ -61,7 +64,7 @@ public class RestMappingItemDisplayField extends RestMappingSetDisplayField
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayField [id=" + id + ", componentType=" + componentType + ", description="
-				+ description + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + "]";
+		return "RestMappingSetDisplayField [name=" + id + ", componentType=" + componentType + ", description="
+				+ description + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + ", value=" + value + "]";
 	}
 }

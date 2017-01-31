@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.Get;
@@ -35,6 +36,7 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 
@@ -52,11 +54,12 @@ import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 public class RestMappingSetDisplayFieldBase
 {
 	/**
-	 * Name that identifies this field within set of known fields
+	 * ID that identifies this field within set of known fields
 	 * Must be non null and be one of values returned by MapSetDisplayFieldsService.getAllFieldNames()
 	 */
 	@XmlElement
-	public String name; // TODO should this be private so that set method and ctor can enforce validation?
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String id; // TODO should this be private so that set method and ctor can enforce validation?
 
 	/**
 	 * Optional specification that field should contain data from specified component.
@@ -64,6 +67,7 @@ public class RestMappingSetDisplayFieldBase
 	 * This field is only optional for internal use, being required by the API.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestMapSetItemComponentType componentType;
 
 	RestMappingSetDisplayFieldBase()
@@ -72,44 +76,67 @@ public class RestMappingSetDisplayFieldBase
 		super();
 	}
 
-	/**
-	 * This constructor should only be called when initializing MapSetDisplayFieldsService
-	 *  
-	 * @param name required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
-	 * @throws RestException
-	 */
-	public RestMappingSetDisplayFieldBase(String name) throws RestException
-	{
-		this(name, (RestMapSetItemComponentType)null);
-	}
+//	/**
+//	 * This constructor should only be called when initializing MapSetDisplayFieldsService
+//	 *  
+//	 * @param id required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
+//	 * @throws RestException
+//	 */
+//	public RestMappingSetDisplayFieldBase(String id) throws RestException
+//	{
+//		this(id, (RestMapSetItemComponentType)null);
+//	}
 
 	/**
 	 * This is the only constructor that should be called by derived classes
 	 * 
-	 * @param name required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
+	 * @param id required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
 	 * @param componentType required to be non null only for RestMappingSetDisplayFieldCreate
 	 * @throws RestException
 	 */
-	public RestMappingSetDisplayFieldBase(String name, RestMapSetItemComponentType componentType) throws RestException
+	public RestMappingSetDisplayFieldBase(String id, MapSetItemComponent componentType) throws RestException
 	{
 		//for Jaxb
 		super();
-		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
-		MapSetDisplayFieldsService.Field field = service.getFieldByIdOrNameIfNotId(name);
-		if (field == null) {
-			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(name);
-			throw new RestException("RestMappingSetFieldBase.name", name, "Unsupported MapSet field \"" + name + "\"" + (cc.isPresent() ? " (" + Get.conceptDescriptionText(cc.get().getNid()) + ") " : "") + "\". Should be one of " + getFieldNamesWithDescriptions(service.getAllFields()));
-		} else {
-			this.name = field.getName();
+
+		if (componentType != null) {
+			// This should only be null when returned as a container for id and description
+			// TODO: Joel fix this by changing hierarchy
+			this.componentType = new RestMapSetItemComponentType(componentType);
 		}
-		this.componentType = componentType;
+		
+		if (componentType == MapSetItemComponent.ITEM_EXTENDED) {
+			// This only validates the id as a valid non-negative integer,
+			// not that it corresponds to an actual extended field DynamicSememeData element
+			Integer idAsIntegerExtendedFieldsColumnNumber = null;
+			try {
+				idAsIntegerExtendedFieldsColumnNumber = Integer.valueOf(id);
+				if (idAsIntegerExtendedFieldsColumnNumber < 0) {
+					throw new RuntimeException("Invalid (negative) map item extended field column " + id + " for RestMapSetItemComponentType " + componentType);
+				} else {
+					this.id = id;
+				}
+			} catch (NumberFormatException e) {
+				throw new RuntimeException("Invalid map item extended field column " + id + " for RestMapSetItemComponentType " + componentType, e);
+			}
+		} else {
+			// These are globals
+			MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
+			MapSetDisplayFieldsService.Field field = service.getFieldByConceptIdOrStringIdIfNotConceptId(id);
+			if (field == null) {
+				Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(id);
+				throw new RestException("RestMappingSetFieldBase.name", id, "Unsupported MapSet field \"" + id + "\"" + (cc.isPresent() ? " (" + Get.conceptDescriptionText(cc.get().getNid()) + ") " : "") + "\". Should be one of " + getFieldNamesWithDescriptions(service.getAllFields()));
+			} else {
+				this.id = field.getId();
+			}
+		}
 	}
 
 	private static Map<Object, String> getFieldNamesWithDescriptions(Collection<MapSetDisplayFieldsService.Field> fields) {
 		Map<Object, String> descriptionsByName = new HashMap<>();
 		
 		for (MapSetDisplayFieldsService.Field field : fields) {
-			descriptionsByName.put(field.getName(), field.getObject() != null ? Get.conceptDescriptionText(field.getObject().getNid()) : MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(field.getName()).getDescription());
+			descriptionsByName.put(field.getId(), field.getObject() != null ? Get.conceptDescriptionText(field.getObject().getNid()) : MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(field.getId()).getDescription());
 		}
 		
 		return descriptionsByName;
@@ -121,7 +148,7 @@ public class RestMappingSetDisplayFieldBase
 	 * @throws RestException
 	 */
 	public RestMappingSetDisplayFieldBase(MapSetDisplayFieldsService.Field field) {
-		this.name = field.getName();
+		this.id = field.getId();
 		this.componentType = null;
 	}
 
@@ -130,6 +157,6 @@ public class RestMappingSetDisplayFieldBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayFieldBase [name=" + name + ", component=" + componentType + "]";
+		return "RestMappingSetDisplayFieldBase [name=" + id + ", component=" + componentType + "]";
 	}
 }

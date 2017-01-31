@@ -19,8 +19,6 @@
 
 package gov.vha.isaac.rest.api1.data.workflow;
 
-import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;

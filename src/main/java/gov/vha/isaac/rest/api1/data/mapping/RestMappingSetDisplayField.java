@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
@@ -32,7 +33,7 @@ import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
-import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -51,19 +52,21 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 {
 	/**
 	 * Optional identifiers of an optional concept that describes the purpose of this display field.
-	 * The description from this concept, if set, will be used as the name of the field.
-	 * Either fieldNameConceptIdentifiers or name must be passed, but not both.
+	 * The description from this concept, if set, will be used as the id of the field.
+	 * Either fieldNameConceptIdentifiers or id must be passed, but not both.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestIdentifiedObject fieldNameConceptIdentifiers;
 
 	/**
 	 * Description of this field
-	 * If the field name is the ID of an assemblage concept then it will be the description of that concept.
-	 * If the field name is a string literal then the description will be MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(name).getDescription()
+	 * If the field id is the ID of an assemblage concept then it will be the description of that concept.
+	 * If the field id is a string literal then the description will be MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(id).getDescription()
 	 * 
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String description;
 
 	RestMappingSetDisplayField()
@@ -72,52 +75,55 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 		super();
 	}
 
-	public RestMappingSetDisplayField(String name) throws RestException {
-		this(name, (IdentifiedObject)null, (RestMapSetItemComponentType)null);
+	public RestMappingSetDisplayField(String id) throws RestException {
+		this(id, (IdentifiedObject)null, (MapSetItemComponent)null, (String)null);
 	}
-	public RestMappingSetDisplayField(String name, RestMapSetItemComponentType component) throws RestException {
-		this(name, (IdentifiedObject)null, component);
+	public RestMappingSetDisplayField(String id, MapSetItemComponent component) throws RestException {
+		this(id, (IdentifiedObject)null, component, (String)null);
 	}
 	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field) throws RestException {
-		this(field.getName(), field.getObject(), null);
+		this(field.getId(), field.getObject(), (MapSetItemComponent)null, (String)null);
 	}
-	private RestMappingSetDisplayField(String name, IdentifiedObject fieldNameConcept, RestMapSetItemComponentType component) throws RestException
+	public RestMappingSetDisplayField(String id, MapSetItemComponent component, String description) throws RestException {
+		this(id, (IdentifiedObject)null, component, description);
+	}
+	private RestMappingSetDisplayField(String id, IdentifiedObject fieldNameConcept, MapSetItemComponent component, String description) throws RestException
 	{
 		//for Jaxb
-		super(name, component); // MapSetDisplayFieldsService performs validation
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.name);
+		super(id, component); // MapSetDisplayFieldsService performs validation
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.id);
 		if (cc.isPresent()) {
 			if (fieldNameConcept != null) {
 				if (fieldNameConcept.getNid() != cc.get().getNid()) {
-					throw new RuntimeException("fieldNameConcept NID " + fieldNameConcept.getNid() + " does not match NID " + cc.get().getNid() + " for concept corresponding to name \"" + this.name + "\"");
+					throw new RuntimeException("fieldNameConcept NID " + fieldNameConcept.getNid() + " does not match NID " + cc.get().getNid() + " for concept corresponding to id \"" + this.id + "\"");
 				}
 				if (! fieldNameConcept.getPrimordialUuid().equals(cc.get().getPrimordialUuid())) {
-					throw new RuntimeException("fieldNameConcept UUID " + fieldNameConcept.getPrimordialUuid() + " does not match UUID " + cc.get().getPrimordialUuid() + " for concept corresponding to name \"" + this.name + "\"");
+					throw new RuntimeException("fieldNameConcept UUID " + fieldNameConcept.getPrimordialUuid() + " does not match UUID " + cc.get().getPrimordialUuid() + " for concept corresponding to id \"" + this.id + "\"");
 				}
 			}
 			this.fieldNameConceptIdentifiers = new RestIdentifiedObject(cc.get().getPrimordialUuid());
 		} else {
 			this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
 		}
-		description = getDescriptionFromName(this.name);
+		this.description = description != null ? description : getDescriptionFromName(this.id);
 	}
 
-	private static String getDescriptionFromName(String name) {
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(name);
+	private static String getDescriptionFromName(String id) {
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(id);
 		if (cc.isPresent()) {
 			Optional<String> desc = Frills.getDescription(cc.get().getNid(), RequestInfo.get().getTaxonomyCoordinate());
 			if (desc.isPresent()) {
 				return desc.get();
 			} else {
-				throw new RuntimeException("Frills.getDescription() failed to find description for concept id=" + name + " (UUID=" + cc.get().getPrimordialUuid() + ")");
+				throw new RuntimeException("Frills.getDescription() failed to find description for concept id=" + id + " (UUID=" + cc.get().getPrimordialUuid() + ")");
 			}
 		} else {
 			MapSetDisplayFieldsService.Field.NonConceptFieldName nonConceptFieldName = null;
 			try {
-				nonConceptFieldName = MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(name);
+				nonConceptFieldName = MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(id);
 				return nonConceptFieldName.getDescription();
 			} catch (Exception e) {
-				throw new RuntimeException("getDescriptionFromName() Failed to find map item display field description for name=\"" + name + "\"");
+				throw new RuntimeException("getDescriptionFromName() Failed to find map item display field description for id=\"" + id + "\"");
 			}
 		}
 	}
@@ -127,7 +133,7 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayField [name=" + name + ", componentType=" + componentType + ", description="
+		return "RestMappingSetDisplayField [id=" + id + ", componentType=" + componentType + ", description="
 				+ description + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + "]";
 	}
 }

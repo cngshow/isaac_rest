@@ -62,10 +62,11 @@ import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 @RunLevel(LookupService.ISAAC_DEPENDENTS_RUNLEVEL)
 @Service
 public class MapSetDisplayFieldsService {
-	public static class Field {
+public static class Field {
 		public static enum NonConceptFieldName {
 			FULLY_SPECIFIED_NAME("Fully Specified Name"),
-			PREFERRED_TERM("Preferred Term");
+			PREFERRED_TERM("Preferred Term"),
+			UUID("Universally Unique ID");
 			
 			private String description;
 			
@@ -78,7 +79,7 @@ public class MapSetDisplayFieldsService {
 			}
 		}
 		
-		private final String name;
+		private final String id;
 		private final IdentifiedObject object;
 
 		private Field(IdentifiedObject object) {
@@ -94,17 +95,17 @@ public class MapSetDisplayFieldsService {
 		 * @param computed
 		 * @param object
 		 */
-		private Field(String name, IdentifiedObject object) {
+		private Field(String id, IdentifiedObject object) {
 			super();
-			this.name = name;
+			this.id = id;
 			this.object = object;
 		}
 
 		/**
-		 * @return the name
+		 * @return the id
 		 */
-		public String getName() {
-			return name;
+		public String getId() {
+			return id;
 		}
 
 		/**
@@ -119,7 +120,7 @@ public class MapSetDisplayFieldsService {
 		 */
 		@Override
 		public String toString() {
-			return "Field [name=" + name + ", object=" + object + "]";
+			return "Field [id=" + id + ", object=" + object + "]";
 		}
 	}
 	
@@ -165,16 +166,16 @@ public class MapSetDisplayFieldsService {
 	public Collection<Field> getAllFields() {
 		return Collections.unmodifiableCollection(getFields().values());
 	}
-	public Set<String> getAllFieldNames() {
+	public Set<String> getAllGlobalFieldIds() {
 		return Collections.unmodifiableSet(getFields().keySet());
 	}
-	public Field getFieldByIdOrNameIfNotId(String nameOrId) {
-		if (getFields().get(nameOrId) != null) {
-			return getFields().get(nameOrId);
+	public Field getFieldByConceptIdOrStringIdIfNotConceptId(String stringOrConceptId) {
+		if (getFields().get(stringOrConceptId) != null) {
+			return getFields().get(stringOrConceptId);
 		}
 
 		try {
-			int intId = Integer.parseInt(nameOrId.trim());
+			int intId = Integer.parseInt(stringOrConceptId.trim());
 			Optional<UUID> uuid = Optional.empty();
 
 			uuid = Get.identifierService().getUuidPrimordialFromConceptId(intId);
@@ -195,11 +196,11 @@ public class MapSetDisplayFieldsService {
 
 	synchronized private void add(IdentifiedObject object) {
 		Field field = new Field(object);
-		fields_.put(field.name, field);
+		fields_.put(field.id, field);
 	}
-	synchronized private void add(String name) {
-		Field field = new Field(name, null);
-		fields_.put(field.name, field);
+	synchronized private void add(String id) {
+		Field field = new Field(id, null);
+		fields_.put(field.id, field);
 	}
 
 	private static Set<ConceptChronology<?>> getAnnotationConcepts(StampCoordinate sc) {

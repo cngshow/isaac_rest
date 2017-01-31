@@ -228,7 +228,7 @@ public class MappingWriteAPIs
 		List<RestMappingSetDisplayField> existingMapSetFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(Get.identifierService().getConceptNid(cloneTargetConceptId), RequestInfo.get().getStampCoordinate());
 		List<RestMappingSetDisplayFieldCreate> mapSetFieldCreateDTOs = new ArrayList<>();
 		for (RestMappingSetDisplayField existingField : existingMapSetFields) {
-			mapSetFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(existingField.name, existingField.componentType));
+			mapSetFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(existingField.id, MapSetItemComponent.valueOf(existingField.componentType.enumName)));
 		}
 		ConceptChronology<? extends ConceptVersion<?>> mappingSetAssemblageConcept = null;
 		try 
@@ -546,14 +546,14 @@ public class MappingWriteAPIs
 
 	private static DynamicSememeStringImpl getDynamicSememeStringFromMapSetField(RestMappingSetDisplayFieldBase passedField) throws RestException {
 		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
-		MapSetDisplayFieldsService.Field existingField = service.getFieldByIdOrNameIfNotId(passedField.name);
+		MapSetDisplayFieldsService.Field existingField = service.getFieldByConceptIdOrStringIdIfNotConceptId(passedField.id);
 		if (existingField == null) {
-			throw new RestException("RestMappingSetFieldCreate.name", passedField.name, "Invalid or unsupported map set field name. Must be one of " + service.getAllFieldNames());
+			throw new RestException("RestMappingSetFieldCreate.name", passedField.id, "Invalid or unsupported map set field name. Must be one of " + service.getAllGlobalFieldIds());
 		}
 		if (passedField.componentType == null) {
 			throw new RestException("RestMappingSetFieldCreate.componentType", "null", "null map set display field component type. Must be one of " + MapSetItemComponent.values());
 		}
-		String dataString = existingField.getName() + ":" + passedField.componentType.enumName;
+		String dataString = existingField.getId() + ":" + passedField.componentType.enumName;
 		return new DynamicSememeStringImpl(dataString);
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })

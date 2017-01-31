@@ -53,7 +53,7 @@ import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
-import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.mapping.MappingAPIs;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
@@ -76,6 +76,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 * The data that was not expanded as part of this call (but can be)
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Expandables expandables;
 	
 	/**
@@ -111,12 +112,14 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 * The identifier data for the sememe that represents this mapping item
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestIdentifiedObject identifiers;
 	
 	/**
 	 * The StampedVersion details for this mapping entry
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestStampedVersion mappingItemStamp;
 	
 	
@@ -124,24 +127,28 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 * An (optional) description of the {@link #sourceConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String sourceDescription;
 	
 	/**
 	 * An (optional) description of the {@link #targetConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String targetDescription;
 	
 	/**
 	 * An (optional) description of the {@link #qualifierConcept} - only populated when requested via the expandable 'referencedDetails'
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String qualifierDescription;
 	
 	/**
 	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestCommentVersion> comments;
 	
 	/**
@@ -149,6 +156,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 * Populated and ordered based on respective fields, if any, in corresponding map set.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<RestMappingItemDisplayField> displayFields;
 	
 	protected RestMappingItemVersion()
@@ -213,7 +221,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 				if (displayFields == null) {
 					displayFields = new ArrayList<>();
 				}
-				displayFields.add(constructDisplayField(sourceConcept.nid, targetConcept.nid, fieldFromMapSet.name, MapSetItemComponent.valueOf(fieldFromMapSet.componentType.enumName)));
+				displayFields.add(constructDisplayField(mapSetConcept.nid, sourceConcept.nid, targetConcept.nid, qualifierConcept.nid, mapItemExtendedFields, fieldFromMapSet.id, MapSetItemComponent.valueOf(fieldFromMapSet.componentType.enumName)));
 			}
 		}
 
@@ -264,7 +272,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		}
 	}
 
-	private static RestMappingItemDisplayField constructDisplayField(int sourceConceptNid, int targetConceptNid, String fieldName, MapSetItemComponent componentType) {
+	private static RestMappingItemDisplayField constructDisplayField(int mapSetNid, int sourceConceptNid, int targetConceptNid, int qualifierConceptNid, List<RestDynamicSememeData> mapItemExtendedFields, String fieldId, MapSetItemComponent componentType) {
 		Integer componentNid = null;
 		String value = null;
 		switch(componentType) {
@@ -274,6 +282,42 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		case TARGET:
 			componentNid = targetConceptNid;
 			break;
+		case QUALIFIER:
+			componentNid = qualifierConceptNid;
+			break;
+		case ITEM_EXTENDED:
+		{
+			Integer idAsIntegerExtendedFieldsColumnNumber = null;
+			try {
+				idAsIntegerExtendedFieldsColumnNumber = Integer.valueOf(fieldId);
+				if (idAsIntegerExtendedFieldsColumnNumber < 0) {
+					throw new RuntimeException("Invalid (negative) map item extended field column " + fieldId + " for RestMapSetItemComponentType " + componentType);
+				}
+				mapItemExtendedFields.get(idAsIntegerExtendedFieldsColumnNumber);
+			} catch (NumberFormatException | IndexOutOfBoundsException e) {
+				throw new RuntimeException("Invalid map item extended field column " + fieldId + " for RestMapSetItemComponentType " + componentType + " on item with " + mapItemExtendedFields.size() + " extended field columns", e);
+			}
+			
+			String description = null;
+			List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = MappingAPIs.getItemFieldDefinitions(mapSetNid);
+			for (RestDynamicSememeColumnInfo info : mapItemFieldsDefinition) {
+				if (info.columnOrder == idAsIntegerExtendedFieldsColumnNumber) {
+					description = info.columnName;
+					break;
+				}
+			}
+			if (description == null) {
+				String msg = "Failed correlating item display field id " + fieldId + " for item display field of type " + componentType + " with any existing extended field definition in map set";
+				log.error(msg);
+				throw new RuntimeException(msg);
+			}
+			try {
+				return new RestMappingItemDisplayField(fieldId, componentType, description);
+			} catch (RestException e) {
+				log.error(e);
+				throw new RuntimeException(e);
+			}
+		}
 		default:
 			String msg = "Invalid/unsupported MapSetItemComponent value \"" + componentType + "\".  Should be one of " + MapSetItemComponent.values();
 			log.error(msg);
@@ -284,7 +328,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		 */
 		UUID annotationConceptUuid = null;
 		try {
-			annotationConceptUuid = UUID.fromString(fieldName);
+			annotationConceptUuid = UUID.fromString(fieldId);
 		} catch (Exception e) {
 			// ignore
 		}
@@ -293,22 +337,26 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			// TODO handle missing values and contradictions
 			value = valueOptional.isPresent() ? valueOptional.get() : null;
 		}
-		else if (fieldName.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
+		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.UUID.name())) {
+			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
+			value = cc.getPrimordialUuid().toString();
+		}
+		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
 			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
 			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
 			// TODO handle missing values and contradictions
 			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
-		} else if (fieldName.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
+		} else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
 			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
 			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
 			 // TODO handle missing values and contradictions
 			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
 		} else {
-			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldName + "\"");
+			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldId + "\"");
 		}
 		
 		try {
-			return new RestMappingItemDisplayField(fieldName, new RestMapSetItemComponentType(componentType), value);
+			return new RestMappingItemDisplayFieldWithValue(fieldId, componentType, value);
 		} catch (RestException e) {
 			log.error(e);
 			throw new RuntimeException(e);

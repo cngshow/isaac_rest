@@ -37,14 +37,12 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
-import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
@@ -56,7 +54,6 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.mapping.MappingAPIs;
-import gov.vha.isaac.rest.api1.mapping.Positions;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -120,7 +117,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		//for Jaxb
 		super();
 	}
-	 
+
 	/**
 	 * This code expects to read a sememe of type {@link IsaacMappingConstants#DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE}
 	 * @param sememe
@@ -145,33 +142,8 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		}
 		
 		//read the extended field definition information
-		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.getNid());
-		//There are two columns used to store the target concept and qualifier, we shouldn't return them here.
-		Positions positions;
-		try
-		{
-			positions = Positions.getPositions(dsud);
-		}
-		catch (RestException e1)
-		{
-			throw new RuntimeException (e1);
-		}
+		mapItemFieldsDefinition.addAll(MappingAPIs.getItemFieldDefinitions(mappingConcept.getNid()));
 		
-		int offset = 0;
-		
-		for (int i = 0; i < dsud.getColumnInfo().length; i++)
-		{
-			if (i == positions.targetPos || i == positions.qualfierPos)
-			{
-				offset++;
-			}
-			else
-			{
-				mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsud.getColumnInfo()[i]));
-				mapItemFieldsDefinition.get(i - offset).columnOrder = mapItemFieldsDefinition.get(i - offset).columnOrder - offset;
-			}
-		}
-
 		//Read the extended fields off of the map set concept.
 		//Strings
 		Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 
