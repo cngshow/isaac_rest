@@ -22,15 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.logging.log4j.LogManager;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
@@ -60,6 +56,7 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.mapping.MappingAPIs;
+import gov.vha.isaac.rest.api1.mapping.Positions;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -149,11 +146,30 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		
 		//read the extended field definition information
 		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.getNid());
-		//Columns 0 and 1 are used to store the target concept and qualifier, we shouldn't return them here.
-		for (int i = 2; i < dsud.getColumnInfo().length; i++)
+		//There are two columns used to store the target concept and qualifier, we shouldn't return them here.
+		Positions positions;
+		try
 		{
-			mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsud.getColumnInfo()[i]));
-			mapItemFieldsDefinition.get(i - 2).columnOrder = mapItemFieldsDefinition.get(i - 2).columnOrder - 2; 
+			positions = Positions.getPositions(dsud);
+		}
+		catch (RestException e1)
+		{
+			throw new RuntimeException (e1);
+		}
+		
+		int offset = 0;
+		
+		for (int i = 0; i < dsud.getColumnInfo().length; i++)
+		{
+			if (i == positions.targetPos || i == positions.qualfierPos)
+			{
+				offset++;
+			}
+			else
+			{
+				mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsud.getColumnInfo()[i]));
+				mapItemFieldsDefinition.get(i - offset).columnOrder = mapItemFieldsDefinition.get(i - offset).columnOrder - offset;
+			}
 		}
 
 		//Read the extended fields off of the map set concept.

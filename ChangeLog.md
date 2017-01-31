@@ -7,6 +7,8 @@ API version number, not the release version number.
 
 * 2017/01/?? - ???
     * Fixed the root cause of 439352, which was (sometimes) occurring when isaac-rest was deployed - especially if it needed to download a new database.
+    * Fixed a bug in the map set definitions, where the wrong columns may have been returned for map items, if the target and qualifier columns were not 
+        in positions 0 and 1 of the sememe
 
 * 2017/01/26 - 1.37
     * Many RestMapSet changes

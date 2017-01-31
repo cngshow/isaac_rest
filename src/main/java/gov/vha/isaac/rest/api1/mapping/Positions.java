@@ -24,10 +24,10 @@ import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
-class Positions
+public class Positions
 {
-	protected int targetPos;
-	protected int qualfierPos;
+	public int targetPos;
+	public int qualfierPos;
 
 	private Positions(int targetPos, int qualifierPos)
 	{
@@ -41,12 +41,16 @@ class Positions
 	 * @return
 	 * @throws RestException 
 	 */
-	protected static Positions getPositions(int sememeAssemblageConceptSequence) throws RestException
+	public static Positions getPositions(int sememeAssemblageConceptSequence) throws RestException
+	{
+		return getPositions(DynamicSememeUsageDescriptionImpl.read(sememeAssemblageConceptSequence));
+	}
+	
+	public static Positions getPositions(DynamicSememeUsageDescription dsud) throws RestException
 	{
 		int targetPos = -1;
 		int qualifierPos = -1;
 		
-		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(sememeAssemblageConceptSequence);
 		for (int i = 0; i < dsud.getColumnInfo().length; i++)
 		{
 			if (dsud.getColumnInfo()[i].getColumnDescriptionConcept().equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid()))
