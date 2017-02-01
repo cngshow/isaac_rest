@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 
@@ -48,12 +49,12 @@ public class RestMappingItemDisplayField extends RestMappingSetDisplayField
 	public RestMappingItemDisplayField(String name, MapSetItemComponent component) throws RestException
 	{
 		//for Jaxb
-		this(name, component, (String)null);
+		this(name, (IdentifiedObject)null, component, (String)null);
 	}
-	public RestMappingItemDisplayField(String name, MapSetItemComponent component, String description) throws RestException
+	public RestMappingItemDisplayField(String name, IdentifiedObject concept, MapSetItemComponent component, String description) throws RestException
 	{
 		//for Jaxb
-		super(name, component, description);
+		super(name, concept, component, description);
 	}
 
 	/* (non-Javadoc)

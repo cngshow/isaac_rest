@@ -87,28 +87,34 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	public RestMappingSetDisplayField(String id, MapSetItemComponent component, String description) throws RestException {
 		this(id, (IdentifiedObject)null, component, description);
 	}
-	private RestMappingSetDisplayField(String id, IdentifiedObject fieldNameConcept, MapSetItemComponent component, String description) throws RestException
+	public RestMappingSetDisplayField(String id, IdentifiedObject fieldNameConcept, MapSetItemComponent component, String description) throws RestException
 	{
 		//for Jaxb
 		super(id, component); // MapSetDisplayFieldsService performs validation
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.id);
-		if (cc.isPresent()) {
-			if (fieldNameConcept != null) {
-				if (fieldNameConcept.getNid() != cc.get().getNid()) {
-					throw new RuntimeException("fieldNameConcept NID " + fieldNameConcept.getNid() + " does not match NID " + cc.get().getNid() + " for concept corresponding to id \"" + this.id + "\"");
-				}
-				if (! fieldNameConcept.getPrimordialUuid().equals(cc.get().getPrimordialUuid())) {
-					throw new RuntimeException("fieldNameConcept UUID " + fieldNameConcept.getPrimordialUuid() + " does not match UUID " + cc.get().getPrimordialUuid() + " for concept corresponding to id \"" + this.id + "\"");
-				}
-			}
-			this.fieldNameConceptIdentifiers = new RestIdentifiedObject(cc.get().getPrimordialUuid());
-		} else {
+		if (component == MapSetItemComponent.ITEM_EXTENDED) {
+			// Do not set fieldNameConceptIdentifiers
+			this.description = description;
 			this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
+		} else {
+			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.id);
+			if (cc.isPresent()) {
+				if (fieldNameConcept != null) {
+					if (fieldNameConcept.getNid() != cc.get().getNid()) {
+						throw new RuntimeException("fieldNameConcept NID " + fieldNameConcept.getNid() + " does not match NID " + cc.get().getNid() + " for concept corresponding to id \"" + this.id + "\"");
+					}
+					if (! fieldNameConcept.getPrimordialUuid().equals(cc.get().getPrimordialUuid())) {
+						throw new RuntimeException("fieldNameConcept UUID " + fieldNameConcept.getPrimordialUuid() + " does not match UUID " + cc.get().getPrimordialUuid() + " for concept corresponding to id \"" + this.id + "\"");
+					}
+				}
+				this.fieldNameConceptIdentifiers = new RestIdentifiedObject(cc.get().getPrimordialUuid());
+			} else {
+				this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
+			}
+			this.description = description != null ? description : getDescriptionFromId(this.id);
 		}
-		this.description = description != null ? description : getDescriptionFromName(this.id);
 	}
 
-	private static String getDescriptionFromName(String id) {
+	private static String getDescriptionFromId(String id) {
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(id);
 		if (cc.isPresent()) {
 			Optional<String> desc = Frills.getDescription(cc.get().getNid(), RequestInfo.get().getTaxonomyCoordinate());

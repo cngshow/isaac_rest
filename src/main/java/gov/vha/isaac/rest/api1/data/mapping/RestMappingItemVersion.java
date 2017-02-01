@@ -34,17 +34,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.ExpandUtil;
-import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -121,28 +117,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestStampedVersion mappingItemStamp;
-	
-	
-	/**
-	 * An (optional) description of the {@link #sourceConcept} - only populated when requested via the expandable 'referencedDetails'
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String sourceDescription;
-	
-	/**
-	 * An (optional) description of the {@link #targetConcept} - only populated when requested via the expandable 'referencedDetails'
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String targetDescription;
-	
-	/**
-	 * An (optional) description of the {@link #qualifierConcept} - only populated when requested via the expandable 'referencedDetails'
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String qualifierDescription;
 	
 	/**
 	 * The (optionally) populated comments attached to this map set.  This field is only populated when requested via an 'expand' parameter.
@@ -228,15 +202,15 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		expandables = new Expandables();
 		if (expandDescriptions)
 		{
-			if (qualifierConcept != null)
-			{
-				qualifierDescription = Util.readBestDescription(qualifierConcept.sequence, stampCoordinate);
-			}
-			sourceDescription = Util.readBestDescription(sourceConcept.sequence, stampCoordinate);
-			if (targetConcept != null)
-			{
-				targetDescription = Util.readBestDescription(targetConcept.sequence, stampCoordinate);
-			}
+//			if (qualifierConcept != null)
+//			{
+//				qualifierDescription = Util.readBestDescription(qualifierConcept.sequence, stampCoordinate);
+//			}
+//			sourceDescription = Util.readBestDescription(sourceConcept.sequence, stampCoordinate);
+//			if (targetConcept != null)
+//			{
+//				targetDescription = Util.readBestDescription(targetConcept.sequence, stampCoordinate);
+//			}
 		}
 		else
 		{
@@ -299,10 +273,12 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			}
 			
 			String description = null;
+			RestIdentifiedObject columnLabelConcept = null;
 			List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition = MappingAPIs.getItemFieldDefinitions(mapSetNid);
 			for (RestDynamicSememeColumnInfo info : mapItemFieldsDefinition) {
 				if (info.columnOrder == idAsIntegerExtendedFieldsColumnNumber) {
 					description = info.columnName;
+					columnLabelConcept = info.columnLabelConcept;
 					break;
 				}
 			}
@@ -312,7 +288,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 				throw new RuntimeException(msg);
 			}
 			try {
-				return new RestMappingItemDisplayField(fieldId, componentType, description);
+				return new RestMappingItemDisplayField(fieldId, Get.conceptService().getConcept(columnLabelConcept.nid), componentType, description);
 			} catch (RestException e) {
 				log.error(e);
 				throw new RuntimeException(e);
@@ -337,20 +313,25 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			// TODO handle missing values and contradictions
 			value = valueOptional.isPresent() ? valueOptional.get() : null;
 		}
-		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.UUID.name())) {
-			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
-			value = cc.getPrimordialUuid().toString();
-		}
-		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
-			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
-			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
+//		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.UUID.name())) {
+//			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
+//			value = cc.getPrimordialUuid().toString();
+//		}
+//		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name())) {
+//			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
+//			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getFullySpecifiedDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
+//			// TODO handle missing values and contradictions
+//			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
+//		} else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
+//			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
+//			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
+//			 // TODO handle missing values and contradictions
+//			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
+//		}
+		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name())) {
+			Optional<String> descLatestVersion = Frills.getDescription(componentNid, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
 			// TODO handle missing values and contradictions
-			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
-		} else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name())) {
-			ConceptChronology<?> cc = Get.conceptService().getConcept(componentNid);
-			Optional<LatestVersion<DescriptionSememe<?>>> descLatestVersion = cc.getPreferredDescription(RequestInfo.get().getLanguageCoordinate(), RequestInfo.get().getStampCoordinate());
-			 // TODO handle missing values and contradictions
-			value = descLatestVersion.isPresent() ? descLatestVersion.get().value().getText() : null;
+			value = descLatestVersion.isPresent() ? descLatestVersion.get() : null;
 		} else {
 			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldId + "\"");
 		}
@@ -370,8 +351,10 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	public String toString() {
 		return "RestMappingItemVersion [expandables=" + expandables + ", identifiers=" + identifiers
 				+ ", mappingItemStamp=" + mappingItemStamp
-				+ ", sourceDescription=" + sourceDescription + ", targetDescription=" + targetDescription
-				+ ", qualifierDescription=" + qualifierDescription + ", mapSetConcept=" + mapSetConcept
+//				+ ", sourceDescription=" + sourceDescription
+//				+ ", targetDescription=" + targetDescription
+//				+ ", qualifierDescription=" + qualifierDescription
+				+ ", mapSetConcept=" + mapSetConcept
 				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
 				+ qualifierConcept + ", mapItemExtendedFields=" + mapItemExtendedFields + "]";
 	}

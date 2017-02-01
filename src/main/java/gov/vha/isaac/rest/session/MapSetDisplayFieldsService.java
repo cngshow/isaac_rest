@@ -64,9 +64,7 @@ import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 public class MapSetDisplayFieldsService {
 public static class Field {
 		public static enum NonConceptFieldName {
-			FULLY_SPECIFIED_NAME("Fully Specified Name"),
-			PREFERRED_TERM("Preferred Term"),
-			UUID("Universally Unique ID");
+			DESCRIPTION("Description");
 			
 			private String description;
 			
@@ -140,8 +138,7 @@ public static class Field {
 				 */
 
 				// Non-concept fields
-				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.FULLY_SPECIFIED_NAME.name());
-				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.PREFERRED_TERM.name());
+				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name());
 
 				for (ConceptChronology<?> cc : getAnnotationConcepts(StampCoordinates.getDevelopmentLatest())) {
 					add(cc);

@@ -18,11 +18,14 @@
  */
 package gov.vha.isaac.rest.api1.data.enumerations;
 
+import java.util.Optional;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeArray;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeBoolean;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeByteArray;
@@ -118,5 +121,19 @@ public class RestDynamicSememeDataType extends Enumeration
 	public DynamicSememeDataType translate()
 	{
 		return DynamicSememeDataType.values()[this.enumId];
+	}
+	
+	public static RestDynamicSememeDataType valueOf(String str) {
+		for (DynamicSememeDataType enumValue : DynamicSememeDataType.values()) {
+			if (enumValue.name().equals(str.trim())) {
+				return new RestDynamicSememeDataType(enumValue);
+			} else {
+				Optional<Integer> intOptional = NumericUtils.getInt(str.trim());
+				if (intOptional.isPresent() && intOptional.get() == enumValue.ordinal()) {
+					return new RestDynamicSememeDataType(enumValue);
+				}
+			}
+		}
+		throw new IllegalArgumentException("invalid RestDynamicSememeDataType value \"" + str + "\"");
 	}
 }
