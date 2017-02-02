@@ -2496,7 +2496,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(((Boolean)retrievedMappingItemVersion.mapItemExtendedFields.get(0).data).booleanValue(), true);
 		Assert.assertEquals(((Integer)retrievedMappingItemVersion.mapItemExtendedFields.get(1).data).intValue(), 20);
 		
-		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.size(), 3); // SOURCE, TARGET and QUALIFIER descriptions plus 2 item extended fields
+		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.size(), 3); // SOURCE, TARGET and EQUIVALENCE_TYPE descriptions plus 2 item extended fields
 
 
 		Optional<String> sourceConceptDescription = Frills.getDescription(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getNid(), getDefaultCoordinatesToken().getTaxonomyCoordinate());
@@ -2516,7 +2516,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(retrievedMappingItemVersion.computedDisplayFields.get(1) instanceof RestMappingItemComputedDisplayField);
 		Assert.assertEquals(((RestMappingItemComputedDisplayField)retrievedMappingItemVersion.computedDisplayFields.get(1)).value, targetConceptDescription.get());
 
-		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(2).componentType, new RestMapSetItemComponentType(MapSetItemComponent.QUALIFIER));
+		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(2).componentType, new RestMapSetItemComponentType(MapSetItemComponent.EQUIVALENCE_TYPE));
 		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(2).id, MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name());
 		Assert.assertTrue(retrievedMappingItemVersion.computedDisplayFields.get(2) instanceof RestMappingItemComputedDisplayField);
 		Assert.assertEquals(((RestMappingItemComputedDisplayField)retrievedMappingItemVersion.computedDisplayFields.get(2)).value, qualifierConceptDescription.get());

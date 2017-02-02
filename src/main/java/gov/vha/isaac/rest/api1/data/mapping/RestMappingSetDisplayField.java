@@ -97,9 +97,15 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	{
 		super(id, component); // MapSetDisplayFieldsService performs validation
 		if (component == MapSetItemComponent.ITEM_EXTENDED) {
-			// Do not set fieldNameConceptIdentifiers
-			this.description = description;
 			this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
+			if (description != null) {
+				this.description = description;
+			} else if (fieldNameConcept != null) {
+				Optional<String> descriptionOptional = Frills.getDescription(fieldNameConcept.getNid(), RequestInfo.get().getTaxonomyCoordinate());
+				if (descriptionOptional.isPresent()) {
+					this.description = descriptionOptional.get();
+				}
+			}
 		} else {
 			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.id);
 			if (cc.isPresent()) {

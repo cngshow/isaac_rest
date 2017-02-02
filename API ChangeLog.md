@@ -18,12 +18,14 @@ Bug fixes should not be documented here, rather, than should be documented in th
     * Changed the RestMappingSetDisplayFieldCreate.componentType to fieldComponentType.  Changed the accepted type from RestMapSetItemComponentType to String, 
         so it now accepts either an enum ID, or a enum name for a specified RestMapSetItemComponentType.  This resolves issues with .equals not working on the passed
         in values on create, if it doesn't align perfectly.
+    * Adding generation of default map display fields for both maps and items
+    * Changing all instances of QUALIFIER to EQUIVALENCE_TYPE
 
 * 2017/02/02 - 1.9.15
     * Changed the field displayFields in RestMappingItemVersion (which was of type  RestMappingItemDisplayField) to computedDisplayFields, (now of type 
         RestMappingItemComputedDisplayField).  Several unnecessary fields were removed from RestMappingItemComputedDisplayField.  The class 
         RestMappingItemDisplayFieldWithValue was also removed (and its contents condensed into RestMappingItemComputedDisplayField)
-
+    
 * 2017/02/01 - 1.9.14:
     * Eliminating FULLY_SPECIFIED_NAME, PREFERRED_TERM and UUID item display fields
     * Adding DESCRIPTION item display field, which uses view coordinate

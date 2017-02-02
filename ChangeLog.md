@@ -9,6 +9,8 @@ API version number, not the release version number.
     * Fixed the root cause of 439352, which was (sometimes) occurring when isaac-rest was deployed - especially if it needed to download a new database.
     * Fixed a bug in the map set definitions, where the wrong columns may have been returned for map items, if the target and qualifier columns were not 
         in positions 0 and 1 of the sememe
+    * Defect 440248 Mapping Qualifier renamed to Equivalence Type with different values.
+    * Task 444801 Rest API support for computed columns (map item display fields) in map sets
 
 * 2017/01/26 - 1.37
     * Many RestMapSet changes
