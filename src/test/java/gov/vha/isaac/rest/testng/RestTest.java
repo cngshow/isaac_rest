@@ -1903,7 +1903,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			displayFieldNamesFromMapSetVersion.add(field.id);
 		}
 		Set<String> displayFieldNamesFromUpdateDTO = new HashSet<>();
-		for (RestMappingSetDisplayFieldBase field : mapSetDisplayFieldCreateDTOs) {
+		for (RestMappingSetDisplayFieldCreate field : mapSetDisplayFieldCreateDTOs) {
 			displayFieldNamesFromUpdateDTO.add(field.id);
 		}
 		Assert.assertEquals(displayFieldNamesFromMapSetVersion, displayFieldNamesFromUpdateDTO);

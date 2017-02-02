@@ -171,7 +171,11 @@ public class MappingWriteAPIs
 					mappingSetCreationData.displayFields,
 					RequestInfo.get().getStampCoordinate(),
 					RequestInfo.get().getEditCoordinate());
-		} 
+		}
+		catch (RestException e)
+		{
+			throw e;
+		}
 		catch (IOException e) 
 		{
 			log.error("Unexpected error: ", e);
@@ -546,27 +550,31 @@ public class MappingWriteAPIs
 		return extension;
 	}
 
-	private static DynamicSememeStringImpl getDynamicSememeStringFromMapSetField(RestMappingSetDisplayFieldBase passedField) throws RestException {
+	private static DynamicSememeStringImpl getDynamicSememeStringFromMapSetField(RestMappingSetDisplayFieldCreate passedField) throws RestException {
 		String dataString = null;
-		if (passedField.componentType == null) {
-			throw new RestException("RestMappingSetFieldCreate.componentType", "null", "null map set display field component type. Must be one of " + MapSetItemComponent.values());
-		}
-		if (passedField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.ITEM_EXTENDED))) {
+		
+		MapSetItemComponent msit = MapSetItemComponent.parse(passedField.fieldComponentType).orElseThrow(() ->
+			new RestException("RestMappingSetFieldCreate.fieldComponentType", "null", "null map set display field component type. Must be one of " 
+				+ MapSetItemComponent.values()));
+		
+		if (msit == MapSetItemComponent.ITEM_EXTENDED) {
 			// item extended fields
 			// validates for type and sign but not correspondence to existing item extended field
 			try {
 				Integer colNum = Integer.parseUnsignedInt(passedField.id);
-				dataString = colNum + ":" + passedField.componentType.enumName;
+				dataString = colNum + ":" + msit.name();
 			} catch (NumberFormatException e) {
-				throw new RestException("RestMappingSetFieldCreate.id", passedField.id, "Invalid or unsupported map set field id " + passedField.id + " for component type " + passedField.componentType.enumName + ". Must be a non-negative integer and should correspond to an existing item extended field");
+				throw new RestException("RestMappingSetFieldCreate.id", passedField.id, "Invalid or unsupported map set field id " + passedField.id 
+						+ " for component type " + msit.name() + ". Must be a non-negative integer and should correspond to an existing item extended field");
 			}
 		} else {
 			MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
 			MapSetDisplayFieldsService.Field existingField = service.getFieldByConceptIdOrStringIdIfNotConceptId(passedField.id);
 			if (existingField == null) {
-				throw new RestException("RestMappingSetFieldCreate.id", passedField.id, "Invalid or unsupported map set field id " + passedField.id + " for component type " + passedField.componentType.enumName + ". Must be one of " + service.getAllGlobalFieldIds());
+				throw new RestException("RestMappingSetFieldCreate.id", passedField.id, "Invalid or unsupported map set field id " + passedField.id 
+						+ " for component type " + msit.name() + ". Must be one of " + service.getAllGlobalFieldIds());
 			}
-			dataString = existingField.getId() + ":" + passedField.componentType.enumName;
+			dataString = existingField.getId() + ":" + msit.name();
 		}
 
 		return new DynamicSememeStringImpl(dataString);
@@ -576,7 +584,7 @@ public class MappingWriteAPIs
 		List<DynamicSememeStringImpl> fieldSpecificationStrings = new ArrayList<>();
 		
 		if (passedFields != null) {
-			for (RestMappingSetDisplayFieldBase passedMapSetField : passedFields) {
+			for (RestMappingSetDisplayFieldCreate passedMapSetField : passedFields) {
 				DynamicSememeStringImpl dynamicSememeString = getDynamicSememeStringFromMapSetField(passedMapSetField);
 				fieldSpecificationStrings.add(dynamicSememeString);
 			}

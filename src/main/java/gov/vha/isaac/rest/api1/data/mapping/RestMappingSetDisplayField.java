@@ -41,7 +41,12 @@ import gov.vha.isaac.rest.session.RequestInfo;
  * 
  * {@link RestMappingSetDisplayField}
  * 
- * This class is used to convey available mapping set display fields.
+ * This, combined with {@link RestMappingSetDisplayFieldBase} returns all of the attributes about display fields.
+ * 
+ * In the context of an individual mapset, this communicates the desired order of fields to be displayed to the user, as a combination 
+ * of map item components (source, target, qualifier), extended fields (if any) and computed fields (if any)
+ * 
+ *  In the context of the capabilities of displaying computed fields, this communicates all possible computed field types. 
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
@@ -51,9 +56,11 @@ import gov.vha.isaac.rest.session.RequestInfo;
 public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 {
 	/**
-	 * Optional identifiers of an optional concept that describes the purpose of this display field.
-	 * The description from this concept, if set, will be used as the id of the field.
-	 * Either fieldNameConceptIdentifiers or id must be passed, but not both.
+	 * when componentType is set to a value such as SOURCE or TARGET (basically, any type other than ITEM_EXTENDED) AND the id is set to a UUID 
+	 * that represents a sememe to compute the value from (as opposed to a constant like DESCRIPTION) then this field will be populated with the 
+	 * concept represented by the UUID value of the id field.
+	 * 
+	 * In any other case, this will not be populated.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -61,25 +68,24 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 
 	/**
 	 * Description of this field
-	 * If the field id is the ID of an assemblage concept then it will be the description of that concept.
-	 * If the field id is a string literal then the description will be MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(id).getDescription()
-	 * 
+	 * If the field id is the ID of an assemblage concept (of a sememe type - where the desired behavior is to return the sememe string value) 
+	 *   then it will be the description of that sememe assemblage concept.  A typical value here would be "VUID".
+	 *   
+	 * If the field id is a string literal then the description will be a user friendly description of the literal, such as "Definition".
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String description;
 
+	//for Jaxb
 	RestMappingSetDisplayField()
 	{
-		//for Jaxb
+		
 		super();
 	}
 
 	public RestMappingSetDisplayField(String id) throws RestException {
 		this(id, (IdentifiedObject)null, (MapSetItemComponent)null, (String)null);
-	}
-	public RestMappingSetDisplayField(String id, MapSetItemComponent component) throws RestException {
-		this(id, (IdentifiedObject)null, component, (String)null);
 	}
 	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field) throws RestException {
 		this(field.getId(), field.getObject(), (MapSetItemComponent)null, (String)null);
@@ -89,7 +95,6 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	}
 	public RestMappingSetDisplayField(String id, IdentifiedObject fieldNameConcept, MapSetItemComponent component, String description) throws RestException
 	{
-		//for Jaxb
 		super(id, component); // MapSetDisplayFieldsService performs validation
 		if (component == MapSetItemComponent.ITEM_EXTENDED) {
 			// Do not set fieldNameConceptIdentifiers

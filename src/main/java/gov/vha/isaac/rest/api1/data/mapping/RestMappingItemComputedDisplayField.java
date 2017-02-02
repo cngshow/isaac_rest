@@ -29,7 +29,12 @@ import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
  * 
  * {@link RestMappingItemComputedDisplayField}
  * 
- * This class is used to convey available mapping set display fields.
+ * This, combined with {@link RestMappingSetDisplayFieldBase} returns a subset of information about fields, on an map set item level.
+ * This class only carries enough information to link this computed field back to the full display field order specification provided
+ * in the MapSet itself - the linkage is by the id field from this class, to the id field in {@link RestMappingSetDisplayField}
+ * 
+ * This class is only returned within item level object, and is only returned for COMPUTED fields.  The value calulated by the computation
+ * is returned in the value attribute.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
@@ -40,20 +45,16 @@ public class RestMappingItemComputedDisplayField extends RestMappingSetDisplayFi
 {
 	/**
 	 * In cases where this field represents a text description value for a calculated item such as source, target, or qualifier, 
-	 * this will contain the value to display. 
+	 * this will contain the value to display.   This field should always be populated.  This entire object will only be returned 
+	 * for computed fields that have a value.
 	 */
 	@XmlElement
 	public String value;
 	
+	//for Jaxb
 	protected RestMappingItemComputedDisplayField()
 	{
-		//for Jaxb
 		super();
-	}
-
-	public RestMappingItemComputedDisplayField(String id, MapSetItemComponent component) throws RestException
-	{
-		super(id, component);
 	}
 	
 	public RestMappingItemComputedDisplayField(String id, MapSetItemComponent component, String value) throws RestException

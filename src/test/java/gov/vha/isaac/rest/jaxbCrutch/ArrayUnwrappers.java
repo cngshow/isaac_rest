@@ -208,19 +208,6 @@ public class ArrayUnwrappers
 	}
 
 	@XmlRootElement
-	public static class RestMappingSetDisplayFieldBases implements ArrayUnwrapper
-	{
-		@XmlElement
-		protected RestMappingSetDisplayFieldBase[] restMappingSetDisplayFieldBase;
-
-		@Override
-		public Object[] getValues()
-		{
-			return restMappingSetDisplayFieldBase;
-		}
-	}
-
-	@XmlRootElement
 	public static class RestMappingSetDisplayFieldCreates implements ArrayUnwrapper
 	{
 		@XmlElement

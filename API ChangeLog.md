@@ -13,9 +13,15 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/02/02 - 1.9.16
+    * removed the 1/mapping/field API, as there was no use case for it
+    * Changed the RestMappingSetDisplayFieldCreate.componentType to fieldComponentType.  Changed the accepted type from RestMapSetItemComponentType to String, 
+        so it now accepts either an enum ID, or a enum name for a specified RestMapSetItemComponentType.  This resolves issues with .equals not working on the passed
+        in values on create, if it doesn't align perfectly.
+
 * 2017/02/02 - 1.9.15
     * Changed the field displayFields in RestMappingItemVersion (which was of type  RestMappingItemDisplayField) to computedDisplayFields, (now of type 
-        RestMappingItemComputedDisplayField).  Several unecessary fields were removed from RestMappingItemComputedDisplayField.  The class 
+        RestMappingItemComputedDisplayField).  Several unnecessary fields were removed from RestMappingItemComputedDisplayField.  The class 
         RestMappingItemDisplayFieldWithValue was also removed (and its contents condensed into RestMappingItemComputedDisplayField)
 
 * 2017/02/01 - 1.9.14:

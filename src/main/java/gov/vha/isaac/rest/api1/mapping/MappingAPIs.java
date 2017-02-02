@@ -249,35 +249,6 @@ public class MappingAPIs
 		
 		return restFields.toArray(new RestMappingSetDisplayField[restFields.size()]);
 	}
-
-	/**
-	 * @param field - name or id (UUID, sequence or NID) identifying a map set item field
-	 * 
-	 * @return a {@link RestMappingSetDisplayField} available for use in ordering and displaying mapping set item fields
-	 * 
-	 * @throws RestException
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.mappingFieldComponent)
-	public RestMappingSetDisplayField getMappingSetDisplayField(
-			@QueryParam(RequestParameters.field) String field
-			) throws RestException {
-		SecurityUtils.validateRole(securityContext, getClass());
-		
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.field);
-		
-		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
-		MapSetDisplayFieldsService.Field existingField = service.getFieldByConceptIdOrStringIdIfNotConceptId(field);
-		
-		if (field == null) {
-			throw new RestException(RequestParameters.field, field, "Invalid or unsupported map set field name. Should be one of " + service.getAllGlobalFieldIds());
-		}
-		
-		return new RestMappingSetDisplayField(existingField);
-	}
 	
 	/**
 	 * @return array of {@link RestMapSetItemComponentType} values available for use in constructing a {@link RestMappingSetDisplayFieldCreate}
