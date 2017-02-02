@@ -13,27 +13,32 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
-* 2017/01/31 - 1.9.14:
-	* Eliminating FULLY_SPECIFIED_NAME, PREFERRED_TERM and UUID item display fields
-	* Adding DESCRIPTION item display field, which uses view coordinate
-	* Eliminating ITEM item display field component type
-	* Eliminating description fields from RestMappingItemVersion
-	* Adding available and default item display fields (DESCRIPTION fields with component types of SOURCE, TARGET and QUALIFIER)
-	* changing mapset creation API behavior to create the following default item display fields in the following order:
-		*	DESCRIPTION(SOURCE), DESCRIPTION(TARGET), DESCRIPTION(QUALIFIER)
-		*	followed by any and all item extended fields, in order
-	
+* 2017/02/02 - 1.9.15
+    * Changed the field displayFields in RestMappingItemVersion (which was of type  RestMappingItemDisplayField) to computedDisplayFields, (now of type 
+        RestMappingItemComputedDisplayField).  Several unecessary fields were removed from RestMappingItemComputedDisplayField.  The class 
+        RestMappingItemDisplayFieldWithValue was also removed (and its contents condensed into RestMappingItemComputedDisplayField)
+
+* 2017/02/01 - 1.9.14:
+    * Eliminating FULLY_SPECIFIED_NAME, PREFERRED_TERM and UUID item display fields
+    * Adding DESCRIPTION item display field, which uses view coordinate
+    * Eliminating ITEM item display field component type
+    * Eliminating description fields from RestMappingItemVersion
+    * Adding available and default item display fields (DESCRIPTION fields with component types of SOURCE, TARGET and QUALIFIER)
+        changing mapset creation API behavior to create the following default item display fields in the following order:
+        DESCRIPTION(SOURCE), DESCRIPTION(TARGET), DESCRIPTION(QUALIFIER)
+        followed by any and all item extended fields, in order
+    
 * 2017/01/31 - 1.9.13:
-	* Adding support for QUALIFIER and ITEM_EXTENDED RestMapSetItemComponentType type
-	* Adding support for ITEM_EXTENDED RestMapSetItemComponentType type, in which "id" refers to extended field column order
-	* Adding support for UUID map item display field
-	* Changing map set and item display fields member from "name" to "id"
-	* Adding new RestMappingItemDisplayFieldWithValue to allow returning some fields with value and others (of ITEM_EXTENDED RestMapSetItemComponentType) without values
+    * Adding support for QUALIFIER and ITEM_EXTENDED RestMapSetItemComponentType type
+    * Adding support for ITEM_EXTENDED RestMapSetItemComponentType type, in which "id" refers to extended field column order
+    * Adding support for UUID map item display field
+    * Changing map set and item display fields member from "name" to "id"
+    * Adding new RestMappingItemDisplayFieldWithValue to allow returning some fields with value and others (of ITEM_EXTENDED RestMapSetItemComponentType) without values
 
 * 2017/01/30 - 1.9.12:
-	* Changing map display fields returned within RestMappingItemVersion to be of type RestMappingItemDisplayField
-	* Removing value member from RestMappingSetDisplayField
-	* Removing "calculated" member from RestMappingSetDisplayField
+    * Changing map display fields returned within RestMappingItemVersion to be of type RestMappingItemDisplayField
+    * Removing value member from RestMappingSetDisplayField
+    * Removing "calculated" member from RestMappingSetDisplayField
 
 * 2017/01/30 - 1.9.11:
     * Added isaacDbId to the RestSystemInfo - this tells you the globally unique ID assigned to the database that this instance is deployed on top of.

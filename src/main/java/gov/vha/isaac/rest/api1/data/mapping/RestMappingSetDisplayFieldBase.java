@@ -53,14 +53,16 @@ import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class RestMappingSetDisplayFieldBase
 {
+	//TODO Joel, fix this javadoc
 	/**
 	 * ID that identifies this field within set of known fields
 	 * Must be non null and be one of values returned by MapSetDisplayFieldsService.getAllFieldNames()
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String id; // TODO should this be private so that set method and ctor can enforce validation?
+	public String id;
 
+	//TODO Joel, I have no idea what you are saying here.  Fix the javadoc.
 	/**
 	 * Optional specification that field should contain data from specified component.
 	 * This will be null in the MapSetDisplayFieldsService and non null in RestMappingSetDisplayFieldCreate.

@@ -336,6 +336,8 @@ public class MappingAPIs
 		
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
+		List<RestMappingSetDisplayField> displayFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(
+				Get.identifierService().getConceptNid(sememeConceptSequence), RequestInfo.get().getStampCoordinate());
 		try
 		{
 			Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
@@ -351,7 +353,7 @@ public class MappingAPIs
 						positions.targetPos, positions.qualfierPos,
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 						RequestInfo.get().shouldExpand(ExpandUtil.comments),
-						processIdUUID));
+						processIdUUID, displayFields));
 				}
 				if (results.size() >= 250)
 				{
@@ -418,6 +420,9 @@ public class MappingAPIs
 		@SuppressWarnings({ "unchecked"})
 		Optional<LatestVersion<DynamicSememe<?>>> latest = sememe.getLatestVersion(DynamicSememe.class, 
 				Util.getPreWorkflowStampCoordinate(processIdUUID, sememe.getNid()));
+		
+		List<RestMappingSetDisplayField> displayFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(
+				Get.identifierService().getConceptNid(sememe.getAssemblageSequence()), RequestInfo.get().getStampCoordinate());
 			
 		if (latest.isPresent())
 		{
@@ -426,7 +431,7 @@ public class MappingAPIs
 				positions.targetPos, positions.qualfierPos,
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
 				RequestInfo.get().shouldExpand(ExpandUtil.comments),
-				processIdUUID);
+				processIdUUID, displayFields);
 		}
 		else
 		{

@@ -18,43 +18,48 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 
 /**
  * 
- * {@link RestMappingItemDisplayField}
+ * {@link RestMappingItemComputedDisplayField}
  * 
  * This class is used to convey available mapping set display fields.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemDisplayField.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingItemComputedDisplayField.class)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class RestMappingItemDisplayField extends RestMappingSetDisplayField
+public class RestMappingItemComputedDisplayField extends RestMappingSetDisplayFieldBase
 {
-	RestMappingItemDisplayField()
+	/**
+	 * In cases where this field represents a text description value for a calculated item such as source, target, or qualifier, 
+	 * this will contain the value to display. 
+	 */
+	@XmlElement
+	public String value;
+	
+	protected RestMappingItemComputedDisplayField()
 	{
 		//for Jaxb
 		super();
 	}
 
-	public RestMappingItemDisplayField(String name, MapSetItemComponent component) throws RestException
+	public RestMappingItemComputedDisplayField(String id, MapSetItemComponent component) throws RestException
 	{
-		//for Jaxb
-		this(name, (IdentifiedObject)null, component, (String)null);
+		super(id, component);
 	}
-	public RestMappingItemDisplayField(String name, IdentifiedObject concept, MapSetItemComponent component, String description) throws RestException
+	
+	public RestMappingItemComputedDisplayField(String id, MapSetItemComponent component, String value) throws RestException
 	{
-		//for Jaxb
-		super(name, concept, component, description);
+		super(id, component);
+		this.value = value;
 	}
 
 	/* (non-Javadoc)
@@ -62,7 +67,6 @@ public class RestMappingItemDisplayField extends RestMappingSetDisplayField
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayField [id=" + id + ", componentType=" + componentType + ", description="
-				+ description + ", fieldNameConceptIdentifiers=" + fieldNameConceptIdentifiers + "]";
+		return "RestMappingSetDisplayField [id=" + id + ", componentType=" + componentType + ", value=" + value + "]";
 	}
 }
