@@ -174,6 +174,7 @@ public class MappingWriteAPIs
 		} 
 		catch (IOException e) 
 		{
+			log.error("Unexpected error: ", e);
 			throw new RestException("Failed creating mapping set name=" + mappingSetCreationData.name + ", inverse=" 
 					+ mappingSetCreationData.inverseName + ", purpose=" + mappingSetCreationData.purpose + ", desc=" + mappingSetCreationData.description);
 		}
