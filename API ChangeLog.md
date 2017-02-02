@@ -13,11 +13,15 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/02/02 - 1.9.16:
+    * Adding generation of default map display fields for both maps and items
+    * Changing all instances of QUALIFIER to EQUIVALENCE_TYPE
+
 * 2017/02/02 - 1.9.15
     * Changed the field displayFields in RestMappingItemVersion (which was of type  RestMappingItemDisplayField) to computedDisplayFields, (now of type 
         RestMappingItemComputedDisplayField).  Several unecessary fields were removed from RestMappingItemComputedDisplayField.  The class 
         RestMappingItemDisplayFieldWithValue was also removed (and its contents condensed into RestMappingItemComputedDisplayField)
-
+    
 * 2017/02/01 - 1.9.14:
     * Eliminating FULLY_SPECIFIED_NAME, PREFERRED_TERM and UUID item display fields
     * Adding DESCRIPTION item display field, which uses view coordinate

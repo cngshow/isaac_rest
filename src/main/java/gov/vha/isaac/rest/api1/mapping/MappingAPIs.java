@@ -495,8 +495,13 @@ public class MappingAPIs
 					}
 				}
 			}
+
+			// Add defaults if empty
+			if (fields.size() == 0) {
+				fields.addAll(getDefaultDisplayFields(itemFieldDefinitions));
+			}
 		}
-		
+
 		return fields;
 	}
 
@@ -532,5 +537,36 @@ public class MappingAPIs
 		}
 		
 		return mapItemFieldsDefinition;
+	}
+
+	public static List<RestMappingSetDisplayField> getDefaultDisplayFields(List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition) {
+		List<RestMappingSetDisplayField> displayFields = new ArrayList<>();
+		// If no display fields passed, then add default display fields
+		// as SOURCE, TARGET and EQUIVALENCE_TYPE DESCRIPTION followed by item extended fields, if any
+		String id = null;
+		MapSetItemComponent componentType = null;
+		try {
+			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
+			componentType = MapSetItemComponent.SOURCE;
+			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
+			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
+			componentType = MapSetItemComponent.TARGET;
+			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
+			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
+			componentType = MapSetItemComponent.EQUIVALENCE_TYPE;
+			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
+
+			for (RestDynamicSememeColumnInfo itemExtendedFieldCol : mapItemFieldsDefinition) {
+				id = itemExtendedFieldCol.columnOrder + "";
+				componentType = MapSetItemComponent.ITEM_EXTENDED;
+				displayFields.add(new RestMappingSetDisplayField(id, Get.conceptService().getConcept(itemExtendedFieldCol.columnLabelConcept.nid), componentType, (String)null));
+			}
+		} catch (Exception e) {
+			String msg = "Failed constructing default item display field id=\"" + id + "\", componentType=" + componentType;
+			log.error(msg, e);
+			throw new RuntimeException(msg, e);
+		}
+		
+		return displayFields;
 	}
 }

@@ -46,6 +46,7 @@ import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
+import gov.vha.isaac.rest.api1.mapping.MappingAPIs;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -183,6 +184,10 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			}
 		}
 
+		if (displayFieldsFromMapSet == null || displayFieldsFromMapSet.size() == 0) {
+			displayFieldsFromMapSet = new ArrayList<>();
+			displayFieldsFromMapSet.addAll(MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(mapSetConcept.nid, stampCoordinate));
+		}
 		if (displayFieldsFromMapSet != null && displayFieldsFromMapSet.size() > 0) {
 			for (RestMappingSetDisplayField fieldFromMapSet : displayFieldsFromMapSet) {
 				if (computedDisplayFields == null) {
@@ -255,7 +260,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		case TARGET:
 			componentNid = targetConceptNid;
 			break;
-		case QUALIFIER:
+		case EQUIVALENCE_TYPE:
 			componentNid = qualifierConceptNid;
 			break;
 		default:

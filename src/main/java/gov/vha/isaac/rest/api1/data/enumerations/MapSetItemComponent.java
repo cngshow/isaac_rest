@@ -27,7 +27,6 @@ package gov.vha.isaac.rest.api1.data.enumerations;
  *
  */
 public enum MapSetItemComponent {
-	SOURCE, TARGET, QUALIFIER, // Attached sememes: i.e. VUID, CODE, SCT_ID, LOINC_NUM, RXCUI, FSN, PT, UUID
-	//ITEM, // Members: i.e. SOURCE_ID, TARGET_ID, QUALIFIER_ID, MAP_ID
-	ITEM_EXTENDED // mapItemExtendedFields column numbers: i.e. 1, 2, 3
+	SOURCE, TARGET, EQUIVALENCE_TYPE, // Attached sememes: i.e. VUID, CODE, SCT_ID, LOINC_NUM, RXCUI, FSN, PT
+	ITEM_EXTENDED // mapItemExtendedFields column numbers: i.e. 0, 1, 2, 3
 }

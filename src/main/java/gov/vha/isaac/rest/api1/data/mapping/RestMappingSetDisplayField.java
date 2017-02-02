@@ -78,9 +78,6 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	public RestMappingSetDisplayField(String id) throws RestException {
 		this(id, (IdentifiedObject)null, (MapSetItemComponent)null, (String)null);
 	}
-	public RestMappingSetDisplayField(String id, MapSetItemComponent component) throws RestException {
-		this(id, (IdentifiedObject)null, component, (String)null);
-	}
 	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field) throws RestException {
 		this(field.getId(), field.getObject(), (MapSetItemComponent)null, (String)null);
 	}
@@ -92,9 +89,15 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 		//for Jaxb
 		super(id, component); // MapSetDisplayFieldsService performs validation
 		if (component == MapSetItemComponent.ITEM_EXTENDED) {
-			// Do not set fieldNameConceptIdentifiers
-			this.description = description;
 			this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
+			if (description != null) {
+				this.description = description;
+			} else if (fieldNameConcept != null) {
+				Optional<String> descriptionOptional = Frills.getDescription(fieldNameConcept.getNid(), RequestInfo.get().getTaxonomyCoordinate());
+				if (descriptionOptional.isPresent()) {
+					this.description = descriptionOptional.get();
+				}
+			}
 		} else {
 			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.id);
 			if (cc.isPresent()) {

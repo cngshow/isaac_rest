@@ -554,7 +554,7 @@ public class MappingWriteAPIs
 			// item extended fields
 			// validates for type and sign but not correspondence to existing item extended field
 			try {
-				Integer colNum = Integer.parseUnsignedInt(passedField.id);
+				Integer colNum = Integer.parseUnsignedInt(passedField.id.trim());
 				dataString = colNum + ":" + passedField.componentType.enumName;
 			} catch (NumberFormatException e) {
 				throw new RestException("RestMappingSetFieldCreate.id", passedField.id, "Invalid or unsupported map set field id " + passedField.id + " for component type " + passedField.componentType.enumName + ". Must be a non-negative integer and should correspond to an existing item extended field");
@@ -751,12 +751,12 @@ public class MappingWriteAPIs
 		}
 		
 		// If no display fields passed, then add default display fields
-		// as SOURCE, TARGET and QUALIFIER DESCRIPTION followed by item extended fields, if any
+		// as SOURCE, TARGET and EQUIVALENCE_TYPE DESCRIPTION followed by item extended fields, if any
 		if (itemDisplayFields == null || itemDisplayFields.size() == 0) {
 			itemDisplayFields = new ArrayList<>();
 			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.SOURCE));
 			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.TARGET));
-			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.QUALIFIER));
+			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.EQUIVALENCE_TYPE));
 	
 			for (RestDynamicSememeColumnInfoCreate itemExtendedFieldCol : itemExtendedFieldDefinitions) {
 				itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(calculatedColumnByPassedItemExtendedFieldDefinition.get(itemExtendedFieldCol) + "", MapSetItemComponent.ITEM_EXTENDED));
