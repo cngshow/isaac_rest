@@ -694,8 +694,8 @@ public class MappingWriteAPIs
 				DynamicSememeValidatorType.COMPONENT_TYPE, 
 				new DynamicSememeArrayImpl<>(new DynamicSememeString[] {new DynamicSememeStringImpl(ObjectChronologyType.CONCEPT.name())}), 
 				true);
-		columns[1] = new DynamicSememeColumnInfo(1, IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_QUALIFIER.getUUID(), DynamicSememeDataType.UUID, null, false, 
-				DynamicSememeValidatorType.IS_KIND_OF, new DynamicSememeUUIDImpl(IsaacMappingConstants.get().MAPPING_QUALIFIERS.getUUID()), true);
+		columns[1] = new DynamicSememeColumnInfo(1, IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE.getUUID(), DynamicSememeDataType.UUID, null, false, 
+				DynamicSememeValidatorType.IS_KIND_OF, new DynamicSememeUUIDImpl(IsaacMappingConstants.get().MAPPING_EQUIVALENCE_TYPES.getUUID()), true);
 		Map<RestDynamicSememeColumnInfoCreate, Integer> calculatedColumnByPassedItemExtendedFieldDefinition = new HashMap<>();
 
 		final int offset = 2;
@@ -1100,8 +1100,8 @@ public class MappingWriteAPIs
 				DynamicSememeValidatorType.COMPONENT_TYPE, 
 				new DynamicSememeArrayImpl<>(new DynamicSememeString[] {new DynamicSememeStringImpl(ObjectChronologyType.CONCEPT.name())}), 
 				true);
-		columns[1] = new DynamicSememeColumnInfo(1, IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_QUALIFIER.getUUID(), DynamicSememeDataType.UUID, null, false, 
-				DynamicSememeValidatorType.IS_KIND_OF, new DynamicSememeUUIDImpl(IsaacMappingConstants.get().MAPPING_QUALIFIERS.getUUID()), true);
+		columns[1] = new DynamicSememeColumnInfo(1, IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE.getUUID(), DynamicSememeDataType.UUID, null, false, 
+				DynamicSememeValidatorType.IS_KIND_OF, new DynamicSememeUUIDImpl(IsaacMappingConstants.get().MAPPING_EQUIVALENCE_TYPES.getUUID()), true);
 		if (extendedFields != null)
 		{
 			int i = 2;
