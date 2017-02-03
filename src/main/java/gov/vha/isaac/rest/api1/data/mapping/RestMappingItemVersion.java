@@ -196,7 +196,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 				//Only need to return these for computed fields...
 				if (fieldFromMapSet.componentType.enumId != MapSetItemComponent.ITEM_EXTENDED.ordinal())
 				{
-					computedDisplayFields.add(constructDisplayField(mapSetConcept.nid, sourceConcept.nid, targetConcept.nid, qualifierConcept.nid, 
+					computedDisplayFields.add(constructDisplayField(mapSetConcept.nid, sourceConcept.nid, targetConcept, qualifierConcept, 
 						fieldFromMapSet.id, MapSetItemComponent.valueOf(fieldFromMapSet.componentType.enumName)));
 				}
 			}
@@ -249,8 +249,8 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		}
 	}
 
-	private static RestMappingItemComputedDisplayField constructDisplayField(int mapSetNid, int sourceConceptNid, int targetConceptNid, int qualifierConceptNid, 
-			String fieldId, MapSetItemComponent componentType) {
+	private static RestMappingItemComputedDisplayField constructDisplayField(int mapSetNid, int sourceConceptNid, RestIdentifiedObject targetConcept, 
+			RestIdentifiedObject qualifierConcept, String fieldId, MapSetItemComponent componentType) {
 		Integer componentNid = null;
 		String value = null;
 		switch(componentType) {
@@ -258,10 +258,10 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			componentNid = sourceConceptNid;
 			break;
 		case TARGET:
-			componentNid = targetConceptNid;
+			componentNid = targetConcept == null ? null : targetConcept.nid;
 			break;
 		case EQUIVALENCE_TYPE:
-			componentNid = qualifierConceptNid;
+			componentNid = qualifierConcept == null ? null : qualifierConcept.nid;
 			break;
 		default:
 			String msg = "Invalid/unsupported MapSetItemComponent value \"" + componentType + "\".  Should be one of " + MapSetItemComponent.values();
@@ -277,7 +277,11 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		} catch (Exception e) {
 			// ignore
 		}
-		if (annotationConceptUuid != null) {
+		if (componentNid == null)
+		{
+			value = null;
+		}
+		else if (annotationConceptUuid != null) {
 			Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, Get.conceptService().getConcept(annotationConceptUuid).getNid(), 
 					RequestInfo.get().getStampCoordinate());
 			// TODO handle missing values and contradictions
