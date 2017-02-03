@@ -94,15 +94,13 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.component.ComponentWriteAPIs;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
-import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValue;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueUpdate;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseUpdate;
@@ -554,8 +552,8 @@ public class MappingWriteAPIs
 		String dataString = null;
 		
 		MapSetItemComponent msit = MapSetItemComponent.parse(passedField.fieldComponentType).orElseThrow(() ->
-			new RestException("RestMappingSetFieldCreate.fieldComponentType", "null", "null map set display field component type. Must be one of " 
-				+ MapSetItemComponent.values()));
+			new RestException("RestMappingSetFieldCreate.fieldComponentType", passedField.fieldComponentType, "unsupported map set display field component type \"" + passedField.fieldComponentType + "\". Must be one of " 
+				+ Arrays.toString(MapSetItemComponent.values())));
 		
 		if (msit == MapSetItemComponent.ITEM_EXTENDED) {
 			// item extended fields
@@ -712,10 +710,18 @@ public class MappingWriteAPIs
 			}
 		}
 		
-		DynamicSememeUsageDescription rdud = Frills.createNewDynamicSememeUsageDescriptionConcept(
+		DynamicSememeUsageDescription tempDsud = null;
+		try {
+			tempDsud = Frills.createNewDynamicSememeUsageDescriptionConcept(
 				mappingName, mappingName, description, columns,
 				IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getConceptSequence(), ObjectChronologyType.CONCEPT, null, editCoord);
-		
+		} catch (Exception e) {
+			String msg = "Failed creating new DynamicSememeUsageDescription for map set " + mappingName;
+			log.error(msg, e);
+			throw new RuntimeException(msg, e);
+		}
+
+		final DynamicSememeUsageDescription rdud = tempDsud;
 		Get.workExecutors().getExecutor().execute(() ->
 		{
 			try
