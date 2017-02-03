@@ -554,8 +554,8 @@ public class MappingWriteAPIs
 		String dataString = null;
 		
 		MapSetItemComponent msit = MapSetItemComponent.parse(passedField.fieldComponentType).orElseThrow(() ->
-			new RestException("RestMappingSetFieldCreate.fieldComponentType", "null", "null map set display field component type. Must be one of " 
-				+ MapSetItemComponent.values()));
+			new RestException("RestMappingSetFieldCreate.fieldComponentType", passedField.fieldComponentType, "unsupported map set display field component type \"" + passedField.fieldComponentType + "\". Must be one of " 
+				+ Arrays.toString(MapSetItemComponent.values())));
 		
 		if (msit == MapSetItemComponent.ITEM_EXTENDED) {
 			// item extended fields
