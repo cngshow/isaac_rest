@@ -1765,14 +1765,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				true);
 		mapItemExtendedFieldCreateDTOs.add(extendedField1Create);
 
-		RestDynamicSememeColumnInfoCreate extendedField2Create = new RestDynamicSememeColumnInfoCreate(
-				MetaData.CONDOR_CLASSIFIER.getNid() + "",
-				new RestDynamicSememeDataType(DynamicSememeDataType.LONG),
-				null, 
-				false,
-				new RestDynamicSememeValidatorType[] { new RestDynamicSememeValidatorType(DynamicSememeValidatorType.LESS_THAN) },
-				new RestDynamicSememeData[] { new RestDynamicSememeLong(1, 40) });
-		mapItemExtendedFieldCreateDTOs.add(extendedField2Create);
+//		RestDynamicSememeColumnInfoCreate extendedField2Create = new RestDynamicSememeColumnInfoCreate(
+//				MetaData.CONDOR_CLASSIFIER.getNid() + "",
+//				new RestDynamicSememeDataType(DynamicSememeDataType.LONG),
+//				null, 
+//				false,
+//				new RestDynamicSememeValidatorType[] { new RestDynamicSememeValidatorType(DynamicSememeValidatorType.LESS_THAN) },
+//				new RestDynamicSememeData[] { new RestDynamicSememeLong(1, 40) });
+//		mapItemExtendedFieldCreateDTOs.add(extendedField2Create);
 
 		RestMappingSetVersionBaseCreate newMappingSetData = new RestMappingSetVersionBaseCreate(
 				newMappingSetName,
@@ -1781,7 +1781,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				newMappingSetPurpose,
 				(Boolean)null,
 				(List<RestMappingSetExtensionValueCreate>)null,
-				/* mapItemExtendedFieldCreateDTOs */null,
+				mapItemExtendedFieldCreateDTOs,
 				mapSetDisplayFieldCreateDTOs);
 
 		String xml = null;
@@ -1852,7 +1852,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MetaData.LOINC_NUM.getPrimordialUuid().toString(), MapSetItemComponent.TARGET));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.TARGET));
 
-		//mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(0 + "", MapSetItemComponent.ITEM_EXTENDED));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(0 + "", MapSetItemComponent.ITEM_EXTENDED));
 		//mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(1 + "", MapSetItemComponent.ITEM_EXTENDED));
 
 		RestMappingSetVersionBaseUpdate updatedMappingSetData = new RestMappingSetVersionBaseUpdate(
@@ -1971,12 +1971,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_LOINC_NUM, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.LOINC_NUM.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
 		Get.commitService().commit("VUID, SCTID, LOINC_NUM, CODE and RXCUI for SNOROCKET_CLASSIFIER and ENGLISH_LANGUAGE for testing only");
 		
+		List<RestDynamicSememeData> mapItemExtendedFields  = new ArrayList<>();
+		RestDynamicSememeData itemExtendedField0 = new RestDynamicSememeBoolean(0, true);
+		mapItemExtendedFields.add(itemExtendedField0);
+//		RestDynamicSememeData itemExtendedField1 = new RestDynamicSememeLong(1, 12345L);
+//		mapItemExtendedFields.add(itemExtendedField1);
 		RestMappingItemVersionCreate newMappingSetItemData = new RestMappingItemVersionCreate(
 				targetConceptSeq + "",
 				qualifierConceptUuid,
 				testMappingSetUUID.toString(),
 				sourceConceptSeq + "",
-				null, null);
+				mapItemExtendedFields, null);
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(newMappingSetItemData);
@@ -2013,7 +2018,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept.sequence);
 		Assert.assertTrue(qualifierConceptUuid.equals(retrievedMappingItemVersion.qualifierConcept.getFirst().toString()));
 		Assert.assertEquals(updatedMappingSetObject.identifiers.sequence, retrievedMappingItemVersion.mapSetConcept.sequence);
-		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.size(), mapSetDisplayFieldCreateDTOs.size());
+		// Only computed (SOURCE|TARGET|EQUIVALENCE_TYPE) display fields should be in the item, not ITEM_EXTENDED
+		List<RestMappingSetDisplayFieldCreate> computedMapSetDisplayFieldCreateDTOs =  new ArrayList<>();
+		List<RestMappingSetDisplayFieldCreate> extendedFieldMapSetDisplayFieldCreateDTOs =  new ArrayList<>();
+		for (RestMappingSetDisplayFieldCreate anyTypeField : mapSetDisplayFieldCreateDTOs) {
+			if (! anyTypeField.fieldComponentType.equals(MapSetItemComponent.ITEM_EXTENDED.name())) {
+				computedMapSetDisplayFieldCreateDTOs.add(anyTypeField);
+			} else {
+				extendedFieldMapSetDisplayFieldCreateDTOs.add(anyTypeField);
+			}
+		}
+		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.size(), computedMapSetDisplayFieldCreateDTOs.size());
+		Assert.assertEquals(retrievedMappingItemVersion.mapItemExtendedFields.size(), extendedFieldMapSetDisplayFieldCreateDTOs.size());
 		boolean foundSourceVuidDisplayField = false;
 		boolean foundSourceSctIdDisplayField = false;
 		boolean foundSourceCodeDisplayField = false;
@@ -2166,7 +2182,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersionUpdate updatedMappingItemData = new RestMappingItemVersionUpdate(
 				updatedTargetConceptSeq,
 				updatedQualifierConceptSeq,
-				null,null);
+				mapItemExtendedFields,null);
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(updatedMappingItemData);
