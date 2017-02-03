@@ -424,8 +424,8 @@ public class MappingAPIs
 			StampCoordinate stampCoord) {
 		List<RestMappingSetDisplayField> fields = new ArrayList<>();
 		Optional<SememeChronology<? extends SememeVersion<?>>> mapSetFieldsSememe = Frills.getAnnotationSememe(mappingConceptNid, IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence());
+		List<RestDynamicSememeColumnInfo> itemFieldDefinitions = getItemFieldDefinitions(mappingConceptNid);
 		if (mapSetFieldsSememe.isPresent()) {
-			List<RestDynamicSememeColumnInfo> itemFieldDefinitions = getItemFieldDefinitions(mappingConceptNid);
 
 			@SuppressWarnings({ "rawtypes" })
 			Optional<LatestVersion<DynamicSememeImpl>> existingVersionOptionalLatest = ((SememeChronology)mapSetFieldsSememe.get()).getLatestVersion(DynamicSememeImpl.class, stampCoord);
@@ -466,11 +466,11 @@ public class MappingAPIs
 					}
 				}
 			}
+		}
 
-			// Add defaults if empty
-			if (fields.size() == 0) {
-				fields.addAll(getDefaultDisplayFields(itemFieldDefinitions));
-			}
+		// Add defaults if empty
+		if (fields.size() == 0) {
+			fields.addAll(getDefaultDisplayFields(itemFieldDefinitions));
 		}
 
 		return fields;
