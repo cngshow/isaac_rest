@@ -419,11 +419,11 @@ public class MappingWriteAPIs
 		{
 			throw new RestException("mapSetConcept", mappingItemCreationData.mapSetConcept + "", "Unable to locate the map set");
 		}
-		if (mappingItemCreationData.targetConcept != null && !targetConcept.isPresent())
+		if (StringUtils.isNotBlank(mappingItemCreationData.targetConcept) && !targetConcept.isPresent())
 		{
 			throw new RestException("targetConcept", mappingItemCreationData.targetConcept + "", "Unable to locate the target concept");
 		}
-		if (mappingItemCreationData.qualifierConcept != null && !qualifierID.isPresent())
+		if (StringUtils.isNotBlank(mappingItemCreationData.qualifierConcept) && !qualifierID.isPresent())
 		{
 			throw new RestException("qualifierConcept", mappingItemCreationData.qualifierConcept + "", "Unable to locate the qualifier concept");
 		}
@@ -472,12 +472,16 @@ public class MappingWriteAPIs
 		
 		Optional<UUID> targetConcept = readConcept(mappingItemUpdateData.targetConcept, "mappingItemUpdateData.targetConcept");
 		
-		if (mappingItemUpdateData.targetConcept != null && !targetConcept.isPresent())
+		if (StringUtils.isNotBlank(mappingItemUpdateData.targetConcept) && !targetConcept.isPresent())
 		{
 			throw new RestException("targetConcept", mappingItemUpdateData.targetConcept + "", "Unable to locate the target concept");
 		}
 
 		Optional<UUID> qualifierConcept = readConcept(mappingItemUpdateData.qualifierConcept, "mappingItemUpdateData.qualifierConcept");
+		if (StringUtils.isNotBlank(mappingItemUpdateData.qualifierConcept) && !qualifierConcept.isPresent())
+		{
+			throw new RestException("qualifierConcept", mappingItemUpdateData.qualifierConcept + "", "Unable to locate the qualifier concept");
+		}
 		
 		try {
 			return updateMappingItem(

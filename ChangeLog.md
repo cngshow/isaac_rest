@@ -11,6 +11,7 @@ API version number, not the release version number.
         in positions 0 and 1 of the sememe
     * Defect 440248 Mapping Qualifier renamed to Equivalence Type with different values.
     * Task 444801 Rest API support for computed columns (map item display fields) in map sets
+    * fix null vs empty string checks on map item create / update for optional fields of qualifier and target.
 
 * 2017/01/26 - 1.37
     * Many RestMapSet changes
