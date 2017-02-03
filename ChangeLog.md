@@ -5,13 +5,13 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/01/?? - ???
+* 2017/02/03 - 1.38
     * Fixed the root cause of 439352, which was (sometimes) occurring when isaac-rest was deployed - especially if it needed to download a new database.
     * Fixed a bug in the map set definitions, where the wrong columns may have been returned for map items, if the target and qualifier columns were not 
         in positions 0 and 1 of the sememe
     * Defect 440248 Mapping Qualifier renamed to Equivalence Type with different values.
     * Task 444801 Rest API support for computed columns (map item display fields) in map sets
-    * fix null vs empty string checks on map item create / update for optional fields of qualifier and target.
+    * Fix null vs empty string checks on map item create / update for optional fields of qualifier and target.
 
 * 2017/01/26 - 1.37
     * Many RestMapSet changes
