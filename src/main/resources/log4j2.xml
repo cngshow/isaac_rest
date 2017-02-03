@@ -6,19 +6,30 @@
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</Console>
 		<!-- the appenders for root -->
-		<File name="appender-root-all" fileName="${sys:catalina.base}/logs/${web:contextPath}.log" append="false">
+		<RollingFile name="appender-root-all" fileName="${sys:catalina.base}/logs/${web:contextPath}.log" 
+			filePattern="${sys:catalina.base}/logs/${web:contextPath}-%i.log">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
-		</File>
-		<File name="appender-root-error" fileName="${sys:catalina.base}/logs${web:contextPath}-err.log" append="false">
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="500 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="20"/>
+		</RollingFile>
+		<RollingFile name="appender-root-error" fileName="${sys:catalina.base}/logs${web:contextPath}-err.log" 
+			filePattern="${sys:catalina.base}/logs${web:contextPath}-err-%i.log">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
-		</File>
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="500 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="20"/>
+		</RollingFile>
 
 		<!-- the appender for PRISME -->
-		<!--
 		<PrismeLogAppender name="appender-prisme-all" ignoreExceptions="true">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</PrismeLogAppender>
-		-->
+
 	</Appenders>
 
 	<Loggers>

@@ -18,50 +18,66 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
-import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 
 /**
  * 
  * {@link RestMappingSetDisplayFieldCreate}
  * 
- * This class is used to convey available mapping fields.
+ * This class is used to specify a field for ordering on a map set during update or create.
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @XmlRootElement
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestMappingSetDisplayFieldCreate.class)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class RestMappingSetDisplayFieldCreate extends RestMappingSetDisplayFieldBase
+public class RestMappingSetDisplayFieldCreate
 {
+	/**
+	 * ID that identifies this display field.  Depending on the value of fieldComponenetType, this may be one of three distinct types:
+	 * 
+	 *  1) when fieldComponentType below is set to ITEM_EXTENDED, this should be the integer column number that represents the columnPosition 
+	 *     of the extended field (extensionValue.columnNumber)
+	 *  2)  when fieldComponentType below is set to a value such as SOURCE or TARGET - This required value must be an ID pulled from 
+	 *        1/mapping/fields[.id].
+	 *      2a) This id may be a UUID, or
+	 *      2b) This id may be a string constant such as DESCRIPTION
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String id;
+
+	/**
+	 * This should be a enumName or enumId from the available values at /1/mapping/fieldComponentTypes - however in the case where the id is set to an id 
+	 * from 1/mapping/fields, the value can more easily be populated from 1/mapping/fields[.componentType]
+	 * 
+	 * Example values of for this field are SOURCE, ITEM_EXTENDED
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String fieldComponentType;
+	
 	RestMappingSetDisplayFieldCreate()
 	{
 		//for Jaxb
 		super();
 	}
-
+	
 	/**
 	 * @param name required to be one of the values returned by MapSetDisplayFieldsService.getAllFieldNames()
 	 * @param componentType required to be non null
 	 * @throws RestException
 	 */
-	public RestMappingSetDisplayFieldCreate(String name, RestMapSetItemComponentType componentType) throws RestException
+	public RestMappingSetDisplayFieldCreate(String id, MapSetItemComponent componentType) throws RestException
 	{
-		super(name, validateAndReturnRestMapSetItemComponentType(name, componentType));
-	}
-	/**
-	 * @param field required to be one of the values returned by MapSetDisplayFieldsService.getAllFields()
-	 * @param componentType required to be non null
-	 * @throws RestException
-	 */
-	public RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field field, RestMapSetItemComponentType componentType) throws RestException {
-		this(field.getName(), componentType);
+		this.id = id;
+		this.fieldComponentType = componentType.name();
 	}
 
 	/* (non-Javadoc)
@@ -69,14 +85,6 @@ public class RestMappingSetDisplayFieldCreate extends RestMappingSetDisplayField
 	 */
 	@Override
 	public String toString() {
-		return "RestMappingSetDisplayFieldCreate [name=" + name + ", componentType=" + componentType + "]";
-	}
-
-	private static RestMapSetItemComponentType validateAndReturnRestMapSetItemComponentType(String name, RestMapSetItemComponentType componentType) throws RestException {
-		if (componentType != null) {
-			return componentType;
-		} else {
-			throw new RestException("Cannon construct RestMappingSetDisplayFieldCreate " + name + " with null RestMapSetItemComponentType");
-		}
+		return "RestMappingSetDisplayFieldCreate [name=" + id + ", fieldComponentType=" + fieldComponentType + "]";
 	}
 }

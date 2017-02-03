@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.data.sememe;
 
+import java.util.Arrays;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -152,5 +154,16 @@ public class RestDynamicSememeColumnInfoCreate
 	public RestDynamicSememeColumnInfoCreate(String columnConceptLabelConcept, RestDynamicSememeDataType columnDataType, boolean columnRequired)
 	{
 		this(columnConceptLabelConcept, columnDataType, null, columnRequired, null, null);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestDynamicSememeColumnInfoCreate [columnLabelConcept=" + columnLabelConcept + ", columnDataType="
+				+ columnDataType + ", columnDefaultData=" + columnDefaultData + ", columnRequired=" + columnRequired
+				+ ", columnValidatorTypes=" + Arrays.toString(columnValidatorTypes) + ", columnValidatorData="
+				+ Arrays.toString(columnValidatorData) + "]";
 	}
 }

@@ -22,15 +22,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
@@ -41,14 +39,12 @@ import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUsageDescription;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
-import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
@@ -57,9 +53,11 @@ import gov.vha.isaac.rest.api1.comment.CommentAPIs;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
+import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.mapping.MappingAPIs;
+import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -73,6 +71,8 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestMappingSetVersion extends RestMappingSetVersionBase implements Comparable<RestMappingSetVersion>
 {
+	private static Logger log = LogManager.getLogger(RestMappingSetVersion.class);
+	
 	//TODO populate expandables
 	/**
 	 * The data that was not expanded as part of this call (but can be)
@@ -123,7 +123,7 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		//for Jaxb
 		super();
 	}
-	 
+
 	/**
 	 * This code expects to read a sememe of type {@link IsaacMappingConstants#DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE}
 	 * @param sememe
@@ -148,14 +148,8 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 		}
 		
 		//read the extended field definition information
-		DynamicSememeUsageDescription dsud = DynamicSememeUsageDescriptionImpl.read(mappingConcept.getNid());
-		//Columns 0 and 1 are used to store the target concept and qualifier, we shouldn't return them here.
-		for (int i = 2; i < dsud.getColumnInfo().length; i++)
-		{
-			mapItemFieldsDefinition.add(new RestDynamicSememeColumnInfo(dsud.getColumnInfo()[i]));
-			mapItemFieldsDefinition.get(i - 2).columnOrder = mapItemFieldsDefinition.get(i - 2).columnOrder - 2; 
-		}
-
+		mapItemFieldsDefinition.addAll(MappingAPIs.getItemFieldDefinitions(mappingConcept.getNid()));
+		
 		//Read the extended fields off of the map set concept.
 		//Strings
 		Get.sememeService().getSememesForComponentFromAssemblage(mappingConcept.getNid(), 

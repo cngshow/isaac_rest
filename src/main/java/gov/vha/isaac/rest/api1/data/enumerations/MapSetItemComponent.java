@@ -19,6 +19,9 @@
 
 package gov.vha.isaac.rest.api1.data.enumerations;
 
+import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * 
  * {@link MapSetItemComponent}
@@ -27,7 +30,23 @@ package gov.vha.isaac.rest.api1.data.enumerations;
  *
  */
 public enum MapSetItemComponent {
-	SOURCE,
-	TARGET
-	//, QUALIFIER
+	SOURCE, TARGET, EQUIVALENCE_TYPE, // Attached sememes: i.e. VUID, CODE, SCT_ID, LOINC_NUM, RXCUI, FSN, PT, UUID
+	//ITEM, // Members: i.e. SOURCE_ID, TARGET_ID, QUALIFIER_ID, MAP_ID
+	ITEM_EXTENDED;// mapItemExtendedFields column numbers: i.e. 1, 2, 3
+	
+	public static Optional<MapSetItemComponent> parse(String input)
+	{
+		if (StringUtils.isNotBlank(input))
+		{
+			String trimmed = input.trim();
+			for (MapSetItemComponent msit : MapSetItemComponent.values())
+			{
+				if (("" + msit.ordinal()).equals(trimmed) || msit.name().equalsIgnoreCase(trimmed))
+				{
+					return Optional.of(msit);
+				}
+			}
+		}
+		return Optional.empty();
+	}
 }

@@ -122,7 +122,8 @@ public class XMLUtils {
 					ArrayUnwrappers.RestWorkflowProcessHistoriesMapEntries.class, ArrayUnwrappers.RestWorkflowAvailableActions.class, 
 					ArrayUnwrappers.RestAssociationTypeVersions.class, ArrayUnwrappers.RestAssociationItemVersions.class, ArrayUnwrappers.RestWorkflowDefinitions.class,
 					ArrayUnwrappers.RestWorkflowProcesses.class,
-					ArrayUnwrappers.RestMappingSetDisplayFields.class, ArrayUnwrappers.RestMappingSetDisplayFieldBases.class, ArrayUnwrappers.RestMappingSetDisplayFieldCreates.class);
+					ArrayUnwrappers.RestMappingSetDisplayFields.class, ArrayUnwrappers.RestMappingSetDisplayFieldCreates.class,
+					ArrayUnwrappers.RestMapSetItemComponentTypes.class);
 
 			Unmarshaller unMarshaller = jaxbContext.createUnmarshaller();
 			ArrayUnwrapper object = (ArrayUnwrapper)unMarshaller.unmarshal(streamSource);

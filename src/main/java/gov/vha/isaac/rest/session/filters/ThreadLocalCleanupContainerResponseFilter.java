@@ -53,6 +53,13 @@ public class ThreadLocalCleanupContainerResponseFilter implements ContainerRespo
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException 
 	{
 		log.debug("Removing RequestInfo state in ThreadLocal after server response to client request...");
-		RequestInfo.remove();
+		try
+		{
+			RequestInfo.remove();
+		}
+		catch (Throwable e)
+		{
+			log.error("Unexpected error trying to clear the thread local", e);
+		}
 	}
 }

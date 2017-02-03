@@ -13,9 +13,57 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/02/02 - 1.9.16
+    * removed the 1/mapping/field API, as there was no use case for it
+    * Changed the RestMappingSetDisplayFieldCreate.componentType to fieldComponentType.  Changed the accepted type from RestMapSetItemComponentType to String, 
+        so it now accepts either an enum ID, or a enum name for a specified RestMapSetItemComponentType.  This resolves issues with .equals not working on the passed
+        in values on create, if it doesn't align perfectly.
+    * Adding generation of default map display fields for both maps and items
+    * Changing all instances of QUALIFIER to EQUIVALENCE_TYPE
+
+* 2017/02/02 - 1.9.15
+    * Changed the field displayFields in RestMappingItemVersion (which was of type  RestMappingItemDisplayField) to computedDisplayFields, (now of type 
+        RestMappingItemComputedDisplayField).  Several unnecessary fields were removed from RestMappingItemComputedDisplayField.  The class 
+        RestMappingItemDisplayFieldWithValue was also removed (and its contents condensed into RestMappingItemComputedDisplayField)
+    
+* 2017/02/01 - 1.9.14:
+    * Eliminating FULLY_SPECIFIED_NAME, PREFERRED_TERM and UUID item display fields
+    * Adding DESCRIPTION item display field, which uses view coordinate
+    * Eliminating ITEM item display field component type
+    * Eliminating description fields from RestMappingItemVersion
+    * Adding available and default item display fields (DESCRIPTION fields with component types of SOURCE, TARGET and QUALIFIER)
+        changing mapset creation API behavior to create the following default item display fields in the following order:
+        DESCRIPTION(SOURCE), DESCRIPTION(TARGET), DESCRIPTION(QUALIFIER)
+        followed by any and all item extended fields, in order
+    
+* 2017/01/31 - 1.9.13:
+    * Adding support for QUALIFIER and ITEM_EXTENDED RestMapSetItemComponentType type
+    * Adding support for ITEM_EXTENDED RestMapSetItemComponentType type, in which "id" refers to extended field column order
+    * Adding support for UUID map item display field
+    * Changing map set and item display fields member from "name" to "id"
+    * Adding new RestMappingItemDisplayFieldWithValue to allow returning some fields with value and others (of ITEM_EXTENDED RestMapSetItemComponentType) without values
+
+* 2017/01/30 - 1.9.12:
+    * Changing map display fields returned within RestMappingItemVersion to be of type RestMappingItemDisplayField
+    * Removing value member from RestMappingSetDisplayField
+    * Removing "calculated" member from RestMappingSetDisplayField
+
+* 2017/01/30 - 1.9.11:
+    * Added isaacDbId to the RestSystemInfo - this tells you the globally unique ID assigned to the database that this instance is deployed on top of.
+    * Added warId to the RestSystemInfo - this tells you the UUID assigned by PRISME during deployment (this is read from prisme.properties: war_uuid)
+        This only populated if deployed via PRISME.
+
+* 2017/01/24 - 1.9.10:
+    * Changing identifier for fully specified name description map item display field to a string ("FULLY_SPECIFIED_NAME") literal rather than a UUID ("00791270-77c9-32b6-b34f-d932569bd2bf")
+    * Dynamically adding availability of some potential map item display fields
+
+* 2017/01/24 - 1.9.9:
+    * Adding user friendly description to map item display fields
+    * Adding API MappingAPIs.getAvailableMappingSetDisplayFieldComponentTypes() (fieldComponentTypes/) to return available map item display field component types (i.e. "SOURCE", "TARGET")
+
 * 2017/01/24 - 1.9.8:
     * Modifying Mapping item display fields APIs to populate item fields
-    * Changing some map item display field related DTO member names
+    * Changing some map item display field related data transfer object member names
     * Changing to allow specification of map item display field component by enum
 
 * 2017/01/23 - 1.9.7:

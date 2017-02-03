@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -39,7 +40,8 @@ public class Expandables
 	 * be expanded with a second trip by calling the provided URL
 	 */
 	@XmlElement
-	List<Expandable> items;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public List<Expandable> items;
 	
 	public Expandables() {
 		// For JAXB only

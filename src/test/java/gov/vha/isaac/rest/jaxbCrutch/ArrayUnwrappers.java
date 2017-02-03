@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
+import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
@@ -207,19 +208,6 @@ public class ArrayUnwrappers
 	}
 
 	@XmlRootElement
-	public static class RestMappingSetDisplayFieldBases implements ArrayUnwrapper
-	{
-		@XmlElement
-		protected RestMappingSetDisplayFieldBase[] restMappingSetDisplayFieldBase;
-
-		@Override
-		public Object[] getValues()
-		{
-			return restMappingSetDisplayFieldBase;
-		}
-	}
-
-	@XmlRootElement
 	public static class RestMappingSetDisplayFieldCreates implements ArrayUnwrapper
 	{
 		@XmlElement
@@ -229,6 +217,19 @@ public class ArrayUnwrappers
 		public Object[] getValues()
 		{
 			return restMappingSetDisplayFieldCreate;
+		}
+	}
+	
+	@XmlRootElement
+	public static class RestMapSetItemComponentTypes implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestMapSetItemComponentType[] restMapSetItemComponentType;
+
+		@Override
+		public Object[] getValues()
+		{
+			return restMapSetItemComponentType;
 		}
 	}
 }
