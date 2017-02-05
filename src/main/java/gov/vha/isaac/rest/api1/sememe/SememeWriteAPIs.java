@@ -391,7 +391,7 @@ public class SememeWriteAPIs
 						RestDynamicSememeData.translate(sememeTypeCreationData.dataColumnsDefinition[i].columnDefaultData), 
 						sememeTypeCreationData.dataColumnsDefinition[i].columnRequired, 
 						DynamicSememeValidatorType.parse(sememeTypeCreationData.dataColumnsDefinition[i].columnValidatorTypes, true), 
-						RestDynamicSememeData.translate(sememeTypeCreationData.dataColumnsDefinition[i].columnValidatorData, false), true);
+						RestDynamicSememeData.translate(sememeTypeCreationData.dataColumnsDefinition[i].columnValidatorData), true);
 			}
 		}
 		

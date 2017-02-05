@@ -198,10 +198,26 @@ public abstract class RestDynamicSememeData
 				throw new RuntimeException("Programmer error");
 		}
 	}
-	
+
 	/**
-	 * This implementation sorts by the column number, and fills gaps (with nulls) as appropriate, as determined by the 
-	 * passed in column numbers
+	 * This implementation sorts by the column number
+	 * 
+	 * @param values
+	 * @return
+	 * @throws RestException
+	 */
+	public static DynamicSememeData[] translate(RestDynamicSememeData[] values) throws RestException {
+		return translate(values, false);
+	}
+	/**
+	 * 
+	 * This implementation sorts by the column number, and, if nullPadGaps is true, fills gaps (with nulls) as appropriate,
+	 * as determined by the passed in column numbers
+	 * 
+	 * @param values
+	 * @param nullPadGaps
+	 * @return
+	 * @throws RestException
 	 */
 	public static DynamicSememeData[] translate(RestDynamicSememeData[] values, boolean nullPadGaps) throws RestException
 	{

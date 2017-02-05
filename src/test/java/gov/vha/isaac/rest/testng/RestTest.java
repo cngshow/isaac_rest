@@ -144,7 +144,6 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
-import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldBase;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetExtensionValueUpdate;
@@ -1758,20 +1757,29 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Create item extended fields here
 		List<RestDynamicSememeColumnInfoCreate> mapItemExtendedFieldCreateDTOs = new ArrayList<>();
-		RestDynamicSememeColumnInfoCreate extendedField1Create = new RestDynamicSememeColumnInfoCreate(
+		RestDynamicSememeColumnInfoCreate extendedField0Create = new RestDynamicSememeColumnInfoCreate(
 				MetaData.BOOLEAN_LITERAL.getNid() + "",
 				RestDynamicSememeDataType.valueOf(DynamicSememeDataType.BOOLEAN.name()),
 				new RestDynamicSememeBoolean(0, true), 
 				true);
-		mapItemExtendedFieldCreateDTOs.add(extendedField1Create);
+		mapItemExtendedFieldCreateDTOs.add(extendedField0Create);
 
-		RestDynamicSememeColumnInfoCreate extendedField2Create = new RestDynamicSememeColumnInfoCreate(
+		RestDynamicSememeColumnInfoCreate extendedField1Create = new RestDynamicSememeColumnInfoCreate(
 				MetaData.CONDOR_CLASSIFIER.getNid() + "",
 				new RestDynamicSememeDataType(DynamicSememeDataType.LONG),
 				null, 
 				true,
 				new RestDynamicSememeValidatorType[] { new RestDynamicSememeValidatorType(DynamicSememeValidatorType.LESS_THAN) },
 				new RestDynamicSememeData[] { new RestDynamicSememeLong(0, 12346) });
+		mapItemExtendedFieldCreateDTOs.add(extendedField1Create);
+
+		RestDynamicSememeColumnInfoCreate extendedField2Create = new RestDynamicSememeColumnInfoCreate(
+				MetaData.DANISH_LANGUAGE.getNid() + "",
+				new RestDynamicSememeDataType(DynamicSememeDataType.STRING),
+				null, 
+				false,
+				(RestDynamicSememeValidatorType[])null,
+				(RestDynamicSememeData[])null);
 		mapItemExtendedFieldCreateDTOs.add(extendedField2Create);
 
 		RestMappingSetVersionBaseCreate newMappingSetData = new RestMappingSetVersionBaseCreate(
@@ -1854,6 +1862,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(0 + "", MapSetItemComponent.ITEM_EXTENDED));
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(1 + "", MapSetItemComponent.ITEM_EXTENDED));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(2 + "", MapSetItemComponent.ITEM_EXTENDED));
 
 		RestMappingSetVersionBaseUpdate updatedMappingSetData = new RestMappingSetVersionBaseUpdate(
 				updatedMappingSetName,
@@ -1976,6 +1985,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		mapItemExtendedFields.add(itemExtendedField0);
 		RestDynamicSememeData itemExtendedField1 = new RestDynamicSememeLong(1, 12345L);
 		mapItemExtendedFields.add(itemExtendedField1);
+		// This is an optional/non-required item extended field
+//		RestDynamicSememeData itemExtendedField2 = new RestDynamicSememeString(2, "test extended field");
+//		mapItemExtendedFields.add(itemExtendedField2);
 		RestMappingItemVersionCreate newMappingSetItemData = new RestMappingItemVersionCreate(
 				targetConceptSeq + "",
 				qualifierConceptUuid,
@@ -2029,7 +2041,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 		}
 		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.size(), computedMapSetDisplayFieldCreateDTOs.size());
-		Assert.assertEquals(retrievedMappingItemVersion.mapItemExtendedFields.size(), extendedFieldMapSetDisplayFieldCreateDTOs.size());
+		Assert.assertEquals(retrievedMappingItemVersion.mapItemExtendedFields.size(), mapItemExtendedFields.size());
 		boolean foundSourceVuidDisplayField = false;
 		boolean foundSourceSctIdDisplayField = false;
 		boolean foundSourceCodeDisplayField = false;

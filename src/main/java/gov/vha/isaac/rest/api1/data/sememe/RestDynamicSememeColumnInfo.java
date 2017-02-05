@@ -124,6 +124,8 @@ public class RestDynamicSememeColumnInfo
 		{
 			for (int i = 0; i < dsci.getValidatorData().length; i++)
 			{
+				// NOTE this dsci.getColumnOrder() column number value is meaningless and useless here
+				// and could just as well be set to anything
 				this.columnValidatorData[i] = RestDynamicSememeData.translate(dsci.getColumnOrder(), dsci.getValidatorData()[i]);
 			}
 		}
@@ -136,6 +138,4 @@ public class RestDynamicSememeColumnInfo
 			}
 		}
 	}
-
-	
 }
