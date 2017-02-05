@@ -1765,14 +1765,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				true);
 		mapItemExtendedFieldCreateDTOs.add(extendedField1Create);
 
-//		RestDynamicSememeColumnInfoCreate extendedField2Create = new RestDynamicSememeColumnInfoCreate(
-//				MetaData.CONDOR_CLASSIFIER.getNid() + "",
-//				new RestDynamicSememeDataType(DynamicSememeDataType.LONG),
-//				null, 
-//				false,
-//				new RestDynamicSememeValidatorType[] { new RestDynamicSememeValidatorType(DynamicSememeValidatorType.LESS_THAN) },
-//				new RestDynamicSememeData[] { new RestDynamicSememeLong(1, 40) });
-//		mapItemExtendedFieldCreateDTOs.add(extendedField2Create);
+		RestDynamicSememeColumnInfoCreate extendedField2Create = new RestDynamicSememeColumnInfoCreate(
+				MetaData.CONDOR_CLASSIFIER.getNid() + "",
+				new RestDynamicSememeDataType(DynamicSememeDataType.LONG),
+				null, 
+				true,
+				new RestDynamicSememeValidatorType[] { new RestDynamicSememeValidatorType(DynamicSememeValidatorType.LESS_THAN) },
+				new RestDynamicSememeData[] { new RestDynamicSememeLong(0, 12346) });
+		mapItemExtendedFieldCreateDTOs.add(extendedField2Create);
 
 		RestMappingSetVersionBaseCreate newMappingSetData = new RestMappingSetVersionBaseCreate(
 				newMappingSetName,
@@ -1853,7 +1853,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.TARGET));
 
 		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(0 + "", MapSetItemComponent.ITEM_EXTENDED));
-		//mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(1 + "", MapSetItemComponent.ITEM_EXTENDED));
+		mapSetDisplayFieldCreateDTOs.add(new RestMappingSetDisplayFieldCreate(1 + "", MapSetItemComponent.ITEM_EXTENDED));
 
 		RestMappingSetVersionBaseUpdate updatedMappingSetData = new RestMappingSetVersionBaseUpdate(
 				updatedMappingSetName,
@@ -1974,8 +1974,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		List<RestDynamicSememeData> mapItemExtendedFields  = new ArrayList<>();
 		RestDynamicSememeData itemExtendedField0 = new RestDynamicSememeBoolean(0, true);
 		mapItemExtendedFields.add(itemExtendedField0);
-//		RestDynamicSememeData itemExtendedField1 = new RestDynamicSememeLong(1, 12345L);
-//		mapItemExtendedFields.add(itemExtendedField1);
+		RestDynamicSememeData itemExtendedField1 = new RestDynamicSememeLong(1, 12345L);
+		mapItemExtendedFields.add(itemExtendedField1);
 		RestMappingItemVersionCreate newMappingSetItemData = new RestMappingItemVersionCreate(
 				targetConceptSeq + "",
 				qualifierConceptUuid,

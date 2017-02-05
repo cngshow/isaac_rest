@@ -710,7 +710,7 @@ public class MappingWriteAPIs
 								RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapItemExtendedFieldsDefinition.columnLabelConcept", 
 										colInfo.columnLabelConcept)).get(), 
 						DynamicSememeDataType.parse(colInfo.columnDataType, true), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
-						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
+						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData, false), true);
 			}
 		}
 		
@@ -1112,7 +1112,7 @@ public class MappingWriteAPIs
 								RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.columnLabelConcept", 
 										colInfo.columnLabelConcept)).get(), 
 						DynamicSememeDataType.parse(colInfo.columnDataType, true), RestDynamicSememeData.translate(colInfo.columnDefaultData), colInfo.columnRequired, 
-						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData), true);
+						DynamicSememeValidatorType.parse(colInfo.columnValidatorTypes, true), RestDynamicSememeData.translate(colInfo.columnValidatorData, false), true);
 			}
 		}
 		
@@ -1406,6 +1406,6 @@ public class MappingWriteAPIs
 			}
 		}
 		//Then we can translate, which sorts and dupe column number checks again, to make sure we didn't get it wrong...
-		return RestDynamicSememeData.translate(temp.toArray(new RestDynamicSememeData[temp.size()]));
+		return RestDynamicSememeData.translate(temp.toArray(new RestDynamicSememeData[temp.size()]), true);
 	}
 }

@@ -203,7 +203,7 @@ public abstract class RestDynamicSememeData
 	 * This implementation sorts by the column number, and fills gaps (with nulls) as appropriate, as determined by the 
 	 * passed in column numbers
 	 */
-	public static DynamicSememeData[] translate(RestDynamicSememeData[] values) throws RestException
+	public static DynamicSememeData[] translate(RestDynamicSememeData[] values, boolean nullPadGaps) throws RestException
 	{
 		if (values == null)
 		{
@@ -216,17 +216,21 @@ public abstract class RestDynamicSememeData
 		
 		for (RestDynamicSememeData rdsd : values)
 		{
-			while (result.size() < rdsd.columnNumber.intValue())
-			{
-				result.add(null);  //fill a gap
-			}
-			if (result.size() == rdsd.columnNumber.intValue() || rdsd.columnNumber.intValue() < 0)
-			{
+			if (nullPadGaps) {
+				while (result.size() < rdsd.columnNumber.intValue())
+				{
+					result.add(null);  //fill a gap
+				}
+				if (result.size() == rdsd.columnNumber.intValue() || rdsd.columnNumber.intValue() < 0)
+				{
+					result.add(RestDynamicSememeData.translate(rdsd));
+				}
+				else
+				{
+					throw new RuntimeException("Dan needs more sleep");
+				}
+			} else {
 				result.add(RestDynamicSememeData.translate(rdsd));
-			}
-			else
-			{
-				throw new RuntimeException("Dan needs more sleep");
 			}
 		}
 		return result.toArray(new DynamicSememeData[result.size()]);
