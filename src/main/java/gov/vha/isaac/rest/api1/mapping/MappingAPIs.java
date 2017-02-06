@@ -20,11 +20,15 @@ package gov.vha.isaac.rest.api1.mapping;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -64,10 +68,15 @@ import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionPage;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
+import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs.SememeVersions;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
@@ -345,6 +354,86 @@ public class MappingAPIs
 			}
 		}
 		return results.toArray(new RestMappingItemVersion[results.size()]);
+	}
+
+	/**
+	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0, defaults to 250
+	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
+	 * will be included for all referenced concepts which align with your current coordinates.  When comments is passed, all comments attached to each mapItem are 
+	 * included.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
+	 * be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @return the mapping items versions object.  
+	 * 
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingItemsPagedComponent + "{" + RequestParameters.id +"}")
+	public RestMappingItemVersionPage getMappingItemPage(
+		@PathParam(RequestParameters.id) String id,
+		@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+		@QueryParam(RequestParameters.maxPageSize) @DefaultValue(250 + "") int maxPageSize,
+		@QueryParam(RequestParameters.expand) String expand,
+		@QueryParam(RequestParameters.processId) String processId,
+		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		//TODO 1 Dan this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
+		//will make it fast for early pages... still slow for later pages, unless we enhance the underlying isaac code to handle paging natively
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.expand,
+				RequestParameters.processId,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		ArrayList<RestMappingItemVersion> items = new ArrayList<>();
+		
+		int sememeConceptSequence = Util.convertToConceptSequence(id);
+		
+		Positions positions = Positions.getPositions(sememeConceptSequence);
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		
+		List<RestMappingSetDisplayField> displayFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(
+				Get.identifierService().getConceptNid(sememeConceptSequence), RequestInfo.get().getStampCoordinate());
+		
+		Set<Integer> allowedAssemblages = new HashSet<>();
+		allowedAssemblages.add(sememeConceptSequence);
+		SememeVersions sememes = SememeAPIs.get(
+				null,
+				allowedAssemblages,
+				pageNum,
+				maxPageSize,
+				false, processIdUUID);
+		
+		for (SememeVersion<?> sememeVersion : sememes.getValues()) {
+			items.add(new RestMappingItemVersion(((DynamicSememe<?>)sememeVersion), 
+					positions.targetPos, positions.qualfierPos,
+					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+					RequestInfo.get().shouldExpand(ExpandUtil.comments),
+					processIdUUID, displayFields));
+		}
+		RestMappingItemVersionPage results =
+				new RestMappingItemVersionPage(
+						pageNum,
+						maxPageSize,
+						sememes.getTotal(),
+						true,
+						sememes.getTotal() > (pageNum * maxPageSize),
+						RestPaths.mappingItemsPagedComponent + id,
+						items.toArray(new RestMappingItemVersion[items.size()])
+						);
+		return results;
 	}
 
 	/**

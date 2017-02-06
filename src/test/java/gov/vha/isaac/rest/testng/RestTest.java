@@ -142,6 +142,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestWorkflowProcessStatusType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemComputedDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionCreate;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionPage;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
@@ -2054,8 +2055,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		boolean foundTargetRxcuiDisplayField = false;
 		boolean foundTargetLoincNumDisplayField = false;
 		boolean foundTargetDescriptionDisplayField = false;
-		boolean foundItemExtendedCol0DisplayField = false;
-		boolean foundItemExtendedCol1DisplayField = false;
 		for (RestMappingItemComputedDisplayField displayField : retrievedMappingItemVersion.computedDisplayFields) {
 			// Source fields
 			if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
@@ -2122,37 +2121,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				Assert.assertEquals(((RestMappingItemComputedDisplayField)displayField).value, targetConceptDescription);
 				foundTargetDescriptionDisplayField = true;
 			}
-			
-//			else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.ITEM_EXTENDED))
-//					&& displayField.id.equals("0")) {
-//
-//				RestDynamicSememeData foundItemExtendedField0Data = null;
-//				for (RestDynamicSememeData data : retrievedMappingItemVersion.mapItemExtendedFields) {
-//					if (data.columnNumber == 0) {
-//						foundItemExtendedField0Data = data;
-//						break;
-//					}
-//				}
-//				Assert.assertNotNull(foundItemExtendedField0Data);
-//				//Assert.assertTrue(StringUtils.isNotBlank(((RestMappingItemDisplayFieldWithValue)displayField).value));
-//				//Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, sourceConceptPreferredTerm);
-//				foundItemExtendedCol0DisplayField = true;
-//			}
-//			else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.ITEM_EXTENDED))
-//					&& displayField.id.equals("1")) {
-//
-//				RestDynamicSememeData foundItemExtendedField1Data = null;
-//				for (RestDynamicSememeData data : retrievedMappingItemVersion.mapItemExtendedFields) {
-//					if (data.columnNumber == 1) {
-//						foundItemExtendedField1Data = data;
-//						break;
-//					}
-//				}
-//				Assert.assertNotNull(foundItemExtendedField1Data);
-//				//Assert.assertTrue(StringUtils.isNotBlank(((RestMappingItemDisplayFieldWithValue)displayField).value));
-//				//Assert.assertEquals(((RestMappingItemDisplayFieldWithValue)displayField).value, sourceConceptPreferredTerm);
-//				foundItemExtendedCol1DisplayField = true;
-//			}
 		}
 		Assert.assertTrue(foundSourceVuidDisplayField);
 		Assert.assertTrue(foundSourceSctIdDisplayField);
@@ -2168,6 +2136,76 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(foundTargetLoincNumDisplayField);
 		Assert.assertTrue(foundTargetDescriptionDisplayField);
 
+		// Add second item to test paging
+		RestMappingItemVersionCreate additionalNewMappingSetItemData = new RestMappingItemVersionCreate(
+				sourceConceptSeq + "", // This item has source and target concepts swapped
+				qualifierConceptUuid,
+				testMappingSetUUID.toString(),
+				targetConceptSeq + "",
+				mapItemExtendedFields, null);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(additionalNewMappingSetItemData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		// Attempt to create second mapping item
+		createNewMappingItemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String additionalNewMappingItemSequenceWrapperXml = checkFail(createNewMappingItemResponse).readEntity(String.class);
+		RestWriteResponse additionalNewMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, additionalNewMappingItemSequenceWrapperXml);
+		UUID additionalNewMappingItemUUID = additionalNewMappingItemSequenceWrapper.uuid;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(additionalNewMappingItemUUID != null);
+
+		// Add third item to test paging
+		additionalNewMappingSetItemData = new RestMappingItemVersionCreate(
+				targetConceptSeq + "",
+				null,
+				testMappingSetUUID.toString(),
+				sourceConceptSeq + "",
+				mapItemExtendedFields, null);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(additionalNewMappingSetItemData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		// Attempt to create third mapping item
+		createNewMappingItemResponse = target(RestPaths.mappingItemCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		additionalNewMappingItemSequenceWrapperXml = checkFail(createNewMappingItemResponse).readEntity(String.class);
+		additionalNewMappingItemSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, additionalNewMappingItemSequenceWrapperXml);
+		additionalNewMappingItemUUID = additionalNewMappingItemSequenceWrapper.uuid;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(additionalNewMappingItemUUID != null);
+		
+		// Should now be 3 items
+		// Test pagination (page 0 with maximum of 2 entries (out of 3))
+		Response getMappingItemsPagedResponse = target(RestPaths.mappingAPIsPathComponent + RestPaths.mappingItemsPagedComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.pageNum, 1)
+				.queryParam(RequestParameters.maxPageSize, 2)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String retrievedMappingItemsPagedResult = checkFail(getMappingItemsPagedResponse).readEntity(String.class);
+		RestMappingItemVersionPage retrievedMappingItemsPaged = XMLUtils.unmarshalObject(RestMappingItemVersionPage.class, retrievedMappingItemsPagedResult);
+		Assert.assertNotNull(retrievedMappingItemsPaged);
+		Assert.assertEquals(retrievedMappingItemsPaged.results.length, 2);
+		// Test pagination (page 0 with maximum of 10 entries (out of 3))
+		getMappingItemsPagedResponse = target(RestPaths.mappingAPIsPathComponent + RestPaths.mappingItemsPagedComponent + testMappingSetUUID)
+				.queryParam(RequestParameters.pageNum, 1)
+				.queryParam(RequestParameters.maxPageSize, 10)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		retrievedMappingItemsPagedResult = checkFail(getMappingItemsPagedResponse).readEntity(String.class);
+		retrievedMappingItemsPaged = XMLUtils.unmarshalObject(RestMappingItemVersionPage.class, retrievedMappingItemsPagedResult);
+		Assert.assertNotNull(retrievedMappingItemsPaged);
+		Assert.assertEquals(retrievedMappingItemsPaged.results.length, 3);
+		
 		// test getMappingItems()
 		Response getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + testMappingSetUUID)
 				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
@@ -2335,7 +2373,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Check clone items contents
 		for (int i = 0; i < cloneTargetMappingItems.length; ++i) {
-			Assert.assertEquals(cloneMappingItems[i].qualifierConcept.nid, cloneTargetMappingItems[i].qualifierConcept.nid);
+			Assert.assertTrue(
+					(cloneMappingItems[i].qualifierConcept != null && cloneTargetMappingItems[i].qualifierConcept != null
+					&& cloneMappingItems[i].qualifierConcept.nid.equals(cloneTargetMappingItems[i].qualifierConcept.nid))
+					|| (cloneMappingItems[i].qualifierConcept == null && cloneTargetMappingItems[i].qualifierConcept == null));
 			Assert.assertEquals(cloneMappingItems[i].sourceConcept.nid, cloneTargetMappingItems[i].sourceConcept.nid);
 			Assert.assertEquals(cloneMappingItems[i].targetConcept.nid, cloneTargetMappingItems[i].targetConcept.nid);
 
