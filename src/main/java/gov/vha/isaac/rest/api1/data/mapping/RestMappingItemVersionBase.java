@@ -59,9 +59,7 @@ public class RestMappingItemVersionBase
 	}
 
 	/**
-	 * @param targetConcept
 	 * @param mapItemExtendedFields
-	 * @param qualifierConcept
 	 */
 	public RestMappingItemVersionBase(List<RestDynamicSememeData> mapItemExtendedFields) 
 	{

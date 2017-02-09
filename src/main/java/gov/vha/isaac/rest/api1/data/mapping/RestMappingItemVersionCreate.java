@@ -64,10 +64,10 @@ public class RestMappingItemVersionCreate extends RestMappingItemVersionUpdate
 		super();
 	}
 
-	public RestMappingItemVersionCreate(String targetConcept, String qualifierConcept, String mapSetConcept, String sourceConcept, 
+	public RestMappingItemVersionCreate(String targetConcept, String equivalenceTypeConcept, String mapSetConcept, String sourceConcept, 
 			List<RestDynamicSememeData> mapItemExtendedFields, Boolean active) 
 	{
-		super(targetConcept, qualifierConcept, mapItemExtendedFields, active);
+		super(targetConcept, equivalenceTypeConcept, mapItemExtendedFields, active);
 		this.mapSetConcept = mapSetConcept;
 		this.sourceConcept = sourceConcept;
 	}

@@ -1944,7 +1944,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// RestMappingItemVersion
 		int sourceConceptSeq = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
 		int targetConceptSeq = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
-		String qualifierConceptUuid = IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_BROAD_TO_NARROW.getPrimordialUuid().toString();
+		String equivalenceTypeConceptUuid = IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_BROAD_TO_NARROW.getPrimordialUuid().toString();
 
 		// Get source concept description for validation
 		ConceptChronology<?> cc = Get.conceptService().getConcept(sourceConceptSeq);
@@ -1993,7 +1993,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		mapItemExtendedFields.add(itemExtendedField2);
 		RestMappingItemVersionCreate newMappingSetItemData = new RestMappingItemVersionCreate(
 				targetConceptSeq + "",
-				qualifierConceptUuid,
+				equivalenceTypeConceptUuid,
 				testMappingSetUUID.toString(),
 				sourceConceptSeq + "",
 				mapItemExtendedFields, null);
@@ -2031,7 +2031,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestMappingItemVersion retrievedMappingItemVersion = new ObjectMapper().readValue(retrievedMappingItemVersionResult, RestMappingItemVersion.class);
 		Assert.assertTrue(sourceConceptSeq == retrievedMappingItemVersion.sourceConcept.sequence);
 		Assert.assertTrue(targetConceptSeq == retrievedMappingItemVersion.targetConcept.sequence);
-		Assert.assertTrue(qualifierConceptUuid.equals(retrievedMappingItemVersion.qualifierConcept.getFirst().toString()));
+		Assert.assertTrue(equivalenceTypeConceptUuid.equals(retrievedMappingItemVersion.qualifierConcept.getFirst().toString()));
 		Assert.assertEquals(updatedMappingSetObject.identifiers.sequence, retrievedMappingItemVersion.mapSetConcept.sequence);
 		// Only computed (SOURCE|TARGET|EQUIVALENCE_TYPE) display fields should be in the item, not ITEM_EXTENDED
 		List<RestMappingSetDisplayFieldCreate> computedMapSetDisplayFieldCreateDTOs =  new ArrayList<>();
@@ -2141,7 +2141,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Add second item to test paging
 		RestMappingItemVersionCreate additionalNewMappingSetItemData = new RestMappingItemVersionCreate(
 				sourceConceptSeq + "", // This item has source and target concepts swapped
-				qualifierConceptUuid,
+				equivalenceTypeConceptUuid,
 				testMappingSetUUID.toString(),
 				targetConceptSeq + "",
 				mapItemExtendedFields, null);
@@ -2221,7 +2221,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					&& currentMappingItem.mapSetConcept.sequence.intValue() == retrievedMappingSetVersion.identifiers.sequence.intValue()
 					&& currentMappingItem.targetConcept.sequence.intValue() == targetConceptSeq
 					&& currentMappingItem.sourceConcept.sequence.intValue() == sourceConceptSeq
-					&& currentMappingItem.qualifierConcept.uuids.get(0).toString().equals(qualifierConceptUuid)) {
+					&& currentMappingItem.qualifierConcept.uuids.get(0).toString().equals(equivalenceTypeConceptUuid)) {
 				mappingItemMatchingNewItem = currentMappingItem;
 				break;
 			}
@@ -2229,11 +2229,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(mappingItemMatchingNewItem);
 
 		String updatedTargetConceptSeq = getIntegerIdForUuid(MetaData.DANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence") + "";
-		String updatedQualifierConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getPrimordialUuid(), "conceptSequence") + "";
+		String updatedEquivalenceTypeConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getPrimordialUuid(), "conceptSequence") + "";
 
 		RestMappingItemVersionUpdate updatedMappingItemData = new RestMappingItemVersionUpdate(
 				updatedTargetConceptSeq,
-				updatedQualifierConceptSeq,
+				updatedEquivalenceTypeConceptSeq,
 				mapItemExtendedFields,null);
 		xml = null;
 		try {
@@ -2574,8 +2574,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(sourceConceptDescription.isPresent());
 		Optional<String> targetConceptDescription = Frills.getDescription(MetaData.AND.getNid(), getDefaultCoordinatesToken().getTaxonomyCoordinate());
 		Assert.assertTrue(targetConceptDescription.isPresent());
-		Optional<String> qualifierConceptDescription = Frills.getDescription(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getNid(), getDefaultCoordinatesToken().getTaxonomyCoordinate());
-		Assert.assertTrue(qualifierConceptDescription.isPresent());
+		Optional<String> equivalenceTypeConceptDescription = Frills.getDescription(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getNid(), getDefaultCoordinatesToken().getTaxonomyCoordinate());
+		Assert.assertTrue(equivalenceTypeConceptDescription.isPresent());
 
 		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(0).componentType, new RestMapSetItemComponentType(MapSetItemComponent.SOURCE));
 		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(0).id, IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid().toString());
@@ -2590,7 +2590,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(2).componentType, new RestMapSetItemComponentType(MapSetItemComponent.EQUIVALENCE_TYPE));
 		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(2).id, IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid().toString());
 		Assert.assertTrue(retrievedMappingItemVersion.computedDisplayFields.get(2) instanceof RestMappingItemComputedDisplayField);
-		Assert.assertEquals(((RestMappingItemComputedDisplayField)retrievedMappingItemVersion.computedDisplayFields.get(2)).value, qualifierConceptDescription.get());
+		Assert.assertEquals(((RestMappingItemComputedDisplayField)retrievedMappingItemVersion.computedDisplayFields.get(2)).value, equivalenceTypeConceptDescription.get());
 
 		//This should fail, due to being a duplicate entry:
 		root = jfn.objectNode();

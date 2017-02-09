@@ -42,7 +42,7 @@ import gov.vha.isaac.rest.session.RequestInfo;
  * This, combined with {@link RestMappingSetDisplayFieldBase} returns all of the attributes about display fields.
  * 
  * In the context of an individual mapset, this communicates the desired order of fields to be displayed to the user, as a combination 
- * of map item components (source, target, qualifier), extended fields (if any) and computed fields (if any)
+ * of map item components (source, target, equivalenceType), extended fields (if any) and computed fields (if any)
  * 
  *  In the context of the capabilities of displaying computed fields, this communicates all possible computed field types. 
  *

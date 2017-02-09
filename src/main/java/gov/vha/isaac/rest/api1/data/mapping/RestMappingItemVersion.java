@@ -100,7 +100,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public RestIdentifiedObject qualifierConcept;
+	public RestIdentifiedObject qualifierConcept; // TODO rename this to equivalenceTypeConcept
 	
 	/**
 	 * The identifier data for the sememe that represents this mapping item
@@ -137,7 +137,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		super();
 	}
 
-	public RestMappingItemVersion(DynamicSememe<?> sememe, int targetColPosition, int qualifierColPosition, 
+	public RestMappingItemVersion(DynamicSememe<?> sememe, int targetColPosition, int equivalenceTypeColPosition, 
 			boolean expandDescriptions, boolean expandComments, UUID processId, List<RestMappingSetDisplayField> displayFieldsFromMapSet)
 	{
 		final StampCoordinate stampCoordinate = RequestInfo.get().getStampCoordinate();
@@ -168,7 +168,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 						: null);
 					offset++;
 				}
-				else if (i == qualifierColPosition)
+				else if (i == equivalenceTypeColPosition)
 				{
 					qualifierConcept = ((data[i] != null) ? 
 							new RestIdentifiedObject(((DynamicSememeUUID) data[i]).getDataUUID()) 
@@ -206,26 +206,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		}
 
 		expandables = new Expandables();
-		if (expandDescriptions)
-		{
-//			if (qualifierConcept != null)
-//			{
-//				qualifierDescription = Util.readBestDescription(qualifierConcept.sequence, stampCoordinate);
-//			}
-//			sourceDescription = Util.readBestDescription(sourceConcept.sequence, stampCoordinate);
-//			if (targetConcept != null)
-//			{
-//				targetDescription = Util.readBestDescription(targetConcept.sequence, stampCoordinate);
-//			}
-		}
-		else
-		{
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				//TODO fix this expandable link
-				expandables.add(new Expandable(ExpandUtil.referencedDetails, ""));
-			}
-		}
 		if (expandComments)
 		{
 			try
@@ -253,7 +233,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	}
 
 	private static RestMappingItemComputedDisplayField constructDisplayField(int mapSetNid, int sourceConceptNid, RestIdentifiedObject targetConcept, 
-			RestIdentifiedObject qualifierConcept, String fieldId, MapSetItemComponent componentType) {
+			RestIdentifiedObject equivalenceTypeConcept, String fieldId, MapSetItemComponent componentType) {
 		Integer componentNid = null;
 		String value = null;
 		switch(componentType) {
@@ -264,8 +244,8 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			componentNid = targetConcept == null ? null : targetConcept.nid;
 				break;
 		case EQUIVALENCE_TYPE:
-			componentNid = qualifierConcept == null ? null : qualifierConcept.nid;
-				break;
+			componentNid = equivalenceTypeConcept == null ? null : equivalenceTypeConcept.nid;
+			break;
 		default:
 			String msg = "Invalid/unsupported MapSetItemComponent value \"" + componentType + "\".  Should be one of " + MapSetItemComponent.values();
 			log.error(msg);
@@ -319,7 +299,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		return "RestMappingItemVersion [expandables=" + expandables + ", identifiers=" + identifiers
 				+ ", mappingItemStamp=" + mappingItemStamp
 				+ ", mapSetConcept=" + mapSetConcept
-				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
+				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", equivalenceTypeConcept="
 				+ qualifierConcept + ", mapItemExtendedFields=" + mapItemExtendedFields + "]";
 	}
 }

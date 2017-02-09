@@ -238,7 +238,7 @@ public class AssociationWriteAPIs
 		
 		if (Get.identifierService().hasUuid(associationItemUUID))
 		{
-			throw new RestException("A mapping with the specified source, target and qualifier already exists in this set.  Please edit that mapping.");
+			throw new RestException("A mapping with the specified source, target and equivalence type already exists in this set.  Please edit that mapping.");
 		}
 		
 		sb.setPrimordialUuid(associationItemUUID);
