@@ -5,8 +5,14 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/02/?? - 1.39 - PENDING
-    * 
+* 2017/02/??  - 1.40 - PENDING
+    *
+
+* 2017/02/09  - 1.39
+    * Internally refatoring the computed display column code to simplify.
+    * Changed the way that the RestMappingSetDisplayField.description was calulated, so that now for mapsets it will return useful values for the column headers - by saying things like "source description" or "target description" rather than saying SOURCE with no context.
+    * Adding RestMappingItemVersionPage to contain paged mapping item results
+    * Changing qualifier to equivalenceType in some places and adding TODOs in places that would break APIs
 
 * 2017/02/03 - 1.38
     * Fixed the root cause of 439352, which was (sometimes) occurring when isaac-rest was deployed - especially if it needed to download a new database.

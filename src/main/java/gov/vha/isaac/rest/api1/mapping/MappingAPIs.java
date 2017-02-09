@@ -19,14 +19,11 @@
 package gov.vha.isaac.rest.api1.mapping;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -37,10 +34,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import gov.vha.isaac.ochre.api.ConceptProxy;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
@@ -73,8 +69,6 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
-import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs.SememeVersions;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
@@ -250,13 +244,7 @@ public class MappingAPIs
 		SecurityUtils.validateRole(securityContext, getClass());
 		
 		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
-		Collection<MapSetDisplayFieldsService.Field> fields = service.getAllFields();
-		List<RestMappingSetDisplayField> restFields = new ArrayList<>();
-		for (MapSetDisplayFieldsService.Field field : fields) {			
-			restFields.add(new RestMappingSetDisplayField(field.getId()));
-		}
-		
-		return restFields.toArray(new RestMappingSetDisplayField[restFields.size()]);
+		return service.getAllFields();
 	}
 	
 	/**
@@ -529,29 +517,30 @@ public class MappingAPIs
 					&& mapSetFieldsSememeDataArray.getDataArray().length > 0) {
 				for (DynamicSememeStringImpl stringSememe : (DynamicSememeStringImpl[])mapSetFieldsSememeDataArray.getDataArray()) {
 					String[] fieldComponents = stringSememe.getDataString().split(":");
-					String id = fieldComponents[0];
 					MapSetItemComponent componentType = MapSetItemComponent.valueOf(fieldComponents[1]);
-					try {
-						String description = null; // If passed description is null will use id to determine description
-						if (componentType == MapSetItemComponent.ITEM_EXTENDED) {
-							// If ITEM_EXTENDED then description is from itemFieldDefinitions
-							int col = Integer.parseUnsignedInt(id);
-							for (RestDynamicSememeColumnInfo def : itemFieldDefinitions) {
-								if (def.columnOrder == col) {
-									description = def.columnName;
-									break;
-								}
-							}
-							if (description == null) {
-								String msg = "Failed correlating item display field id " + id + " for item display field of type " + componentType + " with any existing extended field definition in map set";
-								log.error(msg);
-								throw new RuntimeException(msg);
+					if (componentType == MapSetItemComponent.ITEM_EXTENDED) 
+					{
+						// If ITEM_EXTENDED then description is from itemFieldDefinitions
+						int col = Integer.parseUnsignedInt(fieldComponents[0]);
+						UUID id = null;
+						for (RestDynamicSememeColumnInfo def : itemFieldDefinitions) {
+							if (def.columnOrder == col) {
+								id = def.columnLabelConcept.getFirst();
+								break;
 							}
 						}
-
-						fields.add(new RestMappingSetDisplayField(id, componentType, description));
-					} catch (RestException e) {
-						throw new RuntimeException("Failed constructing RestMappingSetField from stored data", e);
+						if (id == null) {
+							String msg = "Failed correlating item display field id " + col + " for item display field of type " 
+									+ componentType + " with any existing extended field definition in map set";
+							log.error(msg);
+							throw new RuntimeException(msg);
+						}
+						fields.add(new RestMappingSetDisplayField(id, col));
+					}
+					else
+					{
+						UUID id = UUID.fromString(fieldComponents[0]);
+						fields.add(new RestMappingSetDisplayField(new ConceptProxy("", id), componentType));
 					}
 				}
 			}
@@ -599,32 +588,17 @@ public class MappingAPIs
 		return mapItemFieldsDefinition;
 	}
 
-	public static List<RestMappingSetDisplayField> getDefaultDisplayFields(List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition) {
+	protected static List<RestMappingSetDisplayField> getDefaultDisplayFields(List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition) {
 		List<RestMappingSetDisplayField> displayFields = new ArrayList<>();
-		// If no display fields passed, then add default display fields
-		// as SOURCE, TARGET and EQUIVALENCE_TYPE DESCRIPTION followed by item extended fields, if any
-		String id = null;
-		MapSetItemComponent componentType = null;
-		try {
-			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
-			componentType = MapSetItemComponent.SOURCE;
-			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
-			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
-			componentType = MapSetItemComponent.TARGET;
-			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
-			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
-			componentType = MapSetItemComponent.EQUIVALENCE_TYPE;
-			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
-
-			for (RestDynamicSememeColumnInfo itemExtendedFieldCol : mapItemFieldsDefinition) {
-				id = itemExtendedFieldCol.columnOrder + "";
-				componentType = MapSetItemComponent.ITEM_EXTENDED;
-				displayFields.add(new RestMappingSetDisplayField(id, Get.conceptService().getConcept(itemExtendedFieldCol.columnLabelConcept.nid), componentType, (String)null));
+		displayFields.add(new RestMappingSetDisplayField(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION, MapSetItemComponent.SOURCE));
+		displayFields.add(new RestMappingSetDisplayField(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION, MapSetItemComponent.TARGET));
+		displayFields.add(new RestMappingSetDisplayField(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION, MapSetItemComponent.EQUIVALENCE_TYPE));
+		if (mapItemFieldsDefinition != null)
+		{
+			for (RestDynamicSememeColumnInfo itemExtendedFieldCol : mapItemFieldsDefinition) 
+			{
+				displayFields.add(new RestMappingSetDisplayField(itemExtendedFieldCol.columnLabelConcept.uuids.get(0), itemExtendedFieldCol.columnOrder));
 			}
-		} catch (Exception e) {
-			String msg = "Failed constructing default item display field id=\"" + id + "\", componentType=" + componentType;
-			log.error(msg, e);
-			throw new RuntimeException(msg, e);
 		}
 		
 		return displayFields;
