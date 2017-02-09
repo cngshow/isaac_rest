@@ -18,23 +18,21 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
-import java.util.Optional;
-
+import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
+import gov.vha.isaac.ochre.metadata.source.IsaacMetadataAuxiliary;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
-import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 
 /**
@@ -56,8 +54,8 @@ import gov.vha.isaac.rest.session.RequestInfo;
 public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 {
 	/**
-	 * when componentType is set to a value such as SOURCE or TARGET (basically, any type other than ITEM_EXTENDED) AND the id is set to a UUID 
-	 * that represents a sememe to compute the value from (as opposed to a constant like DESCRIPTION) then this field will be populated with the 
+	 * when componentType is set to a value such as SOURCE or TARGET (basically, any type other than ITEM_EXTENDED) the id is set to a UUID 
+	 * that represents a sememe to compute the value from or the UUID constant for the description option, then this field will be populated with the 
 	 * concept represented by the UUID value of the id field.
 	 * 
 	 * In any other case, this will not be populated.
@@ -69,9 +67,8 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	/**
 	 * Description of this field
 	 * If the field id is the ID of an assemblage concept (of a sememe type - where the desired behavior is to return the sememe string value) 
-	 *   then it will be the description of that sememe assemblage concept.  A typical value here would be "VUID".
-	 *   
-	 * If the field id is a string literal then the description will be a user friendly description of the literal, such as "Definition".
+	 *   then it will be the description of that sememe assemblage concept.  A typical value here would be "VUID, though it will be prefixed with source, 
+	 *   target, or another prefix, as makes sense in the context.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -80,69 +77,63 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 	//for Jaxb
 	RestMappingSetDisplayField()
 	{
-		
 		super();
 	}
-
-	public RestMappingSetDisplayField(String id) throws RestException {
-		this(id, (IdentifiedObject)null, (MapSetItemComponent)null, (String)null);
-	}
-	public RestMappingSetDisplayField(MapSetDisplayFieldsService.Field field) throws RestException {
-		this(field.getId(), field.getObject(), (MapSetItemComponent)null, (String)null);
-	}
-	public RestMappingSetDisplayField(String id, MapSetItemComponent component, String description) throws RestException {
-		this(id, (IdentifiedObject)null, component, description);
-	}
-	public RestMappingSetDisplayField(String id, IdentifiedObject fieldNameConcept, MapSetItemComponent component, String description) throws RestException
+	
+	public RestMappingSetDisplayField(UUID extendedColumnDescriptiveConcept, int extendedColId)
 	{
-		super(id, component); // MapSetDisplayFieldsService performs validation
-		if (component == MapSetItemComponent.ITEM_EXTENDED) {
-			this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
-			if (description != null) {
-				this.description = description;
-			} else if (fieldNameConcept != null) {
-				Optional<String> descriptionOptional = Frills.getDescription(fieldNameConcept.getNid(), RequestInfo.get().getTaxonomyCoordinate());
-				if (descriptionOptional.isPresent()) {
-					this.description = descriptionOptional.get();
-				}
-			}
-		} else {
-			Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(this.id);
-			if (cc.isPresent()) {
-				if (fieldNameConcept != null) {
-					if (fieldNameConcept.getNid() != cc.get().getNid()) {
-						throw new RuntimeException("fieldNameConcept NID " + fieldNameConcept.getNid() + " does not match NID " + cc.get().getNid() + " for concept corresponding to id \"" + this.id + "\"");
-					}
-					if (! fieldNameConcept.getPrimordialUuid().equals(cc.get().getPrimordialUuid())) {
-						throw new RuntimeException("fieldNameConcept UUID " + fieldNameConcept.getPrimordialUuid() + " does not match UUID " + cc.get().getPrimordialUuid() + " for concept corresponding to id \"" + this.id + "\"");
-					}
-				}
-				this.fieldNameConceptIdentifiers = new RestIdentifiedObject(cc.get().getPrimordialUuid());
-			} else {
-				this.fieldNameConceptIdentifiers = fieldNameConcept != null ? new RestIdentifiedObject(fieldNameConcept.getPrimordialUuid()) : null;
-			}
-			this.description = description != null ? description : getDescriptionFromId(this.id);
-		}
+		super(extendedColId, MapSetItemComponent.ITEM_EXTENDED);
+		populate(Get.conceptService().getConcept(extendedColumnDescriptiveConcept), MapSetItemComponent.ITEM_EXTENDED);
+	}
+	
+
+	/**
+	 * 
+	 * @param fieldNameConcept
+	 * @param componentType - should only be null when returning field capabilities - should always be populated in the context of a mapset or mapitem
+	 * @throws RestException
+	 */
+	public RestMappingSetDisplayField(IdentifiedObject fieldNameConcept, MapSetItemComponent componentType)
+	{
+		super(fieldNameConcept, componentType); // MapSetDisplayFieldsService performs validation
+		populate(fieldNameConcept, componentType);
 	}
 
-	private static String getDescriptionFromId(String id) {
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> cc = Frills.getConceptForUnknownIdentifier(id);
-		if (cc.isPresent()) {
-			Optional<String> desc = Frills.getDescription(cc.get().getNid(), RequestInfo.get().getTaxonomyCoordinate());
-			if (desc.isPresent()) {
-				return desc.get();
-			} else {
-				throw new RuntimeException("Frills.getDescription() failed to find description for concept id=" + id + " (UUID=" + cc.get().getPrimordialUuid() + ")");
-			}
-		} else {
-			MapSetDisplayFieldsService.Field.NonConceptFieldName nonConceptFieldName = null;
-			try {
-				nonConceptFieldName = MapSetDisplayFieldsService.Field.NonConceptFieldName.valueOf(id);
-				return nonConceptFieldName.getDescription();
-			} catch (Exception e) {
-				throw new RuntimeException("getDescriptionFromName() Failed to find map item display field description for id=\"" + id + "\"");
+	/**
+	 * @param concept
+	 * @param itemExtended
+	 */
+	private void populate(IdentifiedObject concept, MapSetItemComponent componentType)
+	{
+		String prefix = "";
+		fieldNameConceptIdentifiers = new RestIdentifiedObject(concept.getPrimordialUuid());
+
+		if (componentType != null)
+		{
+			switch (componentType)
+			{
+				case EQUIVALENCE_TYPE:
+					prefix = Frills.getDescription(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE.getConceptSequence(), 
+							RequestInfo.get().getTaxonomyCoordinate()).get() + " ";
+					break;
+				case SOURCE:
+					prefix = "source ";
+					break;
+				case TARGET:
+					prefix = Frills.getDescription(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getConceptSequence(), 
+							RequestInfo.get().getTaxonomyCoordinate()).get() + " ";
+					break;
+				case ITEM_EXTENDED:
+					//no prefix
+					break;
+				default :
+					throw new RuntimeException("Unhandled case!");
 			}
 		}
+		
+		description = prefix + Frills.getDescription(concept.getPrimordialUuid(), RequestInfo.get().getTaxonomyCoordinate()).get();
+		//If the view coordinate is on FSN, we may have one (or more) semantic tags in these labels.  Strip them.
+		description = description.replaceAll("\\s\\(" + IsaacMetadataAuxiliary.METADATA_SEMANTIC_TAG + "\\)", "");
 	}
 
 	/* (non-Javadoc)

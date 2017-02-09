@@ -45,9 +45,7 @@ public class RestMappingSetDisplayFieldCreate
 	 *  1) when fieldComponentType below is set to ITEM_EXTENDED, this should be the integer column number that represents the columnPosition 
 	 *     of the extended field (extensionValue.columnNumber)
 	 *  2)  when fieldComponentType below is set to a value such as SOURCE or TARGET - This required value must be an ID pulled from 
-	 *        1/mapping/fields[.id].
-	 *      2a) This id may be a UUID, or
-	 *      2b) This id may be a string constant such as DESCRIPTION
+	 *        1/mapping/fields[.id], which will be a UUID
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)

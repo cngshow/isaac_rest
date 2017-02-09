@@ -30,12 +30,15 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
@@ -259,44 +262,49 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			break;
 		case TARGET:
 			componentNid = targetConcept == null ? null : targetConcept.nid;
-			break;
+				break;
 		case EQUIVALENCE_TYPE:
 			componentNid = qualifierConcept == null ? null : qualifierConcept.nid;
-			break;
+				break;
 		default:
 			String msg = "Invalid/unsupported MapSetItemComponent value \"" + componentType + "\".  Should be one of " + MapSetItemComponent.values();
 			log.error(msg);
 			throw new RuntimeException(msg);
 		}
+		
 		/*
 		 * Fields must correspond to entries returned by MapSetDisplayFieldsService.getAllFields()
 		 */
-		UUID annotationConceptUuid = null;
-		try {
-			annotationConceptUuid = UUID.fromString(fieldId);
-		} catch (Exception e) {
-			// ignore
+		
+		IdentifiedObject fieldType = LookupService.getService(MapSetDisplayFieldsService.class).getFieldConceptIdentifierByFieldConceptId(fieldId);
+		if (fieldType == null)
+		{
+			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldId + "\"");
 		}
+		
 		if (componentNid == null)
 		{
 			value = null;
 		}
-		else if (annotationConceptUuid != null) {
-			Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, Get.conceptService().getConcept(annotationConceptUuid).getNid(), 
-					RequestInfo.get().getStampCoordinate());
-			// TODO handle missing values and contradictions
-			value = valueOptional.isPresent() ? valueOptional.get() : null;
-		}
-		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name())) {
-			Optional<String> descLatestVersion = Frills.getDescription(componentNid, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
-			// TODO handle missing values and contradictions
-			value = descLatestVersion.isPresent() ? descLatestVersion.get() : null;
-		} else {
-			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldId + "\"");
+		else 
+		{
+			if (fieldType.getPrimordialUuid().equals(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid()))
+			{
+				Optional<String> descLatestVersion = Frills.getDescription(componentNid, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
+				// TODO handle missing values and contradictions
+				value = descLatestVersion.isPresent() ? descLatestVersion.get() : null;
+				
+			}
+			else  //represents a single-column sememe field.  Read the sememe data
+			{
+				Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, fieldType.getNid(), RequestInfo.get().getStampCoordinate());
+				// TODO handle missing values and contradictions
+				value = valueOptional.isPresent() ? valueOptional.get() : null;
+			}
 		}
 		
 		try {
-			return new RestMappingItemComputedDisplayField(fieldId, componentType, value);
+			return new RestMappingItemComputedDisplayField(fieldType, componentType, value);
 		} catch (RestException e) {
 			log.error(e);
 			throw new RuntimeException(e);
@@ -310,9 +318,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	public String toString() {
 		return "RestMappingItemVersion [expandables=" + expandables + ", identifiers=" + identifiers
 				+ ", mappingItemStamp=" + mappingItemStamp
-//				+ ", sourceDescription=" + sourceDescription
-//				+ ", targetDescription=" + targetDescription
-//				+ ", qualifierDescription=" + qualifierDescription
 				+ ", mapSetConcept=" + mapSetConcept
 				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
 				+ qualifierConcept + ", mapItemExtendedFields=" + mapItemExtendedFields + "]";
