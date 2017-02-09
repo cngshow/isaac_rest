@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -37,11 +36,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -73,6 +70,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
@@ -134,6 +132,8 @@ public class MappingWriteAPIs
 
 	@Context
 	private SecurityContext securityContext;
+
+	public final static int ITEM_EXTENDED_FIELDS_OFFSET = 2;
 
 	/**
 	 * @param mappingSetCreationData - object containing data used to create new mapping set
@@ -571,12 +571,12 @@ public class MappingWriteAPIs
 			}
 		} else {
 			MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
-			MapSetDisplayFieldsService.Field existingField = service.getFieldByConceptIdOrStringIdIfNotConceptId(passedField.id);
+			IdentifiedObject existingField = service.getFieldConceptIdentifierByFieldConceptId(passedField.id);
 			if (existingField == null) {
 				throw new RestException("RestMappingSetFieldCreate.id", passedField.id, "Invalid or unsupported map set field id " + passedField.id 
 						+ " for component type " + msit.name() + ". Must be one of " + service.getAllGlobalFieldIds());
 			}
-			dataString = existingField.getId() + ":" + msit.name();
+			dataString = existingField.getPrimordialUuid().toString() + ":" + msit.name();
 		}
 
 		return new DynamicSememeStringImpl(dataString);
@@ -688,7 +688,7 @@ public class MappingWriteAPIs
 			throw new RestException("The parameter 'description' is required");
 		}
 		
-		DynamicSememeColumnInfo[] columns = new DynamicSememeColumnInfo[2 + (itemExtendedFieldDefinitions == null ? 0 : itemExtendedFieldDefinitions.size())];
+		DynamicSememeColumnInfo[] columns = new DynamicSememeColumnInfo[ITEM_EXTENDED_FIELDS_OFFSET + (itemExtendedFieldDefinitions == null ? 0 : itemExtendedFieldDefinitions.size())];
 		columns[0] = new DynamicSememeColumnInfo(0, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getUUID(), 
 				DynamicSememeDataType.UUID, null, false, 
 				DynamicSememeValidatorType.COMPONENT_TYPE, 
@@ -698,13 +698,12 @@ public class MappingWriteAPIs
 				DynamicSememeValidatorType.IS_KIND_OF, new DynamicSememeUUIDImpl(IsaacMappingConstants.get().MAPPING_EQUIVALENCE_TYPES.getUUID()), true);
 		Map<RestDynamicSememeColumnInfoCreate, Integer> calculatedColumnByPassedItemExtendedFieldDefinition = new HashMap<>();
 
-		final int offset = 2;
 		if (itemExtendedFieldDefinitions != null)
 		{
-			int i = offset;
+			int i = ITEM_EXTENDED_FIELDS_OFFSET;
 			for (RestDynamicSememeColumnInfoCreate colInfo : itemExtendedFieldDefinitions)
 			{
-				calculatedColumnByPassedItemExtendedFieldDefinition.put(colInfo, i - offset);
+				calculatedColumnByPassedItemExtendedFieldDefinition.put(colInfo, i - ITEM_EXTENDED_FIELDS_OFFSET);
 				columns[i] = new DynamicSememeColumnInfo(i++, 
 						Get.identifierService().getUuidPrimordialFromConceptId(
 								RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapItemExtendedFieldsDefinition.columnLabelConcept", 
@@ -772,13 +771,18 @@ public class MappingWriteAPIs
 		// If no display fields passed, then add default display fields
 		// as SOURCE, TARGET and EQUIVALENCE_TYPE DESCRIPTION followed by item extended fields, if any
 		if (itemDisplayFields == null || itemDisplayFields.size() == 0) {
+						
 			itemDisplayFields = new ArrayList<>();
-			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.SOURCE));
-			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.TARGET));
-			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name(), MapSetItemComponent.EQUIVALENCE_TYPE));
+			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid().toString(), 
+					MapSetItemComponent.SOURCE));
+			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid().toString(), 
+					MapSetItemComponent.TARGET));
+			itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid().toString(), 
+					MapSetItemComponent.EQUIVALENCE_TYPE));
 	
 			for (RestDynamicSememeColumnInfoCreate itemExtendedFieldCol : itemExtendedFieldDefinitions) {
-				itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(calculatedColumnByPassedItemExtendedFieldDefinition.get(itemExtendedFieldCol) + "", MapSetItemComponent.ITEM_EXTENDED));
+				itemDisplayFields.add(new RestMappingSetDisplayFieldCreate(calculatedColumnByPassedItemExtendedFieldDefinition.get(itemExtendedFieldCol) + "", 
+						MapSetItemComponent.ITEM_EXTENDED));
 			}
 		}
 			
@@ -996,7 +1000,7 @@ public class MappingWriteAPIs
 
 							if (! (updatedData.getClass().isInstance(existingData))) {
 								// Validate RestDynamicSememeData type as consistent with existing value
-								throw new RestException("RestMappingSetExtensionValueUpdate.extensionValue", updatedData.data + "", "attempting to update extension value dynamic sememe with data of differing type");
+								throw new RestException("RestMappingSetExtensionValueUpdate.extensionValue", updatedData.data + "", "attempting to update extension " + existingData.getClass().getSimpleName() + " value dynamic sememe with data of differing type " + updatedData.getClass().getSimpleName());
 							}
 							
 							DynamicSememeData[] newDataArray = new DynamicSememeData[2];
@@ -1094,7 +1098,7 @@ public class MappingWriteAPIs
 			throw new RestException("The parameter 'description' is required");
 		}
 		
-		DynamicSememeColumnInfo[] columns = new DynamicSememeColumnInfo[2 + (extendedFields == null ? 0 : extendedFields.size())];
+		DynamicSememeColumnInfo[] columns = new DynamicSememeColumnInfo[ITEM_EXTENDED_FIELDS_OFFSET + (extendedFields == null ? 0 : extendedFields.size())];
 		columns[0] = new DynamicSememeColumnInfo(0, DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getUUID(), 
 				DynamicSememeDataType.UUID, null, false, 
 				DynamicSememeValidatorType.COMPONENT_TYPE, 
@@ -1104,7 +1108,7 @@ public class MappingWriteAPIs
 				DynamicSememeValidatorType.IS_KIND_OF, new DynamicSememeUUIDImpl(IsaacMappingConstants.get().MAPPING_EQUIVALENCE_TYPES.getUUID()), true);
 		if (extendedFields != null)
 		{
-			int i = 2;
+			int i = ITEM_EXTENDED_FIELDS_OFFSET;
 			for (RestDynamicSememeColumnInfoCreate colInfo : extendedFields)
 			{
 				columns[i] = new DynamicSememeColumnInfo(i++, 
@@ -1361,7 +1365,7 @@ public class MappingWriteAPIs
 		RestDynamicSememeData.sort(incomingExtendedDataFields);
 		
 		//Need to make a pass through, and insert the two fields where they belong (and update any other column numbers as appropriate
-		List<RestDynamicSememeData> temp = new ArrayList<>(incomingExtendedDataFields.length + 2);
+		List<RestDynamicSememeData> temp = new ArrayList<>(incomingExtendedDataFields.length + ITEM_EXTENDED_FIELDS_OFFSET);
 		int offset = 0;
 		for (RestDynamicSememeData rdsd : incomingExtendedDataFields)
 		{
@@ -1406,6 +1410,6 @@ public class MappingWriteAPIs
 			}
 		}
 		//Then we can translate, which sorts and dupe column number checks again, to make sure we didn't get it wrong...
-		return RestDynamicSememeData.translate(temp.toArray(new RestDynamicSememeData[temp.size()]));
+		return RestDynamicSememeData.translate(temp.toArray(new RestDynamicSememeData[temp.size()]), true);
 	}
 }

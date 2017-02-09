@@ -19,7 +19,7 @@
 
 package gov.vha.isaac.rest.session;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,15 +28,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
-
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -48,8 +45,13 @@ import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
+import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
+import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 
 /**
  * 
@@ -62,55 +64,24 @@ import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 @RunLevel(LookupService.ISAAC_DEPENDENTS_RUNLEVEL)
 @Service
 public class MapSetDisplayFieldsService {
-public static class Field {
-		public static enum NonConceptFieldName {
-			DESCRIPTION("Description");
-			
-			private String description;
-			
-			private NonConceptFieldName(String description) {
-				this.description = description;
-			}
-			
-			public String getDescription() {
-				return description;
-			}
-		}
+	private static Logger log = LogManager.getLogger(MapSetDisplayFieldsService.class);
+	
+	private Map<UUID, Field> fields_;
+	
+	private static class Field {
 		
-		private final String id;
-		private final IdentifiedObject object;
+		private final IdentifiedObject concept;
 
-		private Field(IdentifiedObject object) {
-			this(object.getPrimordialUuid().toString(), object);
-		}
-		
-		private Field(String name) {
-			this(name, null);
-		}
-
-		/**
-		 * @param name
-		 * @param computed
-		 * @param object
-		 */
-		private Field(String id, IdentifiedObject object) {
+		private Field(IdentifiedObject conceptIdentifier) {
 			super();
-			this.id = id;
-			this.object = object;
+			this.concept = conceptIdentifier;
 		}
 
 		/**
-		 * @return the id
+		 * @return the identifiers of the concept that backs this field type
 		 */
-		public String getId() {
-			return id;
-		}
-
-		/**
-		 * @return the object, if any
-		 */
-		public IdentifiedObject getObject() {
-			return object;
+		public IdentifiedObject getBackingConcept() {
+			return concept;
 		}
 
 		/* (non-Javadoc)
@@ -118,27 +89,21 @@ public static class Field {
 		 */
 		@Override
 		public String toString() {
-			return "Field [id=" + id + ", object=" + object + "]";
+			return "Field [concept=" + concept + "]";
 		}
 	}
 	
-	private static Logger log = LogManager.getLogger(MapSetDisplayFieldsService.class);
 	
-	private Map<String, Field> fields_;
 	
 	MapSetDisplayFieldsService() {
 		// For HK2
 	}
 
-	private Map<String, Field> getFields() {
+	private Map<UUID, Field> getFields() {
 		synchronized (fields_) {
 			if (fields_.size() == 0) {
-				/*
-				 * All added fields must be handlable by code in RestMappingItemVersion constructor
-				 */
-
 				// Non-concept fields
-				add(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name());
+				add(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION);
 
 				for (ConceptChronology<?> cc : getAnnotationConcepts(StampCoordinates.getDevelopmentLatest())) {
 					add(cc);
@@ -159,45 +124,54 @@ public static class Field {
 	public void invalidateCache() {
 		getFields().clear();
 	}
-
-	public Collection<Field> getAllFields() {
-		return Collections.unmodifiableCollection(getFields().values());
+	
+	public RestMappingSetDisplayField[] getAllFields() throws RestException {
+		ArrayList<RestMappingSetDisplayField> result = new ArrayList<RestMappingSetDisplayField>(getFields().size());
+		for (Field f : getFields().values())
+		{
+			result.add(new RestMappingSetDisplayField(f.getBackingConcept(), null));
+		}
+		
+		return result.toArray(new RestMappingSetDisplayField[result.size()]);
 	}
-	public Set<String> getAllGlobalFieldIds() {
+
+
+	public Set<UUID> getAllGlobalFieldIds() {
 		return Collections.unmodifiableSet(getFields().keySet());
 	}
-	public Field getFieldByConceptIdOrStringIdIfNotConceptId(String stringOrConceptId) {
-		if (getFields().get(stringOrConceptId) != null) {
-			return getFields().get(stringOrConceptId);
+	
+	/**
+	 * Takes in a nid, uuid or sequence representing a concept, which represents a supported map set display field.
+	 * returns the IdentifiedObject of the concept, after validating it is a valid field.
+	 * If you pass a UUID in string form into this method, the most likely result is getting the same UUID back within an IdentifiedObject
+	 * (the only other possibility, is getting back null, if the passed UUID isn't a valid display field)
+	 * @param conceptId
+	 * @return
+	 */
+	public IdentifiedObject getFieldConceptIdentifierByFieldConceptId(String conceptId) {
+		
+		String temp = conceptId.trim();
+		Optional<UUID> conceptUUID = UUIDUtil.getUUID(temp);
+		if (conceptUUID.isPresent())
+		{
+			return getFields().get(conceptUUID.get()).concept;
 		}
-
-		try {
-			int intId = Integer.parseInt(stringOrConceptId.trim());
-			Optional<UUID> uuid = Optional.empty();
-
-			uuid = Get.identifierService().getUuidPrimordialFromConceptId(intId);
-			if (uuid.isPresent()) {
-				return getFields().get(uuid.get().toString());
+		
+		Optional<Integer> intId = NumericUtils.getInt(temp);
+		if (intId.isPresent())
+		{
+			conceptUUID = Get.identifierService().getUuidPrimordialFromConceptId(intId.get());
+			if (conceptUUID.isPresent()) {
+				return getFields().get(conceptUUID.get().toString()).concept;
 			}
-			
-			uuid = Get.identifierService().getUuidPrimordialFromSememeId(intId);
-			if (uuid.isPresent()) {
-				return getFields().get(uuid.get().toString());
-			}
-
-			return null;
-		} catch (Exception e) {
-			return null;
 		}
+		
+		return null;
 	}
 
 	synchronized private void add(IdentifiedObject object) {
 		Field field = new Field(object);
-		fields_.put(field.id, field);
-	}
-	synchronized private void add(String id) {
-		Field field = new Field(id, null);
-		fields_.put(field.id, field);
+		fields_.put(field.getBackingConcept().getPrimordialUuid(), field);
 	}
 
 	private static Set<ConceptChronology<?>> getAnnotationConcepts(StampCoordinate sc) {
@@ -224,12 +198,6 @@ public static class Field {
 
 		for (Map.Entry<Integer, Set<Integer>> entry : extensionDefinitionsByAssemblageNid.entrySet()) {
 			ConceptChronology<? extends ConceptVersion<?>> assemblageConcept = Get.conceptService().getConcept(entry.getKey());
-//			try {
-//				String msg = "Concept " + getUuidsWithDescriptions(entry.getKey()) + " has " + entry.getValue().size() + " extension defs: " + getUuidsWithDescriptions(entry.getValue().toArray(new Integer[entry.getValue().size()]));
-//				log.debug(msg);
-//			} catch (Exception e) {
-//				log.error(e);
-//			}
 			if (entry.getValue().size() == 1) {
 				log.debug("Registering annotation concept as map item display field: " + getUuidsWithDescriptions(assemblageConcept.getNid()));
 				annotationConcepts.add(assemblageConcept);
@@ -243,7 +211,7 @@ public static class Field {
 
 	@PostConstruct
 	public void construct() {
-		 fields_ = new HashMap<>();
+		fields_ = new HashMap<>();
 	}
 
 	@PreDestroy

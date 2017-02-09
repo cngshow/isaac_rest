@@ -13,6 +13,10 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/02/02 - 1.9.17
+    * Adding RestMappingItemVersionPage to contain paged map items
+    * Adding /1/mapping/mappingItemsPaged API to return mapping items paged
+
 * 2017/02/02 - 1.9.16
     * removed the 1/mapping/field API, as there was no use case for it
     * Changed the RestMappingSetDisplayFieldCreate.componentType to fieldComponentType.  Changed the accepted type from RestMapSetItemComponentType to String, 

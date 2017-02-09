@@ -458,7 +458,7 @@ public class SememeWriteAPIs
 		int referencedComponentNid =  RequestInfoUtils.getNidFromUuidOrNidParameter("RestSememeBaseCreate.referencedComponent", sememeCreationData.referencedComponent);
 		int assemblageConceptSequence = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeBaseCreate.assemblageConcept", sememeCreationData.assemblageConcept);
 		
-		DynamicSememeData[] data = RestDynamicSememeData.translate(sememeCreationData.columnData);
+		DynamicSememeData[] data = RestDynamicSememeData.translate(sememeCreationData.columnData, true);
 		
 		SememeType type = readSememeType(assemblageConceptSequence, data);
 		checkTypeMap(type, data);
@@ -601,7 +601,7 @@ public class SememeWriteAPIs
 		State stateToUse = (sememeUpdateData.active == null || sememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> sememeChronology = SememeAPIs.findSememeChronology(id);
 		
-		DynamicSememeData[] passedData = RestDynamicSememeData.translate(sememeUpdateData.columnData);
+		DynamicSememeData[] passedData = RestDynamicSememeData.translate(sememeUpdateData.columnData, true);
 		
 		SememeType type = sememeChronology.getSememeType();
 

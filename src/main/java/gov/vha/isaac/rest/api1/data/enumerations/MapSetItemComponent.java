@@ -31,7 +31,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public enum MapSetItemComponent {
 	SOURCE, TARGET, EQUIVALENCE_TYPE, // Attached sememes: i.e. VUID, CODE, SCT_ID, LOINC_NUM, RXCUI, FSN, PT, UUID
-	//ITEM, // Members: i.e. SOURCE_ID, TARGET_ID, QUALIFIER_ID, MAP_ID
 	ITEM_EXTENDED;// mapItemExtendedFields column numbers: i.e. 1, 2, 3
 	
 	public static Optional<MapSetItemComponent> parse(String input)

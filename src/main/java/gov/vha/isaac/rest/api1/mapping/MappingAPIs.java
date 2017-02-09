@@ -19,12 +19,13 @@
 package gov.vha.isaac.rest.api1.mapping;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -33,10 +34,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import gov.vha.isaac.ochre.api.ConceptProxy;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
@@ -64,10 +64,13 @@ import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
+import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersionPage;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayFieldCreate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfo;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
+import gov.vha.isaac.rest.api1.sememe.SememeAPIs.SememeVersions;
 import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
@@ -241,13 +244,7 @@ public class MappingAPIs
 		SecurityUtils.validateRole(securityContext, getClass());
 		
 		MapSetDisplayFieldsService service = LookupService.getService(MapSetDisplayFieldsService.class);
-		Collection<MapSetDisplayFieldsService.Field> fields = service.getAllFields();
-		List<RestMappingSetDisplayField> restFields = new ArrayList<>();
-		for (MapSetDisplayFieldsService.Field field : fields) {			
-			restFields.add(new RestMappingSetDisplayField(field.getId()));
-		}
-		
-		return restFields.toArray(new RestMappingSetDisplayField[restFields.size()]);
+		return service.getAllFields();
 	}
 	
 	/**
@@ -348,6 +345,86 @@ public class MappingAPIs
 	}
 
 	/**
+	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0, defaults to 250
+	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
+	 * will be included for all referenced concepts which align with your current coordinates.  When comments is passed, all comments attached to each mapItem are 
+	 * included.
+	 * @param processId if set, specifies that retrieved components should be checked against the specified active
+	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
+	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
+	 * then either no object will be returned or an exception will be thrown, depending on context.
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
+	 * be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @return the mapping items versions object.  
+	 * 
+	 * @throws RestException 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.mappingItemsPagedComponent + "{" + RequestParameters.id +"}")
+	public RestMappingItemVersionPage getMappingItemPage(
+		@PathParam(RequestParameters.id) String id,
+		@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
+		@QueryParam(RequestParameters.maxPageSize) @DefaultValue(250 + "") int maxPageSize,
+		@QueryParam(RequestParameters.expand) String expand,
+		@QueryParam(RequestParameters.processId) String processId,
+		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		//TODO 1 Dan this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
+		//will make it fast for early pages... still slow for later pages, unless we enhance the underlying isaac code to handle paging natively
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.PAGINATION_PARAM_NAMES,
+				RequestParameters.expand,
+				RequestParameters.processId,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+		
+		ArrayList<RestMappingItemVersion> items = new ArrayList<>();
+		
+		int sememeConceptSequence = Util.convertToConceptSequence(id);
+		
+		Positions positions = Positions.getPositions(sememeConceptSequence);
+		
+		UUID processIdUUID = Util.validateWorkflowProcess(processId);
+		
+		List<RestMappingSetDisplayField> displayFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(
+				Get.identifierService().getConceptNid(sememeConceptSequence), RequestInfo.get().getStampCoordinate());
+		
+		Set<Integer> allowedAssemblages = new HashSet<>();
+		allowedAssemblages.add(sememeConceptSequence);
+		SememeVersions sememes = SememeAPIs.get(
+				null,
+				allowedAssemblages,
+				pageNum,
+				maxPageSize,
+				false, processIdUUID);
+		
+		for (SememeVersion<?> sememeVersion : sememes.getValues()) {
+			items.add(new RestMappingItemVersion(((DynamicSememe<?>)sememeVersion), 
+					positions.targetPos, positions.qualfierPos,
+					RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
+					RequestInfo.get().shouldExpand(ExpandUtil.comments),
+					processIdUUID, displayFields));
+		}
+		RestMappingItemVersionPage results =
+				new RestMappingItemVersionPage(
+						pageNum,
+						maxPageSize,
+						sememes.getTotal(),
+						true,
+						sememes.getTotal() > (pageNum * maxPageSize),
+						RestPaths.mappingItemsPagedComponent + id,
+						items.toArray(new RestMappingItemVersion[items.size()])
+						);
+		return results;
+	}
+
+	/**
 	 * @param id - A UUID, nid, or sememe sequence that identifies a map item.
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
 	 * will be included for all referenced concepts which align with your current coordinates.  When comments is passed, all comments attached to each mapItem are 
@@ -440,29 +517,30 @@ public class MappingAPIs
 					&& mapSetFieldsSememeDataArray.getDataArray().length > 0) {
 				for (DynamicSememeStringImpl stringSememe : (DynamicSememeStringImpl[])mapSetFieldsSememeDataArray.getDataArray()) {
 					String[] fieldComponents = stringSememe.getDataString().split(":");
-					String id = fieldComponents[0];
 					MapSetItemComponent componentType = MapSetItemComponent.valueOf(fieldComponents[1]);
-					try {
-						String description = null; // If passed description is null will use id to determine description
-						if (componentType == MapSetItemComponent.ITEM_EXTENDED) {
-							// If ITEM_EXTENDED then description is from itemFieldDefinitions
-							int col = Integer.parseUnsignedInt(id);
-							for (RestDynamicSememeColumnInfo def : itemFieldDefinitions) {
-								if (def.columnOrder == col) {
-									description = def.columnName;
-									break;
-								}
-							}
-							if (description == null) {
-								String msg = "Failed correlating item display field id " + id + " for item display field of type " + componentType + " with any existing extended field definition in map set";
-								log.error(msg);
-								throw new RuntimeException(msg);
+					if (componentType == MapSetItemComponent.ITEM_EXTENDED) 
+					{
+						// If ITEM_EXTENDED then description is from itemFieldDefinitions
+						int col = Integer.parseUnsignedInt(fieldComponents[0]);
+						UUID id = null;
+						for (RestDynamicSememeColumnInfo def : itemFieldDefinitions) {
+							if (def.columnOrder == col) {
+								id = def.columnLabelConcept.getFirst();
+								break;
 							}
 						}
-
-						fields.add(new RestMappingSetDisplayField(id, componentType, description));
-					} catch (RestException e) {
-						throw new RuntimeException("Failed constructing RestMappingSetField from stored data", e);
+						if (id == null) {
+							String msg = "Failed correlating item display field id " + col + " for item display field of type " 
+									+ componentType + " with any existing extended field definition in map set";
+							log.error(msg);
+							throw new RuntimeException(msg);
+						}
+						fields.add(new RestMappingSetDisplayField(id, col));
+					}
+					else
+					{
+						UUID id = UUID.fromString(fieldComponents[0]);
+						fields.add(new RestMappingSetDisplayField(new ConceptProxy("", id), componentType));
 					}
 				}
 			}
@@ -510,32 +588,17 @@ public class MappingAPIs
 		return mapItemFieldsDefinition;
 	}
 
-	public static List<RestMappingSetDisplayField> getDefaultDisplayFields(List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition) {
+	protected static List<RestMappingSetDisplayField> getDefaultDisplayFields(List<RestDynamicSememeColumnInfo> mapItemFieldsDefinition) {
 		List<RestMappingSetDisplayField> displayFields = new ArrayList<>();
-		// If no display fields passed, then add default display fields
-		// as SOURCE, TARGET and EQUIVALENCE_TYPE DESCRIPTION followed by item extended fields, if any
-		String id = null;
-		MapSetItemComponent componentType = null;
-		try {
-			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
-			componentType = MapSetItemComponent.SOURCE;
-			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
-			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
-			componentType = MapSetItemComponent.TARGET;
-			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
-			id = MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name();
-			componentType = MapSetItemComponent.EQUIVALENCE_TYPE;
-			displayFields.add(new RestMappingSetDisplayField(id, componentType, (String)null));
-
-			for (RestDynamicSememeColumnInfo itemExtendedFieldCol : mapItemFieldsDefinition) {
-				id = itemExtendedFieldCol.columnOrder + "";
-				componentType = MapSetItemComponent.ITEM_EXTENDED;
-				displayFields.add(new RestMappingSetDisplayField(id, Get.conceptService().getConcept(itemExtendedFieldCol.columnLabelConcept.nid), componentType, (String)null));
+		displayFields.add(new RestMappingSetDisplayField(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION, MapSetItemComponent.SOURCE));
+		displayFields.add(new RestMappingSetDisplayField(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION, MapSetItemComponent.TARGET));
+		displayFields.add(new RestMappingSetDisplayField(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION, MapSetItemComponent.EQUIVALENCE_TYPE));
+		if (mapItemFieldsDefinition != null)
+		{
+			for (RestDynamicSememeColumnInfo itemExtendedFieldCol : mapItemFieldsDefinition) 
+			{
+				displayFields.add(new RestMappingSetDisplayField(itemExtendedFieldCol.columnLabelConcept.uuids.get(0), itemExtendedFieldCol.columnOrder));
 			}
-		} catch (Exception e) {
-			String msg = "Failed constructing default item display field id=\"" + id + "\", componentType=" + componentType;
-			log.error(msg, e);
-			throw new RuntimeException(msg, e);
 		}
 		
 		return displayFields;

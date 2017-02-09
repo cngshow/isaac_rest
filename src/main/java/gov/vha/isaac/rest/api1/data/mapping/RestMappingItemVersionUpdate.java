@@ -58,7 +58,7 @@ public class RestMappingItemVersionUpdate extends RestMappingItemVersionBase
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String qualifierConcept;
+	public String qualifierConcept; // TOOD change to equivalenceTypeConcept
 
 	/**
 	 * True to indicate the mapping item should be set as active, false for inactive.  
@@ -76,13 +76,13 @@ public class RestMappingItemVersionUpdate extends RestMappingItemVersionBase
 	/**
 	 * @param targetConcept
 	 * @param mapItemExtendedFields
-	 * @param qualifierConcept
+	 * @param equivalenceTypeConcept
 	 */
-	public RestMappingItemVersionUpdate(String targetConcept, String qualifierConcept, List<RestDynamicSememeData> mapItemExtendedFields,  Boolean active) 
+	public RestMappingItemVersionUpdate(String targetConcept, String equivalenceTypeConcept, List<RestDynamicSememeData> mapItemExtendedFields,  Boolean active) 
 	{
 		super(mapItemExtendedFields);
 		this.targetConcept = targetConcept;
-		this.qualifierConcept = qualifierConcept;
+		this.qualifierConcept = equivalenceTypeConcept;
 		this.active = active;
 	}
 }

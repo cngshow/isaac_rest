@@ -30,12 +30,15 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
@@ -97,7 +100,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public RestIdentifiedObject qualifierConcept;
+	public RestIdentifiedObject qualifierConcept; // TODO rename this to equivalenceTypeConcept
 	
 	/**
 	 * The identifier data for the sememe that represents this mapping item
@@ -134,7 +137,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		super();
 	}
 
-	public RestMappingItemVersion(DynamicSememe<?> sememe, int targetColPosition, int qualifierColPosition, 
+	public RestMappingItemVersion(DynamicSememe<?> sememe, int targetColPosition, int equivalenceTypeColPosition, 
 			boolean expandDescriptions, boolean expandComments, UUID processId, List<RestMappingSetDisplayField> displayFieldsFromMapSet)
 	{
 		final StampCoordinate stampCoordinate = RequestInfo.get().getStampCoordinate();
@@ -165,7 +168,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 						: null);
 					offset++;
 				}
-				else if (i == qualifierColPosition)
+				else if (i == equivalenceTypeColPosition)
 				{
 					qualifierConcept = ((data[i] != null) ? 
 							new RestIdentifiedObject(((DynamicSememeUUID) data[i]).getDataUUID()) 
@@ -203,26 +206,6 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 		}
 
 		expandables = new Expandables();
-		if (expandDescriptions)
-		{
-//			if (qualifierConcept != null)
-//			{
-//				qualifierDescription = Util.readBestDescription(qualifierConcept.sequence, stampCoordinate);
-//			}
-//			sourceDescription = Util.readBestDescription(sourceConcept.sequence, stampCoordinate);
-//			if (targetConcept != null)
-//			{
-//				targetDescription = Util.readBestDescription(targetConcept.sequence, stampCoordinate);
-//			}
-		}
-		else
-		{
-			if (RequestInfo.get().returnExpandableLinks())
-			{
-				//TODO fix this expandable link
-				expandables.add(new Expandable(ExpandUtil.referencedDetails, ""));
-			}
-		}
 		if (expandComments)
 		{
 			try
@@ -250,7 +233,7 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	}
 
 	private static RestMappingItemComputedDisplayField constructDisplayField(int mapSetNid, int sourceConceptNid, RestIdentifiedObject targetConcept, 
-			RestIdentifiedObject qualifierConcept, String fieldId, MapSetItemComponent componentType) {
+			RestIdentifiedObject equivalenceTypeConcept, String fieldId, MapSetItemComponent componentType) {
 		Integer componentNid = null;
 		String value = null;
 		switch(componentType) {
@@ -259,44 +242,49 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 			break;
 		case TARGET:
 			componentNid = targetConcept == null ? null : targetConcept.nid;
-			break;
+				break;
 		case EQUIVALENCE_TYPE:
-			componentNid = qualifierConcept == null ? null : qualifierConcept.nid;
+			componentNid = equivalenceTypeConcept == null ? null : equivalenceTypeConcept.nid;
 			break;
 		default:
 			String msg = "Invalid/unsupported MapSetItemComponent value \"" + componentType + "\".  Should be one of " + MapSetItemComponent.values();
 			log.error(msg);
 			throw new RuntimeException(msg);
 		}
+		
 		/*
 		 * Fields must correspond to entries returned by MapSetDisplayFieldsService.getAllFields()
 		 */
-		UUID annotationConceptUuid = null;
-		try {
-			annotationConceptUuid = UUID.fromString(fieldId);
-		} catch (Exception e) {
-			// ignore
+		
+		IdentifiedObject fieldType = LookupService.getService(MapSetDisplayFieldsService.class).getFieldConceptIdentifierByFieldConceptId(fieldId);
+		if (fieldType == null)
+		{
+			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldId + "\"");
 		}
+		
 		if (componentNid == null)
 		{
 			value = null;
 		}
-		else if (annotationConceptUuid != null) {
-			Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, Get.conceptService().getConcept(annotationConceptUuid).getNid(), 
-					RequestInfo.get().getStampCoordinate());
-			// TODO handle missing values and contradictions
-			value = valueOptional.isPresent() ? valueOptional.get() : null;
-		}
-		else if (fieldId.equals(MapSetDisplayFieldsService.Field.NonConceptFieldName.DESCRIPTION.name())) {
-			Optional<String> descLatestVersion = Frills.getDescription(componentNid, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
-			// TODO handle missing values and contradictions
-			value = descLatestVersion.isPresent() ? descLatestVersion.get() : null;
-		} else {
-			throw new RuntimeException("Unsupported/unexpected map set field \"" + fieldId + "\"");
+		else 
+		{
+			if (fieldType.getPrimordialUuid().equals(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid()))
+			{
+				Optional<String> descLatestVersion = Frills.getDescription(componentNid, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
+				// TODO handle missing values and contradictions
+				value = descLatestVersion.isPresent() ? descLatestVersion.get() : null;
+				
+			}
+			else  //represents a single-column sememe field.  Read the sememe data
+			{
+				Optional<String> valueOptional = Frills.getAnnotationStringValue(componentNid, fieldType.getNid(), RequestInfo.get().getStampCoordinate());
+				// TODO handle missing values and contradictions
+				value = valueOptional.isPresent() ? valueOptional.get() : null;
+			}
 		}
 		
 		try {
-			return new RestMappingItemComputedDisplayField(fieldId, componentType, value);
+			return new RestMappingItemComputedDisplayField(fieldType, componentType, value);
 		} catch (RestException e) {
 			log.error(e);
 			throw new RuntimeException(e);
@@ -310,11 +298,8 @@ public class RestMappingItemVersion extends RestMappingItemVersionBase
 	public String toString() {
 		return "RestMappingItemVersion [expandables=" + expandables + ", identifiers=" + identifiers
 				+ ", mappingItemStamp=" + mappingItemStamp
-//				+ ", sourceDescription=" + sourceDescription
-//				+ ", targetDescription=" + targetDescription
-//				+ ", qualifierDescription=" + qualifierDescription
 				+ ", mapSetConcept=" + mapSetConcept
-				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", qualifierConcept="
+				+ ", sourceConcept=" + sourceConcept + ", targetConcept=" + targetConcept + ", equivalenceTypeConcept="
 				+ qualifierConcept + ", mapItemExtendedFields=" + mapItemExtendedFields + "]";
 	}
 }
