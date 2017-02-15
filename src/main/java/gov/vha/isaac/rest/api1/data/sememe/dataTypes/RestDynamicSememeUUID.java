@@ -48,7 +48,14 @@ public class RestDynamicSememeUUID extends RestDynamicSememeIdentifiedData
 		//the deserializer doesn't always know the right types
 		if (data instanceof String)
 		{
-			return UUID.fromString((String)data);
+			try
+			{
+				return UUID.fromString((String)data);
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException("The RestDynamicSememeUUID was passed as a string, and doesn't contain a valid UUID.  Passed value '" + data + "'");
+			}
 		}
 		return (UUID)data;
 	}
