@@ -759,12 +759,15 @@ public class MappingWriteAPIs
 		{
 			for (RestMappingSetExtensionValueCreate field : mapSetExtendedFields)
 			{
-				buildMappingSetExtensionValue(
+				if (field != null && field.extensionValue != null && field.extensionValue.data != null && !StringUtils.isBlank(field.extensionValue.data.toString()))
+				{
+					buildMappingSetExtensionValue(
 						Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()),
 						"RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept",
 						field.extensionNameConcept,
 						field.extensionValue,
 						editCoord);
+				}
 			}
 		}
 		
@@ -982,13 +985,16 @@ public class MappingWriteAPIs
 							throw new RestException("RestMappingSetExtensionValueUpdate.active", update.active + "", "cannot create new extension value with inactive state (active == false)");
 						}
 						// This is an entirely new extension value
-						//TODO not honoring active / inactive on update
-						sememeToCommit = buildMappingSetExtensionValue(
+						
+						if (update != null && update.extensionValue != null && update.extensionValue.data != null && !StringUtils.isBlank(update.extensionValue.data.toString()))
+						{
+							sememeToCommit = buildMappingSetExtensionValue(
 								mappingConcept.getNid(),
 								"RestMappingSetVersionBaseUpdate.mapSetExtendedFields.extensionNameConcept",
 								update.extensionNameConcept,
 								update.extensionValue,
 								editCoord);
+						}
 					} else {
 						// This corresponds to an existing extension value
 						if (update.active != null && ! update.active) {
@@ -1009,7 +1015,10 @@ public class MappingWriteAPIs
 								newDataArray[1] = new DynamicSememeStringImpl(((RestDynamicSememeString)updatedData).getString());
 							} else if (updatedData instanceof RestDynamicSememeNid) {
 								newDataArray[1] = new DynamicSememeNidImpl(((RestDynamicSememeNid)updatedData).getNid());
-							} else {
+							}
+							else if (updatedData instanceof RestDynamicSememeUUID) {
+								newDataArray[1] = new DynamicSememeUUIDImpl(((RestDynamicSememeUUID)updatedData).getUUID());
+							}else {
 								// Only support RestDynamicSememeString or RestDynamicSememeNid
 								throw new RuntimeException(updatedData.getClass().getName() + " NOT SUPPORTED");
 							}
