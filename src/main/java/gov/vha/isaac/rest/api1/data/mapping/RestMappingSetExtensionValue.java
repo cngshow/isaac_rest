@@ -57,10 +57,11 @@ public class RestMappingSetExtensionValue extends RestMappingSetExtensionValueBa
 		super();
 	}
 	
-	public RestMappingSetExtensionValue(int extensionNameConcept, RestDynamicSememeData extensionValue)
+	public RestMappingSetExtensionValue(int extensionNameConcept, RestDynamicSememeData extensionValue, boolean active)
 	{
 		this.extensionNameConceptIdentifiers = new RestIdentifiedObject(extensionNameConcept, ObjectChronologyType.CONCEPT);
 		this.extensionValue = extensionValue;
+		this.active = active;
 		this.extensionNameConceptDescription = Util.readBestDescription(extensionNameConcept);
 	}
 }

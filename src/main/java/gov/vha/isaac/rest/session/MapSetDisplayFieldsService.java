@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.session;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -45,6 +46,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.identity.IdentifiedObject;
+import gov.vha.isaac.ochre.api.util.AlphanumComparator;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
@@ -131,6 +133,15 @@ public class MapSetDisplayFieldsService {
 		{
 			result.add(new RestMappingSetDisplayField(f.getBackingConcept(), null));
 		}
+		
+		Collections.sort(result, new Comparator<RestMappingSetDisplayField>()
+		{
+			@Override
+			public int compare(RestMappingSetDisplayField o1, RestMappingSetDisplayField o2)
+			{
+				return AlphanumComparator.getCachedInstance(true).compare(o1.description, o2.description);
+			}
+		});
 		
 		return result.toArray(new RestMappingSetDisplayField[result.size()]);
 	}

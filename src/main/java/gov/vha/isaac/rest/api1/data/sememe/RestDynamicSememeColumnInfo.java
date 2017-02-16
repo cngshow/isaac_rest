@@ -112,6 +112,8 @@ public class RestDynamicSememeColumnInfo
 	
 	public RestDynamicSememeColumnInfo(DynamicSememeColumnInfo dsci)
 	{
+		//TODO Dynamic Sememe Column Info is not computed with the passed view coordinate, therefore, the descriptions are not correct.  
+		//Need to fix...
 		this.columnLabelConcept = new RestIdentifiedObject(dsci.getColumnDescriptionConcept());
 		this.columnDataType = new RestDynamicSememeDataType(dsci.getColumnDataType());
 		this.columnDefaultData = dsci.getDefaultColumnValue() == null ? null : RestDynamicSememeData.translate(dsci.getColumnOrder(), dsci.getDefaultColumnValue());

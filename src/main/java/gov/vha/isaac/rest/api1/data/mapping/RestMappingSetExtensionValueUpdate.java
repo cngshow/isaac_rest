@@ -45,39 +45,16 @@ public class RestMappingSetExtensionValueUpdate extends RestMappingSetExtensionV
 	@XmlElement
 	public String extensionNameConcept;
 
-	/**
-	 * True to indicate the extension value should be set as active, false for inactive.  
-	 * This field is optional, if not provided, it will be assumed to be active.
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Boolean active;
-
 	public RestMappingSetExtensionValueUpdate()
 	{
 		//for Jaxb
 		super();
 	}
 	
-	public RestMappingSetExtensionValueUpdate(String extensionNameConcept)
-	{
-		this(extensionNameConcept, (RestDynamicSememeData)null);
-	}
-	public RestMappingSetExtensionValueUpdate(String extensionNameConcept, Boolean active)
-	{
-		this(extensionNameConcept, (RestDynamicSememeData)null, active);
-	}
-	
-	public RestMappingSetExtensionValueUpdate(String extensionNameConcept, RestDynamicSememeData extensionValue)
-	{
-		this(extensionNameConcept, extensionValue, true);
-	}
-
 	public RestMappingSetExtensionValueUpdate(String extensionNameConcept, RestDynamicSememeData extensionValue, Boolean active)
 	{
-		super(extensionValue);
+		super(extensionValue, (active != null) ? active : true);
 		this.extensionNameConcept = extensionNameConcept;
-		this.active = (active != null) ? active : true;
 	}
 
 	/* (non-Javadoc)

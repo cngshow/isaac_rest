@@ -796,10 +796,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		renewedEditToken = writeResponse.editToken;
 
 		// Create a concept in this workflow process
-		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
+		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 
-		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
 
 		final UUID randomUuid = UUID.randomUUID();
@@ -1010,10 +1010,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final UUID randomUuid = UUID.randomUUID();
 
 		// Construct new description data object
-		final int referencedConceptNid = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "nid");
-		final int initialCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
-		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+		final int referencedConceptNid = MetaData.SNOROCKET_CLASSIFIER.getNid();
+		final int initialCaseSignificanceConceptSequence = MetaData.DESCRIPTION_CASE_SENSITIVE.getConceptSequence();
+		final int initialLanguageConceptSequence = MetaData.SPANISH_LANGUAGE.getConceptSequence();
+		final int initialDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 
 		// Retrieve all descriptions referring to referenced concept and just pick the first
@@ -1268,16 +1268,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final UUID randomUuid = UUID.randomUUID();
 
 		// Construct new description data object
-		final int referencedConceptNid = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "nid");
-		final int initialCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
-		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.SPANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+		final int referencedConceptNid = MetaData.SNOROCKET_CLASSIFIER.getNid();
+		final int initialCaseSignificanceConceptSequence = MetaData.DESCRIPTION_CASE_SENSITIVE.getConceptSequence();
+		final int initialLanguageConceptSequence = MetaData.SPANISH_LANGUAGE.getConceptSequence();
+		final int initialDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 
-		//		final int referencedConceptNid = getIntegerIdForUuid(MetaData.AMT_MODULE.getPrimordialUuid(), "nid");
-		//		final int initialCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
-		//		final int initialLanguageConceptSequence = getIntegerIdForUuid(MetaData.FRENCH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		//		final int initialDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+		//		final int referencedConceptNid = MetaData.AMT_MODULE.getNid();
+		//		final int initialCaseSignificanceConceptSequence = MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence();
+		//		final int initialLanguageConceptSequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
+		//		final int initialDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		//		final String initialDescriptionText = "An initial description text for AMT_MODULE (" + randomUuid + ")";
 		/*
 		 * int caseSignificanceConceptSequence,
@@ -1344,9 +1344,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
 
 		// Construct description update data object
-		final int newCaseSignificanceConceptSequence = getIntegerIdForUuid(MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getPrimordialUuid(), "conceptSequence");
-		final int newLanguageConceptSequence = getIntegerIdForUuid(MetaData.FRENCH_LANGUAGE.getPrimordialUuid(), "conceptSequence");
-		//final int newDescriptionTypeConceptSequence = getIntegerIdForUuid(MetaData.SYNONYM.getPrimordialUuid(), "conceptSequence");
+		final int newCaseSignificanceConceptSequence = MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence();
+		final int newLanguageConceptSequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
+		//final int newDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String newDescriptionText = "A new description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 
 		RestSememeDescriptionUpdate newDescriptionData =
@@ -1454,10 +1454,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testConceptAPIs() throws JsonProcessingException, IOException
 	{
-		final int parent1Sequence = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
-		final int parent2Sequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
+		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 
-		final int requiredDescriptionsLanguageSequence = getIntegerIdForUuid(MetaData.ENGLISH_LANGUAGE.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.name());
+		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
 
 		//Pull a different concept taxonomy, in order to validate that the caching in the TaxonomyProvider gets cleaned up properly when the new concept is created.
@@ -2228,8 +2228,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		Assert.assertNotNull(mappingItemMatchingNewItem);
 
-		String updatedTargetConceptSeq = getIntegerIdForUuid(MetaData.DANISH_LANGUAGE.getPrimordialUuid(), "conceptSequence") + "";
-		String updatedEquivalenceTypeConceptSeq = getIntegerIdForUuid(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getPrimordialUuid(), "conceptSequence") + "";
+		String updatedTargetConceptSeq = MetaData.DANISH_LANGUAGE.getConceptSequence() + "";
+		String updatedEquivalenceTypeConceptSeq = IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getConceptSequence() + "";
 
 		RestMappingItemVersionUpdate updatedMappingItemData = new RestMappingItemVersionUpdate(
 				updatedTargetConceptSeq,
@@ -2775,7 +2775,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testCommentAPIs()
 	{
-		String conceptNid = getIntegerIdForUuid(MetaData.SNOROCKET_CLASSIFIER.getPrimordialUuid(), "nid") + "";
+		String conceptNid = MetaData.SNOROCKET_CLASSIFIER.getNid() + "";
 
 		// Create a random string to confirm target data are relevant
 		UUID randomUuid = UUID.randomUUID();
@@ -2892,7 +2892,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testCommentAPI2s() throws JsonProcessingException, IOException
 	{
-		int conceptNid = getIntegerIdForUuid(MetaData.AXIOM_ORIGIN.getPrimordialUuid(), "nid");
+		int conceptNid = MetaData.AXIOM_ORIGIN.getNid();
 
 		// Create a random string to confirm target data are relevant
 		UUID randomUuid = UUID.randomUUID();
@@ -3111,8 +3111,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 
 	/**
-	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
-	 * concept data.
+	 * This test validates idTranslateComponent
+	 * 
+	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain data.
 	 */
 	@Test
 	public void testIdReturn()
@@ -3129,6 +3130,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
 
 		checkFail(response);
+
+		Assert.assertEquals(getIntegerIdForUuid(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.getDisplayName()), DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getConceptSequence());
+		Assert.assertEquals(getIntegerIdForUuid(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(), IdType.NID.getDisplayName()), DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid());
 	}
 	/**
 	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain
