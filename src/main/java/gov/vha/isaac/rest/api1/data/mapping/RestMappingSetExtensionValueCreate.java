@@ -44,9 +44,9 @@ public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionV
 		super();
 	}
 	
-	public RestMappingSetExtensionValueCreate(String extensionNameConcept, RestDynamicSememeData extensionValue)
+	public RestMappingSetExtensionValueCreate(String extensionNameConcept, RestDynamicSememeData extensionValue, boolean active)
 	{
-		super(extensionNameConcept, extensionValue);
+		super(extensionNameConcept, extensionValue, active);
 	}
 
 	/* (non-Javadoc)
@@ -55,6 +55,6 @@ public class RestMappingSetExtensionValueCreate extends RestMappingSetExtensionV
 	@Override
 	public String toString() {
 		return "RestMappingSetExtensionValueCreate [extensionNameConcept=" + extensionNameConcept + ", extensionValue="
-				+ extensionValue + "]";
+				+ extensionValue + ", active=" + active + "]";
 	}
 }

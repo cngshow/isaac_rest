@@ -13,6 +13,11 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/02/15 - 1.9.18
+    * Moved the field 'active' from RestMappingSetExtensionValueUpdate down to the parent class of RestMappingSetExtensionValueBase (which will make it available in 
+        RestMappingSetExtensionValue) - the net effect is upon read of a mapset, the extension fields now report if they are active or inactive.  The API for update/create
+        should be unchanged - on read, there is a new boolean field 'active'
+
 * 2017/02/02 - 1.9.17
     * Adding RestMappingItemVersionPage to contain paged map items
     * Adding /1/mapping/mappingItemsPaged API to return mapping items paged

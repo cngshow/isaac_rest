@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.data.mapping;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
@@ -49,16 +50,26 @@ public class RestMappingSetExtensionValueBase
 	@XmlElement
 	public RestDynamicSememeData extensionValue;
 	
+	/**
+	 * The state of the extensionValue.  On read, it will always be returned - true for active, false for inactive.
+	 * On create or update, true to indicate the extension value should be set as active, false for inactive.  
+	 * This field is optional on create or update, if not provided, it will be assumed to be active.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Boolean active;
+	
 	public RestMappingSetExtensionValueBase()
 	{
 		//for Jaxb
 		super();
 	}
 	
-	public RestMappingSetExtensionValueBase(RestDynamicSememeData extensionValue)
+	public RestMappingSetExtensionValueBase(RestDynamicSememeData extensionValue, boolean active)
 	{
 		//for Jaxb
 		super();
 		this.extensionValue = extensionValue;
+		this.active = active;
 	}
 }

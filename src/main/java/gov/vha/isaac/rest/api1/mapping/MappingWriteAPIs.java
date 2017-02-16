@@ -223,8 +223,8 @@ public class MappingWriteAPIs
 		
 		List<RestMappingSetExtensionValueCreate> extensionCreateDTOs = new ArrayList<>();
 		for (RestMappingSetExtensionValue extensionDTO : cloneTargetMappingSetVersion.mapSetExtendedFields) {
-			//TODO JOEL this isn't honoring active / inactive on extensions
-			RestMappingSetExtensionValueCreate extensionCreateDTO = new RestMappingSetExtensionValueCreate(extensionDTO.extensionNameConceptIdentifiers.sequence + "", extensionDTO.extensionValue);
+			RestMappingSetExtensionValueCreate extensionCreateDTO = new RestMappingSetExtensionValueCreate(extensionDTO.extensionNameConceptIdentifiers.sequence + "",
+					extensionDTO.extensionValue, extensionDTO.active == null ? true : extensionDTO.active.booleanValue());
 			extensionCreateDTOs.add(extensionCreateDTO);
 		}
 		
@@ -519,7 +519,6 @@ public class MappingWriteAPIs
 		if (extensionValue instanceof RestDynamicSememeString)
 		{
 			//TODO this isn't honoring active / inactive of the extensions.
-			//TODO why is this code duplicated?  From about 500 lines below...
 			extension = Get.sememeBuilderService().getDynamicSememeBuilder(mapSetConceptNid,
 					IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
 					new DynamicSememeData[] {
@@ -1170,37 +1169,15 @@ public class MappingWriteAPIs
 			//TODO this isn't honoring the active / inactive of the create info
 			for (RestMappingSetExtensionValueCreate field : mapSetExtendedFields)
 			{
-				if (field.extensionValue instanceof RestDynamicSememeString)
+				
+				if (field != null && field.extensionValue != null && field.extensionValue.data != null && !StringUtils.isBlank(field.extensionValue.data.toString()))
 				{
-					@SuppressWarnings({ "rawtypes", "unused" })
-					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdudAssemblageConcept.getConceptSequence()),
-							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getSequence(), 
-							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(
-											Get.identifierService().getConceptNid(
-													RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
-															field.extensionNameConcept))),
-									new DynamicSememeStringImpl(((RestDynamicSememeString)field.extensionValue).getString())}).build(
-							editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
-				}
-				else if (field.extensionValue instanceof RestDynamicSememeNid || field.extensionValue instanceof RestDynamicSememeUUID)
-				{
-					@SuppressWarnings({ "rawtypes", "unused" })
-					SememeChronology extension = Get.sememeBuilderService().getDynamicSememeBuilder(Get.identifierService().getConceptNid(rdudAssemblageConcept.getConceptSequence()),
-							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_NID_EXTENSION.getSequence(), 
-							new DynamicSememeData[] {
-									new DynamicSememeNidImpl(Get.identifierService().getConceptNid(
-											RequestInfoUtils.getConceptSequenceFromParameter("RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept", 
-													field.extensionNameConcept))),
-									new DynamicSememeNidImpl(
-											(field.extensionValue instanceof RestDynamicSememeNid ? 
-												((RestDynamicSememeNid)field.extensionValue).getNid() :
-												Get.identifierService().getNidForUuids(((RestDynamicSememeUUID)field.extensionValue).getUUID())))
-													}).build(editCoord, ChangeCheckerMode.ACTIVE).getNoThrow();
-				}
-				else
-				{
-					throw new RuntimeException("Unsupported map set extension field type");
+					buildMappingSetExtensionValue(
+						rdudAssemblageConcept.getNid(),
+						"RestMappingSetVersionBaseCreate.mapSetExtendedFields.extensionNameConcept",
+						field.extensionNameConcept,
+						field.extensionValue,
+						editCoord);
 				}
 			}
 		}
