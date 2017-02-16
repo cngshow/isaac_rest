@@ -7,6 +7,7 @@ API version number, not the release version number.
 
 * 2017/02/??  - 1.40 - PENDING
     * fix a couple of bugs with update and create mapset, in handling extended fields, where the extended field data was passed with an empty string value.
+    * Sorted the response of 1/mapping/fields alphanumerically
 
 * 2017/02/09  - 1.39
     * Internally refatoring the computed display column code to simplify.
