@@ -29,17 +29,6 @@
 		<PrismeLogAppender name="appender-prisme-all" ignoreExceptions="true">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 		</PrismeLogAppender>
-		
-		<!-- for HL7 messaging -->
-		<RollingFile name="appender-hl7-messaging-all" fileName="${sys:catalina.base}/logs/${web:contextPath}-hl7.log" 
-			filePattern="${sys:catalina.base}/logs/${web:contextPath}-hl7-%i.log">
-			<PatternLayout pattern="%d{DEFAULT} %msgn%n"/>
-			<Policies>
-				<OnStartupTriggeringPolicy />
-				<SizeBasedTriggeringPolicy size="10 MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="20"/>
-		</RollingFile>
 
 	</Appenders>
 
@@ -49,6 +38,7 @@
 			<AppenderRef ref="appender-Console-all" level="WARN" />
 			<AppenderRef ref="appender-root-all" level="ALL" />
 			<AppenderRef ref="appender-root-error" level="WARN" />
+			
 			<!-- <AppenderRef ref="appender-prisme-all" level="WARN" /> -->
 		</Root>
 
@@ -60,8 +50,5 @@
 		<logger name="gov.vha" level="TRACE" />
 		<logger name="com.mchange.v2.c3p0" level="INFO"/>
 		<Logger name="org.jvnet.hk2.logger" level="OFF"/>  <!-- HK2 is logging a debug message that is being mis-translated into an error by LOG4J2 https://issues.apache.org/jira/browse/LOG4J2-1003 -->
-		<logger name="hl7messages" level="INFO">
-			<AppenderRef ref="appender-hl7-messaging-all"></AppenderRef>
-		</logger>
 	</Loggers>
 </Configuration>
