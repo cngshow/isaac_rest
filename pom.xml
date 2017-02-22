@@ -127,6 +127,11 @@
 			<artifactId>sync-git</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+  			<artifactId>hl7-messaging</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
 		<!-- Need to override the scope on these 3 logging packages -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
