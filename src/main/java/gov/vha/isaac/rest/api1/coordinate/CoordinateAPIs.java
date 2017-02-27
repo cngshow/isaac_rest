@@ -86,7 +86,7 @@ public class CoordinateAPIs
 	 * @param path specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
 	 * @param precedence specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
 	 * @param allowedStates specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".
-	 * @param time specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest".  The default is "latest".
+	 * @param time specifies time component of StampPosition component of the StampCoordinate. Values are Long time values or "latest" (case ignored).  The default is "latest".
 	 * 
 	 * @param logicStatedAssemblage specifies stated assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
 	 * @param logicInferredAssemblage specifies inferred assemblage of the LogicCoordinate. Value may be a concept UUID string or int id.</p>	
