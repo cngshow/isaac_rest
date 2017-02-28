@@ -15,7 +15,7 @@
 			</Policies>
 			<DefaultRolloverStrategy max="20"/>
 		</RollingFile>
-		<RollingFile name="appender-root-error" fileName="${sys:catalina.base}/logs${web:contextPath}-err.log" 
+		<RollingFile name="appender-root-error" fileName="${sys:catalina.base}/logs/${web:contextPath}-err.log" 
 			filePattern="${sys:catalina.base}/logs/${web:contextPath}-err-%i.log">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 			<Policies>
