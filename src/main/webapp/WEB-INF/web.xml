@@ -4,10 +4,5 @@
 	xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 
-        <display-name>ISAAC REST Server</display-name>
-       
-        <context-param>
-            <param-name>log4jContextName</param-name>
-            <param-value>log4jContext</param-value>
-        </context-param>
+	<display-name>ISAAC REST Server</display-name>
 </web-app>
