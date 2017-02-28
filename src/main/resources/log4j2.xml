@@ -39,7 +39,7 @@
 			<AppenderRef ref="appender-root-all" level="ALL" />
 			<AppenderRef ref="appender-root-error" level="WARN" />
 			
-			<!-- <AppenderRef ref="appender-prisme-all" level="WARN" /> -->
+			<AppenderRef ref="appender-prisme-all" level="WARN" />
 		</Root>
 
 		<!-- By default, all loggers in the system are set to WARN or worse.  To enable more verbose logging
