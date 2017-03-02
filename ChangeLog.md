@@ -5,7 +5,12 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/02/16  - 1.40
+* 2017/03/02 - 1.41
+    * Minor fixes to logging configurations to fix mis-named log files.
+    * Documentation enhancements to the API
+    * Incorporate upstream metadata changes from ISAAC
+
+* 2017/02/16 - 1.40
     * fix a couple of bugs with update and create mapset, in handling extended fields, where the extended field data was passed with an empty string value.
     * Sorted the response of 1/mapping/fields alphanumerically
     * Simplifying to use ConceptSpecification methods rather than REST calls

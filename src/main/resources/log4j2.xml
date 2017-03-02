@@ -15,8 +15,8 @@
 			</Policies>
 			<DefaultRolloverStrategy max="20"/>
 		</RollingFile>
-		<RollingFile name="appender-root-error" fileName="${sys:catalina.base}/logs${web:contextPath}-err.log" 
-			filePattern="${sys:catalina.base}/logs${web:contextPath}-err-%i.log">
+		<RollingFile name="appender-root-error" fileName="${sys:catalina.base}/logs/${web:contextPath}-err.log" 
+			filePattern="${sys:catalina.base}/logs/${web:contextPath}-err-%i.log">
 			<PatternLayout pattern="%d{DEFAULT} %-5level [%t] %logger{4} - %msg%n" />
 			<Policies>
 				<OnStartupTriggeringPolicy />
@@ -39,7 +39,7 @@
 			<AppenderRef ref="appender-root-all" level="ALL" />
 			<AppenderRef ref="appender-root-error" level="WARN" />
 			
-			<!-- <AppenderRef ref="appender-prisme-all" level="WARN" /> -->
+			<AppenderRef ref="appender-prisme-all" level="WARN" />
 		</Root>
 
 		<!-- By default, all loggers in the system are set to WARN or worse.  To enable more verbose logging

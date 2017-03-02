@@ -44,6 +44,7 @@ public class RestStampCoordinate {
 	/**
 	 * Long epoch time component of the RestStampCoordinate.
 	 * Corresponds to the time component of the StampPosition component of the OCHRE StampCoordinate.
+	 * A value of 9223372036854775807 (Long.MAX_TIME) indicates that the StampCoordinate specifies LATEST
 	 */
 	@XmlElement
 	public long time;
@@ -145,7 +146,7 @@ public class RestStampCoordinate {
 	 */
 	@Override
 	public String toString() {
-		return "RestStampCoordinate [time=" + time + ", path=" + path + ", precedence=" + precedence + ", modules="
+		return "RestStampCoordinate [time=" + (time == Long.MAX_VALUE ? "LATEST" : time) + ", path=" + path + ", precedence=" + precedence + ", modules="
 				+ modules + ", allowedStates=" + allowedStates + "]";
 	}
 }

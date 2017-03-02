@@ -2403,7 +2403,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		ArrayNode extendedFields = jfn.arrayNode();
 		ObjectNode ef1 = jfn.objectNode();
-		ef1.put("extensionNameConcept", MetaData.AMT_MODULE.getNid());
+		ef1.put("extensionNameConcept", MetaData.LOINC_MODULES.getNid());
 		ef1.set("extensionValue", toJsonObject(new DynamicSememeStringImpl("test Value extended"), 1));
 
 		extendedFields.add(ef1);
@@ -2469,7 +2469,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
 		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
-		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConceptIdentifiers.sequence.intValue(), MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConceptIdentifiers.sequence.intValue(), MetaData.LOINC_MODULES.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
 
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
@@ -2645,7 +2645,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		ArrayNode extendedFields = jfn.arrayNode();
 		ObjectNode ef1 = jfn.objectNode();
-		ef1.put("extensionNameConcept", MetaData.AMT_MODULE.getNid());
+		ef1.put("extensionNameConcept", MetaData.LOINC_MODULES.getNid());
 		ef1.set("extensionValue", toJsonObject(new DynamicSememeStringImpl("test Value extended"), 1));
 
 		extendedFields.add(ef1);
@@ -2703,7 +2703,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
 		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
-		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConceptIdentifiers.sequence.intValue(), MetaData.AMT_MODULE.getConceptSequence());
+		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConceptIdentifiers.sequence.intValue(), MetaData.LOINC_MODULES.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
 
 		Assert.assertEquals(createdMapSet.mapItemFieldsDefinition.size(), 2);
@@ -3264,7 +3264,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"3")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getUUID().toString())
-				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.LOINC_MODULES.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 
@@ -3275,7 +3275,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"3")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
-				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.LOINC_MODULES.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 
@@ -3287,7 +3287,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"3")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getConceptSequence() + "")
-				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.LOINC_MODULES.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 
@@ -3298,7 +3298,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.treatAsString, "false")
 				.queryParam(RequestParameters.query,"55")
 				.queryParam(RequestParameters.sememeAssemblageId, DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid() + "")
-				.queryParam(RequestParameters.sememeAssemblageId, MetaData.AMT_MODULE.getNid() + "")
+				.queryParam(RequestParameters.sememeAssemblageId, MetaData.LOINC_MODULES.getNid() + "")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 
@@ -3772,7 +3772,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(
 									param(RequestParameters.time, 123456789),
 									param(RequestParameters.precedence, StampPrecedence.TIME),
-									param(RequestParameters.modules, MetaData.AMT_MODULE.getConceptSequence() + "," + MetaData.ISAAC_MODULE.getConceptSequence() + "," + MetaData.SNOMED_CT_CORE_MODULE.getConceptSequence()),
+									param(RequestParameters.modules, MetaData.LOINC_MODULES.getConceptSequence() + "," + MetaData.ISAAC_MODULE.getConceptSequence() + "," + MetaData.SNOMED_CT_CORE_MODULES.getConceptSequence()),
 									param(RequestParameters.allowedStates, State.INACTIVE.getAbbreviation() + "," + State.PRIMORDIAL.getAbbreviation()))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
@@ -3789,9 +3789,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				stampCoordinateModules.add(Integer.valueOf(nodeList.item(i).getTextContent()));
 			}
 			Assert.assertTrue(stampCoordinateModules.size() == 3);
-			Assert.assertTrue(stampCoordinateModules.contains(MetaData.AMT_MODULE.getConceptSequence()));
+			Assert.assertTrue(stampCoordinateModules.contains(MetaData.LOINC_MODULES.getConceptSequence()));
 			Assert.assertTrue(stampCoordinateModules.contains(MetaData.ISAAC_MODULE.getConceptSequence()));
-			Assert.assertTrue(stampCoordinateModules.contains(MetaData.SNOMED_CT_CORE_MODULE.getConceptSequence()));
+			Assert.assertTrue(stampCoordinateModules.contains(MetaData.SNOMED_CT_CORE_MODULES.getConceptSequence()));
 
 			xpath = "/restStampCoordinate/allowedStates/enumId";
 			List<Integer> allowedStates = new ArrayList<>();
@@ -4268,7 +4268,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.DOD_MODULE.getNid() + "",
+								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
 										MetaData.AND.getNid() + ""})));
 		assertResponseStatus(createAssociationItemResponse, Status.FORBIDDEN.getStatusCode());
 
@@ -4279,7 +4279,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.DOD_MODULE.getNid() + "",
+								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
 										MetaData.AND.getNid() + ""})));
 		result = checkFail(createAssociationItemResponse).readEntity(String.class);
 		RestWriteResponse createdAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
@@ -4293,7 +4293,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestAssociationItemVersion createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
 
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.DOD_MODULE.getNid());
+		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.NUCC_MODULES.getNid());
 		Assert.assertEquals(createdAssociationItem.targetId.nid.intValue(), MetaData.AND.getNid());
 		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
@@ -4343,7 +4343,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		createdAssociationItem = XMLUtils.unmarshalObject(RestAssociationItemVersion.class, result);
 
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
-		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.DOD_MODULE.getNid());
+		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.NUCC_MODULES.getNid());
 		Assert.assertNull(createdAssociationItem.targetId);
 		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
@@ -4365,7 +4365,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.AMT_MODULE.getNid() + "", ""}))));
+								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.LOINC_MODULES.getNid() + "", ""}))));
 
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent
 				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
@@ -4373,14 +4373,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {descType2.sequence + "", MetaData.AMT_MODULE.getNid() + "",
+								new String[] {descType2.sequence + "", MetaData.LOINC_MODULES.getNid() + "",
 										MetaData.AXIOM_ORIGIN.getNid() + ""}))));
 
 		//test query by source
 
 		RestAssociationItemVersion[] foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class,
 				checkFail(target(RestPaths.associationAPIsPathComponent
-						+ RestPaths.associationsWithSourceComponent + MetaData.AMT_MODULE.getNid())
+						+ RestPaths.associationsWithSourceComponent + MetaData.LOINC_MODULES.getNid())
 						.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 						.queryParam(RequestParameters.expand, "referencedConcept")
 						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
@@ -4400,7 +4400,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//		Assert.assertEquals(foundAssociations.length, 1);
 
 		foundAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class, checkFail(target(RestPaths.associationAPIsPathComponent
-				+ RestPaths.associationsWithTargetComponent + MetaData.AMT_MODULE.getNid())
+				+ RestPaths.associationsWithTargetComponent + MetaData.LOINC_MODULES.getNid())
 				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.queryParam(RequestParameters.expand, "referencedConcept")
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
@@ -4530,7 +4530,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 
 		root.set("dataColumnsDefinition", columns);
-		root.put("parentConcept", MetaData.AMT_MODULE.getNid() + "");
+		root.put("parentConcept", MetaData.LOINC_MODULES.getNid() + "");
 		root.put("referencedComponentRestriction", "CONCEPt");
 		root.set("referencedComponentSubRestriction", jfn.nullNode());
 
