@@ -5,7 +5,9 @@ where provided, and the git commit history.  Note that this is not the same as t
 on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/03/?? - 1.43 - PENDING
+* 2017/03/20 - 3.0
+	* Reversioned from 1.43
+	* Production build for Release 3
 
 * 2017/03/15 - 1.42
     * Just building to align ISAAC dependencies with what PRISME needs
