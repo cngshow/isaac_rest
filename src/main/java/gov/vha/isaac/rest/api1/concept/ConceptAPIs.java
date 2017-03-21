@@ -70,7 +70,8 @@ public class ConceptAPIs
 	@Context
 	private SecurityContext securityContext;
 
-	private Set<Integer> allDescriptionAssemblageTypes = null;
+	//TODO this cache needs to be invalidated if they change
+	private static Set<Integer> allDescriptionAssemblageTypes = null;
 	/**
 	 * Returns a single version of a concept.
 	 * If no version parameter is specified, returns the latest version.
