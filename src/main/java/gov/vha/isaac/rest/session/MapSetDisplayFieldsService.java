@@ -35,6 +35,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
+
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -223,7 +225,7 @@ public class MapSetDisplayFieldsService {
 	private static Set<ConceptChronology<?>> getIdentifierAnnotatedConcepts(StampCoordinate sc) {
 		Set<ConceptChronology<?>> identifierAnnotatedConcepts = new HashSet<>();
 		
-		Stream<SememeChronology<? extends SememeVersion<?>>> identifierAnnotationSememeChronologyStream = Get.sememeService().getSememesFromAssemblage(DynamicSememeConstants.get().DYNAMIC_SEMEME_IDENTIFIER_ASSEMBLAGE_SEMEME.getConceptSequence());
+		Stream<SememeChronology<? extends SememeVersion<?>>> identifierAnnotationSememeChronologyStream = Get.sememeService().getSememesFromAssemblage(MetaData.IDENTIFIER_SOURCE.getConceptSequence());
 		identifierAnnotationSememeChronologyStream.sequential().forEach(identifierAnnotationSememeChronology -> {
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			Optional<LatestVersion<SememeVersionImpl>> identifierAnnotationSememeLatestOptional = ((SememeChronology)identifierAnnotationSememeChronology).getLatestVersion(SememeVersionImpl.class, sc);
