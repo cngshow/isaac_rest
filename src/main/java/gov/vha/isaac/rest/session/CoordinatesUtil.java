@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +39,7 @@ import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -52,6 +54,10 @@ import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 public class CoordinatesUtil {
 	private CoordinatesUtil() {}
 
+	
+	//TODO this cache needs to be cleared if any module changes happen
+	private static Set<Integer> validModuleSequences_ = null;
+	
 	/**
 	 * Used to hash CoordinatesToken object and serialized string by request parameters
 	 * 
@@ -451,21 +457,33 @@ public class CoordinatesUtil {
 			{
 				if (StringUtils.isNotBlank(moduleId))
 				{
+					if (validModuleSequences_ == null)
+					{
+						//TODO need to determine if this should be a leaf-only read, or if we can read all.  I think we will get to leaf only, 
+						//when we finish refatoring things, but we haven't yet finished refactoring everything that way.
+						validModuleSequences_ = Frills.getAllChildrenOfConcept(MetaData.MODULE.getConceptSequence(), true, false); 
+					}
+					
 					Optional<Integer> moduleIdIntIdOptional = NumericUtils.getInt(moduleId.trim());
 					if (moduleIdIntIdOptional.isPresent()) {
 						int nid = Get.identifierService().getConceptNid(moduleIdIntIdOptional.get());
 						if (Get.identifierService().getChronologyTypeForNid(nid) == ObjectChronologyType.CONCEPT) {
 							int seq = Get.identifierService().getConceptSequence(nid);
-							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+							
+							if (validModuleSequences_.contains(seq))
+							{
 								valuesFromParameters.add(seq);
 								continue;
 							}
 						}
 					} else {
 						Optional<UUID> moduleUuidOptional = UUIDUtil.getUUID(moduleId.trim());
-						if (moduleUuidOptional.isPresent() && Get.identifierService().hasUuid(moduleUuidOptional.get()) && Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(moduleUuidOptional.get())) == ObjectChronologyType.CONCEPT) {
+						if (moduleUuidOptional.isPresent() && Get.identifierService().hasUuid(moduleUuidOptional.get()) && 
+								Get.identifierService().getChronologyTypeForNid(Get.identifierService().getNidForUuids(moduleUuidOptional.get())) == ObjectChronologyType.CONCEPT)
+						{
 							int seq = Get.identifierService().getConceptSequenceForUuids(moduleUuidOptional.get());
-							if (Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).anyMatch((i) -> i == seq)) {
+							if (validModuleSequences_.contains(seq))
+							{
 								valuesFromParameters.add(seq);
 								continue;
 							}
