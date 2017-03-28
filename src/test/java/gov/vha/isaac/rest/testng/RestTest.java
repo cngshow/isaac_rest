@@ -128,6 +128,7 @@ import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionBase;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionCreate;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
@@ -181,7 +182,6 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.session.MapSetDisplayFieldsService;
 import gov.vha.isaac.rest.session.PrismeUserService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -3132,6 +3132,36 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		Assert.assertEquals(getIntegerIdForUuid(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(), IdType.CONCEPT_SEQUENCE.getDisplayName()), DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getConceptSequence());
 		Assert.assertEquals(getIntegerIdForUuid(DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getPrimordialUuid(), IdType.NID.getDisplayName()), DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENSION_DEFINITION.getNid());
+	
+		final String idsUrl = RestPaths.idAPIsPathComponent + RestPaths.idsComponent;
+		Response idsResponse = target(idsUrl)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String idsXml = checkFail(idsResponse).readEntity(String.class);
+		RestConceptChronology[] idConcepts = XMLUtils.unmarshalObjectArray(RestConceptChronology.class, idsXml);
+		Assert.assertNotNull(idConcepts);
+		Assert.assertTrue(idConcepts.length >= 4);
+		
+		boolean foundCodeConcept = false;
+		boolean foundSctIdConcept = false;
+		boolean foundVuidConcept = false;
+		boolean foundGeneratedUuidConcept = false;
+		for (int i = 0; i < idConcepts.length; ++i) {
+			int retrievedIdConceptNid = idConcepts[i].getIdentifiers().nid;
+			if (retrievedIdConceptNid == MetaData.CODE.getNid()) {
+				foundCodeConcept = true;
+			} else if (retrievedIdConceptNid == MetaData.SCTID.getNid()) {
+				foundSctIdConcept = true;
+			} else if (retrievedIdConceptNid == MetaData.VUID.getNid()) {
+				foundVuidConcept = true;
+			} else if (retrievedIdConceptNid == MetaData.GENERATED_UUID.getNid()) {
+				foundGeneratedUuidConcept = true;
+			}
+		}
+		Assert.assertTrue(foundCodeConcept);
+		Assert.assertTrue(foundSctIdConcept);
+		Assert.assertTrue(foundVuidConcept);
+		Assert.assertTrue(foundGeneratedUuidConcept);
 	}
 	/**
 	 * This test validates that both the JSON and XML serializers are working correctly with returns that contain

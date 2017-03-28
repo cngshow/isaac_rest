@@ -18,8 +18,12 @@
  */
 package gov.vha.isaac.rest.api1.id;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DefaultValue;
@@ -36,18 +40,26 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestId;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -234,5 +246,51 @@ public class IdAPIs
 				RequestParameters.coordToken);
 	
 		return RestSupportedIdType.getAll();
+	}
+
+	/**
+	 */
+	/**
+	 * Enumerate the supported ID concepts for the system.  In addition to {@code expand}, accepts coordinate token and/or parameters
+	 * 
+	 * @param expand - concept-specific expandable parameters
+	 * 
+	 * @return RestConceptChronology[] - Array of {@link RestConceptChronology} representing identifier concepts
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.idsComponent)  
+	public RestConceptChronology[] getSupportedIdConcepts() throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		Set<ConceptChronology<?>> identifierAnnotatedConcepts = new HashSet<>();
+		
+		Stream<SememeChronology<? extends SememeVersion<?>>> identifierAnnotationSememeChronologyStream = Get.sememeService().getSememesFromAssemblage(MetaData.IDENTIFIER_SOURCE.getConceptSequence());
+		identifierAnnotationSememeChronologyStream.sequential().forEach(identifierAnnotationSememeChronology -> {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<SememeVersionImpl>> identifierAnnotationSememeLatestOptional = ((SememeChronology)identifierAnnotationSememeChronology).getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			if (identifierAnnotationSememeLatestOptional.isPresent()) {
+				// TODO handle contradictions
+				@SuppressWarnings("rawtypes")
+				SememeVersionImpl identifierAnnotationSememe = identifierAnnotationSememeLatestOptional.get().value();
+				identifierAnnotatedConcepts.add(Get.conceptService().getConcept(identifierAnnotationSememe.getReferencedComponentNid()));
+			}
+		});
+		
+		RestConceptChronology[] arrayToReturn = new RestConceptChronology[identifierAnnotatedConcepts.size()];
+		
+		int i = 0;
+		for (ConceptChronology<? extends ConceptVersion<?>> idConcept : identifierAnnotatedConcepts) {
+			arrayToReturn[i++] = new RestConceptChronology(idConcept, false, true, (UUID)null);
+		}
+
+		return arrayToReturn;
 	}
 }
