@@ -18,7 +18,6 @@
  */
 package gov.vha.isaac.rest.api1.id;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -49,12 +48,10 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
-import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -249,13 +246,13 @@ public class IdAPIs
 	}
 
 	/**
-	 */
-	/**
-	 * Enumerate the supported ID concepts for the system.  In addition to {@code expand}, accepts coordinate token and/or parameters
+	 * Enumerate the supported ID static string sememe concepts for the system.
+	 * Each of these ID concepts is annotated with a membership sememe associated with the "identifier source" assemblage concept.
+	 * In addition to {@code expand} parameter(s), accepts coordinate token and/or parameter(s).
 	 * 
 	 * @param expand - concept-specific expandable parameters
 	 * 
-	 * @return RestConceptChronology[] - Array of {@link RestConceptChronology} representing identifier concepts
+	 * @return RestConceptChronology[] - Array of {@link RestConceptChronology} representing identifier static string sememe concepts
 	 * @throws RestException
 	 */
 	@GET
