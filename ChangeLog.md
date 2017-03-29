@@ -4,7 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/03/?? - 3.1 - PENDING
-	*
+	* Added a configuration to the pom file that allows launching the server from the command line.  Execute: 'mvn compile -Pstart-server'
 
 * 2017/03/20 - 3.0
 	* Reversioned from 1.43
