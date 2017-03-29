@@ -1968,13 +1968,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String ITEM_TARGET_CONCEPT_FAKE_VUID = 54321L + "";
 		final String ITEM_TARGET_CONCEPT_FAKE_SCTID = 65432L + "";
 		final String ITEM_TARGET_CONCEPT_FAKE_CODE = "TARGET_FAKE_CODE";
-		final String ITEM_TARGET_CONCEPT_FAKE_RXCUI = "TGTRXCUI";
-		final String ITEM_TARGET_CONCEPT_FAKE_LOINC_NUM = "TGTLOINC";
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_VUID, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.VUID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_SCTID, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.SCTID.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
 		Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_CODE, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.CODE.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
-		//Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_RXCUI, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.RXCUI.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
-		//Get.sememeBuilderService().getStringSememeBuilder(ITEM_TARGET_CONCEPT_FAKE_LOINC_NUM, MetaData.ENGLISH_LANGUAGE.getNid(), MetaData.LOINC_NUM.getConceptSequence()).build(token.getEditCoordinate(), ChangeCheckerMode.INACTIVE);
 		Get.commitService().commit("VUID, SCTID, CODE for SNOROCKET_CLASSIFIER and ENGLISH_LANGUAGE for testing only");
 		
 		List<RestDynamicSememeData> mapItemExtendedFields  = new ArrayList<>();
