@@ -13,6 +13,10 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/03/29 - 1.9.19
+    * Changed the behavior of the modules parameter, when passed in for construction of a stamp Coordinate - such that if a module is passed that represents
+        VHA Modules, for example - and that module concept has children - the constructed stamp coordinate will contain the passed concept, and any of its children. 
+
 * 2017/02/15 - 1.9.18
     * Moved the field 'active' from RestMappingSetExtensionValueUpdate down to the parent class of RestMappingSetExtensionValueBase (which will make it available in 
         RestMappingSetExtensionValue) - the net effect is upon read of a mapset, the extension fields now report if they are active or inactive.  The API for update/create

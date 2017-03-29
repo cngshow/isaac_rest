@@ -27,7 +27,9 @@
  * <p><code>stated</code> - specifies premise/taxonomy type of <i>stated</i> when <code>stated</code> is <code>true</code> and <i>inferred</i> when <code>false</code>.</p>
  * 
  * <h3><u>Stamp Coordinate (<code>RestStampCoordinate</code>) Parameters</u></h3>
- * <p><code>modules</code> - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
+ * <p><code>modules</code> - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.  If a specified module concept
+ * such as "VHA Modules" also contains nested modules, such as "VHAT 2016.08.18", "VHAT 2016.09.25", then the calculated stamp coordinate will behave as if you had passed the parent module
+ * and each of the children modules.</p>
  * <p><code>path</code> - specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
  * <p><code>precedence</code> - specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
  * <p><code>allowedStates</code> - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".</p>

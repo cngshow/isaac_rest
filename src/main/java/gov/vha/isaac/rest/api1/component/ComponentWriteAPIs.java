@@ -90,7 +90,7 @@ public class ComponentWriteAPIs
 	 * then the state remains unchanged
 	 * 
 	 * This method relies on the passed in stamp coordinates to read in the component - the pattern is that it 
-	 * reads the version of the object specivied by the current stamp coordinate, changes the status, then commits that.
+	 * reads the version of the object specified by the current stamp coordinate, changes the status, then commits that.
 	 * 
 	 * @param id The id (UUID or NID) of the component to change the state of.  Sequences are not allowed.
 	 * @param active - true for activate, false for inactivate.

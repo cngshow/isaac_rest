@@ -22,6 +22,7 @@ package gov.vha.isaac.rest.session;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -57,6 +58,9 @@ public class CoordinatesUtil {
 	
 	//TODO this cache needs to be cleared if any module changes happen
 	private static Set<Integer> validModuleSequences_ = null;
+	
+	//TODO this cache would need clearing too
+	private static HashMap<Integer, Set<Integer>> nestedModules_ = new HashMap(); 
 	
 	/**
 	 * Used to hash CoordinatesToken object and serialized string by request parameters
@@ -473,6 +477,7 @@ public class CoordinatesUtil {
 							if (validModuleSequences_.contains(seq))
 							{
 								valuesFromParameters.add(seq);
+								getNestedModules(seq).forEach(value -> valuesFromParameters.add(value));
 								continue;
 							}
 						}
@@ -485,6 +490,7 @@ public class CoordinatesUtil {
 							if (validModuleSequences_.contains(seq))
 							{
 								valuesFromParameters.add(seq);
+								getNestedModules(seq).forEach(value -> valuesFromParameters.add(value));
 								continue;
 							}
 						}
@@ -496,6 +502,20 @@ public class CoordinatesUtil {
 		}
 
 		return valuesFromParameters;
+	}
+	
+	private static Set<Integer> getNestedModules(int moduleSequence)
+	{
+		Set<Integer> nested = nestedModules_.get(moduleSequence);
+		if (nested == null)
+		{
+			//TODO need to determine if this should be a leaf-only read, or if we can read all.  I think we will get to leaf only, 
+			//when we finish refatoring things, but we haven't yet finished refactoring everything that way.
+			nested = Frills.getAllChildrenOfConcept(moduleSequence, true, false); 
+			
+			nestedModules_.put(moduleSequence, nested);
+		}
+		return nested;
 	}
 
 	public static int getStampCoordinatePathSequenceFromParameter(List<String> unexpandedPathStrs, Optional<CoordinatesToken> token) throws RestException {
