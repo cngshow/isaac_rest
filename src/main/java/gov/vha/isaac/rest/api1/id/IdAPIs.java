@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.id;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -287,6 +289,22 @@ public class IdAPIs
 		for (ConceptChronology<? extends ConceptVersion<?>> idConcept : identifierAnnotatedConcepts) {
 			arrayToReturn[i++] = new RestConceptChronology(idConcept, false, true, (UUID)null);
 		}
+
+		final Comparator<RestConceptChronology> restConceptChronologyComparator = new Comparator<RestConceptChronology>() {
+			public int compare(RestConceptChronology concept1, RestConceptChronology concept2) {
+
+				String concept1Description = concept1.getDescription().toUpperCase();
+				String concept2Description = concept2.getDescription().toUpperCase();
+
+				//ascending order
+				return concept1Description.compareTo(concept2Description);
+
+				//descending order
+				//return concept2Description.compareTo(concept1Description);
+			}
+		};
+
+		Arrays.sort(arrayToReturn, restConceptChronologyComparator);
 
 		return arrayToReturn;
 	}
