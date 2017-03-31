@@ -31,6 +31,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.util.AlphanumComparator;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
@@ -85,9 +87,14 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	@SuppressWarnings("rawtypes") 
 	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId)
 	{
+		this(cc, includeAllVersions, includeLatestVersion, processId, RequestInfo.get().getLanguageCoordinate());
+	}
+	@SuppressWarnings("rawtypes") 
+	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId, LanguageCoordinate descriptionLanguageCoordinate)
+	{
 		identifiers = new RestIdentifiedObject(cc);
 		
-		description = Util.readBestDescription(cc.getNid());
+		description = Util.readBestDescription(cc.getNid(), RequestInfo.get().getStampCoordinate(), descriptionLanguageCoordinate);
 		
 		if (includeAllVersions || includeLatestVersion)
 		{

@@ -34,6 +34,7 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
@@ -186,11 +187,16 @@ public class Util
 
 	public static String readBestDescription(int conceptId, StampCoordinate sc)
 	{
+		return readBestDescription(conceptId, sc, RequestInfo.get().getLanguageCoordinate());
+	}
+
+	public static String readBestDescription(int conceptId, StampCoordinate sc, LanguageCoordinate lc)
+	{
 		Optional<LatestVersion<DescriptionSememe<?>>> descriptionOptional = Optional.empty();
 		
 		int conceptNid = Get.identifierService().getConceptNid(conceptId);
 		
-		descriptionOptional = RequestInfo.get().getLanguageCoordinate().getDescription(
+		descriptionOptional = lc.getDescription(
 				Get.sememeService().getDescriptionsForComponent(conceptNid).collect(Collectors.toList()),
 				sc);
 		

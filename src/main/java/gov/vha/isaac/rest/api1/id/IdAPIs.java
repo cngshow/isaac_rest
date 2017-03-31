@@ -44,16 +44,19 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.coordinate.LanguageCoordinateImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -252,6 +255,8 @@ public class IdAPIs
 	 * Each of these ID concepts is annotated with a membership sememe associated with the "identifier source" assemblage concept.
 	 * In addition to {@code expand} parameter(s), accepts coordinate token and/or parameter(s).
 	 * 
+	 * NOTE: For the convenient use of ids as labels, the descriptionTypePrefs is unconditionally overridden to the value of "SYNONYM,FSN"
+	 * 
 	 * @param expand - concept-specific expandable parameters
 	 * 
 	 * @return RestConceptChronology[] - Array of {@link RestConceptChronology} representing identifier static string sememe concepts
@@ -285,27 +290,36 @@ public class IdAPIs
 		
 		RestConceptChronology[] arrayToReturn = new RestConceptChronology[identifierAnnotatedConcepts.size()];
 		
+		// Create an analog of the LanguageCoordinate differing only by descriptionTypePrefs value
+		final LanguageCoordinate languageCoordinateToUse = new LanguageCoordinateImpl(
+				RequestInfo.get().getLanguageCoordinate().getLanguageConceptSequence(),
+				RequestInfo.get().getLanguageCoordinate().getDialectAssemblagePreferenceList(),
+				new int[] {
+						TermAux.SYNONYM_DESCRIPTION_TYPE.getConceptSequence(),
+						TermAux.FULLY_SPECIFIED_DESCRIPTION_TYPE.getConceptSequence()
+				});
+
 		int i = 0;
 		for (ConceptChronology<? extends ConceptVersion<?>> idConcept : identifierAnnotatedConcepts) {
-			arrayToReturn[i++] = new RestConceptChronology(idConcept, false, true, (UUID)null);
+			arrayToReturn[i++] = new RestConceptChronology(idConcept, false, true, (UUID)null, languageCoordinateToUse);
 		}
 
-		final Comparator<RestConceptChronology> restConceptChronologyComparator = new Comparator<RestConceptChronology>() {
-			public int compare(RestConceptChronology concept1, RestConceptChronology concept2) {
-
-				String concept1Description = concept1.getDescription().toUpperCase();
-				String concept2Description = concept2.getDescription().toUpperCase();
-
-				//ascending order
-				return concept1Description.compareTo(concept2Description);
-
-				//descending order
-				//return concept2Description.compareTo(concept1Description);
-			}
-		};
-
-		Arrays.sort(arrayToReturn, restConceptChronologyComparator);
+		// Sort results by description for display
+		Arrays.sort(arrayToReturn, REST_CONCEPT_DESCRIPTION_COMPARATOR);
 
 		return arrayToReturn;
 	}
+	private final static Comparator<RestConceptChronology> REST_CONCEPT_DESCRIPTION_COMPARATOR = new Comparator<RestConceptChronology>() {
+		public int compare(RestConceptChronology concept1, RestConceptChronology concept2) {
+
+			String concept1Description = concept1.getDescription().toUpperCase();
+			String concept2Description = concept2.getDescription().toUpperCase();
+
+			//ascending order
+			return concept1Description.compareTo(concept2Description);
+
+			//descending order
+			//return concept2Description.compareTo(concept1Description);
+		}
+	};
 }
