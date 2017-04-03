@@ -293,9 +293,9 @@ public class AssociationWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES);
 
-		State stateToUse = (associationItemUpdateData.active == null || associationItemUpdateData.active) ? State.ACTIVE : State.INACTIVE;
+		State stateToSave = (associationItemUpdateData.active == null || associationItemUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> associationItemSememeChronology = SememeAPIs.findSememeChronology(id);
 		
 		Optional<UUID> target = StringUtils.isBlank(associationItemUpdateData.targetId) ? Optional.empty() : 
@@ -310,7 +310,7 @@ public class AssociationWriteAPIs
 		try {
 			// Retrieve current version for comparison in order to short-circuit save if unchanged
 			@SuppressWarnings("unchecked")
-			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class, State.ANY_STATE_SET);
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<DynamicSememeImpl>)associationItemSememeChronology, DynamicSememeImpl.class);
 			if (currentVersion.isPresent()) {
 				DynamicSememeData currentTargetSememeData = (currentVersion.get().getData() != null 
 						&& currentVersion.get().getData().length > 0) ? currentVersion.get().getData()[0] : null;
@@ -327,8 +327,8 @@ public class AssociationWriteAPIs
 				UUID newTargetUuid = target.isPresent() ? target.get() : null;
 
 				// This code short-circuits update if passed data are identical to current relevant version
-				if ((newTargetUuid == currentTargetUuid && currentVersion.get().getState() == stateToUse)
-						|| (newTargetUuid != null && currentTargetUuid != null && newTargetUuid.equals(currentTargetUuid) && currentVersion.get().getState() == stateToUse)) {
+				if ((newTargetUuid == currentTargetUuid && currentVersion.get().getState() == stateToSave)
+						|| (newTargetUuid != null && currentTargetUuid != null && newTargetUuid.equals(currentTargetUuid) && currentVersion.get().getState() == stateToSave)) {
 					log.debug("Not updating association sememe {} because data unchanged", associationItemSememeChronology.getPrimordialUuid());
 					return new RestWriteResponse(RequestInfo.get().getEditToken(), associationItemSememeChronology.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 				}
@@ -342,7 +342,7 @@ public class AssociationWriteAPIs
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)associationItemSememeChronology).createMutableVersion(
 				MutableDynamicSememe.class,
-				stateToUse,
+				stateToSave,
 				RequestInfo.get().getEditCoordinate());
 		
 		DynamicSememeData[] data = new DynamicSememeData[1];

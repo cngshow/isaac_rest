@@ -273,6 +273,7 @@ public class SememeWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
+				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES,
 				RequestParameters.editToken);
 
 		// TODO test updateDescription(), including validation of updateData.getDescriptionTypeConceptSequence()
@@ -282,7 +283,7 @@ public class SememeWriteAPIs
 		try {
 			// This code short-circuits update if passed data are identical to current relevant version
 			@SuppressWarnings({ "unchecked" })
-			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class, State.ANY_STATE_SET);
+			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<DescriptionSememeImpl>)sememeChronology, DescriptionSememeImpl.class);
 			
 			if (currentVersion.isPresent()) {
 				int passedCaseSignificanceConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", descriptionSememeUpdateData.caseSignificanceConcept);
@@ -596,7 +597,7 @@ public class SememeWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES);
 		
 		State stateToUse = (sememeUpdateData.active == null || sememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> sememeChronology = SememeAPIs.findSememeChronology(id);
@@ -613,7 +614,7 @@ public class SememeWriteAPIs
 			{
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class, State.ANY_STATE_SET);
+					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -641,7 +642,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class, State.ANY_STATE_SET);
+					Optional<LongSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<LongSememeImpl>)sememeChronology, LongSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -668,7 +669,7 @@ public class SememeWriteAPIs
 			{
 				try {
 					@SuppressWarnings({ "unchecked", "rawtypes" })
-					Optional<SememeVersionImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class, State.ANY_STATE_SET);
+					Optional<SememeVersionImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<SememeVersionImpl>)sememeChronology, SememeVersionImpl.class);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -695,7 +696,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class, State.ANY_STATE_SET);
+					Optional<StringSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<StringSememeImpl>)sememeChronology, StringSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -725,7 +726,7 @@ public class SememeWriteAPIs
 
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class, State.ANY_STATE_SET);
+					Optional<ComponentNidSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<ComponentNidSememeImpl>)sememeChronology, ComponentNidSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version

@@ -243,24 +243,10 @@ public class ConceptWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES);
 		
-		State stateToUse = (conceptUpdateData.active == null || conceptUpdateData.active) ? State.ACTIVE : State.INACTIVE;
+		State stateToSave = (conceptUpdateData.active == null || conceptUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		
-		try {
-			return ComponentWriteAPIs.resetState(
-				RequestInfo.get().getEditCoordinate(),
-				Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null),
-				stateToUse,
-				id);
-		} catch (LatestVersionNotFoundException e) {
-			// TODO remove this hack when modules work properly
-			log.warn("Concept not found on edit path, do you intend to change the module?", e);
-			return ComponentWriteAPIs.resetState(
-					RequestInfo.get().getEditCoordinate(),
-					RequestInfo.get().getStampCoordinate(),
-					stateToUse,
-					id);
-		}
+		return ComponentWriteAPIs.resetState(stateToSave, id);
 	}
 }
