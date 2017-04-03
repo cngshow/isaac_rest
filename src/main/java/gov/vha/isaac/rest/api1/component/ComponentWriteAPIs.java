@@ -146,10 +146,12 @@ public class ComponentWriteAPIs
 	 * @throws RestException
 	 */
 	private static <T extends ConceptVersion<T>> VersionUpdatePair<T> resetState(State state, ConceptChronology<T> chronology) throws RestException {	
-		return resetState(state, chronology, (Class<T>)null);
+		return resetState(state, chronology, (Class<T>)ConceptVersion.class);
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static <T extends StampedVersion> VersionUpdatePair<T> resetState(State state, ObjectChronology<T> chronology, Class<T> clazz) throws RestException {		
+		Optional<T> latestVersion = LatestVersionUtils.getLatestVersionForUpdate(chronology, clazz);
+		
 		StampedVersion rawMutableVersion = null;
 		String detail = chronology.getOchreObjectType() + " " + chronology.getClass().getSimpleName() + " (UUID=" + chronology.getPrimordialUuid() + ")";
 		if (chronology instanceof SememeChronology) {
@@ -161,7 +163,6 @@ public class ComponentWriteAPIs
 			throw new RuntimeException("Unsupported ObjectChronology type " + detail);
 		}
 		
-		Optional<T> latestVersion = LatestVersionUtils.getLatestVersionForUpdate(chronology, clazz);
 		if (! latestVersion.isPresent()) {
 			throw new LatestVersionNotFoundException("Failed getting latest version of " + detail + ". May require different stamp or edit coordinate parameters.");
 		}
