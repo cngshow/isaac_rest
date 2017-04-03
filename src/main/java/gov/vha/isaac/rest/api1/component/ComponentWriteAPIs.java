@@ -146,7 +146,7 @@ public class ComponentWriteAPIs
 	 * @throws RestException
 	 */
 	private static <T extends ConceptVersion<T>> VersionUpdatePair<T> resetState(State state, ConceptChronology<T> chronology) throws RestException {	
-		return resetState(state, chronology, (Class<T>)ConceptVersion.class);
+		return resetState(state, chronology, (Class<T>)null);
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static <T extends StampedVersion> VersionUpdatePair<T> resetState(State state, ObjectChronology<T> chronology, Class<T> clazz) throws RestException {		
