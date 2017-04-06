@@ -128,6 +128,7 @@ public class SememeWriteAPIs
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES,
 				RequestParameters.editToken);
 		
 		if (StringUtils.isBlank(creationData.text))
