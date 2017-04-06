@@ -293,7 +293,7 @@ public class AssociationWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.editToken,
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES); // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 
 		State stateToSave = (associationItemUpdateData.active == null || associationItemUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> associationItemSememeChronology = SememeAPIs.findSememeChronology(id);

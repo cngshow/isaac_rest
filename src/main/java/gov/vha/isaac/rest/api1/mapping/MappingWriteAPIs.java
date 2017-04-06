@@ -206,7 +206,7 @@ public class MappingWriteAPIs
 
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES, // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 				RequestParameters.editToken);
 
 		RestMappingSetVersion cloneTargetMappingSetVersion = MappingAPIs.getMappingSet(mappingSetCloneData.cloneTargetConcept, null);
@@ -355,7 +355,7 @@ public class MappingWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES, // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 				RequestParameters.editToken);
 
 		if (StringUtils.isBlank(mappingSetUpdateData.name))
@@ -462,7 +462,7 @@ public class MappingWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES, // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 				RequestParameters.editToken);
 
 		State stateToUse = (mappingItemUpdateData.active == null || mappingItemUpdateData.active) ? State.ACTIVE : State.INACTIVE;

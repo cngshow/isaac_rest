@@ -273,7 +273,7 @@ public class SememeWriteAPIs
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES,
+				RequestParameters.COORDINATE_PARAM_NAMES, // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 				RequestParameters.editToken);
 
 		// TODO test updateDescription(), including validation of updateData.getDescriptionTypeConceptSequence()
@@ -597,7 +597,7 @@ public class SememeWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.editToken,
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES); // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 		
 		State stateToUse = (sememeUpdateData.active == null || sememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> sememeChronology = SememeAPIs.findSememeChronology(id);

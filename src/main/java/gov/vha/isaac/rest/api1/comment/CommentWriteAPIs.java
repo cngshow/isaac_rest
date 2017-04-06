@@ -168,7 +168,7 @@ public class CommentWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.editToken,
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES); // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 		
 		if (id == null) {
 			throw new RestException(RequestParameters.id, null, "invalid (null) comment id");

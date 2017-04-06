@@ -111,7 +111,7 @@ public class ComponentWriteAPIs
 				RequestParameters.id,
 				RequestParameters.active,
 				RequestParameters.editToken,
-				RequestParameters.UPDATE_COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES); // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 		
 		if (StringUtils.isBlank(active))
 		{
