@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>3.42</version>
+		<version>3.43</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>3.0</version>
+	<version>3.1</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -24,7 +24,7 @@
 	</scm>
 
 	<properties>
-		<isaac.version>3.42</isaac.version>
+		<isaac.version>3.43</isaac.version>
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
@@ -365,6 +365,8 @@
 				</plugins>
 			</build>
 		</profile>
+		
+		<!-- To execute this: 'mvn -Pload-test exec:java' -->
 		<profile>
 			<id>load-test</id>
 			<build>
@@ -379,6 +381,35 @@
 								<argument>http://localhost:8080/isaac-rest/rest/</argument>
 							</arguments>
 						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<!-- To bring this server up, execute: 'mvn compile -Pstart-server' -->
+		<profile>
+			<id>start-server</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<classpathScope>test</classpathScope>
+							<mainClass>gov.vha.isaac.rest.LocalJettyRunner</mainClass>
+							<!-- Uncomment this argument, and adjust, to point at a specific dabase -->
+							<arguments>
+								<!--<argument>isaacDatabaseLocation=/mnt/STORAGE/Work/VetsEZ/Workspaces/ISAAC2/ISAAC-rest/vhat-2016.08.18-1.8-SNAPSHOT-all.data</argument>-->
+							</arguments>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>compile</phase>
+								<goals>
+									<goal>java</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>

@@ -97,6 +97,21 @@ public class RequestParameters {
 		COORDINATE_PARAM_NAMES = Collections.unmodifiableSet(params);
 	}
 	
+	// This parameter set excludes time and allowedStates, as these are hardcoded for updates
+	public final static Set<String> UPDATE_COORDINATE_PARAM_NAMES;
+	static {
+		Set<String> params = new HashSet<>();
+		params.add(coordToken);
+		params.add(stated);
+		params.addAll(LANGUAGE_COORDINATE_PARAM_NAMES);
+		params.addAll(LOGIC_COORDINATE_PARAM_NAMES);
+		params.add(path);
+		params.add(precedence);
+		params.add(modules);
+		
+		UPDATE_COORDINATE_PARAM_NAMES = Collections.unmodifiableSet(params);
+	}
+	
 	public final static String active = "active";
 
 	public final static String id = "id";

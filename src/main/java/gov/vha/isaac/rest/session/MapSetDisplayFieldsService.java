@@ -35,6 +35,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -111,12 +112,14 @@ public class MapSetDisplayFieldsService {
 					add(cc);
 				}
 
-				// TODO Find a way to find and add these assemblages automatically
-				add(MetaData.SCTID);
-				add(MetaData.LOINC_NUM);
-				add(MetaData.RXCUI);
-				add(MetaData.VUID);
-				add(MetaData.CODE);
+//				add(MetaData.SCTID);
+//				add(MetaData.LOINC_NUM);
+//				add(MetaData.RXCUI);
+//				add(MetaData.VUID);
+//				add(MetaData.CODE);
+				for (ConceptChronology<?> idConcept : getIdentifierAnnotatedConcepts(StampCoordinates.getDevelopmentLatest())) {
+					add(idConcept);
+				}
 			}
 
 			return fields_;
@@ -218,6 +221,23 @@ public class MapSetDisplayFieldsService {
 		}
 		
 		return annotationConcepts;
+	}
+	private static Set<ConceptChronology<?>> getIdentifierAnnotatedConcepts(StampCoordinate sc) {
+		Set<ConceptChronology<?>> identifierAnnotatedConcepts = new HashSet<>();
+		
+		Stream<SememeChronology<? extends SememeVersion<?>>> identifierAnnotationSememeChronologyStream = Get.sememeService().getSememesFromAssemblage(MetaData.IDENTIFIER_SOURCE.getConceptSequence());
+		identifierAnnotationSememeChronologyStream.sequential().forEach(identifierAnnotationSememeChronology -> {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<SememeVersionImpl>> identifierAnnotationSememeLatestOptional = ((SememeChronology)identifierAnnotationSememeChronology).getLatestVersion(SememeVersionImpl.class, sc);
+			if (identifierAnnotationSememeLatestOptional.isPresent()) {
+				// TODO handle contradictions
+				@SuppressWarnings("rawtypes")
+				SememeVersionImpl identifierAnnotationSememe = identifierAnnotationSememeLatestOptional.get().value();
+				identifierAnnotatedConcepts.add(Get.conceptService().getConcept(identifierAnnotationSememe.getReferencedComponentNid()));
+			}
+		});
+		
+		return identifierAnnotatedConcepts;
 	}
 
 	@PostConstruct

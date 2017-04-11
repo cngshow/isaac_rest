@@ -18,8 +18,13 @@
  */
 package gov.vha.isaac.rest.api1.id;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DefaultValue;
@@ -36,18 +41,27 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.bootstrap.TermAux;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.coordinate.LanguageCoordinateImpl;
+import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestId;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -235,4 +249,77 @@ public class IdAPIs
 	
 		return RestSupportedIdType.getAll();
 	}
+
+	/**
+	 * Enumerate the supported ID static string sememe concepts for the system.
+	 * Each of these ID concepts is annotated with a membership sememe associated with the "identifier source" assemblage concept.
+	 * In addition to {@code expand} parameter(s), accepts coordinate token and/or parameter(s).
+	 * 
+	 * NOTE: For the convenient use of ids as labels, the descriptionTypePrefs is unconditionally overridden to the value of "SYNONYM,FSN"
+	 * 
+	 * @param expand - concept-specific expandable parameters
+	 * 
+	 * @return RestConceptChronology[] - Array of {@link RestConceptChronology} representing identifier static string sememe concepts
+	 * @throws RestException
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.idsComponent)  
+	public RestConceptChronology[] getSupportedIdConcepts() throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.expand,
+				RequestParameters.COORDINATE_PARAM_NAMES);
+
+		Set<ConceptChronology<?>> identifierAnnotatedConcepts = new HashSet<>();
+		
+		Stream<SememeChronology<? extends SememeVersion<?>>> identifierAnnotationSememeChronologyStream = Get.sememeService().getSememesFromAssemblage(MetaData.IDENTIFIER_SOURCE.getConceptSequence());
+		identifierAnnotationSememeChronologyStream.sequential().forEach(identifierAnnotationSememeChronology -> {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<SememeVersionImpl>> identifierAnnotationSememeLatestOptional = ((SememeChronology)identifierAnnotationSememeChronology).getLatestVersion(SememeVersionImpl.class, RequestInfo.get().getStampCoordinate());
+			if (identifierAnnotationSememeLatestOptional.isPresent()) {
+				// TODO handle contradictions
+				@SuppressWarnings("rawtypes")
+				SememeVersionImpl identifierAnnotationSememe = identifierAnnotationSememeLatestOptional.get().value();
+				identifierAnnotatedConcepts.add(Get.conceptService().getConcept(identifierAnnotationSememe.getReferencedComponentNid()));
+			}
+		});
+		
+		RestConceptChronology[] arrayToReturn = new RestConceptChronology[identifierAnnotatedConcepts.size()];
+		
+		// Create an analog of the LanguageCoordinate differing only by descriptionTypePrefs value
+		final LanguageCoordinate languageCoordinateToUse = new LanguageCoordinateImpl(
+				RequestInfo.get().getLanguageCoordinate().getLanguageConceptSequence(),
+				RequestInfo.get().getLanguageCoordinate().getDialectAssemblagePreferenceList(),
+				new int[] {
+						TermAux.SYNONYM_DESCRIPTION_TYPE.getConceptSequence(),
+						TermAux.FULLY_SPECIFIED_DESCRIPTION_TYPE.getConceptSequence()
+				});
+
+		int i = 0;
+		for (ConceptChronology<? extends ConceptVersion<?>> idConcept : identifierAnnotatedConcepts) {
+			arrayToReturn[i++] = new RestConceptChronology(idConcept, false, true, (UUID)null, languageCoordinateToUse);
+		}
+
+		// Sort results by description for display
+		Arrays.sort(arrayToReturn, REST_CONCEPT_DESCRIPTION_COMPARATOR);
+
+		return arrayToReturn;
+	}
+	private final static Comparator<RestConceptChronology> REST_CONCEPT_DESCRIPTION_COMPARATOR = new Comparator<RestConceptChronology>() {
+		public int compare(RestConceptChronology concept1, RestConceptChronology concept2) {
+
+			String concept1Description = concept1.getDescription().toUpperCase();
+			String concept2Description = concept2.getDescription().toUpperCase();
+
+			//ascending order
+			return concept1Description.compareTo(concept2Description);
+
+			//descending order
+			//return concept2Description.compareTo(concept1Description);
+		}
+	};
 }

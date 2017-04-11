@@ -19,15 +19,21 @@
 
 package gov.vha.isaac.rest.session;
 
-import java.util.EnumSet;
 import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
+import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.impl.utility.Frills;
-import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
@@ -38,23 +44,62 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
  *
  */
 public class LatestVersionUtils {
+	private static Logger log = LogManager.getLogger(LatestVersionUtils.class);
+	
 	private LatestVersionUtils() {}
 
-	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz, StampCoordinate sc) {
-		Optional<LatestVersion<T>> latestVersionOptional = ((SememeChronology<T>)sememeChronology).getLatestVersion(clazz, sc);
-		return latestVersionOptional.isPresent() ? Optional.of(latestVersionOptional.get().value()) : Optional.empty(); // TODO handle contradictions
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T extends ConceptVersion<T>> Optional<T> getLatestVersion(ConceptChronology<T> conceptChronology, StampCoordinate sc) {
+		return getLatestVersion((ConceptChronology)conceptChronology, ConceptVersion.class, sc);
 	}
-	
-//	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz) throws RestException {
-//		return getLatestSememeVersion(sememeChronology, clazz, (EnumSet<State>)null);
-//	}
-	public static <T extends SememeVersionImpl<T>> Optional<T> getLatestSememeVersion(SememeChronology<T> sememeChronology, Class<T> clazz, EnumSet<State> states) throws RestException {
-		StampCoordinate sc = Frills.makeStampCoordinateAnalogVaryingByModulesOnly(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getEditCoordinate().getModuleSequence(), null);
-	
-		if (states != null) {
-			sc = sc.makeAnalog(states.toArray(new State[states.size()]));
+
+	public static <T extends StampedVersion> Optional<T> getLatestVersion(ObjectChronology<T> objectChronology, Class<T> clazz, StampCoordinate sc) {
+		Optional<LatestVersion<T>> latestVersionOptional = objectChronology.getLatestVersion(clazz, sc);
+
+		if (latestVersionOptional.isPresent()) {
+			if (latestVersionOptional.get().contradictions().isPresent()) {
+				// TODO properly handle contradictions
+				final OchreExternalizableObjectType objectType = objectChronology.getOchreObjectType();
+				String detail = "object";
+				switch (objectType) {
+				case SEMEME:
+					detail = objectType + " UUID=" + objectChronology.getPrimordialUuid() + ", SEMEME SEQ=" + ((SememeChronology<?>)objectChronology).getSememeSequence() + ", REF COMP NID=" + ((SememeChronology<?>)objectChronology).getReferencedComponentNid();
+					break;
+				case CONCEPT:
+				case STAMP_ALIAS:
+				case STAMP_COMMENT:
+					detail = objectType + " UUID=" + objectChronology.getPrimordialUuid();
+					break;
+				default:
+					throw new RuntimeException("Unsupported OchreExternalizableObjectType for passed ObjectChronology UUID=" + objectChronology.getPrimordialUuid());
+				}
+				log.warn("Getting latest version of " + detail + " with " + latestVersionOptional.get().contradictions().get().size() 
+						+ " version contradictions");
+			}
+			
+			return Optional.of(latestVersionOptional.get().value());
+		}
+
+		return Optional.empty();
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T extends ConceptVersion<T>> Optional<T> getLatestVersionForUpdate(ConceptChronology<T> conceptChronology) throws RestException {
+		return getLatestVersionForUpdate((ConceptChronology)conceptChronology, ConceptVersion.class);
+	}
+
+	public static <T extends StampedVersion> Optional<T> getLatestVersionForUpdate(ObjectChronology<T> objectChronology, Class<T> clazz) throws RestException {
+		StampCoordinate sc = Frills.makeStampCoordinateAnalogVaryingByModulesOnly(
+				RequestInfo.get().getStampCoordinate(),
+				RequestInfo.get().getEditCoordinate().getModuleSequence(),
+				null).makeAnalog(State.values()).makeAnalog(Long.MAX_VALUE);
+		
+		Optional<T> latestVersion =  getLatestVersion(objectChronology, clazz, sc);
+		if (!latestVersion.isPresent()) {
+			sc = RequestInfo.get().getStampCoordinate().makeAnalog(State.values()).makeAnalog(Long.MAX_VALUE);
+			latestVersion = getLatestVersion(objectChronology, clazz, sc);
 		}
 		
-		return getLatestSememeVersion(sememeChronology, clazz, sc);
+		return latestVersion;
 	}
 }

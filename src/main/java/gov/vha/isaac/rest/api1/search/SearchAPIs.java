@@ -530,7 +530,7 @@ public class SearchAPIs
 		}
 		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
 		
-		String searchString = query.trim();
+		String searchString = query != null ? query.trim() : null;
 		if (StringUtils.isBlank(searchString))
 		{
 			throw new RestException("The query must contain at least one character");

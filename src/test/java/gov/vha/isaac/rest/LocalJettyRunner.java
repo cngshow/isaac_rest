@@ -72,6 +72,11 @@ public class LocalJettyRunner
 	{
 		System.out.println("Launching Jetty Server");
 		
+		if (args != null && args.length >= 1 && args[0].startsWith("isaacDatabaseLocation="))
+		{
+			System.setProperty("isaacDatabaseLocation", args[0].substring("isaacDatabaseLocation=".length()));
+		}
+		
 		final ResourceConfig resourceConfig = configureJerseyServer();
 
 		Map<String, Object> properties = new HashMap<>();

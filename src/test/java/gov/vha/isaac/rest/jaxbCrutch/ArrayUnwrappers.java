@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationItemVersion;
 import gov.vha.isaac.rest.api1.data.association.RestAssociationTypeVersion;
 import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.enumerations.RestMapSetItemComponentType;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingItemVersion;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
@@ -230,6 +231,19 @@ public class ArrayUnwrappers
 		public Object[] getValues()
 		{
 			return restMapSetItemComponentType;
+		}
+	}
+
+	@XmlRootElement
+	public static class RestConceptChronologies implements ArrayUnwrapper
+	{
+		@XmlElement
+		protected RestConceptChronology[] restConceptChronology;
+
+		@Override
+		public Object[] getValues()
+		{
+			return restConceptChronology;
 		}
 	}
 }

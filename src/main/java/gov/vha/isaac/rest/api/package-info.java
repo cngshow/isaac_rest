@@ -27,7 +27,9 @@
  * <p><code>stated</code> - specifies premise/taxonomy type of <i>stated</i> when <code>stated</code> is <code>true</code> and <i>inferred</i> when <code>false</code>.</p>
  * 
  * <h3><u>Stamp Coordinate (<code>RestStampCoordinate</code>) Parameters</u></h3>
- * <p><code>modules</code> - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.</p>	
+ * <p><code>modules</code> - specifies modules of the StampCoordinate. Value may be a comma delimited list of module concept UUID or int ids.  If a specified module concept
+ * such as "VHA Modules" also contains nested modules, such as "VHAT 2016.08.18", "VHAT 2016.09.25", then the calculated stamp coordinate will behave as if you had passed the parent module
+ * and each of the children modules.</p>
  * <p><code>path</code> - specifies path component of StampPosition component of the StampCoordinate. Values is path UUID, int id or the term "development" or "master".  The default is "development".</p>
  * <p><code>precedence</code> - specifies precedence of the StampCoordinate. Values are either "path" or "time".  The default is "path".</p>
  * <p><code>allowedStates</code> - specifies allowed states of the StampCoordinate. Value may be a comma delimited list of State enum names.  The default is "active".</p>
@@ -46,9 +48,34 @@
  *
  * <h2>Expandables</h2>
  * <p>The server has the ability to return data to help understand the API in the form of "expandables".  By default, expandables are on, when the server
- * is deployed in a debug enviornment.  Expandables are disabled when deployed in a production environment.  To override the default, and return expandable
+ * is deployed in a debug environment.  Expandables are disabled when deployed in a production environment.  To override the default, and return expandable
  * metadata in a production environment, add this parameter to any call:
  * <code>expandables=true</code>
+ * </p>
+ *
+ * <h2>Edits/Updates</h2>
+ * <p>
+ * Updates/edits of existing concepts and components require an <code>editToken</code>, to specify the author, module and path for the change,
+ * and use optionally-passed (or defaulted) stamp coordinate <code>RestStampCoordinate</code> information (either default or passed {@code coordToken} or individual parameters:
+ * only <code>modules</code>, <code>path</code>, <code>precedence</code>), to specify a specific existing version against which passed,
+ * presumably updated data, are to be compared. Parameters <code>time</code> and <code>allowedStates</code> are not allowed (or are ignored, as components of passed <code>coordToken</code>),
+ * because all comparisons are made with <code>time=LATEST</code> and <code>allowedStates=ANY</code>. If no <code>coordToken</code> or stamp coordinate parameters are passed, then default values are used.
+ * <br><br>
+ * The update API first attempts to retrieve the most recent <code>time=LATEST</code> version of the specified chronology conforming to the module specified in the
+ * <code>editToken</code> and the non-module parameters of the effective stamp coordinate (with <code>time=LATEST</code> and <code>allowedStates=ANY</code>).
+ * <br>
+ * If a matching version is found, then its data fields are compared to the corresponding data fields in the passed form data.
+ * <br>
+ * If no differences are found, then the update write is not performed.
+ * <br>
+ * If differences are found, then the update write is performed.
+ * <br>
+ * If no matching version is found (based on the <code>editToken</code> module), then the update API attempts to retrieve the most recent (<code>time=LATEST</code>) version
+ * of ANY state (<code>allowedStates=ANY</code>) of the specified chronology conforming to the module and non-module parameters of the effective stamp coordinate.
+ * <br>
+ * If no differences are found, then the update write is not performed.
+ * <br>
+ * If differences are found, then the update write is performed. 
  * </p>
  * 
  * <h2>Data Model</h2>

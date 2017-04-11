@@ -168,13 +168,13 @@ public class CommentWriteAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
 				RequestParameters.editToken,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES); // TODO switch to UPDATE_COORDINATE_PARAM_NAMES when WEB GUI ready
 		
 		if (id == null) {
 			throw new RestException(RequestParameters.id, null, "invalid (null) comment id");
 		}
 		
-		State stateToUse = (dataToUpdateComment.active == null || dataToUpdateComment.active) ? State.ACTIVE : State.INACTIVE;
+		State stateToSave = (dataToUpdateComment.active == null || dataToUpdateComment.active) ? State.ACTIVE : State.INACTIVE;
 		
 		if (StringUtils.isBlank(dataToUpdateComment.comment)) 
 		{
@@ -187,7 +187,7 @@ public class CommentWriteAPIs
 		try {
 			// Retrieve current version in order to short-circuit save if data unchanged
 			@SuppressWarnings("unchecked")
-			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestSememeVersion((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class, State.ANY_STATE_SET);
+			Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<DynamicSememeImpl>)sc, DynamicSememeImpl.class);
 
 			if (currentVersion.isPresent()) {
 				DynamicSememeData currentCommentSememeData = (currentVersion.get().getData() != null 
@@ -222,7 +222,7 @@ public class CommentWriteAPIs
 				String newCommentContext = StringUtils.isBlank(dataToUpdateComment.commentContext) ? null : dataToUpdateComment.commentContext;
 
 				// This code short-circuits update if passed data are identical to current relevant version
-				if (currentVersion.get().getState() == stateToUse) {
+				if (currentVersion.get().getState() == stateToSave) {
 					if (((currentComment == newComment) || (currentComment != null && newComment != null && currentComment.equals(newComment)))
 							&& ((currentCommentContext == newCommentContext) || (currentCommentContext != null && newCommentContext != null 
 							&& currentCommentContext.equals(newCommentContext)))) {
@@ -238,7 +238,7 @@ public class CommentWriteAPIs
 		}
 
 		@SuppressWarnings("unchecked")
-		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToUse, RequestInfo.get().getEditCoordinate());
+		DynamicSememeImpl editVersion = (DynamicSememeImpl)sc.createMutableVersion(DynamicSememeImpl.class, stateToSave, RequestInfo.get().getEditCoordinate());
 		
 		editVersion.setData(
 			new DynamicSememeData[] {new DynamicSememeStringImpl(dataToUpdateComment.comment),

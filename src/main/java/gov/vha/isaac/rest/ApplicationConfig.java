@@ -509,7 +509,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				mavenPwd = "system";
 				groupId = "gov.vha.isaac.db";
 				artifactId = "vhat";
-				version = "2016.08.18-1.5";
+				version = "2016.08.18-1.11";
 				classifier = "all";
 			}
 

@@ -41,6 +41,7 @@ public class RestPaths
 	public static final String sememeTypeComponent = "sememeType/";
 	public static final String idTranslateComponent = "translate/";
 	public static final String idTypesComponent = "types/";
+	public static final String idsComponent = "ids/";
 	public static final String descriptionsComponent = "descriptions/";
 	public static final String descriptionComponent = "description/";
 	public static final String componentComponent = "component/";

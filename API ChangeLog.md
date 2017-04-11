@@ -13,6 +13,21 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/04/03 - 1.9.20
+    * Changed behavior and accepted parameters for update APIs to make latest-version retrieval criteria more permissive
+        Parameters time and allowedStates are not allowed (or are ignored, as components of passed coordToken), because all comparisons are made with time=LATEST and allowedStates=ANY. If no coordToken or stamp coordinate parameters are passed, then default values are used.
+        The update API first attempts to retrieve the most recent time=LATEST version of the specified chronology conforming to the module specified in the editToken and the non-module parameters of the effective stamp coordinate (with time=LATEST and allowedStates=ANY).
+        If a matching version is found, then its data fields are compared to the corresponding data fields in the passed form data.
+        If no differences are found, then the update write is not performed.
+        If differences are found, then the update write is performed.
+        If no matching version is found (based on the editToken module), then the update API attempts to retrieve the most recent (time=LATEST) version of ANY state (allowedStates=ANY) of the specified chronology conforming to the module and non-module parameters of the effective stamp coordinate.
+        If no differences are found, then the update write is not performed.
+        If differences are found, then the update write is performed.
+
+* 2017/03/29 - 1.9.19
+    * Changed the behavior of the modules parameter, when passed in for construction of a stamp Coordinate - such that if a module is passed that represents
+        VHA Modules, for example - and that module concept has children - the constructed stamp coordinate will contain the passed concept, and any of its children. 
+
 * 2017/02/15 - 1.9.18
     * Moved the field 'active' from RestMappingSetExtensionValueUpdate down to the parent class of RestMappingSetExtensionValueBase (which will make it available in 
         RestMappingSetExtensionValue) - the net effect is upon read of a mapset, the extension fields now report if they are active or inactive.  The API for update/create

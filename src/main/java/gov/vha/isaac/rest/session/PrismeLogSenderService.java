@@ -42,6 +42,7 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.spi.StandardLevel;
+import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.codehaus.plexus.util.StringUtils;
 import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
 import org.glassfish.hk2.runlevel.ErrorInformation;
@@ -95,6 +96,10 @@ public class PrismeLogSenderService {
 		@Override public void setEndOfBatch(boolean endOfBatch) {}
 		@Override public void setIncludeLocation(boolean locationRequired) {}
 		@Override public long getNanoTime() { return 0;}
+		@Override public ReadOnlyStringMap getContextData() { return null;}
+		@Override public long getThreadId(){ return 0;}
+		@Override public int getThreadPriority() {return 0;}
+		@Override public LogEvent toImmutable() {return null;}
 	};
 
 	/*
