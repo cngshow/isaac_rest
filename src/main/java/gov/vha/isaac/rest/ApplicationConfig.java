@@ -1,6 +1,7 @@
 package gov.vha.isaac.rest;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -11,6 +12,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+
 import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
@@ -19,6 +22,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -29,15 +33,19 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.ConfigurationService;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.RemoteServiceInfo;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.util.ArtifactUtilities;
 import gov.vha.isaac.ochre.api.util.DBLocator;
 import gov.vha.isaac.ochre.api.util.DownloadUnzipTask;
 import gov.vha.isaac.ochre.api.util.WorkExecutors;
+import gov.vha.isaac.ochre.metadata.source.IsaacMetadataAuxiliary;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
 import gov.vha.isaac.rest.session.PrismeServiceUtils;
@@ -300,6 +308,18 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						try {
 							status_.set("Starting ISAAC");
 							LookupService.startupIsaac();
+														
+							//log metadata versions of codebase and database
+							String version = getDatabaseIsaacMetadataVersion();
+														
+							log.info("Isaac metadata versions - Codebase {} - Database {}.",
+									IsaacMetadataAuxiliary.METADATA_VERSION,
+									version);
+							
+							if (!IsaacMetadataAuxiliary.METADATA_VERSION.equals(version)) {
+								log.warn("Codebase and database are not of the same ISAAC Metadata version!");
+							}
+								
 						}
 						catch(Exception e){
 							log.error("Startup failed due to ", e);
@@ -642,5 +662,22 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			convertString.chars().forEach(c -> temp.append((char)c));
 		}
 		return temp.toString();
+	}
+	
+	private String getDatabaseIsaacMetadataVersion() {
+		String version = "";
+		Stream<SememeChronology<? extends DescriptionSememe<?>>> ds = Get.sememeService()
+				.getDescriptionsForComponent(MetaData.ISAAC_METADATA.getNid());
+		for (Object o : ds.toArray()) {
+			SememeChronology<? extends DescriptionSememe<?>> x = (SememeChronology<? extends DescriptionSememe<?>>)o;
+			for(DescriptionSememe d : x.getVersionList()) {
+				if (d.getText() != null && "version".equalsIgnoreCase(d.getText()) && StringUtils.isNotEmpty(version));
+				{
+					version = d.getText().substring(d.getText().lastIndexOf(":")+1);
+				}
+			}
+			if (StringUtils.isNotEmpty(version)) break;
+		};
+		return version;
 	}
 }
