@@ -310,13 +310,13 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 							LookupService.startupIsaac();
 														
 							//log metadata versions of codebase and database
-							String version = getDatabaseIsaacMetadataVersion();
+							String auxiliaryMetadataVersion = getDatabaseIsaacMetadataVersion();
 														
 							log.info("Isaac metadata versions - Codebase {} - Database {}.",
-									IsaacMetadataAuxiliary.METADATA_VERSION,
-									version);
+									IsaacMetadataAuxiliary.AUXILIARY_METADATA_VERSION,
+									auxiliaryMetadataVersion);
 							
-							if (!IsaacMetadataAuxiliary.METADATA_VERSION.equals(version)) {
+							if (!IsaacMetadataAuxiliary.AUXILIARY_METADATA_VERSION.equals(auxiliaryMetadataVersion)) {
 								log.warn("Codebase and database are not of the same ISAAC Metadata version!");
 							}
 								
