@@ -3,8 +3,11 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/04/?? - 3.3 - PENDING
-	*
+* 2017/04/27 - 3.3
+	* Change isaac metadata version to AUXILIARY_METADATA_VERSION
+	* Changing recursive taxonomy methods to log and return partial results on
+encountering exceptions/errors and improving exception in ConceptAPIs to
+include problem concept id
 
 * 2017/04/20 - 3.2
 	* Log isaac metadata version number from codebase and database
