@@ -39,6 +39,7 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.tree.Tree;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
@@ -188,37 +189,40 @@ public class TaxonomyAPIs
 		{
 			if (rcv.getChildCount() > 5000)
 			{
-				log.warn("Limiting the number of taxonomy children under concept " + childSequence);
+				log.warn("Limiting the number of taxonomy children under concept " + Frills.getIdInfo(childSequence));
 				break;
 			}
 			@SuppressWarnings("rawtypes")
-			ConceptChronology childConcept;
+			ConceptChronology childConcept = null;
 			try
 			{
 				childConcept = ConceptAPIs.findConceptChronology(childSequence + "");
 			}
 			catch (RestException e)
 			{
-				throw new RuntimeException("Internal Error!", e);
+				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + Frills.getIdInfo(conceptSequence) + ". Not including child.", e);
+				//throw new RuntimeException("Internal Error!", e);
 			}
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
-					Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
-			if (cv.isPresent())
-			{
-				//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-				//TODO handle contradictions
-				RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
-					includeSememeMembership, processId);
-				rcv.addChild(childVersion);
-				if (remainingChildDepth > 0)
+			if (childConcept != null) {
+				@SuppressWarnings("unchecked")
+				Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
+						Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
+				if (cv.isPresent())
 				{
-					addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
-						alreadyAddedChildren, processId);
-				}
-				else if (countLeafChildren)
-				{
-					countChildren(childConcept.getConceptSequence(), childVersion, tree, processId);
+					//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
+					//TODO handle contradictions
+					RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
+							includeSememeMembership, processId);
+					rcv.addChild(childVersion);
+					if (remainingChildDepth > 0)
+					{
+						addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
+								alreadyAddedChildren, processId);
+					}
+					else if (countLeafChildren)
+					{
+						countChildren(childConcept.getConceptSequence(), childVersion, tree, processId);
+					}
 				}
 			}
 		}
@@ -230,21 +234,28 @@ public class TaxonomyAPIs
 		for (int parentSequence : tree.getParentSequences(conceptSequence))
 		{
 			@SuppressWarnings("rawtypes")
-			ConceptChronology parentConcept;
+			ConceptChronology parentConcept = null;
 			try
 			{
 				parentConcept = ConceptAPIs.findConceptChronology(parentSequence + "");
-				@SuppressWarnings("unchecked")
-				Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, 
-						Util.getPreWorkflowStampCoordinate(processId, parentConcept.getNid()));
-				if (cv.isPresent())
-				{
-					count++;
-				}
 			}
 			catch (RestException e)
 			{
-				log.error("Unexpected error reading parent concept " + parentSequence + " will not be included in result!", e);
+				log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + Frills.getIdInfo(conceptSequence) + ". Will not be included in count!", e);
+			}
+			
+			if (parentConcept != null) {
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<LatestVersion<ConceptVersionImpl>> cv = parentConcept.getLatestVersion(ConceptVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, parentConcept.getNid()));
+					if (cv.isPresent())
+					{
+						count++;
+					}
+				} catch (Exception e) {
+					log.error("Unexpected error reading latest version of parent concept " + Frills.getIdInfo(parentSequence) + " of child concept " + Frills.getIdInfo(conceptSequence) + ". Will not be included in count!", e);
+				}
 			}
 		}
 		rcv.setParentCount(count);
@@ -257,20 +268,28 @@ public class TaxonomyAPIs
 		for (int childSequence : tree.getChildrenSequences(conceptSequence))
 		{
 			@SuppressWarnings("rawtypes")
-			ConceptChronology childConcept;
+			ConceptChronology childConcept = null;
 			try
 			{
 				childConcept = ConceptAPIs.findConceptChronology(childSequence + "");
 			}
-			catch (RestException e)
+			catch (Exception e)
 			{
-				throw new RuntimeException("Internal Error!", e);
+				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + Frills.getIdInfo(conceptSequence) + ". Not including child in count.", e);
+				//throw new RuntimeException("Internal Error!", e);
 			}
-			@SuppressWarnings("unchecked")
-			Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
-			if (cv.isPresent())
-			{
-				count++;
+			
+			if (childConcept != null) {
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
+					if (cv.isPresent())
+					{
+						count++;
+					}
+				} catch (Exception e) {
+					log.error("Failed finding latest version of child concept " + Frills.getIdInfo(childSequence) + " of parent concept " + Frills.getIdInfo(conceptSequence) + ". Not including child in count.", e);
+				}
 			}
 		}
 		rcv.setChildCount(count);
@@ -305,10 +324,16 @@ public class TaxonomyAPIs
 				perParentHandledConcepts.addAll(passedHandledConcepts.stream());
 
 				@SuppressWarnings("rawtypes")
-				ConceptChronology parentConceptChronlogy;
+				ConceptChronology parentConceptChronlogy = null;
 				try
 				{
 					parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
+				}
+				catch (Exception e) {
+					log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + Frills.getIdInfo(conceptSequence) + ". Will not be included in result!", e);
+				}
+					
+				try {
 					@SuppressWarnings("unchecked")
 					Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, 
 							Util.getPreWorkflowStampCoordinate(processId, parentConceptChronlogy.getNid()));
@@ -330,9 +355,9 @@ public class TaxonomyAPIs
 						}
 					}
 				}
-				catch (RestException e)
+				catch (Exception e)
 				{
-					log.error("Unexpected error reading parent concept " + parentSequence + " will not be included in result!", e);
+					log.error("Unexpected error processing parent concept " + Frills.getIdInfo(parentSequence) + " of child concept " + Frills.getIdInfo(conceptSequence) + ". May not be included in result!", e);
 				}
 				
 				// Add perParentHandledConcepts concepts back to handledConcepts

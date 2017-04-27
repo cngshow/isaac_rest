@@ -204,7 +204,7 @@ public class ConceptAPIs
 			}
 			else
 			{
-				throw new RestException(RequestParameters.id, id, "No concept is available with the specified id");
+				throw new RestException(RequestParameters.id, id, "No concept is available with the specified id \"" + id + "\"");
 			}
 		}
 		else
