@@ -170,6 +170,7 @@ public class MappingWriteAPIs
 					mappingSetCreationData.mapItemExtendedFieldsDefinition,
 					mappingSetCreationData.mapSetExtendedFields,
 					mappingSetCreationData.displayFields,
+					mappingSetCreationData.active,
 					RequestInfo.get().getEditCoordinate());
 		}
 		catch (RestException e)
@@ -673,6 +674,7 @@ public class MappingWriteAPIs
 			List<RestDynamicSememeColumnInfoCreate> itemExtendedFieldDefinitions,
 			List<RestMappingSetExtensionValueCreate> mapSetExtendedFields,
 			List<RestMappingSetDisplayFieldCreate> itemDisplayFields,
+			Boolean active,
 			EditCoordinate editCoord) throws IOException
 	{
 		//We need to create a new concept - which itself is defining a dynamic sememe - so set that up here.
@@ -798,6 +800,11 @@ public class MappingWriteAPIs
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
+			}
+			if (active != null && !active.booleanValue())
+			{
+				//Wanted it created inactive for some reason...
+				ComponentWriteAPIs.resetState(State.INACTIVE, Get.identifierService().getConceptNid(rdud.getDynamicSememeUsageDescriptorSequence()) + "");
 			}
 		}
 		catch (Exception e)
