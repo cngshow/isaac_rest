@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.id;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -312,8 +313,8 @@ public class IdAPIs
 	private final static Comparator<RestConceptChronology> REST_CONCEPT_DESCRIPTION_COMPARATOR = new Comparator<RestConceptChronology>() {
 		public int compare(RestConceptChronology concept1, RestConceptChronology concept2) {
 
-			String concept1Description = concept1.getDescription().toUpperCase();
-			String concept2Description = concept2.getDescription().toUpperCase();
+			String concept1Description = concept1.getDescription().toUpperCase(Locale.ENGLISH);
+			String concept2Description = concept2.getDescription().toUpperCase(Locale.ENGLISH);
 
 			//ascending order
 			return concept1Description.compareTo(concept2Description);
