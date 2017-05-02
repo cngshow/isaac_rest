@@ -2190,7 +2190,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(mappingItemMatchingNewItem);
 
 		String updatedTargetConceptSeq = MetaData.DANISH_LANGUAGE.getConceptSequence() + "";
-		String updatedEquivalenceTypeConceptSeq = IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getConceptSequence() + "";
+		String updatedEquivalenceTypeConceptSeq = IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_EXACT.getConceptSequence() + "";
 
 		RestMappingItemVersionUpdate updatedMappingItemData = new RestMappingItemVersionUpdate(
 				updatedTargetConceptSeq,
@@ -2460,7 +2460,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("mapSetConcept", createdMapSet.identifiers.sequence);
 		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
-		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_EXACT.getConceptSequence());
 
 		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(20)}));
 
@@ -2520,7 +2520,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence.intValue(), newMappingItemSequenceWrapper.sequence.intValue());
 		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept.sequence);
 		Assert.assertTrue(MetaData.AND.getConceptSequence() == retrievedMappingItemVersion.targetConcept.sequence);
-		Assert.assertTrue(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept.sequence);
+		Assert.assertTrue(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_EXACT.getConceptSequence() == retrievedMappingItemVersion.qualifierConcept.sequence);
 		Assert.assertEquals(createdMapSet.identifiers.sequence, retrievedMappingItemVersion.mapSetConcept.sequence);
 		Assert.assertTrue(retrievedMappingItemVersion.mappingItemStamp.state.enumId == State.ACTIVE.ordinal());
 
@@ -2535,7 +2535,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(sourceConceptDescription.isPresent());
 		Optional<String> targetConceptDescription = Frills.getDescription(MetaData.AND.getNid(), getDefaultCoordinatesToken().getTaxonomyCoordinate());
 		Assert.assertTrue(targetConceptDescription.isPresent());
-		Optional<String> equivalenceTypeConceptDescription = Frills.getDescription(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getNid(), getDefaultCoordinatesToken().getTaxonomyCoordinate());
+		Optional<String> equivalenceTypeConceptDescription = Frills.getDescription(IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_EXACT.getNid(), getDefaultCoordinatesToken().getTaxonomyCoordinate());
 		Assert.assertTrue(equivalenceTypeConceptDescription.isPresent());
 
 		Assert.assertEquals(retrievedMappingItemVersion.computedDisplayFields.get(0).componentType, new RestMapSetItemComponentType(MapSetItemComponent.SOURCE));
@@ -2558,7 +2558,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("mapSetConcept", createdMapSet.identifiers.sequence);
 		root.put("sourceConcept", MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
-		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getConceptSequence());
+		root.put("qualifierConcept", IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_EXACT.getConceptSequence());
 
 		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(20)}));
 
@@ -2575,7 +2575,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("mapSetConcept", createdMapSet.identifiers.sequence);
 		root.put("sourceConcept", MetaData.BOOLEAN_LITERAL.getConceptSequence());
 		root.put("targetConcept", MetaData.AND.getConceptSequence());
-		root.put("qualifierConcept",  IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_ONE_TO_ONE.getConceptSequence());
+		root.put("qualifierConcept",  IsaacMappingConstants.MAPPING_EQUIVALENCE_TYPE_EXACT.getConceptSequence());
 
 		root.set("mapItemExtendedFields",  toJsonObject(new DynamicSememeData[] {null, new DynamicSememeLongImpl(40)}));
 
@@ -2602,7 +2602,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		root.put("inverseName", "inverse test");
 		root.put("description", "bla bla");
 		root.put("purpose", "just testing");
-		root.put("active", true);
+		root.put("active", false);
 
 		ArrayNode extendedFields = jfn.arrayNode();
 		ObjectNode ef1 = jfn.objectNode();
@@ -2659,10 +2659,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdMapSet.inverseName, "inverse test");
 		Assert.assertEquals(createdMapSet.name, name);
 		Assert.assertEquals(createdMapSet.purpose, "just testing");
-		Assert.assertEquals(createdMapSet.active.booleanValue(), true);
+		Assert.assertEquals(createdMapSet.active.booleanValue(), false);
 		Assert.assertNull(createdMapSet.comments);
 		Assert.assertEquals(createdMapSet.identifiers.getFirst(), createdMapSetId.uuid);
-		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.ACTIVE.name());
+		Assert.assertEquals(createdMapSet.mappingSetStamp.state.enumName, State.INACTIVE.name());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.size(), 1);
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionNameConceptIdentifiers.sequence.intValue(), MetaData.LOINC_MODULES.getConceptSequence());
 		Assert.assertEquals(createdMapSet.mapSetExtendedFields.get(0).extensionValue.data.toString(), "test Value extended");
