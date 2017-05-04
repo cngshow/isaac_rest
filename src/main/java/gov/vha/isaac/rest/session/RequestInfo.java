@@ -273,7 +273,7 @@ public class RequestInfo
 			//Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(getEditToken().getAuthorSequence());
 			Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptId(getEditToken().getAuthorSequence());
 			if (userUuid.isPresent()) {
-				Optional<User> userOptional = UserCache.get(userUuid.get());
+				Optional<User> userOptional = LookupService.getService(UserCache.class).get(userUuid.get());
 				user_ = userOptional.isPresent() ? userOptional.get() : null;
 			}
 		}
@@ -338,12 +338,12 @@ public class RequestInfo
 							);
 					
 					Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptId(editToken.getAuthorSequence());
-					if (UserCache.get(userUuid.get()).isPresent()) {
-						user_ = UserCache.get(userUuid.get()).get();
+					if (LookupService.getService(UserCache.class).get(userUuid.get()).isPresent()) {
+						user_ = LookupService.getService(UserCache.class).get(userUuid.get()).get();
 					} else {
 						String name = Get.conceptDescriptionText(editToken.getAuthorSequence());
 						User user = new User(name, userUuid.get(), editToken.getRoles());
-						UserCache.put(user);
+						LookupService.getService(UserCache.class).put(user);
 						user_ = user;
 					}
 				} else {

@@ -36,6 +36,7 @@ import org.jvnet.hk2.annotations.Service;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.UserRole;
 
 /**
@@ -82,7 +83,7 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	@Override
 	public Set<UserRole> getUserRoles(UUID userId)
 	{
-		return UserCache.get(userId).get().getRoles();
+		return LookupService.getService(UserCache.class).get(userId).get().getRoles();
 	}
 
 	/* (non-Javadoc)

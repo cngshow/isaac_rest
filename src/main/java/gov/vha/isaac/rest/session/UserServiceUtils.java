@@ -168,7 +168,7 @@ public class UserServiceUtils {
 			}
 		}
 		
-		UserCache.put(newUser);
+		LookupService.getService(UserCache.class).put(newUser);
 	
 		return Optional.of(newUser);
 	}
