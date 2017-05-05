@@ -5,7 +5,7 @@ API version number, not the release version number.
 
 
 * 2017/??/?? - 4.1 - PENDING
-	*
+	* Fix a bug where the translate API was returning "Optional[x]" instead of just "x" for VUIDs and SCTIDs.
 
 * 2017/05/02 - 4.0
 	* Fixed 430032 - create on map set was ignoring active/inactive portion of request (always creating the new mapset as active)
