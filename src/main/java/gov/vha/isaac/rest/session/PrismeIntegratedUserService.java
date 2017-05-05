@@ -37,6 +37,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.User;
+import gov.vha.isaac.ochre.api.UserCache;
 import gov.vha.isaac.ochre.api.UserRole;
 
 /**

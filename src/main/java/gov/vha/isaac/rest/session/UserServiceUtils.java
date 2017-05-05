@@ -42,6 +42,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.User;
+import gov.vha.isaac.ochre.api.UserCache;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 

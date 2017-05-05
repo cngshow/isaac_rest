@@ -33,12 +33,12 @@ import javax.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.RestApplicationSecurityContext;
-import gov.vha.isaac.rest.session.User;
 import gov.vha.isaac.rest.tokens.EditToken;
 
 /**

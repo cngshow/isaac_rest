@@ -30,6 +30,9 @@ import javax.inject.Singleton;
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
 
+import gov.vha.isaac.ochre.api.User;
+import gov.vha.isaac.ochre.api.UserCache;
+
 /**
  * 
  * {@link UserCacheImpl}

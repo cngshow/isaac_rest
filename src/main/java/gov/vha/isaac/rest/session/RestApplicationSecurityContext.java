@@ -23,6 +23,7 @@ import java.security.Principal;
 
 import javax.ws.rs.core.SecurityContext;
 
+import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserRole;
 
 /**

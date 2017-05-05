@@ -34,6 +34,8 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
+import gov.vha.isaac.ochre.api.User;
+import gov.vha.isaac.ochre.api.UserCache;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
