@@ -4,8 +4,9 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 
-* 2017/??/?? - 4.1 - PENDING
+* 2017/05/05 - 4.1
 	* Fix a bug where the translate API was returning "Optional[x]" instead of just "x" for VUIDs and SCTIDs.
+	* Refactoring of some rest auth code for reuse
 
 * 2017/05/02 - 4.0
 	* Fixed 430032 - create on map set was ignoring active/inactive portion of request (always creating the new mapset as active)
