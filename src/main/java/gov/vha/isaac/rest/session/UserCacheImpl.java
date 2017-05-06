@@ -24,27 +24,42 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Singleton;
+
+import org.glassfish.hk2.api.Rank;
+import org.jvnet.hk2.annotations.Service;
+
+import gov.vha.isaac.ochre.api.User;
+import gov.vha.isaac.ochre.api.UserCache;
+
 /**
  * 
- * {@link UserCache}
+ * {@link UserCacheImpl}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-public class UserCache {
-	private final static Object OBJECT_BY_ID_CACHE_LOCK = new Object();
-	
+@Service(name="userCacheService")
+@Rank(value = 10)
+@Singleton
+public class UserCacheImpl implements UserCache {	
 	private static final int DEFAULT_MAX_SIZE = 1024;
-	private static Map<UUID, User> OBJECT_BY_ID_CACHE = null;
+	private Map<UUID, User> OBJECT_BY_ID_CACHE = null;
 
-	private static void init(final int maxEntries) {
-		synchronized(OBJECT_BY_ID_CACHE_LOCK) {
+	UserCacheImpl() {
+		// For HK2
+	}
+
+	@PostConstruct
+	private void init() {
+		synchronized(this) {
 			if (OBJECT_BY_ID_CACHE == null) {
-				OBJECT_BY_ID_CACHE = new LinkedHashMap<UUID, User>(maxEntries, 0.75F, true) {
+				OBJECT_BY_ID_CACHE = new LinkedHashMap<UUID, User>(DEFAULT_MAX_SIZE, 0.75F, true) {
 					private static final long serialVersionUID = -1236481390177598762L;
 					@Override
 					protected boolean removeEldestEntry(Map.Entry<UUID, User> eldest){
-						return size() > maxEntries;
+						return size() > DEFAULT_MAX_SIZE;
 					}
 				};
 			}
@@ -58,12 +73,12 @@ public class UserCache {
 	 * @param value User object
 	 * @throws Exception
 	 */
-	public static void put(User value) {
+	public void put(User value) {
 		if (OBJECT_BY_ID_CACHE == null) {
-			init(DEFAULT_MAX_SIZE);
+			init();
 		}
 
-		synchronized (OBJECT_BY_ID_CACHE_LOCK) {
+		synchronized (this) {
 			OBJECT_BY_ID_CACHE.put(value.getId(), value);
 		}
 	}
@@ -77,11 +92,11 @@ public class UserCache {
 	 * @return User object
 	 * @throws Exception
 	 */
-	public static Optional<User> get(UUID key) {
+	public Optional<User> get(UUID key) {
 		if (OBJECT_BY_ID_CACHE == null) {
-			init(DEFAULT_MAX_SIZE);
+			init();
 		}
-		synchronized (OBJECT_BY_ID_CACHE_LOCK) {
+		synchronized (this) {
 			User obj = OBJECT_BY_ID_CACHE.get(key);
 			return obj != null ? Optional.of(obj) : Optional.empty();
 		}

@@ -191,7 +191,7 @@ public class IdAPIs
 					{
 						throw new RestException("No SCTID was found on the specified component");
 					}
-					return new RestId(outputTypeFormat, "" + sctId);
+					return new RestId(outputTypeFormat, "" + sctId.get());
 				case CONCEPT_SEQUENCE:
 					if (object.get().getOchreObjectType() == OchreExternalizableObjectType.CONCEPT)
 					{
@@ -222,7 +222,7 @@ public class IdAPIs
 					{
 						throw new RestException("No VUID was found on the specified component");
 					}
-					return new RestId(outputTypeFormat, "" + vuId);
+					return new RestId(outputTypeFormat, "" + vuId.get());
 				default :
 					log.error("Design error - case not handled: " + inputTypeFormat);
 					throw new RestException("Internal server error");
