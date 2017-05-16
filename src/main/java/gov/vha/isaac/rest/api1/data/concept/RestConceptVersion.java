@@ -217,33 +217,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		
 		if (includeTerminologyType)
 		{
-			HashSet<Integer> modules = new HashSet<>();
-			cv.getChronology().getVersionStampSequences().forEach(stampSequence -> 
-			{
-				modules.add(Get.stampService().getModuleSequenceForStamp(stampSequence));
-			});
-			
-			for (int moduleSequence : modules)
-			{
-				if (Get.taxonomyService().wasEverKindOf(moduleSequence, MetaData.MODULE.getConceptSequence()))
-				{
-					AtomicInteger previous = new AtomicInteger(0);
-					OfInt parents = Get.taxonomyService().getTaxonomyParentSequences(moduleSequence).iterator();
-					while (parents.hasNext())
-					{
-						int current = parents.nextInt();
-						if (previous.get() != 0)
-						{
-							if (current == MetaData.MODULE.getConceptSequence())
-							{
-								terminologyTypes.add(previous.get());
-								break;
-							}
-						}
-						previous.set(current);
-					};
-				}
-			}
+			terminologyTypes = Frills.getTerminologyTypes(cv.getChronology());
 		}
 		else
 		{
