@@ -104,7 +104,7 @@ public class RestTerminologyConcept extends RestConceptChronology
 		});
 		if (StringUtils.isBlank(description))
 		{
-			LogManager.getLogger().warn("Unable to find expected description type for Terminology Concept " + cc.getPrimordialUuid());
+			LogManager.getLogger().info("Unable to find expected description type for Terminology Concept " + cc.getPrimordialUuid());
 			description = Util.readBestDescription(cc.getNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
 		}
 	}
