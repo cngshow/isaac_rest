@@ -40,6 +40,9 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
@@ -525,12 +528,20 @@ public class SystemAPIs
 
 		ArrayList<RestConceptChronology> results = new ArrayList<>();
 		
-		Set<Integer> allowableModules = Frills.getAllModuleSequences(ConceptAPIs.findConceptChronology(id));
+		ConceptChronology<? extends ConceptVersion<?>> cc = ConceptAPIs.findConceptChronology(id);
+		
+		if (!Get.taxonomyService().isChildOf(cc.getConceptSequence(), MetaData.MODULE.getConceptSequence(), 
+				TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), 
+						LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate())))
+		{
+			throw new RestException("The passed in concept is not a child of the MODULE constant.  It should be a direct child of " + MetaData.MODULE.getPrimordialUuid());
+		}
+		
 		
 		Frills.getAllChildrenOfConcept(MetaData.DESCRIPTION_TYPE_IN_SOURCE_TERMINOLOGY.getConceptSequence(), true, true).forEach(descType ->
 		{
 			ConceptChronology<? extends ConceptVersion<?>> concept = Get.conceptService().getConcept(descType);
-			if (Frills.getAllModuleSequences(concept).stream().anyMatch(module -> allowableModules.contains(module)))
+			if (Frills.getTerminologyTypes(concept).contains(cc.getConceptSequence()))
 			{
 				results.add(new RestConceptChronology(concept, false, false, null));
 			}

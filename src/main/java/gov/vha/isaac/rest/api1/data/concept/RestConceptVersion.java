@@ -136,13 +136,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Set<Integer> sememeMembership = new HashSet<>();
 	
-
 	/**
 	 * The concept sequences of the terminologies that this concept is part of.  This is determined by whether or not there is version of this concept present 
 	 * with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  Note that this field is typically not populated - and when it 
 	 * is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the parameter 'terminologyTypes=true' is passed.
 	 * 
-	 * See 1/system/TODO for more details on the potential terminology concepts that will be returned.
+	 * See 1/system/terminologyTypes for more details on the potential terminology concepts that will be returned.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
