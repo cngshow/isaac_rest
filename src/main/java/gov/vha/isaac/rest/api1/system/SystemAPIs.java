@@ -18,9 +18,10 @@
  */
 package gov.vha.isaac.rest.api1.system;
 
+import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,17 +31,21 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
 import gov.vha.isaac.rest.api1.data.RestUserInfo;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
@@ -473,4 +478,39 @@ public class SystemAPIs
 
 		return new RestUserInfo(Get.identifierService().getConceptNid(Util.convertToConceptSequence(id)));
 	}
+	
+	/**
+	 * Return the extended description types that are allowable by a particular terminology.  
+	 * @param id - a nid, sequence or UUID of a concept that represents a terminology in the system.  This should be a child of 
+	 * {@link MetaData#MODULE}
+	 * @throws RestException if no user concept can be identified.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.extendedDescriptionTypes + "{" + RequestParameters.id + "}")
+	public RestConceptChronology[] getExtendedDescriptionTypesForTerminology(@PathParam(RequestParameters.id) String id) throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.coordToken);
+
+		ArrayList<RestConceptChronology> results = new ArrayList<>();
+		
+		Set<Integer> allowableModules = Frills.getAllModuleSequences(ConceptAPIs.findConceptChronology(id));
+		
+		Frills.getAllChildrenOfConcept(MetaData.DESCRIPTION_TYPE_IN_SOURCE_TERMINOLOGY.getConceptSequence(), true, true).forEach(descType ->
+		{
+			ConceptChronology<? extends ConceptVersion<?>> concept = Get.conceptService().getConcept(descType);
+			if (Frills.getAllModuleSequences(concept).stream().anyMatch(module -> allowableModules.contains(module)))
+			{
+				results.add(new RestConceptChronology(concept, false, false, null));
+			}
+		});
+		
+		return results.toArray(new RestConceptChronology[results.size()]);
+	}
+	
 }
