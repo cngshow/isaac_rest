@@ -91,7 +91,7 @@ public class RequestInfo
 	public static EditCoordinate getDefaultEditCoordinate() {
 		if (DEFAULT_EDIT_COORDINATE == null)
 		{
-			DEFAULT_EDIT_COORDINATE = EditCoordinates.getDefaultUserVeteransAdministrationExtension();
+			DEFAULT_EDIT_COORDINATE = EditCoordinates.getDefaultUserVHAT();
 		}
 		return DEFAULT_EDIT_COORDINATE;
 	}

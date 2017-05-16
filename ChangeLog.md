@@ -4,29 +4,30 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/05/?? - 4.2 - PENDING
+    * Changed default edit module to VHAT_EDIT.
 
 * 2017/05/05 - 4.1
-	* Fix a bug where the translate API was returning "Optional[x]" instead of just "x" for VUIDs and SCTIDs.
-	* Refactoring of some rest auth code for reuse
+    * Fix a bug where the translate API was returning "Optional[x]" instead of just "x" for VUIDs and SCTIDs.
+    * Refactoring of some rest auth code for reuse
 
 * 2017/05/02 - 4.0
-	* Fixed 430032 - create on map set was ignoring active/inactive portion of request (always creating the new mapset as active)
+    * Fixed 430032 - create on map set was ignoring active/inactive portion of request (always creating the new mapset as active)
 
 * 2017/04/27 - 3.3
-	* Change isaac metadata version to AUXILIARY_METADATA_VERSION
-	* Changing recursive taxonomy methods to log and return partial results on
+    * Change isaac metadata version to AUXILIARY_METADATA_VERSION
+    * Changing recursive taxonomy methods to log and return partial results on
 encountering exceptions/errors and improving exception in ConceptAPIs to
 include problem concept id
 
 * 2017/04/20 - 3.2
-	* Log isaac metadata version number from codebase and database
+    * Log isaac metadata version number from codebase and database
 
 * 2017/04/11 - 3.1
-	* Added a configuration to the pom file that allows launching the server from the command line.  Execute: 'mvn compile -Pstart-server'
+    * Added a configuration to the pom file that allows launching the server from the command line.  Execute: 'mvn compile -Pstart-server'
 
 * 2017/03/20 - 3.0
-	* Reversioned from 1.43
-	* Production build for Release 3
+    * Reversioned from 1.43
+    * Production build for Release 3
 
 * 2017/03/15 - 1.42
     * Just building to align ISAAC dependencies with what PRISME needs
