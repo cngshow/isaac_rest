@@ -13,6 +13,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/05/16 - 1.10.0
+    * Changed the datatype of RestConceptVersion sememeMembership and terminologyTypes to and Array of RestIdentifiedObject, instead of a Set of Integers.
+
 * 2017/05/16 - 1.9.21
     * Added a parameter to the ConceptVersion and Taxonomy Version APIs 'terminologyType' - which may be set to true, to include a new set of concept sequences
         that represent each terminology that a concept is a member of.  The concepts returned will be direct children of the MODULE metadata constant.

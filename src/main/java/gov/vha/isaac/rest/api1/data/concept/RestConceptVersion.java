@@ -38,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -52,6 +53,7 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
 import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -127,25 +129,25 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	Integer parentCount;
 	
 	/**
-	 * The concept sequences of the sememe assemblage concepts that this concept is a member of (there exists a sememe instance where the referencedComponent 
+	 * The identifiers of the sememe assemblage concepts that this concept is a member of (there exists a sememe instance where the referencedComponent 
 	 * is this concept, and the assemblage is the value returned).  Note that this field is typically not populated - and when it is populated, it is only 
 	 * in response to a request via the Taxonomy or Concept APIs, when the parameter 'sememeMembership=true' is passed.
 	 * See more details on {@link TaxonomyAPIs#getConceptVersionTaxonomy(String, String, int, String, int, String, String, String)}
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Set<Integer> sememeMembership = new HashSet<>();
+	RestIdentifiedObject[] sememeMembership;
 	
 	/**
-	 * The concept sequences of the terminologies that this concept is part of.  This is determined by whether or not there is version of this concept present 
-	 * with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  Note that this field is typically not populated - and when it 
-	 * is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the parameter 'terminologyTypes=true' is passed.
+	 * The identifiers of the terminologies (concepts that represent terminologies) that this concept is part of.  This is determined by whether or not there is 
+	 * version of this concept present with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  Note that this field is typically 
+	 * not populated - and when it is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the parameter 'terminologyTypes=true' is passed.
 	 * 
 	 * See 1/system/terminologyTypes for more details on the potential terminology concepts that will be returned.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	Set<Integer> terminologyTypes = new HashSet<>();
+	RestIdentifiedObject[] terminologyTypes;
 	
 	protected RestConceptVersion()
 	{
@@ -189,25 +191,33 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		}
 		
 		if (includeSememeMembership)
-		{			
+		{
+			HashSet<Integer> sememeMembershipSequences = new HashSet<>();
 			Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
 			{
 				@Override
 				public void accept(SememeChronology sc)
 				{
-					if (!sememeMembership.contains(sc.getAssemblageSequence()) 
+					if (!sememeMembershipSequences.contains(sc.getAssemblageSequence()) 
 						&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
 						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
 						&& sc.getSememeType() != SememeType.DESCRIPTION 
 						&& sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, sc.getNid())).isPresent()) 
 					{
-						sememeMembership.add(sc.getAssemblageSequence());
+						sememeMembershipSequences.add(sc.getAssemblageSequence());
 					}
 				}
 			};
 			
 			Stream<SememeChronology<? extends SememeVersion<?>>> sememes = Get.sememeService().getSememesForComponent(cv.getNid());
 			sememes.forEach(consumer);
+			
+			sememeMembership = new RestIdentifiedObject[sememeMembershipSequences.size()];
+			int i = 0;
+			for (int sequence : sememeMembershipSequences)
+			{
+				sememeMembership[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+			}
 		}
 		else
 		{
@@ -216,7 +226,15 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		
 		if (includeTerminologyType)
 		{
-			terminologyTypes = Frills.getTerminologyTypes(cv.getChronology());
+			
+			HashSet<Integer> terminologyTypeSequences = Frills.getTerminologyTypes(cv.getChronology());
+			
+			terminologyTypes = new RestIdentifiedObject[terminologyTypeSequences.size()];
+			int i = 0; 
+			for (int sequence : terminologyTypeSequences)
+			{
+				terminologyTypes[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+			}
 		}
 		else
 		{
@@ -385,14 +403,6 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@XmlTransient
 	public List<RestConceptVersion> getChildren() {
 		return Collections.unmodifiableList(children);
-	}
-
-	/**
-	 * @return the sememeMembership
-	 */
-	@XmlTransient
-	public Set<Integer> getSememeMembership() {
-		return Collections.unmodifiableSet(sememeMembership);
 	}
 
 	/* (non-Javadoc)
