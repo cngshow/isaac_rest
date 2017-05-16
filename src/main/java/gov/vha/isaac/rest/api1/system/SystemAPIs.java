@@ -49,6 +49,7 @@ import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
 import gov.vha.isaac.rest.api1.data.RestUserInfo;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
+import gov.vha.isaac.rest.api1.data.concept.RestTerminologyConcept;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
@@ -477,6 +478,31 @@ public class SystemAPIs
 				RequestParameters.coordToken);
 
 		return new RestUserInfo(Get.identifierService().getConceptNid(Util.convertToConceptSequence(id)));
+	}
+	
+	/**
+	 * Return the general terminology types that are currently supported in this system.  These are the terminology 
+	 * types that can be passed into the extendedDescriptionTypes call.  
+	 * For extended, specific details on the terminologies supported by the system, see 1/system/systemInfo.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.terminologyTypes)
+	public RestTerminologyConcept[] getTerminologyTypes() throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+		
+		ArrayList<RestTerminologyConcept> terminologies = new ArrayList<>();
+		Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).forEach(conceptSeq -> 
+		{
+			terminologies.add(new RestTerminologyConcept(Get.conceptService().getConcept(conceptSeq)));
+		});
+
+		return terminologies.toArray(new RestTerminologyConcept[terminologies.size()]);
 	}
 	
 	/**

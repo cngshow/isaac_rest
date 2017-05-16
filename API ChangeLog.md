@@ -16,7 +16,9 @@ Bug fixes should not be documented here, rather, than should be documented in th
 * 2017/05/16 - 1.9.21
     * Added a parameter to the ConceptVersion and Taxonomy Version APIs 'terminologyType' - which may be set to true, to include a new set of concept sequences
         that represent each terminology that a concept is a member of.  The concepts returned will be direct children of the MODULE metadata constant.
-    * Added systemInfo/extendedDescriptionTypes to return the applicable extended description types for a particular terminology.
+    * Added system/extendedDescriptionTypes to return the applicable extended description types for a particular terminology.
+    * Added system/terminologyTypes api to provide a list of generally supported terminologies (the same ids that can be passed into extendedDescriptionTypes
+        to find out the extended types per terminology.
     
 
 
