@@ -89,6 +89,9 @@ public class ConceptAPIs
 	 * concept sequences that describe sememes that this concept is referenced by.  (there exists a sememe instance where the referencedComponent 
 	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion)
 	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
+	 * @param terminologyType - when true, the concept sequences of the terminologies that this concept is part of on any stamp is returned.  This 
+	 * is determined by whether or not there is version of this concept present with a module that extends from one of the children of the 
+	 * {@link MetaData#MODULE} concepts.  This is returned as a set, as a concept may exist in multiple terminologies at the same time.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'
 	 * @param processId if set, specifies that retrieved components should be checked against the specified active
 	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
@@ -109,6 +112,7 @@ public class ConceptAPIs
 			@QueryParam(RequestParameters.includeChildren) @DefaultValue("false") String includeChildren,
 			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
 			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
+			@QueryParam(RequestParameters.terminologyType) @DefaultValue("false") String terminologyType,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken
@@ -122,6 +126,7 @@ public class ConceptAPIs
 				RequestParameters.includeChildren,
 				RequestParameters.countChildren,
 				RequestParameters.sememeMembership,
+				RequestParameters.terminologyType,
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -144,6 +149,7 @@ public class ConceptAPIs
 					Boolean.parseBoolean(countChildren.trim()),
 					RequestInfo.get().getStated(),
 					Boolean.parseBoolean(sememeMembership.trim()),
+					Boolean.parseBoolean(terminologyType.trim()),
 					processIdUUID);
 		}
 		throw new RestException(RequestParameters.id, id, "No version on coordinate path for concept with the specified id");

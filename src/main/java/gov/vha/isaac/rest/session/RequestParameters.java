@@ -152,6 +152,7 @@ public class RequestParameters {
 	public final static String countParents = "countParents";
 	public final static String countChildren = "countChildren";
 	public final static String sememeMembership = "sememeMembership";
+	public final static String terminologyType = "terminologyType";
 	
 	// Concept
 	public final static String includeParents = "includeParents";

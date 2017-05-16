@@ -23,8 +23,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.PrimitiveIterator.OfInt;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.xml.bind.annotation.XmlElement;
@@ -33,6 +35,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
@@ -133,6 +136,18 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	Set<Integer> sememeMembership = new HashSet<>();
 	
+
+	/**
+	 * The concept sequences of the terminologies that this concept is part of.  This is determined by whether or not there is version of this concept present 
+	 * with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  Note that this field is typically not populated - and when it 
+	 * is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the parameter 'terminologyTypes=true' is passed.
+	 * 
+	 * See 1/system/TODO for more details on the potential terminology concepts that will be returned.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	Set<Integer> terminologyTypes = new HashSet<>();
+	
 	protected RestConceptVersion()
 	{
 		//for Jaxb
@@ -140,7 +155,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	
 	@SuppressWarnings({ "rawtypes" }) 
 	public RestConceptVersion(ConceptVersion cv, boolean includeChronology, UUID processId) {
-		this(cv, includeChronology, false, false, false, false, false, false, processId);
+		this(cv, includeChronology, false, false, false, false, false, false, false, processId);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" }) 
@@ -153,6 +168,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			boolean countChildren,
 			boolean stated,
 			boolean includeSememeMembership,
+			boolean includeTerminologyType,
 			final UUID processId)
 	{
 		conVersion = new RestStampedVersion(cv);
@@ -199,6 +215,41 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			sememeMembership = null;
 		}
 		
+		if (includeTerminologyType)
+		{
+			HashSet<Integer> modules = new HashSet<>();
+			cv.getChronology().getVersionStampSequences().forEach(stampSequence -> 
+			{
+				modules.add(Get.stampService().getModuleSequenceForStamp(stampSequence));
+			});
+			
+			for (int moduleSequence : modules)
+			{
+				if (Get.taxonomyService().wasEverKindOf(moduleSequence, MetaData.MODULE.getConceptSequence()))
+				{
+					AtomicInteger previous = new AtomicInteger(0);
+					OfInt parents = Get.taxonomyService().getTaxonomyParentSequences(moduleSequence).iterator();
+					while (parents.hasNext())
+					{
+						int current = parents.nextInt();
+						if (previous.get() != 0)
+						{
+							if (current == MetaData.MODULE.getConceptSequence())
+							{
+								terminologyTypes.add(previous.get());
+								break;
+							}
+						}
+						previous.set(current);
+					};
+				}
+			}
+		}
+		else
+		{
+			terminologyTypes = null;
+		}
+		
 		if (includeChronology || includeParents || includeChildren || countChildren || countParents)
 		{
 			expandables = new Expandables();
@@ -223,7 +274,8 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 
 			if (includeParents)
 			{
-				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
+				TaxonomyAPIs.addParents(cv.getChronology().getConceptSequence(), this, tree, countParents, 0, includeSememeMembership, includeTerminologyType, 
+						new ConceptSequenceSet(), processId);
 			}
 			else if (countParents)
 			{
@@ -232,7 +284,8 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, new ConceptSequenceSet(), processId);
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, 
+						includeTerminologyType, new ConceptSequenceSet(), processId);
 			}
 			else if (countChildren)
 			{

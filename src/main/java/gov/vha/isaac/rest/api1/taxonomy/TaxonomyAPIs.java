@@ -33,7 +33,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -59,7 +59,8 @@ import gov.vha.isaac.rest.session.SecurityUtils;
  */
 
 @Path(RestPaths.taxonomyAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
+@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, 
+	UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
 public class TaxonomyAPIs
 {
 	private static Logger log = LogManager.getLogger(TaxonomyAPIs.class);
@@ -85,8 +86,12 @@ public class TaxonomyAPIs
 	 * concept sequences that describe sememes that this concept is referenced by.  (there exists a sememe instance where the referencedComponent 
 	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion).
 	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
+	 * @param terminologyType - when true, the concept sequences of the terminologies that this concept is part of on any stamp is returned.  This 
+	 * is determined by whether or not there is version of this concept present with a module that extends from one of the children of the 
+	 * {@link MetaData#MODULE} concepts.  This is returned as a set, as a concept may exist in multiple terminologies at the same time.
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
+	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the concept version object
 	 * @throws RestException 
@@ -102,6 +107,7 @@ public class TaxonomyAPIs
 			@QueryParam(RequestParameters.childDepth) @DefaultValue("1") int childDepth,
 			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
 			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
+			@QueryParam(RequestParameters.terminologyType) @DefaultValue("false") String terminologyType,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.processId) String processId,
 			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
@@ -116,6 +122,7 @@ public class TaxonomyAPIs
 				RequestParameters.childDepth,
 				RequestParameters.countChildren,
 				RequestParameters.sememeMembership,
+				RequestParameters.terminologyType,
 				RequestParameters.expand,
 				RequestParameters.processId,
 				RequestParameters.COORDINATE_PARAM_NAMES);
@@ -123,6 +130,7 @@ public class TaxonomyAPIs
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
 		boolean includeSememeMembership = Boolean.parseBoolean(sememeMembership.trim());
+		boolean includeTerminologyType = Boolean.parseBoolean(terminologyType.trim());
 		
 		UUID processIdUUID = Util.validateWorkflowProcess(processId);
 		
@@ -137,14 +145,15 @@ public class TaxonomyAPIs
 			//TODO handle contradictions
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
-					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership,
+					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership, includeTerminologyType,
 					processIdUUID);  
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
 			if (parentHeight > 0)
 			{
-				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, includeSememeMembership, new ConceptSequenceSet(), processIdUUID);
+				addParents(concept.getConceptSequence(), rcv, tree, countParentsBoolean, parentHeight - 1, includeSememeMembership, 
+						includeTerminologyType, new ConceptSequenceSet(), processIdUUID);
 			}
 			else if (countParentsBoolean)
 			{
@@ -154,7 +163,7 @@ public class TaxonomyAPIs
 			if (childDepth > 0)
 			{
 				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, 
-						new ConceptSequenceSet(), processIdUUID);
+						includeTerminologyType, new ConceptSequenceSet(), processIdUUID);
 			}
 			else if (countChildrenBoolean)
 			{
@@ -174,6 +183,7 @@ public class TaxonomyAPIs
 			boolean countParents,
 			int remainingChildDepth,
 			boolean includeSememeMembership,
+			boolean includeTerminologyType,
 			ConceptSequenceSet alreadyAddedChildren,
 			UUID processId)
 	{
@@ -213,12 +223,12 @@ public class TaxonomyAPIs
 					//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
 					//TODO handle contradictions
 					RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
-							includeSememeMembership, processId);
+							includeSememeMembership, includeTerminologyType, processId);
 					rcv.addChild(childVersion);
 					if (remainingChildDepth > 0)
 					{
 						addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
-								alreadyAddedChildren, processId);
+								includeTerminologyType, alreadyAddedChildren, processId);
 					}
 					else if (countLeafChildren)
 					{
@@ -303,6 +313,7 @@ public class TaxonomyAPIs
 			boolean countLeafParents,
 			int remainingParentDepth, 
 			boolean includeSememeMembership,
+			boolean includeTerminologyType,
 			ConceptSequenceSet handledConcepts,
 			UUID processId)
 	{
@@ -346,12 +357,12 @@ public class TaxonomyAPIs
 							//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
 							//TODO handle contradictions
 							RestConceptVersion parentVersion = new RestConceptVersion(cv.get().value(), true, false, false, false, false, RequestInfo.get().getStated(), 
-									includeSememeMembership, processId);
+									includeSememeMembership, includeTerminologyType, processId);
 							rcv.addParent(parentVersion);
 							if (remainingParentDepth > 0)
 							{
 								addParents(parentConceptChronlogy.getConceptSequence(), parentVersion, tree, countLeafParents, remainingParentDepth - 1, includeSememeMembership, 
-										perParentHandledConcepts, processId);
+										includeTerminologyType, perParentHandledConcepts, processId);
 							}
 							else if (countLeafParents)
 							{

@@ -13,6 +13,11 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+* 2017/05/16 - 1.9.21
+    * Added a parameter to the ConceptVersion and Taxonomy Version APIs 'terminologyType' - which may be set to true, to include a new set of concept sequences
+        that represent each terminology that a concept is a member of.  The concepts returned will be direct children of the MODULE metadata constant.
+
+
 * 2017/04/03 - 1.9.20
     * Changed behavior and accepted parameters for update APIs to make latest-version retrieval criteria more permissive
         Parameters time and allowedStates are not allowed (or are ignored, as components of passed coordToken), because all comparisons are made with time=LATEST and allowedStates=ANY. If no coordToken or stamp coordinate parameters are passed, then default values are used.
