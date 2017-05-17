@@ -13,6 +13,10 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+
+* 2017/05/16 - 1.10.1
+    * Adding VuidWriteAPIs to allow allocation and return of blocks of VUIDs.  The parameters are ssoToken, blockSize and reason, and the data type returned is RestVuidBlockData, which contains the upper and lower bound of a contiguous range of integer VUID numbers.
+
 * 2017/05/16 - 1.10.0
     * Changed the datatype of RestConceptVersion sememeMembership and terminologyTypes to and Array of RestIdentifiedObject, instead of a Set of Integers.
 

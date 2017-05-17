@@ -59,7 +59,9 @@ public class VuidWriteAPIs
 	private SecurityContext securityContext;
 
 	/**
-	 * @param blockSize - size (int > 0) of contiguous block of VUID numbers to be returned
+	 * Allocates and returns a block (range) of contiguous VUID numbers
+	 * 
+	 * @param blockSize - integer size (0 < size < 1,000,000) of contiguous block of VUID numbers to be returned
 	 * @param reason - text (length <= 30) explaining purpose of allocation request
 	 * @param ssoToken - ssoToken string used to determine and authenticate user and role
 	 *
