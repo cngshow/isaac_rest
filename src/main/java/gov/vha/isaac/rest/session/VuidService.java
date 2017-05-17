@@ -28,7 +28,7 @@ import org.jvnet.hk2.annotations.Contract;
 import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.UserRoleService;
-import gov.vha.isaac.ochre.rest.api.data.vuid.RestVuidBlockData;
+import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 
 /**
  * 

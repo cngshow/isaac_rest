@@ -36,7 +36,7 @@ import org.codehaus.plexus.util.StringUtils;
 
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
-import gov.vha.isaac.ochre.rest.api.data.vuid.RestVuidBlockData;
+import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
