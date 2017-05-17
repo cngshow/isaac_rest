@@ -16,7 +16,7 @@ Bug fixes should not be documented here, rather, than should be documented in th
 *** Don't forget to update the value in the class RestSystemInfo ***
 
 * 2017/05/16 - 1.11.0
-    * Changed the RestStampedVersion object, removing authorSequence, moduleSequence and pathSequence - replacing them with author, module and path - which 
+    * Changed the RestStampedVersion object, removing authorSequence, moduleSequence and pathSequence - replacing them with authorUUID, moduleUUID and pathUUID - which 
         are now UUIDs, instead of sequences.
 
 * 2017/05/16 - 1.10.1
