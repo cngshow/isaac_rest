@@ -188,6 +188,14 @@ public class RequestParameters {
 	
 	public final static String field = "field";
 
+	// VUID
+		public final static String blockSize = "blockSize";
+		public final static String reason = "reason";
+		public final static Set<String> VUID_PARAM_NAMES =
+				unmodifiableSet(
+						ssoToken,
+						blockSize,
+						reason);
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */
@@ -197,6 +205,7 @@ public class RequestParameters {
 		params.addAll(COORDINATE_PARAM_NAMES);
 		params.addAll(PAGINATION_PARAM_NAMES);
 		params.addAll(EDIT_TOKEN_PARAM_NAMES);
+		params.addAll(VUID_PARAM_NAMES);
 		params.addAll(unmodifiableSet(
 			expand,
 			ssoToken,
