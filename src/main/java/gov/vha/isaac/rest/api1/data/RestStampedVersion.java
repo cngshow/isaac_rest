@@ -54,19 +54,19 @@ public class RestStampedVersion
 	 * The UUID of the concept that identifies the author of this version 
 	 */
 	@XmlElement
-	public UUID author;
+	public UUID authorUUID;
 	
 	/**
 	 * The UUID of the concept that identifies the module that this version is in
 	 */
 	@XmlElement
-	public UUID module;
+	public UUID moduleUUID;
 	
 	/**
 	 * The UUID of the concept that identifies the path that this version is in
 	 */
 	@XmlElement
-	public UUID path;
+	public UUID pathUUID;
 
 	@XmlTransient
 	public RestStateType getState() {
@@ -81,17 +81,17 @@ public class RestStampedVersion
 	{
 		state = new RestStateType(sv.getState());
 		time = sv.getTime();
-		author = Get.identifierService().getUuidPrimordialFromConceptId(sv.getAuthorSequence()).get();
-		path = Get.identifierService().getUuidPrimordialFromConceptId(sv.getPathSequence()).get();
-		module = Get.identifierService().getUuidPrimordialFromConceptId(sv.getModuleSequence()).get();
+		authorUUID = Get.identifierService().getUuidPrimordialFromConceptId(sv.getAuthorSequence()).get();
+		pathUUID = Get.identifierService().getUuidPrimordialFromConceptId(sv.getPathSequence()).get();
+		moduleUUID = Get.identifierService().getUuidPrimordialFromConceptId(sv.getModuleSequence()).get();
 	}
 	public RestStampedVersion(Stamp s)
 	{
 		state = new RestStateType(s.getStatus());
 		time = s.getTime();
-		author = Get.identifierService().getUuidPrimordialFromConceptId(s.getAuthorSequence()).get();
-		path = Get.identifierService().getUuidPrimordialFromConceptId(s.getPathSequence()).get();
-		module = Get.identifierService().getUuidPrimordialFromConceptId(s.getModuleSequence()).get();
+		authorUUID = Get.identifierService().getUuidPrimordialFromConceptId(s.getAuthorSequence()).get();
+		pathUUID = Get.identifierService().getUuidPrimordialFromConceptId(s.getPathSequence()).get();
+		moduleUUID = Get.identifierService().getUuidPrimordialFromConceptId(s.getModuleSequence()).get();
 	}
 
 	/* (non-Javadoc)
@@ -100,7 +100,7 @@ public class RestStampedVersion
 	@Override
 	public String toString() {
 		return "RestStampedVersion [state=" + state + ", time=" + time
-				+ ", author=" + author + ", module=" + module + ", path="
-				+ path + "]";
+				+ ", author=" + authorUUID + ", module=" + moduleUUID + ", path="
+				+ pathUUID + "]";
 	}
 }
