@@ -254,4 +254,73 @@ public class RestIdentifiedObject
 	public UUID getFirst() {
 		return uuids.get(0);
 	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((nid == null) ? 0 : nid.hashCode());
+		result = prime * result + ((sequence == null) ? 0 : sequence.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		
+		// Generate based only on initial, presumably primordial, uuid
+		result = prime * result + ((uuids == null) ? 0 : (uuids.size() == 0 ? 0 : uuids.get(0).hashCode()));
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RestIdentifiedObject other = (RestIdentifiedObject) obj;
+		if (nid == null) {
+			if (other.nid != null)
+				return false;
+		} else if (!nid.equals(other.nid))
+			return false;
+		if (sequence == null) {
+			if (other.sequence != null)
+				return false;
+		} else if (!sequence.equals(other.sequence))
+			return false;
+		if (type == null) {
+			if (other.type != null)
+				return false;
+		} else if (!type.equals(other.type))
+			return false;
+		
+		// Compare based only on initial, presumably primordial, uuid
+		if (uuids == null) {
+			if (other.uuids != null)
+				return false;
+		} else if (uuids.size() == 0 && other.uuids.size() != 0) {
+			return false;
+		} else if (uuids.size() != 0 && other.uuids.size() == 0) {
+			return false;
+		} else if (uuids.size() > 0) {
+			if (! uuids.get(0).equals(other.uuids.get(0))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestIdentifiedObject [type=" + type + ", nid=" + nid + ", sequence=" + sequence + ", uuids=" + uuids
+				+ "]";
+	}
 }

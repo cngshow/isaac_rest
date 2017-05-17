@@ -131,6 +131,8 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionCreate;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.data.coordinate.RestLanguageCoordinate;
+import gov.vha.isaac.rest.api1.data.coordinate.RestLogicCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
@@ -3772,7 +3774,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			nodeList = null;
 			long stampCoordinateTime = Long.parseLong(node.getTextContent());
 			Assert.assertTrue(stampCoordinateTime == 123456789);
-			xpath = "/restStampCoordinate/modules";
+			xpath = "/restStampCoordinate/modules/sequence";
+			//xpath = "/restStampCoordinate/modules";
 			List<Integer> stampCoordinateModules = new ArrayList<>();
 			node = null;
 			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
@@ -3803,11 +3806,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.language, MetaData.ENGLISH_LANGUAGE.getConceptSequence()))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/language";
-			node = XMLUtils.getNodeFromXml(result, xpath);
-			nodeList = null;
-			int languageCoordinateLangSeq = Integer.parseInt(node.getTextContent());
-			Assert.assertTrue(languageCoordinateLangSeq == MetaData.ENGLISH_LANGUAGE.getConceptSequence());
+			RestLanguageCoordinate retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.language.sequence == MetaData.ENGLISH_LANGUAGE.getConceptSequence());
 
 			// descriptionTypePrefs
 			result = checkFail(
@@ -3816,12 +3816,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.descriptionTypePrefs, "fsn,synonym"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.SYNONYM.getConceptSequence());
 
 			// descriptionTypePrefs (reversed)
 			result = checkFail(
@@ -3830,12 +3828,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.descriptionTypePrefs, "synonym,fsn"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 
 			// Get token with specified non-default descriptionTypePrefs (SYNONYM,FSN)
 			// then test token passed as argument along with RequestParameters.stated parameter
@@ -3863,12 +3859,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.coordToken, synonymDescriptionPreferredToken.token))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 
 			// test token passed as argument along with RequestParameters.stated parameter
 			// ensure that descriptionTypePrefs order specified in token is maintained
@@ -3880,12 +3874,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.stated, "true"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 
 			// test passed descriptionTypePrefs on taxonomy
 			// test synonym as preference
@@ -3940,11 +3932,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.classifier, MetaData.SNOROCKET_CLASSIFIER.getConceptSequence()))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLogicCoordinate/classifier";
-			node = XMLUtils.getNodeFromXml(result, xpath);
-			nodeList = null;
-			int logicCoordinateClassifierSeq = Integer.parseInt(node.getTextContent());
-			Assert.assertTrue(logicCoordinateClassifierSeq == MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());
+			RestLogicCoordinate retrievedLogicCoordinate = XMLUtils.unmarshalObject(RestLogicCoordinate.class, result);
+			Assert.assertTrue(retrievedLogicCoordinate.classifier.sequence == MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());
 		} catch (Throwable error) {
 			System.out.println("Failing request target: " + target);
 			System.out.println("Failing request URL: " + requestUrl);

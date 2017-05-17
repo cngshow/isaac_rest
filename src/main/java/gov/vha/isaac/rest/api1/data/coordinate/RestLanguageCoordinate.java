@@ -19,15 +19,15 @@
 
 package gov.vha.isaac.rest.api1.data.coordinate;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
+import gov.vha.isaac.rest.HashCodeUtils;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 
 /**
  * 
@@ -40,27 +40,27 @@ import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLanguageCoordinate {
 	/**
-	 * Sequence number of the language concept associated with the language coordinate.
+	 * Identifier of the language concept associated with the language coordinate.
 	 * The language will be something like
 	 * english, spanish, french, danish, polish, dutch,
 	 * lithuanian, chinese, japanese, or swedish.
 	 */
 	@XmlElement
-	int language;
+	public RestIdentifiedObject language;
 	
 	/**
-	 * Ordered list of dialect assemblage sequence numbers. Order determines preference.
+	 * Ordered list of dialect assemblage concept identifiers. Order determines preference.
 	 * A dialect assemblage will be something like US (US Dialect) or GB (Great Britain Dialect).
 	 */
 	@XmlElement
-	List<Integer> dialectAssemblagePreferences = new ArrayList<>();
+	public RestIdentifiedObject[] dialectAssemblagePreferences;
 
 	/**
-	 * Ordered list of description type sequence numbers. Order determines preference.
+	 * Ordered list of description type concept identifiers. Order determines preference.
 	 * A description type will be something like FSN (Fully Specified Name), Synonym or Definition.
 	 */
 	@XmlElement
-	List<Integer> descriptionTypePreferences = new ArrayList<>();
+	public RestIdentifiedObject[] descriptionTypePreferences;
 	
 	/**
 	 * @param ochreLanguageCoordinate OCHRE LanguageCoordinate
@@ -68,12 +68,16 @@ public class RestLanguageCoordinate {
 	 * Constructs RestLanguageCoordinate from OCHRE LanguageCoordinate
 	 */
 	public RestLanguageCoordinate(LanguageCoordinate ochreLanguageCoordinate) {
-		language = ochreLanguageCoordinate.getLanguageConceptSequence();
+		language = new RestIdentifiedObject(ochreLanguageCoordinate.getLanguageConceptSequence(), ObjectChronologyType.CONCEPT);
+		dialectAssemblagePreferences = new RestIdentifiedObject[ochreLanguageCoordinate.getDialectAssemblagePreferenceList() != null ? ochreLanguageCoordinate.getDialectAssemblagePreferenceList().length : 0];
+		int index = 0;
 		for (int seq : ochreLanguageCoordinate.getDialectAssemblagePreferenceList()) {
-			dialectAssemblagePreferences.add(seq);
+			dialectAssemblagePreferences[index++] = new RestIdentifiedObject(seq, ObjectChronologyType.CONCEPT);
 		}
+		descriptionTypePreferences = new RestIdentifiedObject[ochreLanguageCoordinate.getDescriptionTypePreferenceList() != null ? ochreLanguageCoordinate.getDescriptionTypePreferenceList().length : 0];
+		index = 0;
 		for (int seq : ochreLanguageCoordinate.getDescriptionTypePreferenceList()) {
-			descriptionTypePreferences.add(seq);
+			descriptionTypePreferences[index++] = new RestIdentifiedObject(seq, ObjectChronologyType.CONCEPT);
 		}
 	}
 
@@ -88,10 +92,10 @@ public class RestLanguageCoordinate {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((descriptionTypePreferences == null) ? 0 : descriptionTypePreferences.hashCode());
+		result = prime * result + HashCodeUtils.getOrderedUniqueValues(descriptionTypePreferences).hashCode();
 		result = prime * result
-				+ ((dialectAssemblagePreferences == null) ? 0 : dialectAssemblagePreferences.hashCode());
-		result = prime * result + language;
+				+ HashCodeUtils.getOrderedUniqueValues(dialectAssemblagePreferences).hashCode();
+		result = prime * result + (language == null ? 0 : language.hashCode());
 		return result;
 	}
 
@@ -107,18 +111,13 @@ public class RestLanguageCoordinate {
 		if (getClass() != obj.getClass())
 			return false;
 		RestLanguageCoordinate other = (RestLanguageCoordinate) obj;
-		if (descriptionTypePreferences == null) {
-			if (other.descriptionTypePreferences != null)
-				return false;
-		} else if (!descriptionTypePreferences.equals(other.descriptionTypePreferences))
+		if (!HashCodeUtils.getOrderedUniqueValues(descriptionTypePreferences).equals(HashCodeUtils.getOrderedUniqueValues(other.descriptionTypePreferences)))
 			return false;
-		if (dialectAssemblagePreferences == null) {
-			if (other.dialectAssemblagePreferences != null)
-				return false;
-		} else if (!dialectAssemblagePreferences.equals(other.dialectAssemblagePreferences))
+		if (!HashCodeUtils.getOrderedUniqueValues(dialectAssemblagePreferences).equals(HashCodeUtils.getOrderedUniqueValues(other.dialectAssemblagePreferences)))
 			return false;
-		if (language != other.language)
+		if (!HashCodeUtils.equals(language, other.language)) {
 			return false;
+		}
 		return true;
 	}
 

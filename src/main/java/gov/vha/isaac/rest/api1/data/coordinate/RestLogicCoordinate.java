@@ -24,7 +24,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 
 /**
  * 
@@ -37,28 +39,28 @@ import gov.vha.isaac.ochre.api.coordinate.LogicCoordinate;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestLogicCoordinate {
 	/**
-	 * Sequence number of the STATED assemblage.
+	 * Identifiers of the STATED assemblage concept.
 	 */
 	@XmlElement
-	public int statedAssemblage;
+	public RestIdentifiedObject statedAssemblage;
 	
 	/**
-	 * Sequence number of the INFERRED assemblage.
+	 * Identifiers of the INFERRED assemblage concept.
 	 */
 	@XmlElement
-	public int inferredAssemblage;
+	public RestIdentifiedObject inferredAssemblage;
 	
 	/**
-	 * Sequence number of the description profile assemblage.
+	 * Identifiers of the description profile assemblage concept.
 	 */
 	@XmlElement
-	public int descriptionLogicProfile;
+	public RestIdentifiedObject descriptionLogicProfile;
 	
 	/**
-	 * Sequence number of the classifier assemblage.
+	 * Identifiers of the classifier assemblage concept.
 	 */
 	@XmlElement
-	public int classifier;
+	public RestIdentifiedObject classifier;
 
 	/**
 	 * @param ochreLogicCoordinate OCHRE LogicCoordinate
@@ -66,10 +68,10 @@ public class RestLogicCoordinate {
 	 * Constructs RestLogicCoordinate from OCHRE LogicCoordinate
 	 */
 	public RestLogicCoordinate(LogicCoordinate ochreLogicCoordinate) {
-		statedAssemblage = ochreLogicCoordinate.getStatedAssemblageSequence();
-		inferredAssemblage = ochreLogicCoordinate.getInferredAssemblageSequence();
-		descriptionLogicProfile = ochreLogicCoordinate.getDescriptionLogicProfileSequence();
-		classifier = ochreLogicCoordinate.getClassifierSequence();
+		statedAssemblage = new RestIdentifiedObject(ochreLogicCoordinate.getStatedAssemblageSequence(), ObjectChronologyType.CONCEPT);
+		inferredAssemblage = new RestIdentifiedObject(ochreLogicCoordinate.getInferredAssemblageSequence(), ObjectChronologyType.CONCEPT);
+		descriptionLogicProfile = new RestIdentifiedObject(ochreLogicCoordinate.getDescriptionLogicProfileSequence(), ObjectChronologyType.CONCEPT);
+		classifier = new RestIdentifiedObject(ochreLogicCoordinate.getClassifierSequence(), ObjectChronologyType.CONCEPT);
 	}
 
 	protected RestLogicCoordinate() {
@@ -83,10 +85,10 @@ public class RestLogicCoordinate {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + classifier;
-		result = prime * result + descriptionLogicProfile;
-		result = prime * result + inferredAssemblage;
-		result = prime * result + statedAssemblage;
+		result = prime * result + (classifier == null ? 0 : classifier.hashCode());
+		result = prime * result + (descriptionLogicProfile == null ? 0 : descriptionLogicProfile.hashCode());
+		result = prime * result + (inferredAssemblage == null ? 0 : inferredAssemblage.hashCode());
+		result = prime * result + (statedAssemblage == null ? 0 : statedAssemblage.hashCode());
 		return result;
 	}
 
@@ -102,14 +104,38 @@ public class RestLogicCoordinate {
 		if (getClass() != obj.getClass())
 			return false;
 		RestLogicCoordinate other = (RestLogicCoordinate) obj;
-		if (classifier != other.classifier)
-			return false;
-		if (descriptionLogicProfile != other.descriptionLogicProfile)
-			return false;
-		if (inferredAssemblage != other.inferredAssemblage)
-			return false;
-		if (statedAssemblage != other.statedAssemblage)
-			return false;
+		if (classifier != other.classifier) {
+			if (classifier == null && other.classifier != null)
+				return false;
+			if (classifier != null && other.classifier == null)
+				return false;
+			if (! classifier.equals(other.classifier))
+				return false;
+		}
+		if (descriptionLogicProfile != other.descriptionLogicProfile) {
+			if (descriptionLogicProfile == null && other.descriptionLogicProfile != null)
+				return false;
+			if (descriptionLogicProfile != null && other.descriptionLogicProfile == null)
+				return false;
+			if (! descriptionLogicProfile.equals(other.descriptionLogicProfile))
+				return false;
+		}
+		if (inferredAssemblage != other.inferredAssemblage) {
+			if (inferredAssemblage == null && other.inferredAssemblage != null)
+				return false;
+			if (inferredAssemblage != null && other.inferredAssemblage == null)
+				return false;
+			if (! inferredAssemblage.equals(other.inferredAssemblage))
+				return false;
+		}
+		if (statedAssemblage != other.statedAssemblage) {
+			if (statedAssemblage == null && other.statedAssemblage != null)
+				return false;
+			if (statedAssemblage != null && other.statedAssemblage == null)
+				return false;
+			if (! statedAssemblage.equals(other.statedAssemblage))
+				return false;
+		}
 		return true;
 	}
 

@@ -20,6 +20,7 @@
 package gov.vha.isaac.rest.api1.data.coordinate;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -27,7 +28,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
+import gov.vha.isaac.rest.HashCodeUtils;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStampPrecedenceType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
 
@@ -63,10 +67,10 @@ public class RestStampCoordinate {
 	public RestStampPrecedenceType precedence;
 	
 	/**
-	 * Set of module concept sequence numbers.
+	 * Set of module concept identifiers.
 	 */
 	@XmlElement
-	public Set<Integer> modules = new HashSet<>();
+	public RestIdentifiedObject[] modules;
 	
 	/**
 	 * Set of RestStateType Enumeration values determining allowed RestStateType values.
@@ -84,7 +88,15 @@ public class RestStampCoordinate {
 		time = ochreStampCoordinate.getStampPosition().getTime();
 		path = ochreStampCoordinate.getStampPosition().getStampPathSequence();
 		precedence = new RestStampPrecedenceType(ochreStampCoordinate.getStampPrecedence());
-		ochreStampCoordinate.getModuleSequences().stream().forEach((seq) -> modules.add(seq));
+		
+		Set<Integer> moduleSequences = new HashSet<>();
+		ochreStampCoordinate.getModuleSequences().stream().forEach((seq) -> moduleSequences.add(seq));
+		modules = new RestIdentifiedObject[moduleSequences.size()];
+		int index = 0;
+		for (Iterator<Integer> iter = moduleSequences.iterator(); iter.hasNext();) {
+			modules[index++] = new RestIdentifiedObject(Get.conceptService().getConcept(iter.next()));
+		}
+		
 		ochreStampCoordinate.getAllowedStates().stream().forEach((state) -> allowedStates.add(new RestStateType(state)));
 	}
 
@@ -99,8 +111,8 @@ public class RestStampCoordinate {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((allowedStates == null) ? 0 : allowedStates.hashCode());
-		result = prime * result + ((modules == null) ? 0 : modules.hashCode());
+		result = prime * result + HashCodeUtils.getUniqueValues(allowedStates).hashCode();
+		result = prime * result + HashCodeUtils.getUniqueValues(modules).hashCode();
 		result = prime * result + path;
 		result = prime * result + ((precedence == null) ? 0 : precedence.hashCode());
 		result = prime * result + (int) (time ^ (time >>> 32));
@@ -119,23 +131,15 @@ public class RestStampCoordinate {
 		if (getClass() != obj.getClass())
 			return false;
 		RestStampCoordinate other = (RestStampCoordinate) obj;
-		if (allowedStates == null) {
-			if (other.allowedStates != null)
-				return false;
-		} else if (!allowedStates.equals(other.allowedStates))
+		if (!HashCodeUtils.getUniqueValues(allowedStates).equals(HashCodeUtils.getUniqueValues(other.allowedStates)))
 			return false;
-		if (modules == null) {
-			if (other.modules != null)
-				return false;
-		} else if (!modules.equals(other.modules))
+		if (!HashCodeUtils.getUniqueValues(modules).equals(HashCodeUtils.getUniqueValues(other.modules)))
 			return false;
 		if (path != other.path)
 			return false;
-		if (precedence == null) {
-			if (other.precedence != null)
-				return false;
-		} else if (!precedence.equals(other.precedence))
+		if (!HashCodeUtils.equals(precedence, other.precedence)) {
 			return false;
+		}
 		if (time != other.time)
 			return false;
 		return true;
