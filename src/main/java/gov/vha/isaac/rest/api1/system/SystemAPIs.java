@@ -20,7 +20,6 @@ package gov.vha.isaac.rest.api1.system;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
@@ -126,6 +125,7 @@ public class SystemAPIs
 									Get.conceptService().getConcept(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									true,
 									Util.validateWorkflowProcess(processId));
 					break;
 				}
@@ -161,6 +161,7 @@ public class SystemAPIs
 									Get.conceptService().getConcept(conceptNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									true,
 									Util.validateWorkflowProcess(processId));
 				}
 
@@ -200,15 +201,16 @@ public class SystemAPIs
 						concept =
 								new RestConceptChronology(
 										Get.conceptService().getConcept(nid),
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+										true,
 										Util.validateWorkflowProcess(processId));
 						break;
 					case SEMEME:
 						sememe =
 								new RestSememeChronology(
 										Get.sememeService().getSememe(nid),
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
@@ -541,9 +543,9 @@ public class SystemAPIs
 		Frills.getAllChildrenOfConcept(MetaData.DESCRIPTION_TYPE_IN_SOURCE_TERMINOLOGY.getConceptSequence(), true, true).forEach(descType ->
 		{
 			ConceptChronology<? extends ConceptVersion<?>> concept = Get.conceptService().getConcept(descType);
-			if (Frills.getTerminologyTypes(concept).contains(cc.getConceptSequence()))
+			if (Frills.getTerminologyTypes(concept, null).contains(cc.getConceptSequence()))
 			{
-				results.add(new RestConceptChronology(concept, false, false, null));
+				results.add(new RestConceptChronology(concept, false, false, false, null));
 			}
 		});
 		

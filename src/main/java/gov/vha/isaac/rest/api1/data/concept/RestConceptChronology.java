@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,12 +28,16 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.util.AlphanumComparator;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
@@ -77,6 +82,19 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 */
 	@XmlElement
 	List<RestConceptVersion> versions = new ArrayList<>();
+	
+	/**
+	 * The identifiers of the terminologies (concepts that represent terminologies) that this concept is part of.  This is determined by whether or not there is 
+	 * version of this concept present with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  Note that this field is typically 
+	 * not populated - and when it is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the parameter 'terminologyTypes=true' is passed.
+	 * 
+	 * Note that this is calculated WITHOUT taking into account the view coordinate, or the active / inactive state of the concept in any particular terminology.
+	 * 
+	 * See 1/system/terminologyTypes for more details on the potential terminology concepts that will be returned.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	RestIdentifiedObject[] terminologyTypes;
 
 	protected RestConceptChronology()
 	{
@@ -84,16 +102,36 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	}
 	
 	@SuppressWarnings("rawtypes") 
-	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId)
+	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeTerminologyType,
+			UUID processId)
 	{
-		this(cc, includeAllVersions, includeLatestVersion, processId, RequestInfo.get().getLanguageCoordinate());
+		this(cc, includeAllVersions, includeLatestVersion, includeTerminologyType, processId, RequestInfo.get().getLanguageCoordinate());
 	}
+	
 	@SuppressWarnings("rawtypes") 
-	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, UUID processId, LanguageCoordinate descriptionLanguageCoordinate)
+	public RestConceptChronology(ConceptChronology<? extends ConceptVersion> cc, boolean includeAllVersions, boolean includeLatestVersion, boolean includeTerminologyType, 
+			UUID processId, LanguageCoordinate descriptionLanguageCoordinate)
 	{
 		identifiers = new RestIdentifiedObject(cc);
 		
 		description = Util.readBestDescription(cc.getNid(), RequestInfo.get().getStampCoordinate(), descriptionLanguageCoordinate);
+		
+		if (includeTerminologyType)
+		{
+			
+			HashSet<Integer> terminologyTypeSequences = Frills.getTerminologyTypes(cc, null);
+			
+			terminologyTypes = new RestIdentifiedObject[terminologyTypeSequences.size()];
+			int i = 0; 
+			for (int sequence : terminologyTypeSequences)
+			{
+				terminologyTypes[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+			}
+		}
+		else
+		{
+			terminologyTypes = null;
+		}
 		
 		if (includeAllVersions || includeLatestVersion)
 		{

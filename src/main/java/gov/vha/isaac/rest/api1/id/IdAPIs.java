@@ -302,7 +302,7 @@ public class IdAPIs
 
 		int i = 0;
 		for (ConceptChronology<? extends ConceptVersion<?>> idConcept : identifierAnnotatedConcepts) {
-			arrayToReturn[i++] = new RestConceptChronology(idConcept, false, true, (UUID)null, languageCoordinateToUse);
+			arrayToReturn[i++] = new RestConceptChronology(idConcept, false, true, false, (UUID)null, languageCoordinateToUse);
 		}
 
 		// Sort results by description for display

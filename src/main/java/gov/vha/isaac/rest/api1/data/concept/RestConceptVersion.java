@@ -143,6 +143,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * version of this concept present with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  Note that this field is typically 
 	 * not populated - and when it is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the parameter 'terminologyTypes=true' is passed.
 	 * 
+	 * Note that this is calculated WITH taking into account the view coordinate, including the active / inactive state of the concept in any particular terminology.
+	 * This means that if a concept is present in both Snomed CT and the US Extension modules, but your view coordinate excludes the US Extension, this will not 
+	 * include the US Extension module.
+	 * 
+	 * For behavior that ignores stamp, request the same value on the ConceptChronology, instead.
+	 * 
 	 * See 1/system/terminologyTypes for more details on the potential terminology concepts that will be returned.
 	 */
 	@XmlElement
@@ -226,8 +232,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		
 		if (includeTerminologyType)
 		{
-			
-			HashSet<Integer> terminologyTypeSequences = Frills.getTerminologyTypes(cv.getChronology());
+			HashSet<Integer> terminologyTypeSequences = Frills.getTerminologyTypes(cv.getChronology(), RequestInfo.get().getStampCoordinate());
 			
 			terminologyTypes = new RestIdentifiedObject[terminologyTypeSequences.size()];
 			int i = 0; 
@@ -246,7 +251,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			expandables = new Expandables();
 			if (includeChronology)
 			{
-				conChronology = new RestConceptChronology(cv.getChronology(), false, false, processId);
+				conChronology = new RestConceptChronology(cv.getChronology(), false, false, false, processId);
 			}
 			else
 			{

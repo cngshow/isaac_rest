@@ -14,15 +14,23 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2018/05/18 - 1.13.1
+    * Added the terminologyType parameter to the concept Chronology read API.  
+    * Changed the behavior of the terminologyType paremter on the concept Version read API, so that it now takes into account the view coordianate (the chronology read
+        API retains the previous behavior of ignoring the view coordinate entirely)
+    * In RestAssociationItemVersion, when source or target concepts are requested to be returned, these concept chonologies now include the terminologyType information
+    * In RestAssociationTypeVersion, when the referenced concept is requested to be returned, the concept chronology now includes the terminologyType information.
+    * Added terminologyType field to RestMappingSetVersion, which is always populated.
+    * In RestSearchResult, when the referencedConcept is requested to be returned, the concept chronology now includes the terminologyType information.
+    * In RestIdentifiedObjectsResult, when the identified object is a concept, the terminologyType information is now returned.
 
-
-* 2017/05/16 - 1.13.0
+* 2017/05/17 - 1.13.0
     * Changed the RestConceptNode and RestTypedConnectorNode objects, recursively replacing all concept sequences with corresponding RestIdentifiedObject.
 
-* 2017/05/16 - 1.12.0
+* 2017/05/17 - 1.12.0
     * Changed the RestLanguageCoordinate, RestStampCoordinate and RestLogicCoordinate objects, recursively replacing all concept sequences with corresponding RestIdentifiedObject.
 
-* 2017/05/16 - 1.11.0
+* 2017/05/17 - 1.11.0
     * Changed the RestStampedVersion object, removing authorSequence, moduleSequence and pathSequence - replacing them with authorUUID, moduleUUID and pathUUID - which 
         are now UUIDs, instead of sequences.
 
