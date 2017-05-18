@@ -270,7 +270,7 @@ public class RequestInfo
 	public void setDefaultReadOnlyUser() {
 		user_ = DEFAULT_READ_ONLY_USER;
 	}
-	public Optional<User> getUser() {
+	public Optional<User> getUser() throws RestException {
 		if (user_ == null) {
 			//Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(getEditToken().getAuthorSequence());
 			Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptId(getEditToken().getAuthorSequence());
@@ -289,7 +289,7 @@ public class RequestInfo
 	 * @return EditToken
 	 * @throws RestException 
 	 */
-	public EditToken getEditToken() {
+	public EditToken getEditToken() throws RestException {
 		if (editToken_ == null) {
 			try {
 				// FAIL if ssoToken and editToken parameters both set
@@ -424,6 +424,10 @@ public class RequestInfo
 					
 					// Must have EditToken, SSO token (real or parsable, if in src/test) or userId in order to get author
 					user_ = userOptional.isPresent() ? userOptional.get() : null;
+					if (user_ == null)
+					{
+						throw new RestException("Edit token cannot be constructed without user information!");
+					}
 					editToken = EditTokenUtil.getUserToken(
 							user_,
 							module != null ? module : defaultEditCoordinate.getModuleSequence(),
@@ -434,6 +438,8 @@ public class RequestInfo
 				editToken_ = editToken;
 
 				log.debug("Created EditToken \"{}\"", requestInfo.get().editToken_);
+			} catch (RestException e) {
+				throw e;
 			} catch (RuntimeException e) {
 				throw e;
 			} catch (Exception e) {

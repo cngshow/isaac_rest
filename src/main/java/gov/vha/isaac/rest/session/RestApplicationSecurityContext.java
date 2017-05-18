@@ -53,6 +53,10 @@ public class RestApplicationSecurityContext implements SecurityContext {
 
 	@Override
 	public boolean isUserInRole(String s) {
+		if (user == null)
+		{
+			return false;
+		}
 		for (UserRole role : user.getRoles()) {
 			if (role.getText().equalsIgnoreCase(s)) {
 				return true;

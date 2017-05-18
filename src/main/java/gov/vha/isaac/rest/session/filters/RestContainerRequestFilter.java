@@ -35,6 +35,7 @@ import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.rest.ApplicationConfig;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -66,7 +67,7 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 	public RestContainerRequestFilter() {
 	}
 
-	private void authenticate(ContainerRequestContext requestContext) {
+	private void authenticate(ContainerRequestContext requestContext) throws RestException {
 		// GET, POST, PUT, ...
 		String method = requestContext.getMethod();
 
@@ -141,9 +142,13 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 
 			authenticate(requestContext); // Apply after readAll() in order to populate User, if possible
 		} 
+		catch (RestException e)
+		{
+			throw e;
+		}
 		catch (IOException e) {
 			throw e;
-		} 
+		}
 		catch (Exception e) {
 			throw new IOException(e);
 		}
