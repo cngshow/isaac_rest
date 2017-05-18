@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
@@ -34,6 +35,7 @@ import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.ConceptNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.ConceptNodeWithSequences;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -54,7 +56,7 @@ public class RestConceptNode extends RestLogicNode {
 	 * The int sequence of the concept referred to by this REST logic graph node
 	 */
 	@XmlElement
-	int conceptSequence;
+	RestIdentifiedObject concept;
 	
 	/**
 	 * Optionally-expandable RestConceptVersion corresponding to RestConceptNode concept
@@ -94,7 +96,7 @@ public class RestConceptNode extends RestLogicNode {
 	}
 	
 	private void finishSetup(int conceptSequence) {
-	this.conceptSequence = conceptSequence;
+	this.concept = new RestIdentifiedObject(conceptSequence, ObjectChronologyType.CONCEPT);
 	conceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate())
 			.conceptDescriptionText(conceptSequence);
 	try {

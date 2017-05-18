@@ -16,6 +16,9 @@ Bug fixes should not be documented here, rather, than should be documented in th
 *** Don't forget to update the value in the class RestSystemInfo ***
 
 
+* 2017/05/16 - 1.13.0
+    * Changed the RestConceptNode and RestTypedConnectorNode objects, recursively replacing all concept sequences with corresponding RestIdentifiedObject.
+
 * 2017/05/16 - 1.12.0
     * Changed the RestLanguageCoordinate, RestStampCoordinate and RestLogicCoordinate objects, recursively replacing all concept sequences with corresponding RestIdentifiedObject.
 
