@@ -24,12 +24,14 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api1.data.enumerations.RestObjectChronologyType;
 
 /**
@@ -65,6 +67,20 @@ public class RestIdentifiedObject
 	public Integer sequence;
 	
 	/**
+	 * A textual description of this identified object.  This field is NOT always populated, and should not be relied on.  
+	 * 
+	 * It currently always returns null in a production mode - it is only calculated when the service is in debug mode.
+	 * 
+	 * It is primarily a debugging aid for developers when looking at returned object in a browser.  When concepts are returned, this will return an 
+	 * arbitrary description for the concept (sometimes - not always.)
+	 * 
+	 * When sememes are returned, this is currently not populated at all.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String description;
+	
+	/**
 	 * The type of this object - concept, sememe, or unknown.
 	 */
 	@XmlElement
@@ -88,6 +104,10 @@ public class RestIdentifiedObject
 		nid = concept.getNid();
 		sequence = concept.getConceptSequence();
 		type = new RestObjectChronologyType(ObjectChronologyType.CONCEPT);
+		if (ApplicationConfig.getInstance().isDebugDeploy())
+		{
+			description = concept.getConceptDescriptionText();
+		}
 	}
 	
 	public RestIdentifiedObject(UUID uuid)
@@ -127,6 +147,10 @@ public class RestIdentifiedObject
 				case CONCEPT:
 					sequence = Get.identifierService().getConceptSequenceForUuids(uuid);
 					nid = Get.identifierService().getConceptNid(sequence);
+					if (ApplicationConfig.getInstance().isDebugDeploy())
+					{
+						description = Get.conceptDescriptionText(sequence);
+					}
 					break;
 				case SEMEME:
 					sequence = Get.identifierService().getSememeSequenceForUuids(uuid);
@@ -166,6 +190,10 @@ public class RestIdentifiedObject
 			case CONCEPT:
 				sequence = Get.identifierService().getConceptSequence(nid);
 				type = new RestObjectChronologyType(ObjectChronologyType.CONCEPT);
+				if (ApplicationConfig.getInstance().isDebugDeploy())
+				{
+					description = Get.conceptDescriptionText(nid);
+				}
 				break;
 			case SEMEME:
 				sequence = Get.identifierService().getSememeSequence(nid);
@@ -183,6 +211,10 @@ public class RestIdentifiedObject
 			case CONCEPT:
 				nid = Get.identifierService().getConceptNid(id);
 				sequence = Get.identifierService().getConceptSequence(id);
+				if (ApplicationConfig.getInstance().isDebugDeploy())
+				{
+					description = Get.conceptDescriptionText(id);
+				}
 				break;
 			case SEMEME:
 				nid = Get.identifierService().getSememeNid(id);
@@ -219,6 +251,10 @@ public class RestIdentifiedObject
 					this.type = new RestObjectChronologyType(ObjectChronologyType.CONCEPT);
 					this.nid = Get.identifierService().getConceptNid(sequence);
 					this.uuids.addAll(Get.identifierService().getUuidsForNid(nid));
+					if (ApplicationConfig.getInstance().isDebugDeploy())
+					{
+						description = Get.conceptDescriptionText(sequence);
+					}
 				}
 			}
 			else if (Get.sememeService().hasSememe(sequence))
@@ -238,6 +274,10 @@ public class RestIdentifiedObject
 		switch (internalType) {
 			case CONCEPT:
 				sequence = Get.identifierService().getConceptSequence(nid);
+				if (ApplicationConfig.getInstance().isDebugDeploy())
+				{
+					description = Get.conceptDescriptionText(sequence);
+				}
 				break;
 			case SEMEME:
 				sequence = Get.identifierService().getSememeSequence(nid);
