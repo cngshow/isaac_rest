@@ -121,6 +121,7 @@ public class RestPaths
 	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptAPIsPathComponent +descriptionsComponent;
 	public static final String conceptCreateAppPathComponent = writePathComponent + conceptAPIsPathComponent + createPathComponent;
 
+	public static final String intakeAPIsPathComponent = apiVersionComponent + "intake/";
 
 	public static final String sememeAPIsPathComponent = apiVersionComponent + "sememe/";
 	public static final String sememeChronologyAppPathComponent = appPathComponent + sememeAPIsPathComponent + chronologyComponent;

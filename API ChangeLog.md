@@ -25,6 +25,7 @@ Bug fixes should not be documented here, rather, than should be documented in th
     * In RestIdentifiedObjectsResult, when the identified object is a concept, the terminologyType information is now returned.
     * Added a 'description' field to RestIdentifiedObject, which is ONLY populated when the service is deployed in debug mode, and then, is only (sometimes) populated.
         This field should NOT be relied on for production use, it is a developers debug tool. 
+    * Added an API for submitting VETS VHAT XML content:  /write/1/intake/vetsXML 
 
 * 2017/05/17 - 1.13.0
     * Changed the RestConceptNode and RestTypedConnectorNode objects, recursively replacing all concept sequences with corresponding RestIdentifiedObject.
