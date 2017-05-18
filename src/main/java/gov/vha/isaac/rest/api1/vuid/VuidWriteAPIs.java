@@ -50,7 +50,7 @@ import gov.vha.isaac.rest.session.VuidService;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.vuidAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
+@RolesAllowed({UserRoleConstants.VUID_REQUESTOR})
 public class VuidWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(VuidWriteAPIs.class);
