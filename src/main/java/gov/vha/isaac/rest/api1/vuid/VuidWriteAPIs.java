@@ -113,22 +113,22 @@ public class VuidWriteAPIs
 		}
 	}
 
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.allocateTestComponent)
-	public RestVuidBlockData allocateTestOnly(
-			@QueryParam(RequestParameters.blockSize) int blockSize,
-			@QueryParam(RequestParameters.reason) String reason,
-			@QueryParam(RequestParameters.ssoToken) String ssoToken) throws RestException
-	{
-		SecurityUtils.validateRole(securityContext, getClass());
-
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.blockSize,
-				RequestParameters.reason,
-				RequestParameters.ssoToken);
-		
-		return allocate(blockSize, reason, ssoToken);
-	}
+//	@GET
+//	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+//	@Path(RestPaths.allocateTestComponent)
+//	public RestVuidBlockData allocateTestOnly(
+//			@QueryParam(RequestParameters.blockSize) int blockSize,
+//			@QueryParam(RequestParameters.reason) String reason,
+//			@QueryParam(RequestParameters.ssoToken) String ssoToken) throws RestException
+//	{
+//		SecurityUtils.validateRole(securityContext, getClass());
+//
+//		RequestParameters.validateParameterNamesAgainstSupportedNames(
+//				RequestInfo.get().getParameters(),
+//				RequestParameters.blockSize,
+//				RequestParameters.reason,
+//				RequestParameters.ssoToken);
+//		
+//		return allocate(blockSize, reason, ssoToken);
+//	}
 }

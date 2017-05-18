@@ -96,7 +96,7 @@ public class VuidServiceImpl implements VuidService {
 			return null;
 		}
 
-		//http://localhost:8181/vuid-rest/write/1/vuids/allocateTest
+		//http://localhost:8181/vuid-rest/write/1/vuids/allocate
 		String prismeWebServer = prismeRootUrl.replace("rails_prisme", "vuid-rest/write/1/vuids/allocate");
 		return prismeWebServer;
 	}
