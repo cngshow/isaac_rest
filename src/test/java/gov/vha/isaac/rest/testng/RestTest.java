@@ -58,8 +58,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -113,6 +115,7 @@ import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
+import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -486,6 +489,28 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	// PLACE TEST METHODS BELOW HERE
+//	@Test
+//	public void testVuidWriteAPIs() throws JsonParseException, JsonMappingException, IOException {
+//		// THIS TEST ONLY WORKS IF THE VUID-rest SERVER IS RUNNING IN THE SERVER SPECIFIED BY THE prisme_root PROPERTY IN prisme.properties
+//		// TODO configure to start own VUID-rest server
+//		final int blockSize = 10;
+//		final String reason = "A test reason";
+//
+//		Response getResponse = target(RestPaths.writePathComponent + RestPaths.vuidAPIsPathComponent + RestPaths.allocateComponent)
+//				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
+//				.queryParam(RequestParameters.blockSize, blockSize)
+//				.queryParam(RequestParameters.reason, reason)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).post(Entity.xml(""));
+//		String getResponseResult = checkFail(getResponse).readEntity(String.class);
+//		RestVuidBlockData vuids = new ObjectMapper().readValue(getResponseResult, RestVuidBlockData.class);
+//		
+//		Assert.assertNotNull(vuids);
+//
+//		Assert.assertTrue((vuids.startInclusive > 0 && vuids.endInclusive > 0) || (vuids.startInclusive < 0 && vuids.endInclusive < 0));
+//		Assert.assertEquals(Math.abs(Math.abs(vuids.endInclusive) - Math.abs(vuids.startInclusive)), blockSize - 1);
+//	}
+
 	@Test
 	public void testEditToken() {
 		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
