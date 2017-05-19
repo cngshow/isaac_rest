@@ -136,7 +136,7 @@ public class VuidWriteAPIs
 		catch (Exception e)
 		{
 			log.error("Error allocating vuids", e);
-			throw new RestException("Unexpected error allocating VUIDs at " + LookupService.getService(VuidService.class).getVuidServiceUrl() + ": " + e.getLocalizedMessage());
+			throw new RestException("Unexpected error allocating VUIDs at " + LookupService.getService(VuidService.class).getVuidServiceUrl());
 		}
 	}
 }
