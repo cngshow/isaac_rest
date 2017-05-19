@@ -18,8 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.system;
 
-import java.util.ArrayList;
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
@@ -486,7 +486,7 @@ public class SystemAPIs
 	}
 	
 	/**
-	 * Return the general terminology types that are currently supported in this system.  These are the terminology 
+	 * Return the (sorted) general terminology types that are currently supported in this system.  These are the terminology 
 	 * types that can be passed into the extendedDescriptionTypes call.  
 	 * For extended, specific details on the terminologies supported by the system, see 1/system/systemInfo.
 	 */
@@ -501,7 +501,7 @@ public class SystemAPIs
 				RequestInfo.get().getParameters(),
 				RequestParameters.coordToken);
 		
-		ArrayList<RestTerminologyConcept> terminologies = new ArrayList<>();
+		TreeSet<RestTerminologyConcept> terminologies = new TreeSet<>();
 		Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).forEach(conceptSeq -> 
 		{
 			terminologies.add(new RestTerminologyConcept(Get.conceptService().getConcept(conceptSeq)));
@@ -511,7 +511,7 @@ public class SystemAPIs
 	}
 	
 	/**
-	 * Return the extended description types that are allowable by a particular terminology.  
+	 * Return the (sorted) extended description types that are allowable by a particular terminology.  
 	 * @param id - a nid, sequence or UUID of a concept that represents a terminology in the system.  This should be a child of 
 	 * {@link MetaData#MODULE}
 	 * @throws RestException if no user concept can be identified.
@@ -528,7 +528,7 @@ public class SystemAPIs
 				RequestParameters.id,
 				RequestParameters.coordToken);
 
-		ArrayList<RestConceptChronology> results = new ArrayList<>();
+		TreeSet<RestConceptChronology> results = new TreeSet<>();
 		
 		ConceptChronology<? extends ConceptVersion<?>> cc = ConceptAPIs.findConceptChronology(id);
 		

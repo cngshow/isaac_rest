@@ -6,6 +6,7 @@ API version number, not the release version number.
 * 2017/05/?? - 4.2 - PENDING
     * Changed default edit module to VHAT_EDIT.
     * Various API enhancements per the api changelog.
+    * Sorted the returns of extendedDescriptionTypes and terminologyTypes
 
 * 2017/05/05 - 4.1
     * Fix a bug where the translate API was returning "Optional[x]" instead of just "x" for VUIDs and SCTIDs.
