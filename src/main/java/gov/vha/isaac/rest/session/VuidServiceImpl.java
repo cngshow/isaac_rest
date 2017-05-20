@@ -69,7 +69,7 @@ public class VuidServiceImpl implements VuidService {
 			url = new URL(vuidServiceUrl);
 		} catch (MalformedURLException e) {
 			log.error("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e);
-			throw new RuntimeException(e); 
+			throw new RuntimeException("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e); 
 		}
 
 		Map<String, String> params = new HashMap<>();
@@ -84,7 +84,7 @@ public class VuidServiceImpl implements VuidService {
 			vuids = new ObjectMapper().readValue(resultJson, RestVuidBlockData.class);
 		} catch (IOException e) {
 			log.error("Failed unmarshalling RestVuidBlockData json from \"" + vuidServiceUrl + "\"", e);
-			throw new RuntimeException(e);
+			throw new RuntimeException("Failed unmarshalling RestVuidBlockData json from \"" + vuidServiceUrl + "\"", e);
 		}
 		
 		return Optional.of(vuids);
