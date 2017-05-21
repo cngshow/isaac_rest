@@ -36,6 +36,7 @@ import org.jvnet.hk2.annotations.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
+import gov.vha.isaac.rest.api.exceptions.RestExceptionResponse;
 
 /**
  * The Class VuidServiceImpl
@@ -79,15 +80,45 @@ public class VuidServiceImpl implements VuidService {
 		String resultJson = VuidServiceUtils.getResultJsonFromVuidService(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		log.trace("Retrieved from " + vuidServiceUrl + " resultJson=\"" + resultJson + "\"");
 		
-		RestVuidBlockData vuids = null;
-		try {
-			vuids = new ObjectMapper().readValue(resultJson, RestVuidBlockData.class);
-		} catch (IOException e) {
-			log.error("Failed unmarshalling RestVuidBlockData json from \"" + vuidServiceUrl + "\"", e);
-			throw new RuntimeException("Failed unmarshalling RestVuidBlockData json from \"" + vuidServiceUrl + "\"", e);
+		if (resultJson.contains(RestExceptionResponse.class.getName()))
+		{
+			boolean ok = false;
+			try
+			{
+				RestExceptionResponse message = new ObjectMapper().readValue(resultJson, RestExceptionResponse.class);
+				log.error("VUID server sent an error: " + message.conciseMessage + " " + message.verboseMessage);
+				ok = true;
+				throw new RuntimeException(message.conciseMessage + " " + message.verboseMessage);
+			}
+			catch (Exception e)
+			{
+				if (!ok || !(e instanceof RuntimeException))
+				{
+					log.error("Error trying to deserialize upstream error message from '" + resultJson + "'", e);
+					throw new RuntimeException("The VUID server returned an unknown error");
+				}
+				else
+				{
+					throw (RuntimeException)e;
+				}
+			}
 		}
-		
-		return Optional.of(vuids);
+		else if (resultJson.contains(RestVuidBlockData.class.getName()))
+		{
+			RestVuidBlockData vuids = null;
+			try {
+				vuids = new ObjectMapper().readValue(resultJson, RestVuidBlockData.class);
+				return Optional.of(vuids);
+			} catch (Exception e) {
+				log.error("Failed unmarshalling RestVuidBlockData json from \"" + vuidServiceUrl + "\"" + " with json: '" + resultJson + "'", e);
+				throw new RuntimeException("Failed unmarshalling RestVuidBlockData json from \"" + vuidServiceUrl + "\"", e);
+			}
+		}
+		else
+		{
+			log.error("Unexpected response from vuid server '" + resultJson + "'");
+			throw new RuntimeException("The VUID server returned an unknown error");
+		}
 	}
 
 	public String getVuidServiceUrl() {

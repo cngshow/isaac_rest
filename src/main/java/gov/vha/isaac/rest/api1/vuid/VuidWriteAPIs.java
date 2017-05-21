@@ -135,8 +135,17 @@ public class VuidWriteAPIs
 		}
 		catch (Exception e)
 		{
-			log.error("Error allocating vuids", e);
-			throw new RestException("Unexpected error allocating VUIDs at " + LookupService.getService(VuidService.class).getVuidServiceUrl());
+			if (e.getMessage().contains("User not authorized"))
+			{
+				log.info("Upstream error: " + e.getMessage());
+				throw new RestException(e.getMessage());
+			}
+			else
+			{
+				log.error("Error allocating vuids", e);
+				throw new RestException("Unexpected error allocating VUIDs at " + LookupService.getService(VuidService.class).getVuidServiceUrl() 
+					+ " " + e.getMessage());
+			}
 		}
 	}
 }
