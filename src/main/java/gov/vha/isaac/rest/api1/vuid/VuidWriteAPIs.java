@@ -70,7 +70,12 @@ public class VuidWriteAPIs
 	 * @param reason - text (length <= 30) explaining purpose of allocation request
 	 * @param ssoToken - ssoToken string used to determine and authenticate user and role
 	 * 
-	 * Normally, you get your ssoToken by TODO (from prisme, Cris to provide details on 5/19....)
+	 * You retrieve your ssoToken by making a GET request on the rails server to this URL:
+	 *  https://servername/rails_prisme/roles/my_token.text
+	 *  
+	 *  However, if you are working in KOMET code, then the token is already available to you in a header variable.
+	 *  
+	 *  The process of going through Single Sign On in the AITC enviornment, will allow PRISME to produce your token.
 	 * 
 	 * If you are testing locally, with a SNAPSHOT build, you may pass ssoToken=TEST
 	 *
