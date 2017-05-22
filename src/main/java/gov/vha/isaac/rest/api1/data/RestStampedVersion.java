@@ -18,12 +18,12 @@
  */
 package gov.vha.isaac.rest.api1.data;
 
+import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.commit.Stamp;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.rest.api1.data.enumerations.RestStateType;
@@ -51,22 +51,22 @@ public class RestStampedVersion
 	public long time;
 	
 	/**
-	 * The concept sequence of the concept that identifies the author of this version 
+	 * The UUID of the concept that identifies the author of this version 
 	 */
 	@XmlElement
-	public int authorSequence;
+	public UUID authorUUID;
 	
 	/**
-	 * The concept sequence of the module that this version is in
+	 * The UUID of the concept that identifies the module that this version is in
 	 */
 	@XmlElement
-	public int moduleSequence;
+	public UUID moduleUUID;
 	
 	/**
-	 * The concept sequence of the path that this version is in
+	 * The UUID of the concept that identifies the path that this version is in
 	 */
 	@XmlElement
-	public int pathSequence;
+	public UUID pathUUID;
 
 	@XmlTransient
 	public RestStateType getState() {
@@ -81,17 +81,17 @@ public class RestStampedVersion
 	{
 		state = new RestStateType(sv.getState());
 		time = sv.getTime();
-		authorSequence = sv.getAuthorSequence();
-		pathSequence = sv.getPathSequence();
-		moduleSequence = sv.getModuleSequence();
+		authorUUID = Get.identifierService().getUuidPrimordialFromConceptId(sv.getAuthorSequence()).get();
+		pathUUID = Get.identifierService().getUuidPrimordialFromConceptId(sv.getPathSequence()).get();
+		moduleUUID = Get.identifierService().getUuidPrimordialFromConceptId(sv.getModuleSequence()).get();
 	}
 	public RestStampedVersion(Stamp s)
 	{
 		state = new RestStateType(s.getStatus());
 		time = s.getTime();
-		authorSequence = s.getAuthorSequence();
-		pathSequence = s.getPathSequence();
-		moduleSequence = s.getModuleSequence();
+		authorUUID = Get.identifierService().getUuidPrimordialFromConceptId(s.getAuthorSequence()).get();
+		pathUUID = Get.identifierService().getUuidPrimordialFromConceptId(s.getPathSequence()).get();
+		moduleUUID = Get.identifierService().getUuidPrimordialFromConceptId(s.getModuleSequence()).get();
 	}
 
 	/* (non-Javadoc)
@@ -100,7 +100,7 @@ public class RestStampedVersion
 	@Override
 	public String toString() {
 		return "RestStampedVersion [state=" + state + ", time=" + time
-				+ ", authorSequence=" + authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence="
-				+ pathSequence + "]";
+				+ ", author=" + authorUUID + ", module=" + moduleUUID + ", path="
+				+ pathUUID + "]";
 	}
 }

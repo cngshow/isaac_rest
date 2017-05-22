@@ -58,8 +58,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -113,6 +115,7 @@ import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.LocalJettyRunner;
+import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -131,6 +134,8 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersionCreate;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.data.coordinate.RestLanguageCoordinate;
+import gov.vha.isaac.rest.api1.data.coordinate.RestLogicCoordinate;
 import gov.vha.isaac.rest.api1.data.coordinate.RestTaxonomyCoordinate;
 import gov.vha.isaac.rest.api1.data.enumerations.IdType;
 import gov.vha.isaac.rest.api1.data.enumerations.MapSetItemComponent;
@@ -233,7 +238,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	//	private static final String gregToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx91%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFX%7C%5Cx96%5CxA8%5CxA3%5CxA2%5CxC4%5CxB1%3D%5CxFF%5Cx01K%22%2C+%22oC%5Cx83%5CxF7%40%3A%5Cx94%5CxAC%5CxAF%5CxB6%5CxE1%5CxF4c%5CxB8%5CbK%22%2C+%22+M%5Cx89%5CxB8Xe%5CxF9%5CxD4%5CxC0%5CxDB%5CxAB%5Cx99%5Ce%5CxD7e%40%22%5D";
 	//	private static final String joelToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC7%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx8C%5CxBA%5Cx1Ft%5CxDD%5CxB5%5CxA4%5CxB8%5CxC0%5CxE9Q%5CxAB%5CnK%22%2C+%22z%5D%5Cx83%5CxAFT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D";
 
-	private static final String TEST_SSO_TOKEN = usePrismeForRolesByToken() ? getTokenFromPrisme("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com") : "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager";
+	private static final String TEST_SSO_TOKEN = usePrismeForRolesByToken() ? getTokenFromPrisme("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com") : "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager,vuid_requestor";
 	private static final String TEST_READ_ONLY_SSO_TOKEN = usePrismeForRolesByToken() ? getTokenFromPrisme("readonly@readonly.com", "readonly@readonly.com") : "TestReadOnlyUser:read_only";
 
 	private static boolean usePrismeForRolesByToken() {
@@ -484,6 +489,28 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	// PLACE TEST METHODS BELOW HERE
+	@Test
+	public void testVuidWriteAPIs() throws JsonParseException, JsonMappingException, IOException {
+		// THIS TEST ONLY WORKS IF THE VUID-rest SERVER IS RUNNING IN THE SERVER SPECIFIED BY THE prisme_root PROPERTY IN prisme.properties
+		// TODO configure to start own VUID-rest server
+		final int blockSize = 10;
+		final String reason = "A test reason";
+
+		Response getResponse = target(RestPaths.writePathComponent + RestPaths.vuidAPIsPathComponent + RestPaths.allocateComponent)
+				.queryParam(RequestParameters.ssoToken, TEST_SSO_TOKEN)
+				.queryParam(RequestParameters.blockSize, blockSize)
+				.queryParam(RequestParameters.reason, reason)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).post(Entity.xml(""));
+		String getResponseResult = checkFail(getResponse).readEntity(String.class);
+		RestVuidBlockData vuids = new ObjectMapper().readValue(getResponseResult, RestVuidBlockData.class);
+		
+		Assert.assertNotNull(vuids);
+
+		Assert.assertTrue((vuids.startInclusive > 0 && vuids.endInclusive > 0) || (vuids.startInclusive < 0 && vuids.endInclusive < 0));
+		Assert.assertEquals(Math.abs(Math.abs(vuids.endInclusive) - Math.abs(vuids.startInclusive)), blockSize - 1);
+	}
+
 	@Test
 	public void testEditToken() {
 		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
@@ -3772,7 +3799,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			nodeList = null;
 			long stampCoordinateTime = Long.parseLong(node.getTextContent());
 			Assert.assertTrue(stampCoordinateTime == 123456789);
-			xpath = "/restStampCoordinate/modules";
+			xpath = "/restStampCoordinate/modules/sequence";
+			//xpath = "/restStampCoordinate/modules";
 			List<Integer> stampCoordinateModules = new ArrayList<>();
 			node = null;
 			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
@@ -3803,11 +3831,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.language, MetaData.ENGLISH_LANGUAGE.getConceptSequence()))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/language";
-			node = XMLUtils.getNodeFromXml(result, xpath);
-			nodeList = null;
-			int languageCoordinateLangSeq = Integer.parseInt(node.getTextContent());
-			Assert.assertTrue(languageCoordinateLangSeq == MetaData.ENGLISH_LANGUAGE.getConceptSequence());
+			RestLanguageCoordinate retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.language.sequence == MetaData.ENGLISH_LANGUAGE.getConceptSequence());
 
 			// descriptionTypePrefs
 			result = checkFail(
@@ -3816,12 +3841,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.descriptionTypePrefs, "fsn,synonym"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.SYNONYM.getConceptSequence());
 
 			// descriptionTypePrefs (reversed)
 			result = checkFail(
@@ -3830,12 +3853,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.descriptionTypePrefs, "synonym,fsn"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 
 			// Get token with specified non-default descriptionTypePrefs (SYNONYM,FSN)
 			// then test token passed as argument along with RequestParameters.stated parameter
@@ -3863,12 +3884,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.coordToken, synonymDescriptionPreferredToken.token))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 
 			// test token passed as argument along with RequestParameters.stated parameter
 			// ensure that descriptionTypePrefs order specified in token is maintained
@@ -3880,12 +3899,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.stated, "true"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLanguageCoordinate/descriptionTypePreferences";
-			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
-			node = null;
-			Assert.assertTrue(nodeList.getLength() == 2);
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(0).getTextContent()) == MetaData.SYNONYM.getConceptSequence());
-			Assert.assertTrue(Integer.parseUnsignedInt(nodeList.item(1).getTextContent()) == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
+			retrievedLanguageCoordinate = XMLUtils.unmarshalObject(RestLanguageCoordinate.class, result);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences.length == 2);
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[0].sequence == MetaData.SYNONYM.getConceptSequence());
+			Assert.assertTrue(retrievedLanguageCoordinate.descriptionTypePreferences[1].sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence());
 
 			// test passed descriptionTypePrefs on taxonomy
 			// test synonym as preference
@@ -3940,11 +3957,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 							parameters = buildParams(param(RequestParameters.classifier, MetaData.SNOROCKET_CLASSIFIER.getConceptSequence()))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restLogicCoordinate/classifier";
-			node = XMLUtils.getNodeFromXml(result, xpath);
-			nodeList = null;
-			int logicCoordinateClassifierSeq = Integer.parseInt(node.getTextContent());
-			Assert.assertTrue(logicCoordinateClassifierSeq == MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());
+			RestLogicCoordinate retrievedLogicCoordinate = XMLUtils.unmarshalObject(RestLogicCoordinate.class, result);
+			Assert.assertTrue(retrievedLogicCoordinate.classifier.sequence == MetaData.SNOROCKET_CLASSIFIER.getConceptSequence());
 		} catch (Throwable error) {
 			System.out.println("Failing request target: " + target);
 			System.out.println("Failing request URL: " + requestUrl);

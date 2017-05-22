@@ -178,6 +178,7 @@ public class RestAssociationItemVersion
 					sourceConcept = new RestConceptChronology(Get.conceptService().getConcept(sourceId.sequence), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+							true,
 							processId);
 				}
 				else if (sourceId.type.enumId == ObjectChronologyType.SEMEME.ordinal())
@@ -202,6 +203,7 @@ public class RestAssociationItemVersion
 					targetConcept = new RestConceptChronology(Get.conceptService().getConcept(targetId.sequence), 
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 							RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+							true,
 							processId);
 				}
 				else if (targetId.type.enumId == ObjectChronologyType.SEMEME.ordinal())

@@ -54,6 +54,8 @@ public class RestPaths
 	public static final String termRequestComponent = "termRequest/";
 	public static final String userComponent = "user/";
 	public static final String vetsXMLComponent = "vetsXML/";
+	public static final String terminologyTypes = "terminologyTypes/";
+	public static final String extendedDescriptionTypes = "extendedDescriptionTypes/";
 
 	// Workflow Based Calls
 	public static final String workflowAPIsPathComponent = apiVersionComponent + "workflow/";
@@ -70,6 +72,10 @@ public class RestPaths
 	public static final String processComponent = process + "component/";
 	public static final String componentSummary = process + "component/summary/" ;
 	public static final String lock = "lock/";
+
+	public static final String allocateComponent = "allocate/";
+	//public static final String allocateTestComponent = "allocateTest/";
+	public static final String vuidAPIsPathComponent = apiVersionComponent + "vuids/";
 
 	// Mapping Based Calls
 	public static final String mappingAPIsPathComponent = apiVersionComponent + "mapping/";
@@ -115,6 +121,7 @@ public class RestPaths
 	public static final String conceptDescriptionsAppPathComponent = appPathComponent + conceptAPIsPathComponent +descriptionsComponent;
 	public static final String conceptCreateAppPathComponent = writePathComponent + conceptAPIsPathComponent + createPathComponent;
 
+	public static final String intakeAPIsPathComponent = apiVersionComponent + "intake/";
 
 	public static final String sememeAPIsPathComponent = apiVersionComponent + "sememe/";
 	public static final String sememeChronologyAppPathComponent = appPathComponent + sememeAPIsPathComponent + chronologyComponent;

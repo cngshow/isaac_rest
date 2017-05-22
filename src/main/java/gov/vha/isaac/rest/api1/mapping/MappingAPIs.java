@@ -272,7 +272,9 @@ public class MappingAPIs
 	 * then either no object will be returned or an exception will be thrown, depending on context.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
 	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the mapping items versions object.  
+	 * @return the mapping items versions object.
+	 * 
+	 *  TODO I believe we deprecated this, supposed to use the pages query now.
 	 * 
 	 * @throws RestException 
 	 */

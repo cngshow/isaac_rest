@@ -13,6 +13,49 @@ parameter.  However, any change that will break KOMET code - such as changing th
 
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
+*** Don't forget to update the value in the class RestSystemInfo ***
+* 2018/05/18 - 1.14.0
+    * Added VUID_REQUESTOR role for VuidWriteAPIs  
+
+* 2018/05/18 - 1.13.1
+    * Added the terminologyType parameter to the concept Chronology read API.  
+    * Changed the behavior of the terminologyType paremter on the concept Version read API, so that it now takes into account the view coordianate (the chronology read
+        API retains the previous behavior of ignoring the view coordinate entirely)
+    * In RestAssociationItemVersion, when source or target concepts are requested to be returned, these concept chonologies now include the terminologyType information
+    * In RestAssociationTypeVersion, when the referenced concept is requested to be returned, the concept chronology now includes the terminologyType information.
+    * Added terminologyType field to RestMappingSetVersion, which is always populated.
+    * In RestSearchResult, when the referencedConcept is requested to be returned, the concept chronology now includes the terminologyType information.
+    * In RestIdentifiedObjectsResult, when the identified object is a concept, the terminologyType information is now returned.
+    * Added a 'description' field to RestIdentifiedObject, which is ONLY populated when the service is deployed in debug mode, and then, is only (sometimes) populated.
+        This field should NOT be relied on for production use, it is a developers debug tool. 
+    * Added an API for submitting VETS VHAT XML content:  /write/1/intake/vetsXML 
+
+* 2017/05/17 - 1.13.0
+    * Changed the RestConceptNode and RestTypedConnectorNode objects, recursively replacing all concept sequences with corresponding RestIdentifiedObject.
+
+* 2017/05/17 - 1.12.0
+    * Changed the RestLanguageCoordinate, RestStampCoordinate and RestLogicCoordinate objects, recursively replacing all concept sequences with corresponding RestIdentifiedObject.
+
+* 2017/05/17 - 1.11.0
+    * Changed the RestStampedVersion object, removing authorSequence, moduleSequence and pathSequence - replacing them with authorUUID, moduleUUID and pathUUID - which 
+        are now UUIDs, instead of sequences.
+
+* 2017/05/16 - 1.10.1
+    * Adding VuidWriteAPIs to allow allocation and return of blocks of VUIDs.  The parameters are ssoToken, blockSize and reason, and the data type returned is 
+        RestVuidBlockData, which contains the upper and lower bound of a contiguous range of integer VUID numbers.
+
+* 2017/05/16 - 1.10.0
+    * Changed the datatype of RestConceptVersion sememeMembership and terminologyTypes to and Array of RestIdentifiedObject, instead of a Set of Integers.
+
+* 2017/05/16 - 1.9.21
+    * Added a parameter to the ConceptVersion and Taxonomy Version APIs 'terminologyType' - which may be set to true, to include a new set of concept sequences
+        that represent each terminology that a concept is a member of.  The concepts returned will be direct children of the MODULE metadata constant.
+    * Added system/extendedDescriptionTypes to return the applicable extended description types for a particular terminology.
+    * Added system/terminologyTypes api to provide a list of generally supported terminologies (the same ids that can be passed into extendedDescriptionTypes
+        to find out the extended types per terminology.
+    
+
+
 * 2017/04/03 - 1.9.20
     * Changed behavior and accepted parameters for update APIs to make latest-version retrieval criteria more permissive
         Parameters time and allowedStates are not allowed (or are ignored, as components of passed coordToken), because all comparisons are made with time=LATEST and allowedStates=ANY. If no coordToken or stamp coordinate parameters are passed, then default values are used.

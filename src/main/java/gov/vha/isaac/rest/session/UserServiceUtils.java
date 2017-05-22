@@ -66,8 +66,10 @@ public class UserServiceUtils {
 	+ ","
 	+ "{\"id\":19994,\"name\":\"manager\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 	+ ","
-	+ "{\"id\":19995,\"name\":\"approver\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
-	+ "],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
+	+ "{\"id\":19995,\"name\":\"vuid_requestor\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
+	+ ","
+	+ "{\"id\":19996,\"name\":\"approver\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
+	+ "],\"token_parsed?\":true,\"user\":\"TEST\",\"type\":\"ssoi\",\"id\":10005}";
 	public static final String TEST_JSON2 = "{\"roles\":["
 	+ "{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 	+ "],\"token_parsed?\":true,\"user\":\"VHAISBKniazJ\",\"type\":\"ssoi\",\"id\":10005}";
@@ -114,7 +116,8 @@ public class UserServiceUtils {
 					if (addedRole) {
 						builder.append(",");
 					}
-					builder.append("{\"id\":19990,\"name\":\"" + role.toString() + "\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}");
+					builder.append("{\"id\":19990,\"name\":\"" + role.toString() 
+					+ "\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}");
 	
 					addedRole = true;
 				}
@@ -143,7 +146,7 @@ public class UserServiceUtils {
 				jsonToUse = TEST_JSON2;
 			} else if (ssoToken.equals(TEST_JSON3)) {
 				jsonToUse = TEST_JSON3;
-			} else if (ssoToken.equals("TEST_JSON1")) {
+			} else if (ssoToken.equals("TEST_JSON1") || ssoToken.equals("TEST")) {
 				jsonToUse = TEST_JSON1;
 			} else if (ssoToken.equals("TEST_JSON2")) {
 				jsonToUse = TEST_JSON2;
@@ -175,39 +178,6 @@ public class UserServiceUtils {
 		return Optional.of(newUser);
 	}
 
-//	private static Optional<String> safeGetToken(String id, String password) {
-//		try {
-//			return Optional.of(getToken(id, password));
-//		} catch (Exception e) {
-//			System.err.println(e);
-//			e.printStackTrace();
-//			return Optional.empty();
-//		} 
-//	}
-//	private static String getToken(String id, String password) throws Exception {		
-//		URL url = new URL("https://vadev.mantech.com:4848/rails_prisme/roles/get_user_roles.json");
-//		Client client = ClientBuilder.newClient();
-//		Response response = client.target("https://vadev.mantech.com:4848")
-//				.path(url.getPath())
-//				.queryParam("id", id)
-//				.queryParam("password", password)
-//				.request().get();
-//		String responseJson = response.readEntity(String.class);
-//		
-//		ObjectMapper mapper = new ObjectMapper();
-//		Map<?, ?> map = null;
-//		try {
-//			map = mapper.readValue(responseJson, Map.class);
-//		} catch (Exception e) {
-//			throw new Exception("Failed parsing json \"" + responseJson);
-//		} finally {
-//			client.close();
-//		}
-//		
-//		System.out.println("Output for id=\"" + id + "\", password=\"" + password + "\": \"" + map + "\"");
-//		
-//		return (String)map.get("token");
-//	}
 	private static void testToken(String token) {
 		PrismeIntegratedUserService service = LookupService.getService(PrismeIntegratedUserService.class);
 
@@ -226,11 +196,7 @@ public class UserServiceUtils {
 					.path(url.getPath())
 					.queryParam("token", token)
 					.request().get();
-//			Response response = client.target("https://vadev.mantech.com:4848/rails_prisme/roles/get_roles_by_token.json")
-//					.queryParam("id", "cris@cris.com")
-//					.queryParam("password", "cris@cris.com")
-//					.queryParam("token", ssoToken)
-//					.request().get();
+
 			String responseJson = response.readEntity(String.class);
 			
 			ObjectMapper mapper = new ObjectMapper();
@@ -253,7 +219,7 @@ public class UserServiceUtils {
 //		 * Example URL for get_roles_by_token
 //		 * URL url = new URL("https://vaauscttweb81.aac.va.gov/rails_prisme/roles/get_roles_by_token.json?token=" + token);
 		
-		//{"user":"joel.kniaz@vetsez.com","roles":["read_only","super_user","administrator"],"token":"%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC7%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx8C%5CxBA%5Cx1Ft%5CxDD%5CxB5%5CxA4%5CxB8%5CxC0%5CxE9Q%5CxAB%5CnK%22%2C+%22z%5D%5Cx83%5CxAFT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D"}
+		//{"user":"joel.kniaz@vetsez.com","roles":["read_only","super_user","administrator","vuid_requestor"],"token":"%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC7%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx8C%5CxBA%5Cx1Ft%5CxDD%5CxB5%5CxA4%5CxB8%5CxC0%5CxE9Q%5CxAB%5CnK%22%2C+%22z%5D%5Cx83%5CxAFT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D"}
 		//final String         ssoToken = "%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx91%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFX%7C%5Cx96%5CxA8%5CxA3%5CxA2%5CxC4%5CxB1%3D%5CxFF%5Cx01K%22%2C+%22oC%5Cx83%5CxF7%40%3A%5Cx94%5CxAC%5CxAF%5CxB6%5CxE1%5CxF4c%5CxB8%5CbK%22%2C+%22+M%5Cx89%5CxB8Xe%5CxF9%5CxD4%5CxC0%5CxDB%5CxAB%5Cx99%5Ce%5CxD7e%40%22%5D";
 
 		//{"user":"readonly@readonly.com","roles":["read_only"],"token":"%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC6%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx94%5CxB0%5Ce%7C%5Cx9C%5CxB0%5CxA6%5CxA8%5CxE1%5CxE1t%5CxBC%5CvK%22%2C+%22a%40%5Cx8A%5CxACT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D"}

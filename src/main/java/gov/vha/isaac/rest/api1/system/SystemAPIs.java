@@ -19,8 +19,8 @@
 package gov.vha.isaac.rest.api1.system;
 
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.UUID;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,20 +30,28 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
+import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
+import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
+import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
 import gov.vha.isaac.rest.api1.data.RestUserInfo;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
+import gov.vha.isaac.rest.api1.data.concept.RestTerminologyConcept;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeValidatorType;
@@ -117,6 +125,7 @@ public class SystemAPIs
 									Get.conceptService().getConcept(intId.get()),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									true,
 									Util.validateWorkflowProcess(processId));
 					break;
 				}
@@ -152,6 +161,7 @@ public class SystemAPIs
 									Get.conceptService().getConcept(conceptNid),
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
 									RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+									true,
 									Util.validateWorkflowProcess(processId));
 				}
 
@@ -191,15 +201,16 @@ public class SystemAPIs
 						concept =
 								new RestConceptChronology(
 										Get.conceptService().getConcept(nid),
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+										true,
 										Util.validateWorkflowProcess(processId));
 						break;
 					case SEMEME:
 						sememe =
 								new RestSememeChronology(
 										Get.sememeService().getSememe(nid),
-										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),	
+										RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 										RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
@@ -473,4 +484,72 @@ public class SystemAPIs
 
 		return new RestUserInfo(Get.identifierService().getConceptNid(Util.convertToConceptSequence(id)));
 	}
+	
+	/**
+	 * Return the (sorted) general terminology types that are currently supported in this system.  These are the terminology 
+	 * types that can be passed into the extendedDescriptionTypes call.  
+	 * For extended, specific details on the terminologies supported by the system, see 1/system/systemInfo.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.terminologyTypes)
+	public RestTerminologyConcept[] getTerminologyTypes() throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken);
+		
+		TreeSet<RestTerminologyConcept> terminologies = new TreeSet<>();
+		Get.taxonomyService().getTaxonomyChildSequences(MetaData.MODULE.getConceptSequence()).forEach(conceptSeq -> 
+		{
+			terminologies.add(new RestTerminologyConcept(Get.conceptService().getConcept(conceptSeq)));
+		});
+
+		return terminologies.toArray(new RestTerminologyConcept[terminologies.size()]);
+	}
+	
+	/**
+	 * Return the (sorted) extended description types that are allowable by a particular terminology.  
+	 * @param id - a nid, sequence or UUID of a concept that represents a terminology in the system.  This should be a child of 
+	 * {@link MetaData#MODULE}
+	 * @throws RestException if no user concept can be identified.
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.extendedDescriptionTypes + "{" + RequestParameters.id + "}")
+	public RestConceptChronology[] getExtendedDescriptionTypesForTerminology(@PathParam(RequestParameters.id) String id) throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.id,
+				RequestParameters.coordToken);
+
+		TreeSet<RestConceptChronology> results = new TreeSet<>();
+		
+		ConceptChronology<? extends ConceptVersion<?>> cc = ConceptAPIs.findConceptChronology(id);
+		
+		if (!Get.taxonomyService().isChildOf(cc.getConceptSequence(), MetaData.MODULE.getConceptSequence(), 
+				TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), 
+						LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate())))
+		{
+			throw new RestException("The passed in concept is not a child of the MODULE constant.  It should be a direct child of " + MetaData.MODULE.getPrimordialUuid());
+		}
+		
+		
+		Frills.getAllChildrenOfConcept(MetaData.DESCRIPTION_TYPE_IN_SOURCE_TERMINOLOGY.getConceptSequence(), true, true).forEach(descType ->
+		{
+			ConceptChronology<? extends ConceptVersion<?>> concept = Get.conceptService().getConcept(descType);
+			if (Frills.getTerminologyTypes(concept, null).contains(cc.getConceptSequence()))
+			{
+				results.add(new RestConceptChronology(concept, false, false, false, null));
+			}
+		});
+		
+		return results.toArray(new RestConceptChronology[results.size()]);
+	}
+	
 }

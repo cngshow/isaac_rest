@@ -26,12 +26,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.webcohesion.enunciate.metadata.json.JsonSeeAlso;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptSnapshotService;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.logic.node.external.TypedNodeWithUuids;
 import gov.vha.isaac.ochre.model.logic.node.internal.TypedNodeWithSequences;
 import gov.vha.isaac.rest.ExpandUtil;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
 
@@ -61,7 +63,7 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 	 * RestTypedConnectorNode contains an int connectorTypeConceptSequence identifying a connector type concept 
 	 */
 	@XmlElement
-	int connectorTypeConceptSequence;
+	RestIdentifiedObject connectorTypeConcept;
 	
 	/**
 	 * Optionally-populated connectorTypeConceptVersion
@@ -83,12 +85,12 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 	 */
 	public RestTypedConnectorNode(TypedNodeWithSequences typedNodeWithSequences) {
 		super(typedNodeWithSequences);
-		connectorTypeConceptSequence = typedNodeWithSequences.getTypeConceptSequence();
-		connectorTypeConceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(connectorTypeConceptSequence);
+		connectorTypeConcept = new RestIdentifiedObject(typedNodeWithSequences.getTypeConceptSequence(), ObjectChronologyType.CONCEPT);
+		connectorTypeConceptDescription = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(connectorTypeConcept.sequence);
 		
 		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
-			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
+			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConcept.sequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			// TODO handle contradictions
@@ -103,14 +105,14 @@ public abstract class RestTypedConnectorNode extends RestLogicNode {
 	 */
 	public RestTypedConnectorNode(TypedNodeWithUuids typedNodeWithUuids) {
 		super(typedNodeWithUuids);
-		connectorTypeConceptSequence = Get.identifierService().getConceptSequenceForUuids(typedNodeWithUuids.getTypeConceptUuid());
+		connectorTypeConcept = new RestIdentifiedObject(Get.identifierService().getConceptSequenceForUuids(typedNodeWithUuids.getTypeConceptUuid()), ObjectChronologyType.CONCEPT);
 
 		ConceptSnapshotService snapshotService = Get.conceptService().getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate());
-		connectorTypeConceptDescription = snapshotService.conceptDescriptionText(connectorTypeConceptSequence);
+		connectorTypeConceptDescription = snapshotService.conceptDescriptionText(connectorTypeConcept.sequence);
 
 		if (RequestInfo.get().shouldExpand(ExpandUtil.versionExpandable)) {
 			@SuppressWarnings("rawtypes")
-			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConceptSequence);
+			ConceptChronology cc = Get.conceptService().getConcept(connectorTypeConcept.sequence);
 			@SuppressWarnings("unchecked")
 			Optional<LatestVersion<ConceptVersionImpl>> olcv = cc.getLatestVersion(ConceptVersionImpl.class, RequestInfo.get().getStampCoordinate());
 			// TODO handle contradictions

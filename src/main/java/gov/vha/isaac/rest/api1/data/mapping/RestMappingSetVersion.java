@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.data.mapping;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,11 +29,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
@@ -83,6 +86,20 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 	 */
 	@XmlElement
 	public RestIdentifiedObject identifiers;
+	
+	/**
+	 * The identifiers of the terminologies (concepts that represent terminologies) that this mapset concept is part of.  This is determined by whether or not there is 
+	 * version of this concept present with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  
+	 * 
+	 * Note that this is calculated WITH taking into account the view coordinate, including the active / inactive state of the concept in any particular terminology.
+	 * This means that if a concept is present in both Snomed CT and the US Extension modules, but your view coordinate excludes the US Extension, this will not 
+	 * include the US Extension module.
+	 * 
+	 * See 1/system/terminologyTypes for more details on the potential terminology concepts that will be returned.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	RestIdentifiedObject[] terminologyTypes;
 	
 	/**
 	 * The StampedVersion details for this map set definition
@@ -240,6 +257,16 @@ public class RestMappingSetVersion extends RestMappingSetVersionBase implements 
 			});
 
 		displayFields.addAll(MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(mappingConcept.getNid(), stampCoord));
+		
+		//figure out the terminology info
+		HashSet<Integer> terminologyTypeSequences = Frills.getTerminologyTypes(mappingConcept.getChronology(), RequestInfo.get().getStampCoordinate());
+		
+		terminologyTypes = new RestIdentifiedObject[terminologyTypeSequences.size()];
+		int i = 0; 
+		for (int sequence : terminologyTypeSequences)
+		{
+			terminologyTypes[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+		}
 
 		if (includeComments)
 		{

@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>4.01</version>
+		<version>4.04</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>4.1</version>
+	<version>4.2</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -24,7 +24,7 @@
 	</scm>
 
 	<properties>
-		<isaac.version>4.01</isaac.version>
+		<isaac.version>4.04</isaac.version>
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
@@ -127,6 +127,12 @@
 			<artifactId>sync-git</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>rest-utils</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		
 		<!-- Need to override the scope on these 3 logging packages -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

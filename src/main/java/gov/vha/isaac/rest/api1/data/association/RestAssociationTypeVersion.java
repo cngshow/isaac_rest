@@ -94,6 +94,7 @@ public class RestAssociationTypeVersion extends RestAssociationTypeVersionCreate
 			associationConcept = new RestConceptChronology(read.getAssociationTypeConcept(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.versionsAllExpandable), 
 					RequestInfo.get().shouldExpand(ExpandUtil.versionsLatestOnlyExpandable),
+					true,
 					processId);
 		}
 		else 
