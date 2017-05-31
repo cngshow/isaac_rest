@@ -65,7 +65,7 @@ public class IntakeWriteAPIs
 	 * @throws RestException if any processing error happened.
 	 */
 	@POST
-	@Consumes(MediaType.APPLICATION_XML)
+	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	@Path(RestPaths.vetsXMLComponent)
 	public RestWriteResponse readVHATXML(RestXML inputXML) throws RestException
 	{
