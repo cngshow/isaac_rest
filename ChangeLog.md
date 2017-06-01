@@ -3,6 +3,11 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/06/01 - 4.3
+    * Allowing IntakeWriteAPIs to consume json.
+    * Updating prisme.properties with a log event token that will work locally in development.
+    * Adding UserRoleConstants.SUPER_USER role to VuidWriteAPIs.
+
 * 2017/05/21 - 4.2 
     * Changed default edit module to VHAT_EDIT.
     * Various API enhancements per the api changelog.

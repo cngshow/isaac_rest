@@ -48,7 +48,7 @@ import gov.vha.isaac.rest.tokens.EditTokens;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.vuidAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.VUID_REQUESTOR})
+@RolesAllowed({UserRoleConstants.VUID_REQUESTOR, UserRoleConstants.SUPER_USER})
 public class VuidWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(VuidWriteAPIs.class);
