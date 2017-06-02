@@ -21,6 +21,8 @@ package gov.vha.isaac.rest.session;
 
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -35,26 +37,43 @@ import gov.vha.isaac.ochre.api.LookupService;
  *
  */
 public class VuidServiceUtils {
-	//private static Logger log = LogManager.getLogger(VuidServiceUtils.class);
+	private static Logger log = LogManager.getLogger(VuidServiceUtils.class);
 	
 	private VuidServiceUtils() {}
 
-	private static String getResultJsonFromVuidService(WebTarget targetWithPath, Map<String, String> params) {
+	private static String getResultJsonFromVuidService(WebTarget targetWithPath, Map<String, String> params, Entity<?> entityToPost) {
 		for (Map.Entry<String, String> entry : params.entrySet()) {
 			targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
 		}
-		Response response = targetWithPath.request().post(Entity.xml(""));
+
+		Response response = null;
+		try {
+			if (entityToPost != null) {
+				response = targetWithPath.request().post(entityToPost);
+			} else {
+				response = targetWithPath.request().get();
+			}
+		} catch (RuntimeException e) {
+			log.error("FAILED getting response from request " + targetWithPath + " (" + entityToPost != null ? "POST " + entityToPost : "GET" + ")", e);
+			throw e;
+		}
 		
 		String responseJson = response.readEntity(String.class);
 	
 		return responseJson;
 	}
 	
-	static String getResultJsonFromVuidService(String targetStr, String pathStr, Map<String, String> params) {
+	static String getResultJsonFromVuidService(String targetStr, String pathStr, Map<String, String> params, Entity<?> entityToPost) {
 		ClientService clientService = LookupService.getService(ClientService.class);
-		WebTarget target = clientService.getClient().target(targetStr);
-		target = target.path(pathStr);
-		
-		return getResultJsonFromVuidService(target, params);
+		WebTarget target = null;
+		try {
+			target = clientService.getClient().target(targetStr);
+			target = target.path(pathStr);
+		} catch (RuntimeException e) {
+			log.error("FAILED constructing WebTarget from targetStr='" + targetStr + "' and pathStr='" + pathStr + "'", e);
+			throw e;
+		}
+
+		return getResultJsonFromVuidService(target, params, entityToPost);
 	}
 }

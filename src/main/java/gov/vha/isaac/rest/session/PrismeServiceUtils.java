@@ -115,15 +115,20 @@ public class PrismeServiceUtils {
 	}
 
 	public static String getTargetFromUrl(URL url) {
-		StringBuilder target = new StringBuilder();
-		target.append(url.getProtocol());
-		target.append("://");
-		target.append(url.getHost());
-		if (url.getPort() > 0) {
-			target.append(":" + url.getPort());
+		try {
+			StringBuilder target = new StringBuilder();
+			target.append(url.getProtocol());
+			target.append("://");
+			target.append(url.getHost());
+			if (url.getPort() > 0) {
+				target.append(":" + url.getPort());
+			}
+
+			return target.toString();
+		} catch (RuntimeException e) {
+			log.error("FAILED getting target from URL '" + url + "'", e);
+			throw e;
 		}
-		
-		return target.toString();
 	}
 
 	static String postJsonToPrisme(WebTarget targetWithPath, String json) {

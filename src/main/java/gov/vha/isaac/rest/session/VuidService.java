@@ -29,6 +29,7 @@ import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.UserRoleService;
 import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 
 /**
  * 
@@ -39,6 +40,31 @@ import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
  */
 @Contract
 public interface VuidService {
+	/**
+	 * Validates a VUID. If a VUID is less than the next vuid
+	 * stored in the database, then it is considered 'valid'
+	 * (as a number, no check if it's been used).
+	 * 
+	 * So we don't forget why this is:
+	 * 
+	 	15:47 Neill Robins
+		Are the VUIDs going to come in negative values in test cases?
+		15:49 Dan Armbrust
+		bit of an open question how much we should validate when in test mode with negative vuids.
+		it may be, that we don't do this step when in test mode.
+		because the test would be pointless, if we aren't the authority server.
+		but when we are, we would do the test.
+		15:51 Neill Robins
+		I'm curious how testers will test this part
+		Or will they?
+		15:51 Dan Armbrust
+		they can put it in 'real'mode
+		though they know it isn't in real mode
+	 *
+	 * @param vuidToValidate The VUID that should be validated
+	 * @return true, if the VUID is valid, false if it's certain conditions aren't met, an excpetion is thrown for a bad VUID
+	 */
+	public boolean isVuidValid(long vuidToValidate) throws RestException;
 
 	/**
 	 * Allocate and return a block of VUIDs
@@ -56,5 +82,7 @@ public interface VuidService {
 	 */
 	Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken);
 	
-	String getVuidServiceUrl();
+	String getVuidValidateServiceUrl();
+
+	String getVuidAllocateServiceUrl();
 }
