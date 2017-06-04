@@ -94,6 +94,16 @@ public class VuidAPIs
 		return new RestBoolean(isValid);
 	}
 	
+	/**
+	 * Returns a RestOptionalIdentifiedObject containing either a RestIdentifiedObject representing an object identified by the passed VUID
+	 * or null, if no object has ever been persisted corresponding to the passed VUID.
+	 * 
+	 * If the passed VUID is invalid (see isValidVuid) then a RestException is thrown.
+	 * 
+	 * @param vuid the VUID for which to search for a corresponding object
+	 * @return RestOptionalIdentifiedObject
+	 * @throws RestException
+	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.objectForVuidComponent)
