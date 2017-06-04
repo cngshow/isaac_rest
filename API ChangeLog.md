@@ -14,6 +14,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2018/06/03 - 1.15.1
+    * Adding getObjectForVuid() objectForVuid RestPath component returning new RestOptionalIdentifiedObject
+
 * 2018/06/02 - 1.15.0
 	* Adding VuidAPIs for isVuidValid() and changing RestVuidBlockData to hold long instead of int
 

@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.mahout.math.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -360,7 +363,7 @@ public class RestIdentifiedObject
 	 */
 	@Override
 	public String toString() {
-		return "RestIdentifiedObject [type=" + type + ", nid=" + nid + ", sequence=" + sequence + ", uuids=" + uuids
+		return "RestIdentifiedObject [type=" + type + ", nid=" + nid + ", sequence=" + sequence + ", uuids=" + (uuids != null ? Arrays.toString(uuids.toArray()) : null)
 				+ "]";
 	}
 }
