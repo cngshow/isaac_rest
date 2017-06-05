@@ -28,7 +28,6 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
-import gov.vha.isaac.rest.api.data.RestXML;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -65,12 +64,12 @@ public class IntakeWriteAPIs
 	 * @throws RestException if any processing error happened.
 	 */
 	@POST
-	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	@Consumes(MediaType.APPLICATION_XML)
 	@Path(RestPaths.vetsXMLComponent)
-	public RestWriteResponse readVHATXML(RestXML inputXML) throws RestException
+	public RestWriteResponse readVHATXML(String inputXML) throws RestException
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
-		log.info("VHAT XML was posted for intake - length " + inputXML.xml.length());
+		log.info("VHAT XML was posted for intake - length " + inputXML.length());
 		log.debug("Posted XML: '" + inputXML + "'");
 		
 		//TODO dan has to actually process this XML...
