@@ -14,16 +14,19 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
-* 2018/06/03 - 1.15.1
+* 2017/06/05 - 1.15.2
+    * Reverting out some changes to /write/1/intake/vetsXML so we go back to accepting XML directly
+
+* 2017/06/03 - 1.15.1
     * Adding getObjectForVuid() objectForVuid RestPath component returning new RestOptionalIdentifiedObject
 
-* 2018/06/02 - 1.15.0
+* 2017/06/02 - 1.15.0
 	* Adding VuidAPIs for isVuidValid() and changing RestVuidBlockData to hold long instead of int
 
-* 2018/05/18 - 1.14.0
+* 2017/05/18 - 1.14.0
     * Added VUID_REQUESTOR role for VuidWriteAPIs  
 
-* 2018/05/18 - 1.13.1
+* 2017/05/18 - 1.13.1
     * Added the terminologyType parameter to the concept Chronology read API.  
     * Changed the behavior of the terminologyType paremter on the concept Version read API, so that it now takes into account the view coordianate (the chronology read
         API retains the previous behavior of ignoring the view coordinate entirely)
