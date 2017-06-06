@@ -71,6 +71,16 @@ public class RestSememeDescriptionUpdate
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String descriptionTypeConcept;
+	
+	/**
+	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
+	 * This may be a concept like Abbreviation or Vista Name.  On Create, if this is left blank, it is simply not added.
+	 * On Update, if this is not provided, and it was previously specified, then the previous extended type will be inactivated.
+	 * On Update, to maintain this value, you must submit back the value that it is currently set to.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String extendedDescriptionTypeConcept;
 
 	/**
 	 * True to indicate the mapping set should be set as active, false for inactive.  

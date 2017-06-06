@@ -14,6 +14,11 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2017/06/05 - 1.15.3
+    * Moving extendedDescriptionTypeConcept from RestSememeDescriptionCreate down into RestSememeDescriptionUpdate (which is a parent of RestSememeDescriptionCreate)
+        The end result of this move is that extendedDescriptionTypeConcept is now available for direct edit during a description update.  This, in conjunction with a 
+        change to filter out nested sememes of type DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE will prevent inadvertent cases of creating multiple extended description 
+        types on a single description.  
 * 2017/06/05 - 1.15.2
     * Reverting out some changes to /write/1/intake/vetsXML so we go back to accepting XML directly
 
