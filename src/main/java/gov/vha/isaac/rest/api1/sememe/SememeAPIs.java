@@ -434,6 +434,7 @@ public class SememeAPIs
 				get(
 						id,
 						allowedAssemblages,
+						null,  //TODO add API support for the new skip assemblage feature
 						RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable),
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
@@ -647,6 +648,7 @@ public class SememeAPIs
 	 * @param referencedComponent - optional - if provided - takes precedence
 	 * @param allowedAssemblages - optional - if provided, either limits the referencedComponent search by this type, or, if 
 	 * referencedComponent is not provided - focuses the search on just this assemblage
+	 * @param skipAssemblages - optional - if provided, any assemblage listed here will not be part of the return.  This takes priority over the allowedAssemblages.
 	 * @param expandChronology
 	 * @param expandNested
 	 * @param expandReferenced
@@ -660,8 +662,9 @@ public class SememeAPIs
 	 * @return
 	 * @throws RestException
 	 */
-	public static RestSememeVersion[] get(String referencedComponent, Set<Integer> allowedAssemblages, boolean expandChronology, boolean expandNested, 
-		boolean expandReferenced, boolean allowDescriptions, boolean allowAssociations, boolean allowMappings, UUID processId) throws RestException
+	public static RestSememeVersion[] get(String referencedComponent, Set<Integer> allowedAssemblages, Set<Integer> skipAssemblages, boolean expandChronology, 
+			boolean expandNested, boolean expandReferenced, boolean allowDescriptions, boolean allowAssociations, boolean allowMappings, UUID processId) 
+					throws RestException
 	{
 		final ArrayList<RestSememeVersion> results = new ArrayList<>();
 		Consumer<SememeChronology<? extends SememeVersion<?>>> consumer = new Consumer<SememeChronology<? extends SememeVersion<?>>>()
@@ -679,6 +682,10 @@ public class SememeAPIs
 						return;
 					}
 					if (!allowMappings && MappingUtils.isMapping(sc))
+					{
+						return;
+					}
+					if (skipAssemblages != null && skipAssemblages.contains(sc.getAssemblageSequence()))
 					{
 						return;
 					}

@@ -287,6 +287,7 @@ public class ConceptAPIs
 		RestSememeVersion[] descriptions = SememeAPIs.get(
 				findConceptChronology(id).getNid() + "",
 				getAllDescriptionTypes(),
+				null,
 				true, 
 				Boolean.parseBoolean(includeAttributes.trim()),
 				RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
