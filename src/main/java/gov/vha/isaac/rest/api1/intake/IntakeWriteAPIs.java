@@ -22,6 +22,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -65,6 +66,7 @@ public class IntakeWriteAPIs
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_XML)
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.vetsXMLComponent)
 	public RestWriteResponse readVHATXML(String inputXML) throws RestException
 	{
