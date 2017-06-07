@@ -59,7 +59,7 @@ public class IntakeWriteAPIs
 	 * being thrown.
 	 * 
 	 * @param editToken - 
-	 *            EditToken string returned by previous call to /system/editToken
+	 *            EditToken string returned by previous call to 1/coordinate/editToken
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return a RestWriteResponse with a new token, if the content was read successfully.  
 	 * @throws RestException if any processing error happened.
