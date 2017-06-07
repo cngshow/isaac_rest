@@ -80,6 +80,7 @@ public class RestSememeDescriptionCreate extends RestSememeDescriptionUpdate
 	 * @param descriptionTypeConceptSequence
 	 * @param dialectIds
 	 * @param referencedComponentNid
+	 * @param extendedDescriptionTypeConceptSequence
 	 */
 	public RestSememeDescriptionCreate(
 			String caseSignificanceConceptSequence,
@@ -88,8 +89,9 @@ public class RestSememeDescriptionCreate extends RestSememeDescriptionUpdate
 			String descriptionTypeConceptSequence,
 			Collection<String> preferredInDialectAssemblagesIds,
 			Collection<String> acceptableInDialectAssemblagesIds,
-			int referencedComponentNid) {
-		super(caseSignificanceConceptSequence, languageConceptSequence, text, descriptionTypeConceptSequence, true);
+			int referencedComponentNid,
+			String extendedDescriptionTypeConceptSequence) {
+		super(caseSignificanceConceptSequence, languageConceptSequence, text, descriptionTypeConceptSequence, true, extendedDescriptionTypeConceptSequence);
 		if (preferredInDialectAssemblagesIds != null) {
 			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
 		}
