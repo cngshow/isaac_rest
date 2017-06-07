@@ -100,19 +100,22 @@ public class RestSememeDescriptionUpdate
 	 * @param languageConceptSequence
 	 * @param text
 	 * @param descriptionTypeConceptSequence
+	 * @param active
+	 * @param extendedDescriptionTypeConceptSequence
 	 */
 	public RestSememeDescriptionUpdate(
 			String caseSignificanceConceptSequence,
 			String languageConceptSequence,
 			String text,
 			String descriptionTypeConceptSequence,
-//			Integer extendedDescriptionTypeConceptSequence,
-			Boolean active) {
+			Boolean active,
+			String extendedDescriptionTypeConceptSequence) {
 		super();
 		this.caseSignificanceConcept = caseSignificanceConceptSequence;
 		this.languageConcept = languageConceptSequence;
 		this.text = text;
 		this.descriptionTypeConcept = descriptionTypeConceptSequence;
 		this.active = active;
+		this.extendedDescriptionTypeConcept = extendedDescriptionTypeConceptSequence;
 	}
 }

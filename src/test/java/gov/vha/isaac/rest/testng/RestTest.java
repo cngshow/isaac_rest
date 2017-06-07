@@ -77,6 +77,7 @@ import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
@@ -1042,7 +1043,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final int initialLanguageConceptSequence = MetaData.SPANISH_LANGUAGE.getConceptSequence();
 		final int initialDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
-
+		final int initialExtendedDescriptionTypeConceptSequence = MetaData.LITHUANIAN_LANGUAGE.getConceptSequence();
+		
 		// Retrieve all descriptions referring to referenced concept and just pick the first
 		final String expandParamValue = ExpandUtil.nestedSememesExpandable + "," + ExpandUtil.comments + "," + ExpandUtil.referencedDetails;
 		Map<String, Object> params = new HashMap<>();
@@ -1060,7 +1062,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						initialDescriptionTypeConceptSequence + "",
 						null,
 						null,
-						referencedConceptNid);
+						referencedConceptNid,
+						initialExtendedDescriptionTypeConceptSequence + "");
 		String xml = null;
 		try {
 			xml = XMLUtils.marshallObject(initialDescriptionData);
@@ -1099,6 +1102,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingDescriptionSememeVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
 		Assert.assertEquals(matchingDescriptionSememeVersion.languageConcept.sequence.intValue(), initialLanguageConceptSequence);
 		Assert.assertEquals(matchingDescriptionSememeVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
+		Assert.assertEquals(matchingDescriptionSememeVersion.descriptionExtendedTypeConcept.sequence.intValue(), initialExtendedDescriptionTypeConceptSequence);
 
 		// Retrieve all descriptions referring to referenced concept from yesterday
 		// using time parameter
@@ -1300,7 +1304,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final int initialLanguageConceptSequence = MetaData.SPANISH_LANGUAGE.getConceptSequence();
 		final int initialDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
-
+		final int initialExtendedDescriptionTypeConceptSequence = MetaData.CHINESE_LANGUAGE.getConceptSequence();
+		
 		//		final int referencedConceptNid = MetaData.AMT_MODULE.getNid();
 		//		final int initialCaseSignificanceConceptSequence = MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence();
 		//		final int initialLanguageConceptSequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
@@ -1324,7 +1329,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						initialDescriptionTypeConceptSequence + "",
 						null,
 						null,
-						referencedConceptNid);
+						referencedConceptNid,
+						initialExtendedDescriptionTypeConceptSequence + "");
 		String xml = null;
 		try {
 			xml = XMLUtils.marshallObject(initialDescriptionData);
@@ -1369,12 +1375,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
 		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), initialLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
+		Assert.assertEquals(matchingVersion.descriptionExtendedTypeConcept.sequence.intValue(), initialExtendedDescriptionTypeConceptSequence);
 
 		// Construct description update data object
 		final int newCaseSignificanceConceptSequence = MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence();
 		final int newLanguageConceptSequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
 		//final int newDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String newDescriptionText = "A new description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
+		final int newDescriptionExtendedTypeConcept = MetaData.LITHUANIAN_LANGUAGE.getConceptSequence();
 
 		RestSememeDescriptionUpdate newDescriptionData =
 				new RestSememeDescriptionUpdate(
@@ -1382,7 +1390,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						newLanguageConceptSequence + "",
 						newDescriptionText,
 						initialDescriptionTypeConceptSequence + "",
-						true);
+						true,
+						newDescriptionExtendedTypeConcept + "");
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(newDescriptionData);
@@ -1434,7 +1443,56 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
 		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
+		Assert.assertEquals(matchingVersion.descriptionExtendedTypeConcept.sequence.intValue(), newDescriptionExtendedTypeConcept);
 
+		// TEST PASSING NULL descriptionExtendedType
+		newDescriptionData =
+				new RestSememeDescriptionUpdate(
+						newCaseSignificanceConceptSequence + "",
+						newLanguageConceptSequence + "",
+						newDescriptionText,
+						initialDescriptionTypeConceptSequence + "",
+						true,
+						null);
+		xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newDescriptionData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+		// Attempt update as authorized user
+		updateDescriptionResponse = target(RestPaths.descriptionUpdatePathComponent + descriptionSememeSequence)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
+		updateDescriptionResponseResult = checkFail(updateDescriptionResponse).readEntity(String.class);
+		writeResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, updateDescriptionResponseResult);
+		// Should be no detail in RestWriteResponse
+		Assert.assertTrue(StringUtils.isBlank(writeResponse.detail) || ! writeResponse.detail.equals(RestWriteResponseEnumeratedDetails.UNCHANGED));
+
+		// Retrieve all descriptions referring to referenced concept
+		conceptDescriptionsObject = getDescriptionsForConcept(
+				referencedConceptNid,
+				param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()),
+				param(RequestParameters.allowedStates, State.ACTIVE.name()));
+		Assert.assertTrue(conceptDescriptionsObject.length > 0);
+		// Iterate description list to find new description
+		matchingVersion = null;
+		for (RestSememeDescriptionVersion version : conceptDescriptionsObject) {
+			if (version.getSememeChronology().identifiers.sequence == descriptionSememeSequence) {
+				matchingVersion = version;
+				break;
+			}
+		}
+		// Validate description fields
+		Assert.assertNotNull(matchingVersion);
+		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence.intValue(), newCaseSignificanceConceptSequence);
+		Assert.assertEquals(matchingVersion.text, newDescriptionText);
+		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
+		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
+		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
+		//Assert.assertNull(matchingVersion.descriptionExtendedTypeConcept); // TODO fix bug causing either deactivate or retrieval to behave incorrectly
+		
 		// Attempt to deactivate description as read_only user
 		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent +  RestPaths.componentComponent
 				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + descriptionSememeSequenceWrapper.nid)
