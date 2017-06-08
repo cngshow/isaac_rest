@@ -118,4 +118,14 @@ public class RestSememeDescriptionUpdate
 		this.active = active;
 		this.extendedDescriptionTypeConcept = extendedDescriptionTypeConceptSequence;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RestSememeDescriptionUpdate [text=" + text + ", descriptionTypeConcept=" + descriptionTypeConcept
+				+ ", extendedDescriptionTypeConcept=" + extendedDescriptionTypeConcept + ", caseSignificanceConcept="
+				+ caseSignificanceConcept + ", languageConcept=" + languageConcept + ", active=" + active + "]";
+	}
 }

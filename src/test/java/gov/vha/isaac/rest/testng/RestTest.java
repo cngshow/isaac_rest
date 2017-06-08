@@ -1473,8 +1473,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject = getDescriptionsForConcept(
 				referencedConceptNid,
-				param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()),
-				param(RequestParameters.allowedStates, State.ACTIVE.name()));
+				param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()));
 		Assert.assertTrue(conceptDescriptionsObject.length > 0);
 		// Iterate description list to find new description
 		matchingVersion = null;
