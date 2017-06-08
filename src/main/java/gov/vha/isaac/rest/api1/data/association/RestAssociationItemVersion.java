@@ -223,7 +223,7 @@ public class RestAssociationItemVersion
 			
 			if (RequestInfo.get().shouldExpand(ExpandUtil.nestedSememesExpandable))
 			{
-				nestedSememes = SememeAPIs.get(identifiers.getFirst().toString(), null, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), true, 
+				nestedSememes = SememeAPIs.get(identifiers.getFirst().toString(), null, null, RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), true, 
 						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails), true, true, true, processId);
 			}
 			if (expandables.size() == 0)

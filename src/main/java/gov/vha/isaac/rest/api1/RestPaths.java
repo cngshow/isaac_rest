@@ -74,7 +74,8 @@ public class RestPaths
 	public static final String lock = "lock/";
 
 	public static final String allocateComponent = "allocate/";
-	//public static final String allocateTestComponent = "allocateTest/";
+	public static final String validateComponent = "validate/";
+	public static final String objectForVuidComponent = "objectForVuid/";
 	public static final String vuidAPIsPathComponent = apiVersionComponent + "vuids/";
 
 	// Mapping Based Calls

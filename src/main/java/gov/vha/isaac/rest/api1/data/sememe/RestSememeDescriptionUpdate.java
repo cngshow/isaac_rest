@@ -71,6 +71,16 @@ public class RestSememeDescriptionUpdate
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public String descriptionTypeConcept;
+	
+	/**
+	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
+	 * This may be a concept like Abbreviation or Vista Name.  On Create, if this is left blank, it is simply not added.
+	 * On Update, if this is not provided, and it was previously specified, then the previous extended type will be inactivated.
+	 * On Update, to maintain this value, you must submit back the value that it is currently set to.
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public String extendedDescriptionTypeConcept;
 
 	/**
 	 * True to indicate the mapping set should be set as active, false for inactive.  
@@ -90,19 +100,22 @@ public class RestSememeDescriptionUpdate
 	 * @param languageConceptSequence
 	 * @param text
 	 * @param descriptionTypeConceptSequence
+	 * @param active
+	 * @param extendedDescriptionTypeConceptSequence
 	 */
 	public RestSememeDescriptionUpdate(
 			String caseSignificanceConceptSequence,
 			String languageConceptSequence,
 			String text,
 			String descriptionTypeConceptSequence,
-//			Integer extendedDescriptionTypeConceptSequence,
-			Boolean active) {
+			Boolean active,
+			String extendedDescriptionTypeConceptSequence) {
 		super();
 		this.caseSignificanceConcept = caseSignificanceConceptSequence;
 		this.languageConcept = languageConceptSequence;
 		this.text = text;
 		this.descriptionTypeConcept = descriptionTypeConceptSequence;
 		this.active = active;
+		this.extendedDescriptionTypeConcept = extendedDescriptionTypeConceptSequence;
 	}
 }

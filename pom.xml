@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>4.05</version>
+		<version>4.06</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>4.3</version>
+	<version>4.4</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -24,7 +24,7 @@
 	</scm>
 
 	<properties>
-		<isaac.version>4.05</isaac.version>
+		<isaac.version>4.06</isaac.version>
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
@@ -144,6 +144,14 @@
 			<artifactId>log4j-slf4j-impl</artifactId>
 			<scope>compile</scope>
 		</dependency>
+		<!--  fortify complaining about log4j-core missing optional dependency -->
+		<dependency>
+			<groupId>com.lmax</groupId>
+			<artifactId>disruptor</artifactId>
+			<version>3.3.6</version>
+			<scope>compile</scope>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-jul</artifactId>
@@ -225,6 +233,7 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
 		</dependency>
+
 	</dependencies>
 
 	<build>

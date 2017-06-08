@@ -148,7 +148,7 @@ public class VuidWriteAPIs
 			else
 			{
 				log.error("Error allocating vuids", e);
-				throw new RestException("Unexpected error allocating VUIDs at " + LookupService.getService(VuidService.class).getVuidServiceUrl() 
+				throw new RestException("Unexpected error allocating VUIDs at " + LookupService.getService(VuidService.class).getVuidAllocateServiceUrl() 
 					+ " " + e.getMessage());
 			}
 		}

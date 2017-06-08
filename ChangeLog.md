@@ -3,6 +3,13 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/06/08 - 4.4
+    * Changes for VUID-rest service
+    * Fortify fixes.
+    * Adding extendedDescriptionTypeConceptSequence ctor parameters and javadoc an adding some, but not all, required  RestTest unit tests for description create and modify
+    * change the intake api to return either json or xml
+    * Moving extendedDescriptionTypeConcept from RestSememeDescriptionCreate down into RestSememeDescriptionUpdate
+
 * 2017/06/01 - 4.3
     * Allowing IntakeWriteAPIs to consume json.
     * Updating prisme.properties with a log event token that will work locally in development.

@@ -42,15 +42,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestSememeDescriptionCreate.class)
 public class RestSememeDescriptionCreate extends RestSememeDescriptionUpdate
-{
-	/**
-	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
-	 * This may be a concept like Abbreviation or Vista Name
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String extendedDescriptionTypeConcept;
-	
+{	
 	/**
 	 * The optional concepts (UUID, nid or sequence) that represent preferred dialects attached to this sememe.  If not specified, 
 	 * no preferred dialect is added.
@@ -88,6 +80,7 @@ public class RestSememeDescriptionCreate extends RestSememeDescriptionUpdate
 	 * @param descriptionTypeConceptSequence
 	 * @param dialectIds
 	 * @param referencedComponentNid
+	 * @param extendedDescriptionTypeConceptSequence
 	 */
 	public RestSememeDescriptionCreate(
 			String caseSignificanceConceptSequence,
@@ -96,8 +89,9 @@ public class RestSememeDescriptionCreate extends RestSememeDescriptionUpdate
 			String descriptionTypeConceptSequence,
 			Collection<String> preferredInDialectAssemblagesIds,
 			Collection<String> acceptableInDialectAssemblagesIds,
-			int referencedComponentNid) {
-		super(caseSignificanceConceptSequence, languageConceptSequence, text, descriptionTypeConceptSequence, true);
+			int referencedComponentNid,
+			String extendedDescriptionTypeConceptSequence) {
+		super(caseSignificanceConceptSequence, languageConceptSequence, text, descriptionTypeConceptSequence, true, extendedDescriptionTypeConceptSequence);
 		if (preferredInDialectAssemblagesIds != null) {
 			this.preferredInDialectAssemblagesIds.addAll(preferredInDialectAssemblagesIds);
 		}

@@ -16,36 +16,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.vha.isaac.rest.api.data;
+package gov.vha.isaac.rest.api1.data;
 
 import javax.xml.bind.annotation.XmlElement;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * 
- * {@link RestXML}
+ * Returns an object in the system if and only if it exists in the system
+ * {@link RestOptionalIdentifiedObject}
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-public class RestXML
+public class RestOptionalIdentifiedObject
 {
 	/**
-	 * XML that is passed
+	 * An object containing a type, description and set of identifiers for an object.
+	 * Null if no corresponding object exists.
 	 */
 	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public String xml;
+	public RestIdentifiedObject object = null;
 
-	RestXML() {
+	RestOptionalIdentifiedObject() {
 		// For JAXB only
 	}
 	
-	public RestXML(String xml)
+	public RestOptionalIdentifiedObject(RestIdentifiedObject object)
 	{
-		this.xml = xml;
+		this.object = object;
 	}
 
 	/* (non-Javadoc)
@@ -53,6 +54,6 @@ public class RestXML
 	 */
 	@Override
 	public String toString() {
-		return "RestXML [xml=" + xml + "]";
+		return "RestOptionalIdentifiedObject [object=" + object + "]";
 	}
 }

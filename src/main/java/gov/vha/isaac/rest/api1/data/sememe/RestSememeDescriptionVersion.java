@@ -30,6 +30,7 @@ import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
@@ -101,6 +102,11 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 				if (Get.taxonomyService().wasEverKindOf(restSememeVersion.sememeChronology.assemblage.sequence, MetaData.DIALECT_ASSEMBLAGE.getConceptSequence()))
 				{
 					dialects.add((RestDynamicSememeVersion) restSememeVersion);
+					return false;
+				}
+				//if the assemblage is extendedDescriptionType, skip - we handle below
+				if (restSememeVersion.sememeChronology.assemblage.sequence == DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence())
+				{
 					return false;
 				}
 				return true;

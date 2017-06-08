@@ -89,7 +89,7 @@ public class RestConceptCreateData
 	/**
 	 * An optional concept identifier (nid, sequence or UUID) of a concept that represents an extended type of the description.  
 	 * This will be applied to the preferred description created on the concept if {@link #calculateSemanticTag} is true.  Will be applied to 
-	 * the FSN description created onthe concept if  {@link #calculateSemanticTag} is false or absent.
+	 * the FSN description created on the concept if  {@link #calculateSemanticTag} is false or absent.
 	 * This may be a concept like Abbreviation or Vista Name
 	 */
 	@XmlElement

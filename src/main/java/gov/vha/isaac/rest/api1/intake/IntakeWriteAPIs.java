@@ -22,13 +22,13 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
-import gov.vha.isaac.rest.api.data.RestXML;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -59,18 +59,19 @@ public class IntakeWriteAPIs
 	 * being thrown.
 	 * 
 	 * @param editToken - 
-	 *            EditToken string returned by previous call to /system/editToken
+	 *            EditToken string returned by previous call to 1/coordinate/editToken
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
 	 * @return a RestWriteResponse with a new token, if the content was read successfully.  
 	 * @throws RestException if any processing error happened.
 	 */
 	@POST
-	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	@Consumes(MediaType.APPLICATION_XML)
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.vetsXMLComponent)
-	public RestWriteResponse readVHATXML(RestXML inputXML) throws RestException
+	public RestWriteResponse readVHATXML(String inputXML) throws RestException
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
-		log.info("VHAT XML was posted for intake - length " + inputXML.xml.length());
+		log.info("VHAT XML was posted for intake - length " + inputXML.length());
 		log.debug("Posted XML: '" + inputXML + "'");
 		
 		//TODO dan has to actually process this XML...
