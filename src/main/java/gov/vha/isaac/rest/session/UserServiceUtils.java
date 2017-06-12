@@ -36,6 +36,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -248,6 +250,10 @@ public class UserServiceUtils {
 		map = mapper.readValue(jsonToUse, Map.class);
 		
 		String userName = (String)map.get("user");
+		if (StringUtils.isBlank(userName)) {
+			throw new RuntimeException("Failed extracting 'user' field from json '" + jsonToUse + "'");
+		}
+
 		Set<UserRole> roleSet = new HashSet<>();
 		Collection<?> roles = (Collection<?>)map.get("roles");
 		for (Object roleMapObject : roles) {

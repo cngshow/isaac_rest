@@ -28,9 +28,11 @@ import java.util.Properties;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.persistence.oxm.MediaType;
 
 import gov.vha.isaac.ochre.api.LookupService;
 
@@ -140,8 +142,12 @@ public class PrismeServiceUtils {
 				targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
 			}
 		}
-		Response response = targetWithPath.request().post(Entity.json(json));
-		
+		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON.toString()).post(Entity.json(json));
+
+		if (response.getStatus() != Status.OK.getStatusCode()) {
+			throw new RuntimeException("Failed performing POST " + targetWithPath + " of \"" + json + "\" + with CODE=" + response.getStatus() + " and REASON=" + response.getStatusInfo());
+		}
+
 		String responseJson = response.readEntity(String.class);
 	
 		return responseJson;
@@ -151,8 +157,12 @@ public class PrismeServiceUtils {
 		for (Map.Entry<String, String> entry : params.entrySet()) {
 			targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
 		}
-		Response response = targetWithPath.request().get();
-		
+		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON.toString()).get();
+
+		if (response.getStatus() != Status.OK.getStatusCode()) {
+			throw new RuntimeException("Failed performing GET " + targetWithPath + " with CODE=" + response.getStatus() + " and REASON=" + response.getStatusInfo());
+		}
+
 		String responseJson = response.readEntity(String.class);
 	
 		return responseJson;
@@ -163,7 +173,8 @@ public class PrismeServiceUtils {
 		WebTarget target = clientService.getClient().target(targetStr);
 		target = target.path(pathStr);
 		
-		return getResultJsonFromPrisme(target, params);
+		final String result = getResultJsonFromPrisme(target, params);
+		return result;
 	}
 
 	static String getResultJsonFromPrisme(String targetStr, String pathStr) {
