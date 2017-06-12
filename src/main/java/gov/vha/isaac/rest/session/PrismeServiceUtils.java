@@ -32,7 +32,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.persistence.oxm.MediaType;
+import javax.ws.rs.core.MediaType;
 
 import gov.vha.isaac.ochre.api.LookupService;
 
@@ -142,7 +142,7 @@ public class PrismeServiceUtils {
 				targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
 			}
 		}
-		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON.toString()).post(Entity.json(json));
+		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
 
 		if (response.getStatus() != Status.OK.getStatusCode()) {
 			throw new RuntimeException("Failed performing POST " + targetWithPath + " of \"" + json + "\" + with CODE=" + response.getStatus() + " and REASON=" + response.getStatusInfo());
@@ -157,7 +157,7 @@ public class PrismeServiceUtils {
 		for (Map.Entry<String, String> entry : params.entrySet()) {
 			targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
 		}
-		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON.toString()).get();
+		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON).get();
 
 		if (response.getStatus() != Status.OK.getStatusCode()) {
 			throw new RuntimeException("Failed performing GET " + targetWithPath + " with CODE=" + response.getStatus() + " and REASON=" + response.getStatusInfo());
