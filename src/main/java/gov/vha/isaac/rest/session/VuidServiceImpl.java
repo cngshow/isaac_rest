@@ -18,8 +18,10 @@
  */
 package gov.vha.isaac.rest.session;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -163,7 +165,13 @@ public class VuidServiceImpl implements VuidService {
 		Map<String, String> params = new HashMap<>();
 		params.put("blockSize", blockSize + "");
 		params.put("reason", reason);
-		params.put("ssoToken", ssoToken);
+		String encodedToken;
+		try {
+			encodedToken = URLEncoder.encode(ssoToken, "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			throw new RuntimeException("Failed UTF-8 encoding SSO token \"" + ssoToken + "\"", e1);
+		}
+		params.put("ssoToken", encodedToken);
 		String target = PrismeServiceUtils.getTargetFromUrl(url);
 		String resultJson = VuidServiceUtils.getResultJsonFromVuidService(target, url.getPath(), params, Entity.xml(""));
 		log.trace("Retrieved from " + vuidServiceUrl + " resultJson=\"" + resultJson + "\"");

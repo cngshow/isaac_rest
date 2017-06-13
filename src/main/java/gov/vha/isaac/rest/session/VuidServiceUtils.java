@@ -25,7 +25,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import gov.vha.isaac.ochre.api.LookupService;
 
@@ -49,15 +51,19 @@ public class VuidServiceUtils {
 		Response response = null;
 		try {
 			if (entityToPost != null) {
-				response = targetWithPath.request().post(entityToPost);
+				response = targetWithPath.request().accept(MediaType.APPLICATION_JSON).post(entityToPost);
 			} else {
-				response = targetWithPath.request().get();
+				response = targetWithPath.request().accept(MediaType.APPLICATION_JSON).get();
 			}
 		} catch (RuntimeException e) {
 			log.error("FAILED getting response from request " + targetWithPath + " (" + entityToPost != null ? "POST " + entityToPost : "GET" + ")", e);
 			throw e;
 		}
 		
+		if (response.getStatus() != Status.OK.getStatusCode()) {
+			throw new RuntimeException("FAILED request " + targetWithPath + " (" + entityToPost != null ? "POST " + entityToPost : "GET" + ") with code=" + response.getStatus() + " and reason=" + response.getStatusInfo());
+		}
+
 		String responseJson = response.readEntity(String.class);
 	
 		return responseJson;

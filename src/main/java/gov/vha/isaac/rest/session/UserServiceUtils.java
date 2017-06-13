@@ -196,7 +196,7 @@ public class UserServiceUtils {
 			
 			Response response = client.target(PrismeServiceUtils.getTargetFromUrl(url))
 					.path(url.getPath())
-					.queryParam("token", token)
+					.queryParam("token", URLEncoder.encode(token, "UTF-8"))
 					.request().get();
 
 			String responseJson = response.readEntity(String.class);
