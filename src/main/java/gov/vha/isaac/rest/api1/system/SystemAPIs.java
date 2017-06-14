@@ -536,7 +536,8 @@ public class SystemAPIs
 				TaxonomyCoordinates.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), 
 						LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate())))
 		{
-			throw new RestException("The passed in concept is not a child of the MODULE constant.  It should be a direct child of " + MetaData.MODULE.getPrimordialUuid());
+			throw new RestException("The passed in concept '" + id + "' is not a child of the MODULE constant.  "
+					+ "It should be a direct child of " + MetaData.MODULE.getPrimordialUuid());
 		}
 		
 		
