@@ -21,7 +21,7 @@ package gov.vha.isaac.rest.session;
 
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -141,7 +141,8 @@ public class UserServiceUtils {
 	public static Optional<User> getUserFromTestToken(String ssoToken) throws JsonParseException, JsonMappingException, IOException {
 		String jsonToUse = null;
 	
-		Optional<String> createdJson = constructTestUser(ssoToken);
+		//We no longer automatically decode ssoTokens - but when the test class sends in raw json, it comes with ':' encoded.
+		Optional<String> createdJson = constructTestUser(URLDecoder.decode(ssoToken, "UTF-8"));
 		if (createdJson.isPresent()) {
 			jsonToUse = createdJson.get();
 		} else {

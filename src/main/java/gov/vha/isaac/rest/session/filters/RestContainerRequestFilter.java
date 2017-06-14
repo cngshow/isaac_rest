@@ -20,6 +20,7 @@
 package gov.vha.isaac.rest.session.filters;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Priority;
@@ -27,7 +28,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -100,7 +100,8 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 		
 		
 		//Note, this call, DECODES all of the parameters.  But we shouldn't decode ssoToken.
-		MultivaluedMap<String, String> queryParams = requestContext.getUriInfo().getQueryParameters();
+		HashMap<String, List<String>> queryParams = new HashMap<>();
+		queryParams.putAll(requestContext.getUriInfo().getQueryParameters());
 		if (queryParams.containsKey(RequestParameters.ssoToken))
 		{
 			//grab the unmolested ssoToken, so we don't cause inadvertent parse issues in prisme
