@@ -512,7 +512,7 @@ public class SystemAPIs
 	
 	/**
 	 * Return the (sorted) extended description types that are allowable by a particular terminology.  
-	 * @param id - a nid, sequence or UUID of a concept that represents a terminology in the system.  This should be a child of 
+	 * @param id - a nid, sequence or UUID of a concept that represents a terminology in the system.  This should be a direct child of 
 	 * {@link MetaData#MODULE}
 	 * @throws RestException if no user concept can be identified.
 	 */
