@@ -37,7 +37,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,6 +58,8 @@ import gov.vha.isaac.ochre.api.util.UuidT5Generator;
  *
  */
 public class UserServiceUtils {
+	private static Logger log = LogManager.getLogger(UserServiceUtils.class);
+	
 	public static final String TEST_JSON1 = "{\"roles\":["
 	+ "{\"id\":19990,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 	+ ","
@@ -321,6 +324,7 @@ public class UserServiceUtils {
 		params.put("token", URLEncoder.encode(ssoToken, "UTF-8"));
 		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
+		log.debug("PRISME returned '" + jsonResultString + "'");
 		return Optional.of(UserServiceUtils.getUserFromJson(jsonResultString));
 	}
 }
