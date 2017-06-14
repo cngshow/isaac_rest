@@ -20,19 +20,17 @@
 package gov.vha.isaac.rest.session.filters;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -99,9 +97,21 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 				LOG.debug("Path parameter \"{}\"=\"{}\"", parameter.getKey(), parameter.getValue());
 			}
 		}
-		if (requestContext.getUriInfo().getQueryParameters().size() > 0) {
-			LOG.debug("Query parameters: {}", requestContext.getUriInfo().getQueryParameters().keySet());
-			for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getQueryParameters().entrySet()) 
+		
+		
+		//Note, this call, DECODES all of the parameters.  But we shouldn't decode ssoToken.
+		HashMap<String, List<String>> queryParams = new HashMap<>();
+		queryParams.putAll(requestContext.getUriInfo().getQueryParameters());
+		if (queryParams.containsKey(RequestParameters.ssoToken))
+		{
+			//grab the unmolested ssoToken, so we don't cause inadvertent parse issues in prisme
+			queryParams.put(RequestParameters.ssoToken, requestContext.getUriInfo().getQueryParameters(false).get(RequestParameters.ssoToken));
+		}
+		
+		
+		if (queryParams.size() > 0) {
+			LOG.debug("Query parameters: {}", queryParams.keySet());
+			for (Map.Entry<String, List<String>> parameter : queryParams.entrySet()) 
 			{
 				LOG.debug("Query parameter \"{}\"=\"{}\"", parameter.getKey(), parameter.getValue());
 			}
@@ -115,12 +125,12 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 
 		try
 		{
-			RequestInfo.get().readAll(requestContext.getUriInfo().getQueryParameters());
+			RequestInfo.get().readAll(queryParams);
 
 			//If they are asking for an edit token, or attempting to do a write, we need a valid editToken.
 			if (requestContext.getUriInfo().getPath().contains(RestPaths.writePathComponent)
 					|| requestContext.getUriInfo().getPath().contains(RestPaths.coordinateAPIsPathComponent + RestPaths.editTokenComponent)
-					|| requestContext.getUriInfo().getQueryParameters().containsKey(RequestParameters.editToken)
+					|| queryParams.containsKey(RequestParameters.editToken)
 					) {
 
 				EditToken et = RequestInfo.get().getEditToken();

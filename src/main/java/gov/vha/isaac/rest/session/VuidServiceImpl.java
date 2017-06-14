@@ -18,8 +18,10 @@
  */
 package gov.vha.isaac.rest.session;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -98,7 +100,16 @@ public class VuidServiceImpl implements VuidService {
 		Map<String, String> params = new HashMap<>();
 		params.put(RequestParameters.vuid, vuidToValidate + "");
 		String target = PrismeServiceUtils.getTargetFromUrl(url);
-		String resultJson = VuidServiceUtils.getResultJsonFromVuidService(target, url.getPath(), params, (Entity<?>)null);
+		String resultJson = null;
+		try {
+			resultJson = VuidServiceUtils.getResultJsonFromVuidService(target, url.getPath(), params, (Entity<?>)null);
+		} catch (Exception e) {
+			String msg = "FAILED vuid validation request " + target + url.getPath() + "?vuid=" + vuidToValidate;
+			log.error(msg, e);
+			
+			throw new RestException(msg);
+		}
+		
 		log.trace("Retrieved from " + vuidServiceUrl + " resultJson=\"" + resultJson + "\"");
 		
 		if (resultJson.contains(RestExceptionResponse.class.getName()))

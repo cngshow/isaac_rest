@@ -426,14 +426,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return getDescriptionsForConcept(id, entries);
 	}
 	public String getEditTokenString(String ssoTokenString) {
-		String encodedToken = null;
-		try {
-			encodedToken = URLEncoder.encode(ssoTokenString, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
 		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
-				.queryParam(RequestParameters.ssoToken, encodedToken)
+				.queryParam(RequestParameters.ssoToken, ssoTokenString)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String getEditTokenResponseResult = checkFail(getEditTokenResponse).readEntity(String.class);
@@ -1473,8 +1467,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Retrieve all descriptions referring to referenced concept
 		conceptDescriptionsObject = getDescriptionsForConcept(
 				referencedConceptNid,
-				param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()),
-				param(RequestParameters.allowedStates, State.ACTIVE.name()));
+				param(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence()));
 		Assert.assertTrue(conceptDescriptionsObject.length > 0);
 		// Iterate description list to find new description
 		matchingVersion = null;

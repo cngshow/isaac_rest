@@ -21,7 +21,7 @@ package gov.vha.isaac.rest.session;
 
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,6 +36,9 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,6 +58,8 @@ import gov.vha.isaac.ochre.api.util.UuidT5Generator;
  *
  */
 public class UserServiceUtils {
+	private static Logger log = LogManager.getLogger(UserServiceUtils.class);
+	
 	public static final String TEST_JSON1 = "{\"roles\":["
 	+ "{\"id\":19990,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}"
 	+ ","
@@ -136,7 +141,8 @@ public class UserServiceUtils {
 	public static Optional<User> getUserFromTestToken(String ssoToken) throws JsonParseException, JsonMappingException, IOException {
 		String jsonToUse = null;
 	
-		Optional<String> createdJson = constructTestUser(ssoToken);
+		//We no longer automatically decode ssoTokens - but when the test class sends in raw json, it comes with ':' encoded.
+		Optional<String> createdJson = constructTestUser(URLDecoder.decode(ssoToken, "UTF-8"));
 		if (createdJson.isPresent()) {
 			jsonToUse = createdJson.get();
 		} else {
@@ -248,6 +254,10 @@ public class UserServiceUtils {
 		map = mapper.readValue(jsonToUse, Map.class);
 		
 		String userName = (String)map.get("user");
+		if (StringUtils.isBlank(userName)) {
+			throw new RuntimeException("Failed extracting 'user' field from json '" + jsonToUse + "'");
+		}
+
 		Set<UserRole> roleSet = new HashSet<>();
 		Collection<?> roles = (Collection<?>)map.get("roles");
 		for (Object roleMapObject : roles) {
@@ -312,9 +322,10 @@ public class UserServiceUtils {
 //		//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
 
 		Map<String, String> params = new HashMap<>();	
-		params.put("token", URLEncoder.encode(ssoToken, "UTF-8"));
+		params.put("token", ssoToken);
 		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
+		log.debug("PRISME returned '" + jsonResultString + "'");
 		return Optional.of(UserServiceUtils.getUserFromJson(jsonResultString));
 	}
 }
