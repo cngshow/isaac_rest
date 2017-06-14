@@ -199,7 +199,7 @@ public class UserServiceUtils {
 			
 			Response response = client.target(PrismeServiceUtils.getTargetFromUrl(url))
 					.path(url.getPath())
-					.queryParam("token", URLEncoder.encode(token, "UTF-8"))
+					.queryParam("token", token)
 					.request().get();
 
 			String responseJson = response.readEntity(String.class);
@@ -321,7 +321,7 @@ public class UserServiceUtils {
 //		//String json = "{\"roles\":[{\"id\":10000,\"name\":\"read_only\",\"resource_id\":null,\"resource_type\":null,\"created_at\":\"2016-09-13T14:48:18.000Z\",\"updated_at\":\"2016-09-13T14:48:18.000Z\"}],\"token_parsed?\":true,\"user\":\"VHAISHArmbrD\",\"type\":\"ssoi\",\"id\":10005}";
 
 		Map<String, String> params = new HashMap<>();	
-		params.put("token", URLEncoder.encode(ssoToken, "UTF-8"));
+		params.put("token", ssoToken);
 		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
 		log.debug("PRISME returned '" + jsonResultString + "'");
