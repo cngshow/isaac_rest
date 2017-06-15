@@ -347,12 +347,12 @@ public class CoordinateAPIs
 			) throws RestException
 	{
 		// Log value of ssoToken parameter
-		log.info(RequestParameters.ssoToken + "==\"" + ssoToken + "\"");
+		//log.info(RequestParameters.ssoToken + "==\"" + ssoToken + "\"");
 		// TODO figure out why we need to use RequestInfo.get().getParameters().get(RequestParameters.ssoToken) instead of ssoToken
 		if (RequestInfo.get().getParameters().get(RequestParameters.ssoToken) != null && RequestInfo.get().getParameters().get(RequestParameters.ssoToken).size() > 0) {
 			ssoToken = RequestInfo.get().getParameters().get(RequestParameters.ssoToken).iterator().next();
 		}
-		log.info(RequestParameters.ssoToken + " in RequestInfo==\"" + ssoToken + "\"");
+		//log.info(RequestParameters.ssoToken + " in RequestInfo==\"" + ssoToken + "\"");
 
 		SecurityUtils.validateRole(securityContext, getClass());
 		RequestInfoUtils.validateIncompatibleParameters(RequestInfo.get().getParameters(), RequestParameters.editToken, RequestParameters.ssoToken, RequestParameters.userId);
