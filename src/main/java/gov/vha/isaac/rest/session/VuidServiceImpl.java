@@ -158,6 +158,10 @@ public class VuidServiceImpl implements VuidService {
 	 */
 	@Override
 	public Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken) {
+
+		// Log value of ssoToken parameter
+		log.info(RequestParameters.ssoToken + "==\"" + ssoToken + "\"");
+
 		String vuidServiceUrl = getVuidAllocateServiceUrl();
 
 		if (StringUtils.isBlank(vuidServiceUrl)) {
