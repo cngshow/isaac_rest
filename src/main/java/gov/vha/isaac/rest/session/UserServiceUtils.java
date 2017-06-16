@@ -108,7 +108,12 @@ public class UserServiceUtils {
 					String[] roleStrings = components[1].split(",");
 	
 					for (int i = 0; i < roleStrings.length; ++i) {
-						roles.add(UserRole.safeValueOf(roleStrings[i].trim()).get());
+						final String roleString = roleStrings[i].trim();
+						if (UserRole.safeValueOf(roleString).isPresent()) {
+							roles.add(UserRole.safeValueOf(roleString).get());
+						} else {
+							log.warn("Not adding unsupported role \"" + roleString + "\"");
+						}
 					}
 				}
 			}
@@ -264,10 +269,14 @@ public class UserServiceUtils {
 			Map<?,?> roleMap = (Map<?,?>)roleMapObject;
 			String roleName = (String)roleMap.get("name");
 			
-			roleSet.add(UserRole.safeValueOf(roleName).get());
+			if (UserRole.safeValueOf(roleName).isPresent()) {
+				roleSet.add(UserRole.safeValueOf(roleName).get());
+			} else {
+				log.warn("Not adding to user \"" + userName + "\" unsupported role \"" + roleName + "\"");
+			}
 		}
 		
-		final UUID uuidFromUserFsn = UserServiceUtils.getUuidFromUserName(userName);;
+		final UUID uuidFromUserFsn = UserServiceUtils.getUuidFromUserName(userName);
 	
 		User newUser = new User(userName, uuidFromUserFsn, roleSet);
 		
@@ -283,6 +292,11 @@ public class UserServiceUtils {
 		Object returnedObject = mapper.readValue(jsonResultString, List.class);
 		
 		for (Object roleFromPrisme : (List<?>)returnedObject) {
+			if (UserRole.safeValueOf(roleFromPrisme.toString()).isPresent()) {
+				roles.add(UserRole.safeValueOf(roleFromPrisme.toString()).get());
+			} else {
+				log.warn("Not adding unsupported role \"" + roleFromPrisme.toString() + "\"");
+			}
 			roles.add(UserRole.valueOf(roleFromPrisme.toString()));
 		}
 		

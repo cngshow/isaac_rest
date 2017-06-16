@@ -156,6 +156,11 @@ public class RequestInfo
 			parameters_.put(entry.getKey(), Collections.unmodifiableList(entry.getValue()));
 		}
 
+		// Log value of ssoToken parameter, if any
+		if (parameters_.get(RequestParameters.ssoToken) != null && parameters_.get(RequestParameters.ssoToken).size() == 1) {
+			log.info(RequestParameters.ssoToken + "==\"" + parameters_.get(RequestParameters.ssoToken).iterator().next() + "\"");
+		}
+		
 		readExpandables(parameters);
 
 		String serializedCoordinatesTokenByParams = CoordinatesTokens.get(CoordinatesUtil.getCoordinateParameters(parameters));
