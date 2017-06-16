@@ -18,10 +18,8 @@
  */
 package gov.vha.isaac.rest.session;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -158,10 +156,6 @@ public class VuidServiceImpl implements VuidService {
 	 */
 	@Override
 	public Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken) {
-
-		// Log value of ssoToken parameter
-		//log.info(RequestParameters.ssoToken + "==\"" + ssoToken + "\"");
-
 		String vuidServiceUrl = getVuidAllocateServiceUrl();
 
 		if (StringUtils.isBlank(vuidServiceUrl)) {

@@ -93,13 +93,16 @@ public class VuidWriteAPIs
 			@QueryParam(RequestParameters.reason) String reason,
 			@QueryParam(RequestParameters.ssoToken) String ssoToken) throws RestException
 	{
-		// Log value of ssoToken parameter
-		//log.info(RequestParameters.ssoToken + "==\"" + ssoToken + "\"");
-		// TODO figure out why we need to use RequestInfo.get().getParameters().get(RequestParameters.ssoToken) instead of ssoToken
+		// The ssoToken, as passed in to this call, has been decoded by jersey - but we don't want the decoded parameter.
+		//We want it exactly as it was - which was pulled off and stashed by the filter.  So, use the token from the RequestInfo, instead.
 		if (RequestInfo.get().getParameters().get(RequestParameters.ssoToken) != null && RequestInfo.get().getParameters().get(RequestParameters.ssoToken).size() > 0) {
 			ssoToken = RequestInfo.get().getParameters().get(RequestParameters.ssoToken).iterator().next();
 		}
-		//log.info(RequestParameters.ssoToken + " in RequestInfo==\"" + ssoToken + "\"");
+		else
+		{
+			//This should be impossible... but just in case, to save us headaches in the future....
+			throw new RestException(RequestParameters.ssoToken, "", "no ssoToken present?");
+		}
 
 		//Even though we don't ask for an edit token, the other framework here inadvertently creates one, and caches it.  Future calles to this method will reject
 		//an sso string if it has ever been seen before, if we don't refresh the edit token on each call.

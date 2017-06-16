@@ -346,9 +346,6 @@ public class CoordinateAPIs
 			@QueryParam(RequestParameters.editPath) String editPath // Applied in RestContainerRequestFilter
 			) throws RestException
 	{
-		// Log value of ssoToken parameter
-		//log.info(RequestParameters.ssoToken + "==\"" + ssoToken + "\"");
-
 		SecurityUtils.validateRole(securityContext, getClass());
 		RequestInfoUtils.validateIncompatibleParameters(RequestInfo.get().getParameters(), RequestParameters.editToken, RequestParameters.ssoToken, RequestParameters.userId);
 

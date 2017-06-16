@@ -98,7 +98,6 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 			}
 		}
 		
-		
 		//Note, this call, DECODES all of the parameters.  But we shouldn't decode ssoToken.
 		HashMap<String, List<String>> queryParams = new HashMap<>();
 		queryParams.putAll(requestContext.getUriInfo().getQueryParameters());
@@ -107,7 +106,6 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 			//grab the unmolested ssoToken, so we don't cause inadvertent parse issues in prisme
 			queryParams.put(RequestParameters.ssoToken, requestContext.getUriInfo().getQueryParameters(false).get(RequestParameters.ssoToken));
 		}
-		
 		
 		if (queryParams.size() > 0) {
 			LOG.debug("Query parameters: {}", queryParams.keySet());
