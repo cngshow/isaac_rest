@@ -3,7 +3,9 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/06/?? - 4.6 - PENDING
+* 2017/06/?? - 4.6
+	* Improvement and cleanup for ssoToken handling.
+	* Documentation improvements and code cleanup. 
 
 * 2017/06/14 - 4.5
     * Fix a bunch of issues with how we were handling the ssoToken internally, which lead to prisme not being able to parse back the ssoToken in some cases.
