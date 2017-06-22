@@ -36,6 +36,7 @@ public class RestPaths
 	public static final String updateStateComponent = "state/";
 	public static final String versionsComponent = "versions/";
 	public static final String versionComponent = "version/";
+	public static final String childrenComponent = "children/";
 	public static final String objectChronologyTypeComponent = "objectChronologyType/";
 	public static final String identifiedObjectsComponent = "identifiedObjects/";
 	public static final String sememeTypeComponent = "sememeType/";

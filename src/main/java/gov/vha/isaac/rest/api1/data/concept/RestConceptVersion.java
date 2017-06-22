@@ -280,8 +280,11 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, 
-						includeTerminologyType, new ConceptSequenceSet(), processId);
+				List<RestConceptVersion> children = new ArrayList<>();
+				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), children, tree, countChildren, countParents, 0, includeSememeMembership, 
+						includeTerminologyType, new ConceptSequenceSet(), processId,
+						TaxonomyAPIs.PAGE_NUM_DEFAULT, TaxonomyAPIs.MAX_PAGE_SIZE_DEFAULT);
+				this.getChildren().addAll(children);
 			}
 			else if (countChildren)
 			{
@@ -313,11 +316,6 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			parents.clear();
 			children.clear();
 		}
-	}
-	
-	public void addChild(RestConceptVersion child)
-	{
-		this.children.add(child);
 	}
 	
 	public void addParent(RestConceptVersion parent)
@@ -407,7 +405,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 */
 	@XmlTransient
 	public List<RestConceptVersion> getChildren() {
-		return Collections.unmodifiableList(children);
+		return children;
 	}
 
 	/* (non-Javadoc)
