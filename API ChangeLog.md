@@ -14,6 +14,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2017/06/22 - 1.15.4
+    * Modifed RestConceptVersion to contain Pagination data and modified TaxonomyAPIs version API to accept pageNum and maxPageSize parameters or to default values and to paginate concept children
+
 * 2017/06/05 - 1.15.3
     * Moving extendedDescriptionTypeConcept from RestSememeDescriptionCreate down into RestSememeDescriptionUpdate (which is a parent of RestSememeDescriptionCreate)
         The end result of this move is that extendedDescriptionTypeConcept is now available for direct edit during a description update.  This, in conjunction with a 

@@ -19,22 +19,23 @@
 package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.PrimitiveIterator.OfInt;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -52,6 +53,8 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
+import gov.vha.isaac.rest.api.data.Pagination;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
@@ -154,7 +157,13 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestIdentifiedObject[] terminologyTypes;
-	
+
+	/**
+	 * Pagination data
+	 */
+	@XmlElement
+	public Pagination childrenPaginationData;
+
 	protected RestConceptVersion()
 	{
 		//for Jaxb
@@ -280,11 +289,14 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 
 			if (includeChildren)
 			{
-				List<RestConceptVersion> children = new ArrayList<>();
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), children, tree, countChildren, countParents, 0, includeSememeMembership, 
-						includeTerminologyType, new ConceptSequenceSet(), processId,
-						TaxonomyAPIs.PAGE_NUM_DEFAULT, TaxonomyAPIs.MAX_PAGE_SIZE_DEFAULT);
-				this.getChildren().addAll(children);
+				try {
+					TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, 
+							includeTerminologyType, new ConceptSequenceSet(), processId,
+							TaxonomyAPIs.PAGE_NUM_DEFAULT, TaxonomyAPIs.MAX_PAGE_SIZE_DEFAULT);
+				} catch (RestException e) {
+					// RestException thrown due to Pagination Shouldn't happen with default values
+					throw new RuntimeException(e);
+				}
 			}
 			else if (countChildren)
 			{
@@ -416,6 +428,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		return "RestConceptVersion [conChronology=" + conChronology + ", conVersion=" + conVersion
 				+ ", isConceptDefined=" + isConceptDefined + ", parents=" + parents + ", children=" + children
 				+ ", childCount=" + childCount + ", parentCount=" + parentCount + ", sememeMembership="
-				+ sememeMembership + "]";
+				+ Arrays.toString(sememeMembership) + ", terminologyTypes=" + Arrays.toString(terminologyTypes)
+				+ ", childrenPaginationData=" + childrenPaginationData + "]";
 	}
 }

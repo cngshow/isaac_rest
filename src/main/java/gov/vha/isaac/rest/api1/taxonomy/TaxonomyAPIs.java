@@ -47,11 +47,11 @@ import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.rest.api.data.Pagination;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
-import gov.vha.isaac.rest.api1.data.concept.RestConceptVersionPage;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
@@ -69,12 +69,17 @@ public class TaxonomyAPIs
 {
 	private static Logger log = LogManager.getLogger(TaxonomyAPIs.class);
 
+	public final static int MAX_PAGE_SIZE_DEFAULT = 5000;
+	public final static int PAGE_NUM_DEFAULT = 1;
+
 	@Context
 	private SecurityContext securityContext;
 
 	/**
-	 * Returns a single version of a concept, with parents and children expanded to the specified levels.
+	 * Returns a single version of a concept, with parents and children expanded to the specified extent and levels.
 	 * If no version parameter is specified, returns the latest version.
+	 * Pagination parameters may restrict which children are returned, but only effect the direct children of the specified concept,
+	 * and are ignored (defaulted) during populating children of children and descendants. 
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.
 	 * @param parentHeight - How far to walk up (expand) the parent tree
@@ -96,7 +101,8 @@ public class TaxonomyAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
 	 * obtained by a separate (prior) call to getCoordinatesToken().
-	 * 
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0, defaults to (MAX_PAGE_SIZE_DEFAULT==5000)
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -114,7 +120,9 @@ public class TaxonomyAPIs
 			@QueryParam(RequestParameters.terminologyType) @DefaultValue("false") String terminologyType,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.processId) String processId,
-			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+			@QueryParam(RequestParameters.coordToken) String coordToken,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(PAGE_NUM_DEFAULT + "") int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(MAX_PAGE_SIZE_DEFAULT + "") int maxPageSize) throws RestException
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
 
@@ -150,8 +158,7 @@ public class TaxonomyAPIs
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership, includeTerminologyType,
-					processIdUUID);  
-			
+					processIdUUID);
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
@@ -167,10 +174,8 @@ public class TaxonomyAPIs
 			
 			if (childDepth > 0)
 			{
-				List<RestConceptVersion> children = new ArrayList<>();
-				addChildren(concept.getConceptSequence(), children, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, 
+				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, 
 						includeTerminologyType, new ConceptSequenceSet(), processIdUUID, 1, MAX_PAGE_SIZE_DEFAULT);
-				rcv.getChildren().addAll(children);
 			}
 			else if (countChildrenBoolean)
 			{
@@ -180,64 +185,6 @@ public class TaxonomyAPIs
 			return rcv;
 		}
 		throw new RestException(RequestParameters.id, id, "No concept was found");
-	}
-
-	public final static int MAX_PAGE_SIZE_DEFAULT = 5000;
-	public final static int PAGE_NUM_DEFAULT = 1;
-	
-	/**
-	 * Returns a ({@code RestConceptVersionPage}), containing a list of versions of a specified concept ({@code RestConceptVersion}),
-	 * with parents and children expanded to the specified levels.
-	 * If no version parameter is specified, returns the latest version.
-	 * Pagination parameters only effect the direct children of the specified concept,
-	 * and are ignored (defaulted) when populating {@code RestConceptVersionPage} children of children and descendants. 
-	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
-	 * is the UUID for the ISAAC_ROOT concept.
-	 * @param parentHeight - How far to walk up (expand) the parent tree
-	 * @param countParents - true to count the number of parents above this node.  May be used with or without the parentHeight parameter
-	 *  - it works independently.  When used in combination with the parentHeight parameter, only the last level of items returned will return
-	 *  parent counts.  This parameter also applies to the expanded children - if childDepth is requested, and countParents is set, this will 
-	 *  return a count of parents of each child, which can be used to determine if a child has multiple parents.
-	 * @param childDepth - How far to walk down (expand) the tree 
-	 * @param countChildren - true to count the number of children below this node.  May be used with or without the childDepth parameter
-	 *  - it works independently.  When used in combination with the childDepth parameter, only the last level of items returned will return
-	 *  child counts.  
-	 * @param sememeMembership - when true, the sememeMembership field of the RestConceptVersion object will be populated with the set of unique
-	 * concept sequences that describe sememes that this concept is referenced by.  (there exists a sememe instance where the referencedComponent 
-	 * is the RestConceptVersion being returned here, then the value of the assemblage is also included in the RestConceptVersion).
-	 * This will not include the membership information for any assemblage of type logic graph or descriptions.
-	 * @param terminologyType - when true, the concept sequences of the terminologies that this concept is part of on any stamp is returned.  This 
-	 * is determined by whether or not there is version of this concept present with a module that extends from one of the children of the 
-	 * {@link MetaData#MODULE} concepts.  This is returned as a set, as a concept may exist in multiple terminologies at the same time.
-	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
-	 * obtained by a separate (prior) call to getCoordinatesToken().
-	 * @param pageNum The pagination page number >= 1 to return
-	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0, defaults to 250
-	 * 
-	 * @return the concept version object
-	 * @throws RestException 
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.childrenComponent)
-	public RestConceptVersionPage getConceptVersionChildrenTaxonomy(
-			//ISAAC_Root - any variable ref here breaks the compiler and/or enunciate
-			@QueryParam(RequestParameters.id) @DefaultValue(RequestParameters.ISAAC_ROOT_UUID) String id,
-			@QueryParam(RequestParameters.parentHeight) @DefaultValue("0") int parentHeight,
-			@QueryParam(RequestParameters.countParents) @DefaultValue("false") String countParents,
-			@QueryParam(RequestParameters.childDepth) @DefaultValue("1") int childDepth,
-			@QueryParam(RequestParameters.countChildren) @DefaultValue("false") String countChildren,
-			@QueryParam(RequestParameters.sememeMembership) @DefaultValue("false") String sememeMembership,
-			@QueryParam(RequestParameters.terminologyType) @DefaultValue("false") String terminologyType,
-			@QueryParam(RequestParameters.expand) String expand,
-			@QueryParam(RequestParameters.processId) String processId,
-			@QueryParam(RequestParameters.coordToken) String coordToken,
-			@QueryParam(RequestParameters.pageNum) @DefaultValue(PAGE_NUM_DEFAULT + "") int pageNum,
-			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(MAX_PAGE_SIZE_DEFAULT + "") int maxPageSize
-			) throws RestException
-	{
-		return null;
 	}
 
 	/**
@@ -256,7 +203,7 @@ public class TaxonomyAPIs
 	 */
 	public static void addChildren(
 			int conceptSequence,
-			Collection<RestConceptVersion> children,
+			RestConceptVersion rcv,
 			Tree tree,
 			boolean countLeafChildren,
 			boolean countParents,
@@ -266,15 +213,16 @@ public class TaxonomyAPIs
 			ConceptSequenceSet alreadyAddedChildren,
 			UUID processId,
 			int pageNum, // PAGE_NUM_DEFAULT == 1
-			int maxPageSize) // MAX_PAGE_SIZE_DEFAULT == 250
+			int maxPageSize) // MAX_PAGE_SIZE_DEFAULT == 5000
+		throws RestException
 	{
 		if (pageNum < 1) {
 			// Bad pageNum parameter value
-			//TODO Throw RestException if pageNum < 1?
+			throw new RestException(RequestParameters.pageNum, pageNum + "", "pageNum (" + pageNum + ") should be >= 1");
 		}
 		if (maxPageSize < 1) {
 			// Bad maxPageSize parameter value
-			//TODO Throw RestException if maxPageSize < 1?
+			throw new RestException(RequestParameters.maxPageSize, maxPageSize + "", "maxPageSize (" + maxPageSize + ") should be >= 1");
 		}
 
 		if (alreadyAddedChildren.contains(conceptSequence)) {
@@ -287,14 +235,16 @@ public class TaxonomyAPIs
 		//TODO 3 we need to guard against very large result returns - we must cap this, and, ideally, introduce paging, 
 		//or something along those lines to handle very large result sets.
 		int childCount = 0;
-		int start = pageNum == 1 ? 0 : ((pageNum - 1) * maxPageSize + 1);
-		for (int childSequence : tree.getChildrenSequences(conceptSequence))
+		final int first = pageNum == 1 ? 0 : ((pageNum - 1) * maxPageSize + 1);
+		final int last = pageNum * maxPageSize;
+		final int[] totalChildrenSequences = tree.getChildrenSequences(conceptSequence);
+		for (int childSequence : totalChildrenSequences)
 		{
 			childCount++;
-			if (childCount < start) {
+			if (childCount < first) {
 				// Ignore unrequested pages prior to requested page
 				continue;
-			} else if (childCount > pageNum * maxPageSize) {
+			} else if (childCount > last) {
 				// Ignore unrequested pages subsequent to requested page
 				log.warn("Limiting the number of taxonomy children under concept " + Frills.getIdInfo(childSequence));
 				break;
@@ -321,13 +271,11 @@ public class TaxonomyAPIs
 					//TODO handle contradictions
 					RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
 							includeSememeMembership, includeTerminologyType, processId);
-					children.add(childVersion);
+					rcv.getChildren().add(childVersion);
 					if (remainingChildDepth > 0)
 					{
-						List<RestConceptVersion> childChildren = new ArrayList<>();
-						addChildren(childConcept.getConceptSequence(), childChildren, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
-								includeTerminologyType, alreadyAddedChildren, processId, PAGE_NUM_DEFAULT, MAX_PAGE_SIZE_DEFAULT);
-						childVersion.getChildren().addAll(childChildren);
+						addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
+								includeTerminologyType, alreadyAddedChildren, processId, 1, MAX_PAGE_SIZE_DEFAULT);
 					}
 					else if (countLeafChildren)
 					{
@@ -336,6 +284,14 @@ public class TaxonomyAPIs
 				}
 			}
 		}
+		
+		final String baseUrl = RestPaths.taxonomyAPIsPathComponent + RestPaths.versionComponent + "?" + RequestParameters.id + "=" + conceptSequence;
+		rcv.childrenPaginationData = new Pagination(
+				pageNum, maxPageSize,
+				totalChildrenSequences.length,
+				true,
+				(last - first) < totalChildrenSequences.length,
+				baseUrl);
 	}
 	
 	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId)
