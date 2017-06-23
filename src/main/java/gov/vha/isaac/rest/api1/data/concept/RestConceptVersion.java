@@ -162,6 +162,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * Pagination data
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Pagination childrenPaginationData;
 
 	protected RestConceptVersion()
