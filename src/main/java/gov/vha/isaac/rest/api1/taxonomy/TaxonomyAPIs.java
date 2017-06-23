@@ -137,7 +137,8 @@ public class TaxonomyAPIs
 				RequestParameters.terminologyType,
 				RequestParameters.expand,
 				RequestParameters.processId,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.PAGINATION_PARAM_NAMES);
 
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
@@ -175,7 +176,7 @@ public class TaxonomyAPIs
 			if (childDepth > 0)
 			{
 				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, 
-						includeTerminologyType, new ConceptSequenceSet(), processIdUUID, 1, MAX_PAGE_SIZE_DEFAULT);
+						includeTerminologyType, new ConceptSequenceSet(), processIdUUID, pageNum, maxPageSize);
 			}
 			else if (countChildrenBoolean)
 			{

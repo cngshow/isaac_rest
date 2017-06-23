@@ -28,6 +28,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -483,7 +486,123 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return writeResponse;
 	}
 
+	public int createConcept(
+			Collection<String> parentConceptIds,
+			String fsn,
+			boolean createSemanticTag,
+			String descriptionsLanguageConceptId,
+			String descriptionsExtendedTypeId,
+			Collection<String> descriptionsPreferredDialects) {
+		RestConceptCreateData newConceptData = new RestConceptCreateData(
+				parentConceptIds,
+				fsn,
+				true,
+				descriptionsLanguageConceptId,
+				descriptionsExtendedTypeId,
+				descriptionsPreferredDialects);
+
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newConceptData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+
+		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
+		RestWriteResponseConceptCreate newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptSequenceWrapper.sequence;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newConceptSequence > 0);
+		
+		return newConceptSequence;
+	}
+
 	// PLACE TEST METHODS BELOW HERE
+
+	@Test void testTaxonomyPagination() {
+		// Construct a concept with multiple children
+		final String randomTestString = "Taxonomy Pagination Test " + UUID.randomUUID().toString();		
+		
+		final String parentFSN = randomTestString + ":Parent";
+		
+		// First, create concept
+		final int parentConceptSequence = createConcept(
+				Arrays.asList(MetaData.SNOROCKET_CLASSIFIER.getConceptSequence() + ""),
+				parentFSN,
+				false,
+				MetaData.ENGLISH_LANGUAGE.getNid() + "",
+				null,
+				Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""));
+		
+		// Create 6 children
+		final int childSequences[] = new int[6];
+		for (int i = 0; i < childSequences.length; ++i) {
+			final String childFSN = randomTestString + ":" + (i + 1);
+			final int childConceptSequence = createConcept(
+					Arrays.asList(parentConceptSequence + ""),
+					childFSN,
+					false,
+					MetaData.ENGLISH_LANGUAGE.getNid() + "",
+					null,
+					Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""));
+			childSequences[i] = childConceptSequence;
+		}
+		
+		// Test request for all children
+		Response taxonomyResponse = target(taxonomyRequestPath)
+				.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.queryParam(RequestParameters.id, parentConceptSequence)
+				.queryParam(RequestParameters.parentHeight, 1)
+				.queryParam(RequestParameters.childDepth, 10)
+				.queryParam(RequestParameters.pageNum, 1)
+				.queryParam(RequestParameters.maxPageSize, 6)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+		Assert.assertNotNull(conceptVersionFromTaxonomy);
+		Assert.assertNotNull(conceptVersionFromTaxonomy.childrenPaginationData);
+		Assert.assertNotNull(conceptVersionFromTaxonomy.getChildren());
+		Assert.assertEquals(conceptVersionFromTaxonomy.getChildren().size(), childSequences.length);
+		Assert.assertEquals(conceptVersionFromTaxonomy.childrenPaginationData.approximateTotal, childSequences.length);
+		Assert.assertTrue(conceptVersionFromTaxonomy.childrenPaginationData.totalIsExact);
+		Assert.assertEquals(conceptVersionFromTaxonomy.getChildren().size(), conceptVersionFromTaxonomy.childrenPaginationData.approximateTotal);
+		
+		// Test request for each child, individually, by maxPageSize==1
+		List<Integer> foundChildSequences = new ArrayList<>();
+		
+		for (int i = 0; i < childSequences.length; ++i) {
+			Response childTaxonomyResponse = target(taxonomyRequestPath)
+					.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+					.queryParam(RequestParameters.id, parentConceptSequence)
+					.queryParam(RequestParameters.parentHeight, 1)
+					.queryParam(RequestParameters.childDepth, 10)
+					.queryParam(RequestParameters.pageNum, i + 1)
+					.queryParam(RequestParameters.maxPageSize, 1)
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+			String childTaxonomyResult = checkFail(childTaxonomyResponse).readEntity(String.class);
+			RestConceptVersion childConceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, childTaxonomyResult);
+			Assert.assertNotNull(childConceptVersionFromTaxonomy);
+			Assert.assertNotNull(childConceptVersionFromTaxonomy.childrenPaginationData);
+			Assert.assertNotNull(childConceptVersionFromTaxonomy.getChildren());
+			Assert.assertEquals(childConceptVersionFromTaxonomy.getChildren().size(), 1);
+			Assert.assertEquals(childConceptVersionFromTaxonomy.childrenPaginationData.approximateTotal, childSequences.length);
+			Assert.assertTrue(childConceptVersionFromTaxonomy.childrenPaginationData.totalIsExact);
+			Assert.assertTrue(childConceptVersionFromTaxonomy.getChildren().size() < conceptVersionFromTaxonomy.childrenPaginationData.approximateTotal);
+
+			foundChildSequences.add(childConceptVersionFromTaxonomy.getChildren().iterator().next().getConChronology().getIdentifiers().sequence);
+		}
+		Assert.assertEquals(foundChildSequences.size(), childSequences.length);
+		for (int i = 0; i < childSequences.length; ++i) {
+			Assert.assertTrue(foundChildSequences.contains(childSequences[i]));
+		}
+	}
+
 	@Test
 	public void testVuidWriteAPIs() throws JsonParseException, JsonMappingException, IOException {
 		// THIS TEST ONLY WORKS IF THE VUID-rest SERVER IS RUNNING IN THE SERVER SPECIFIED BY THE prisme_root PROPERTY IN prisme.properties
@@ -4736,6 +4855,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 		return on;
 	}
+
 	/**
 	 * @param data
 	 * @return
