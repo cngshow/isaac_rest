@@ -108,7 +108,7 @@ public class RestConceptNode extends RestLogicNode {
 		isConceptDefined = Frills.isConceptFullyDefined(lgs.get().value());
 	} catch (Exception e) {
 		LOG.warn("Problem getting isConceptDefined value (defaulting to false) for ConceptNode with {}", 
-				Optional.ofNullable(Frills.getIdInfo(conceptSequence, RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate())));
+				this.concept.toString());
 		isConceptDefined = false;
 	}
 

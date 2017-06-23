@@ -47,6 +47,7 @@ import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -200,7 +201,7 @@ public class TaxonomyAPIs
 		{
 			if (rcv.getChildCount() > 5000)
 			{
-				log.warn("Limiting the number of taxonomy children under concept " + Frills.getIdInfo(childSequence));
+				log.warn("Limiting the number of taxonomy children under concept " + new RestIdentifiedObject(childSequence));
 				break;
 			}
 			@SuppressWarnings("rawtypes")
@@ -211,7 +212,8 @@ public class TaxonomyAPIs
 			}
 			catch (RestException e)
 			{
-				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + Frills.getIdInfo(conceptSequence) + ". Not including child.", e);
+				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + new RestIdentifiedObject(conceptSequence) 
+					+ ". Not including child.", e);
 				//throw new RuntimeException("Internal Error!", e);
 			}
 			if (childConcept != null) {
@@ -252,7 +254,8 @@ public class TaxonomyAPIs
 			}
 			catch (RestException e)
 			{
-				log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + Frills.getIdInfo(conceptSequence) + ". Will not be included in count!", e);
+				log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + new RestIdentifiedObject(conceptSequence) 
+					+ ". Will not be included in count!", e);
 			}
 			
 			if (parentConcept != null) {
@@ -265,7 +268,8 @@ public class TaxonomyAPIs
 						count++;
 					}
 				} catch (Exception e) {
-					log.error("Unexpected error reading latest version of parent concept " + Frills.getIdInfo(parentSequence) + " of child concept " + Frills.getIdInfo(conceptSequence) + ". Will not be included in count!", e);
+					log.error("Unexpected error reading latest version of parent concept " + new RestIdentifiedObject(parentSequence) + " of child concept " 
+				+ new RestIdentifiedObject(conceptSequence) + ". Will not be included in count!", e);
 				}
 			}
 		}
@@ -286,20 +290,23 @@ public class TaxonomyAPIs
 			}
 			catch (Exception e)
 			{
-				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + Frills.getIdInfo(conceptSequence) + ". Not including child in count.", e);
+				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + new RestIdentifiedObject(conceptSequence) 
+					+ ". Not including child in count.", e);
 				//throw new RuntimeException("Internal Error!", e);
 			}
 			
 			if (childConcept != null) {
 				try {
 					@SuppressWarnings("unchecked")
-					Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
+					Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
+						Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
 					if (cv.isPresent())
 					{
 						count++;
 					}
 				} catch (Exception e) {
-					log.error("Failed finding latest version of child concept " + Frills.getIdInfo(childSequence) + " of parent concept " + Frills.getIdInfo(conceptSequence) + ". Not including child in count.", e);
+					log.error("Failed finding latest version of child concept " + new RestIdentifiedObject(childSequence) + " of parent concept " 
+				+ new RestIdentifiedObject(conceptSequence) + ". Not including child in count.", e);
 				}
 			}
 		}
@@ -342,7 +349,8 @@ public class TaxonomyAPIs
 					parentConceptChronlogy = ConceptAPIs.findConceptChronology(parentSequence + "");
 				}
 				catch (Exception e) {
-					log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + Frills.getIdInfo(conceptSequence) + ". Will not be included in result!", e);
+					log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + new RestIdentifiedObject(conceptSequence) 
+						+ ". Will not be included in result!", e);
 				}
 				
 				//if error is caught above parentConceptChronlogy will be null and not usable in the block below
@@ -372,7 +380,8 @@ public class TaxonomyAPIs
 					}
 					catch (Exception e)
 					{
-						log.error("Unexpected error processing parent concept " + Frills.getIdInfo(parentSequence) + " of child concept " + Frills.getIdInfo(conceptSequence) + ". May not be included in result!", e);
+						log.error("Unexpected error processing parent concept " + new RestIdentifiedObject(parentSequence) + " of child concept " 
+					+ new RestIdentifiedObject(conceptSequence) + ". May not be included in result!", e);
 					}
 				}
 				// Add perParentHandledConcepts concepts back to handledConcepts
