@@ -133,8 +133,13 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 
 				EditToken et = RequestInfo.get().getEditToken();
 				
-				if (requestContext.getUriInfo().getPath().contains(RestPaths.writePathComponent))
+				if (requestContext.getUriInfo().getPath().contains(RestPaths.writePathComponent)
+						// VuidWriteAPIs does not require or return an EditCoordinate,
+						// so calling isValidForWrite(), which invalidates the existing token, requiring its renewal,
+						// will break things.  Therefore, do not call isValidForWrite() for vuidAPIsPathComponent
+						&& ! requestContext.getUriInfo().getPath().contains(RestPaths.vuidAPIsPathComponent))
 				{
+					
 					//If it is a write request, the edit token needs to be valid for write.
 					if (!et.isValidForWrite())
 					{
