@@ -36,6 +36,7 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNode;
 import gov.vha.isaac.rest.api1.data.logic.RestLogicNodeFactory;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -103,13 +104,13 @@ public class RestSememeLogicGraphVersion extends RestSememeVersion {
 		referencedConceptDescription = Get.conceptService()
 				.getSnapshot(RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).conceptDescriptionText(lgs.getReferencedComponentNid());
 		LOG.debug("Constructing REST logic graph for {} from LogicalExpression\n{}",
-				() -> Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()).toString(), () -> lgs.getLogicalExpression().toString());
+			new RestIdentifiedObject(lgs.getReferencedComponentNid()).toString(), lgs.getLogicalExpression().toString());
 		rootLogicNode = constructRootRestLogicNodeFromLogicGraphSememe(lgs);
 		try {
 			isReferencedConceptDefined = Frills.isConceptFullyDefined(lgs);
 		} catch (Exception e) {
 			LOG.warn("Problem getting isConceptDefined value (defaulting to false) for LogicGraphSememe referencing {}",
-					Frills.getIdInfo(lgs.getReferencedComponentNid(), RequestInfo.get().getStampCoordinate(), RequestInfo.get().getLanguageCoordinate()));
+					new RestIdentifiedObject(lgs.getReferencedComponentNid()).toString());
 			isReferencedConceptDefined = false;
 		}
 
