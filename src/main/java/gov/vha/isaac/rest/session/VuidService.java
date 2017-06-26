@@ -80,7 +80,7 @@ public interface VuidService {
 	 * This implementation gets a RestVuidBlockData object from VUID-rest IFF vuid.properties is in classpath
 	 * and contains a value for property "vuid_allocate_url"
 	 */
-	Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken);
+	Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken) throws RestException;
 	
 	String getVuidValidateServiceUrl();
 

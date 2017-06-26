@@ -155,7 +155,7 @@ public class VuidServiceImpl implements VuidService {
 	 * @see gov.vha.isaac.rest.session.VuidService#allocate(int, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken) {
+	public Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken) throws RestException {
 		String vuidServiceUrl = getVuidAllocateServiceUrl();
 
 		if (StringUtils.isBlank(vuidServiceUrl)) {
