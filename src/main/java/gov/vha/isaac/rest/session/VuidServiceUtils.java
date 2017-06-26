@@ -19,10 +19,15 @@
 
 package gov.vha.isaac.rest.session;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -30,6 +35,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.rest.api.exceptions.RestException;
+import gov.vha.isaac.rest.api.exceptions.RestExceptionResponse;
 
 /**
  * 
@@ -43,7 +50,7 @@ public class VuidServiceUtils {
 	
 	private VuidServiceUtils() {}
 
-	private static String getResultJsonFromVuidService(WebTarget targetWithPath, Map<String, String> params, Entity<?> entityToPost) {
+	private static String getResultJsonFromVuidService(WebTarget targetWithPath, Map<String, String> params, Entity<?> entityToPost) throws RestException {
 		for (Map.Entry<String, String> entry : params.entrySet()) {
 			targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
 		}
@@ -61,7 +68,30 @@ public class VuidServiceUtils {
 		}
 		
 		if (response.getStatus() != Status.OK.getStatusCode()) {
-			throw new RuntimeException("FAILED request " + targetWithPath + " (" + entityToPost != null ? "POST " + entityToPost : "GET" + ") with code=" + response.getStatus() + " and reason=" + response.getStatusInfo());
+			final String msg = "FAILED request " + targetWithPath + " (" + entityToPost != null ? "POST " + entityToPost : "GET" + ") with code=" + response.getStatus() + " and reason=" + response.getStatusInfo();
+
+			log.warn(msg);
+
+			String responseString = null;
+			try {
+				responseString = (String)response.readEntity(String.class);
+			} catch (ProcessingException | IllegalStateException e) {
+				log.error("FAILED reading response string entity", e);
+				throw e;
+			}
+			RestExceptionResponse rer = null;
+			try {
+				rer = new ObjectMapper().readValue(responseString, RestExceptionResponse.class);
+				if (rer.relevantQueryParameterName != null) {
+					throw new RestException(rer.relevantQueryParameterName, rer.relevantQueryParameterValue, rer.conciseMessage);
+				} else {
+					throw new RestException(rer.conciseMessage);
+				}
+			} catch (IOException e) {
+				log.error("FAILED deserializing RestExceptionResponse \"" + responseString + "\"");
+			}
+
+			throw new RestException(response.getStatusInfo().getReasonPhrase());
 		}
 
 		String responseJson = response.readEntity(String.class);
@@ -69,7 +99,7 @@ public class VuidServiceUtils {
 		return responseJson;
 	}
 	
-	static String getResultJsonFromVuidService(String targetStr, String pathStr, Map<String, String> params, Entity<?> entityToPost) {
+	static String getResultJsonFromVuidService(String targetStr, String pathStr, Map<String, String> params, Entity<?> entityToPost) throws RestException {
 		ClientService clientService = LookupService.getService(ClientService.class);
 		WebTarget target = null;
 		try {
