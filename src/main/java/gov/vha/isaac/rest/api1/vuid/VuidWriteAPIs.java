@@ -40,7 +40,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
 import gov.vha.isaac.rest.session.VuidService;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link VuidWriteAPIs}
@@ -104,10 +103,6 @@ public class VuidWriteAPIs
 			throw new RestException(RequestParameters.ssoToken, "", "no ssoToken present?");
 		}
 
-		//Even though we don't ask for an edit token, the other framework here inadvertently creates one, and caches it.  Future calles to this method will reject
-		//an sso string if it has ever been seen before, if we don't refresh the edit token on each call.
-		EditTokens.renew(RequestInfo.get().getEditToken());
-		
 		log.info("VUID request: block - " + blockSize + " reason = " + reason + " by - "+ RequestInfo.get().getUser().get().getName());
 		//TODO validate that when prisme.properties is present, we reject at this point if the token is invalid, or test, or of prisme isn't reachable.
 		SecurityUtils.validateRole(securityContext, getClass());
