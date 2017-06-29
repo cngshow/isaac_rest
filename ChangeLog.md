@@ -3,8 +3,14 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/06/?? - 4.8 - PENDING
+* 2017/07/?? - 4.10 - PENDING
 	*
+
+* 2017/06/27 - 4.9
+	* Intermediate build for testers.
+
+* 2017/06/26 - 4.8
+	* Changes for VUID server error message handling.
 
 * 2017/06/22 - 4.7
 	* Updated context for most developer installs.
