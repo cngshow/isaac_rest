@@ -53,7 +53,6 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
-import gov.vha.isaac.rest.api.data.Pagination;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
@@ -164,6 +163,13 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestIdentifiedObject[] terminologyTypes;
 
+	/**
+	 * Exception messages encountered while populating data, including parents and children
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public List<String> exceptionMessages = new ArrayList<>();
+
 //	/**
 //	 * Pagination data
 //	 */
@@ -220,13 +226,18 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				@Override
 				public void accept(SememeChronology sc)
 				{
-					if (!sememeMembershipSequences.contains(sc.getAssemblageSequence()) 
-						&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
-						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
-						&& sc.getSememeType() != SememeType.DESCRIPTION 
-						&& sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, sc.getNid())).isPresent()) 
-					{
-						sememeMembershipSequences.add(sc.getAssemblageSequence());
+					try {
+						if (!sememeMembershipSequences.contains(sc.getAssemblageSequence()) 
+								&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
+								&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
+								&& sc.getSememeType() != SememeType.DESCRIPTION 
+								&& sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, sc.getNid())).isPresent()) 
+						{
+							sememeMembershipSequences.add(sc.getAssemblageSequence());
+						}
+					} catch (RuntimeException e) {
+						exceptionMessages.add("Error checking sememe membership " + sc.getPrimordialUuid() + ": " + e.getLocalizedMessage());
+						throw e;
 					}
 				}
 			};
@@ -238,7 +249,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			int i = 0;
 			for (int sequence : sememeMembershipSequences)
 			{
-				sememeMembership[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+				try {
+					sememeMembership[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+				} catch (RuntimeException e) {
+					exceptionMessages.add("Error creating identified object for concept SEQ=" + sequence + ": " + e.getLocalizedMessage());
+					throw e;
+				}
 			}
 		}
 		else
@@ -248,8 +264,14 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		
 		if (includeTerminologyType)
 		{
-			HashSet<Integer> terminologyTypeSequences = Frills.getTerminologyTypes(cv.getChronology(), RequestInfo.get().getStampCoordinate());
-			
+			HashSet<Integer> terminologyTypeSequences = null;
+			try {
+				terminologyTypeSequences = Frills.getTerminologyTypes(cv.getChronology(), RequestInfo.get().getStampCoordinate());
+			} catch (RuntimeException e) {
+				exceptionMessages.add("Error getting terminology types for concept " + cv.getChronology().getPrimordialUuid() + ": " + e.getLocalizedMessage());
+				throw e;
+			}
+
 			terminologyTypes = new RestIdentifiedObject[terminologyTypeSequences.size()];
 			int i = 0; 
 			for (int sequence : terminologyTypeSequences)
@@ -281,7 +303,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			Tree tree = null;
 			if (includeParents || includeChildren || countChildren || countParents)
 			{
-				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
+				try {
+					tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
+				} catch (RuntimeException e) {
+					exceptionMessages.add("Error getting " + (stated ? "stated" : "inferred") + " taxonomy tree: " + e.getLocalizedMessage());
+					throw e;
+				}
 			}
 
 			if (includeParents)

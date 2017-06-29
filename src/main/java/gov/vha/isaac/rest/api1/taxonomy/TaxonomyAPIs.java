@@ -261,28 +261,33 @@ public class TaxonomyAPIs
 			{
 				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + new RestIdentifiedObject(conceptSequence) 
 					+ ". Not including child.", e);
-				//throw new RuntimeException("Internal Error!", e);
+				rcv.exceptionMessages.add("Error adding child concept SEQ=" + childSequence + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 			}
 			if (childConcept != null) {
-				@SuppressWarnings("unchecked")
-				Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
-						Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
-				if (cv.isPresent())
-				{
-					//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-					//TODO handle contradictions
-					RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
-							includeSememeMembership, includeTerminologyType, processId);
-					children.add(childVersion);
-					if (remainingChildDepth > 0)
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
+					if (cv.isPresent())
 					{
-						addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
-								includeTerminologyType, alreadyAddedChildren, processId, 1, MAX_PAGE_SIZE_DEFAULT);
+						//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
+						//TODO handle contradictions
+						RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
+								includeSememeMembership, includeTerminologyType, processId);
+						children.add(childVersion);
+						if (remainingChildDepth > 0)
+						{
+							addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
+									includeTerminologyType, alreadyAddedChildren, processId, 1, MAX_PAGE_SIZE_DEFAULT);
+						}
+						else if (countLeafChildren)
+						{
+							countChildren(childConcept.getConceptSequence(), childVersion, tree, processId);
+						}
 					}
-					else if (countLeafChildren)
-					{
-						countChildren(childConcept.getConceptSequence(), childVersion, tree, processId);
-					}
+				} catch (RestException | RuntimeException e) {
+					rcv.exceptionMessages.add("Error adding child concept " + childConcept.getPrimordialUuid() + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
+					throw e;
 				}
 			}
 		}
@@ -313,6 +318,7 @@ public class TaxonomyAPIs
 			{
 				log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + new RestIdentifiedObject(conceptSequence) 
 					+ ". Will not be included in count!", e);
+				rcv.exceptionMessages.add("Error counting parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 			}
 			
 			if (parentConcept != null) {
@@ -327,6 +333,7 @@ public class TaxonomyAPIs
 				} catch (Exception e) {
 					log.error("Unexpected error reading latest version of parent concept " + new RestIdentifiedObject(parentSequence) + " of child concept " 
 				+ new RestIdentifiedObject(conceptSequence) + ". Will not be included in count!", e);
+					rcv.exceptionMessages.add("Error counting latest version of parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 				}
 			}
 		}
@@ -349,7 +356,7 @@ public class TaxonomyAPIs
 			{
 				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + new RestIdentifiedObject(conceptSequence) 
 					+ ". Not including child in count.", e);
-				//throw new RuntimeException("Internal Error!", e);
+				rcv.exceptionMessages.add("Error counting child concept SEQ=" + childSequence + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 			}
 			
 			if (childConcept != null) {
@@ -364,6 +371,7 @@ public class TaxonomyAPIs
 				} catch (Exception e) {
 					log.error("Failed finding latest version of child concept " + new RestIdentifiedObject(childSequence) + " of parent concept " 
 				+ new RestIdentifiedObject(conceptSequence) + ". Not including child in count.", e);
+					rcv.exceptionMessages.add("Error counting latest version of child concept SEQ=" + childSequence + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 				}
 			}
 		}
@@ -383,7 +391,8 @@ public class TaxonomyAPIs
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
-			log.warn("addParents(" + conceptSequence + ") aborted potential infinite recursion");
+			String msg = "addParents(" + conceptSequence + ") aborted potential infinite recursion";
+			log.warn(msg);
 			return;
 		} else if (tree.getParentSequences(conceptSequence).length == 0) {
 			// If no parents, just add self
@@ -391,7 +400,7 @@ public class TaxonomyAPIs
 		} else {
 			ConceptSequenceSet passedHandledConcepts = new ConceptSequenceSet();
 			passedHandledConcepts.addAll(handledConcepts.stream());
-			
+
 			for (int parentSequence : tree.getParentSequences(conceptSequence))
 			{
 				// create a new perParentHandledConcepts for each parent
@@ -407,16 +416,17 @@ public class TaxonomyAPIs
 				}
 				catch (Exception e) {
 					log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + new RestIdentifiedObject(conceptSequence) 
-						+ ". Will not be included in result!", e);
+							+ ". Will not be included in result!", e);
+					rcv.exceptionMessages.add("Error reading parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 				}
-				
+
 				//if error is caught above parentConceptChronlogy will be null and not usable in the block below
 				if (parentConceptChronlogy != null) {
 					try {
 						@SuppressWarnings("unchecked")
 						Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, 
 								Util.getPreWorkflowStampCoordinate(processId, parentConceptChronlogy.getNid()));
-						
+
 						if (cv.isPresent())
 						{
 							//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
@@ -438,7 +448,8 @@ public class TaxonomyAPIs
 					catch (Exception e)
 					{
 						log.error("Unexpected error processing parent concept " + new RestIdentifiedObject(parentSequence) + " of child concept " 
-					+ new RestIdentifiedObject(conceptSequence) + ". May not be included in result!", e);
+								+ new RestIdentifiedObject(conceptSequence) + ". May not be included in result!", e);
+						rcv.exceptionMessages.add("Error reading parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 					}
 				}
 				// Add perParentHandledConcepts concepts back to handledConcepts
