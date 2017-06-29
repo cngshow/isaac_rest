@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.taxonomy;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,12 +45,12 @@ import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
-import gov.vha.isaac.rest.api.data.Pagination;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptVersionPage;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
@@ -236,6 +238,7 @@ public class TaxonomyAPIs
 		final int first = pageNum == 1 ? 0 : ((pageNum - 1) * maxPageSize + 1);
 		final int last = pageNum * maxPageSize;
 		final int[] totalChildrenSequences = tree.getChildrenSequences(conceptSequence);
+		List<RestConceptVersion> children = new ArrayList<>();
 		for (int childSequence : totalChildrenSequences)
 		{
 			childCount++;
@@ -270,7 +273,7 @@ public class TaxonomyAPIs
 					//TODO handle contradictions
 					RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
 							includeSememeMembership, includeTerminologyType, processId);
-					rcv.getChildren().add(childVersion);
+					children.add(childVersion);
 					if (remainingChildDepth > 0)
 					{
 						addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
@@ -285,12 +288,14 @@ public class TaxonomyAPIs
 		}
 		
 		final String baseUrl = RestPaths.taxonomyAPIsPathComponent + RestPaths.versionComponent + "?" + RequestParameters.id + "=" + conceptSequence;
-		rcv.childrenPaginationData = new Pagination(
+
+		rcv.children = new RestConceptVersionPage(
 				pageNum, maxPageSize,
 				totalChildrenSequences.length,
 				true,
 				(last - first) < totalChildrenSequences.length,
-				baseUrl);
+				baseUrl,
+				children.toArray(new RestConceptVersion[children.size()]));
 	}
 	
 	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId)

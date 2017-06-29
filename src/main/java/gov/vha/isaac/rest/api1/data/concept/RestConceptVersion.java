@@ -110,10 +110,16 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	
 	/**
 	 * The child concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
+	 * They are stored in the results member of the RestConceptVersionPage object.
+	 * If children.results.length < children.paginationData.approximateTotal,
+	 * then that is an indication that the results set has been truncated due to pagination (size of children.results likely corresponds to the specified maxPageSize,
+	 * unless the page returned includes the last item (final tranche) of the total set).
+	 * The children.paginationData object also contains URL suggestions for how to get prior and subsequent tranches of data.
+	 * The children.paginationData.totalIsExact should always be set to true.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	List<RestConceptVersion> children = new ArrayList<>();
+	public RestConceptVersionPage children;
 	
 	/**
 	 * The number of child concept(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
@@ -158,12 +164,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestIdentifiedObject[] terminologyTypes;
 
-	/**
-	 * Pagination data
-	 */
-	@XmlElement
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Pagination childrenPaginationData;
+//	/**
+//	 * Pagination data
+//	 */
+//	@XmlElement
+//	@JsonInclude(JsonInclude.Include.NON_NULL)
+//	public Pagination childrenPaginationData;
 
 	protected RestConceptVersion()
 	{
@@ -327,7 +333,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			}
 			conChronology = null;
 			parents.clear();
-			children.clear();
+			children = null;
 		}
 	}
 	
@@ -356,10 +362,10 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				rcv.sortParentsAndChildren();
 			}
 		}
-		if (children.size() > 0)
+		if (children != null && children.results.length > 1)
 		{
-			Collections.sort(children);
-			for (RestConceptVersion rcv : children)
+			Arrays.sort(children.results);
+			for (RestConceptVersion rcv : children.results)
 			{
 				rcv.sortParentsAndChildren();
 			}
@@ -410,14 +416,14 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@XmlTransient
 	public int getChildCount()
 	{
-		return (children == null  || children.size() == 0 ? (childCount == null ? 0 : childCount) : children.size());
+		return (children == null  || children.results == null || children.results.length == 0 ? (childCount == null ? 0 : childCount) : children.results.length);
 	}
 
 	/**
 	 * @return the children
 	 */
 	@XmlTransient
-	public List<RestConceptVersion> getChildren() {
+	public RestConceptVersionPage getChildren() {
 		return children;
 	}
 
@@ -430,6 +436,6 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				+ ", isConceptDefined=" + isConceptDefined + ", parents=" + parents + ", children=" + children
 				+ ", childCount=" + childCount + ", parentCount=" + parentCount + ", sememeMembership="
 				+ Arrays.toString(sememeMembership) + ", terminologyTypes=" + Arrays.toString(terminologyTypes)
-				+ ", childrenPaginationData=" + childrenPaginationData + "]";
+				+ "]";
 	}
 }

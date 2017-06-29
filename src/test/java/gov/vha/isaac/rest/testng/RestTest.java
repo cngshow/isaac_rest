@@ -565,12 +565,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
 		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
 		Assert.assertNotNull(conceptVersionFromTaxonomy);
-		Assert.assertNotNull(conceptVersionFromTaxonomy.childrenPaginationData);
-		Assert.assertNotNull(conceptVersionFromTaxonomy.getChildren());
-		Assert.assertEquals(conceptVersionFromTaxonomy.getChildren().size(), childSequences.length);
-		Assert.assertEquals(conceptVersionFromTaxonomy.childrenPaginationData.approximateTotal, childSequences.length);
-		Assert.assertTrue(conceptVersionFromTaxonomy.childrenPaginationData.totalIsExact);
-		Assert.assertEquals(conceptVersionFromTaxonomy.getChildren().size(), conceptVersionFromTaxonomy.childrenPaginationData.approximateTotal);
+		Assert.assertNotNull(conceptVersionFromTaxonomy.children);
+		Assert.assertNotNull(conceptVersionFromTaxonomy.children.results);
+		Assert.assertNotNull(conceptVersionFromTaxonomy.children.paginationData);
+		Assert.assertEquals(conceptVersionFromTaxonomy.children.results.length, childSequences.length);
+		Assert.assertEquals(conceptVersionFromTaxonomy.children.paginationData.approximateTotal, childSequences.length);
+		Assert.assertTrue(conceptVersionFromTaxonomy.children.paginationData.totalIsExact);
+		Assert.assertEquals(conceptVersionFromTaxonomy.children.results.length, conceptVersionFromTaxonomy.children.paginationData.approximateTotal);
 		
 		// Test request for each child, individually, by maxPageSize==1
 		List<Integer> foundChildSequences = new ArrayList<>();
@@ -588,14 +589,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			String childTaxonomyResult = checkFail(childTaxonomyResponse).readEntity(String.class);
 			RestConceptVersion childConceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, childTaxonomyResult);
 			Assert.assertNotNull(childConceptVersionFromTaxonomy);
-			Assert.assertNotNull(childConceptVersionFromTaxonomy.childrenPaginationData);
-			Assert.assertNotNull(childConceptVersionFromTaxonomy.getChildren());
-			Assert.assertEquals(childConceptVersionFromTaxonomy.getChildren().size(), 1);
-			Assert.assertEquals(childConceptVersionFromTaxonomy.childrenPaginationData.approximateTotal, childSequences.length);
-			Assert.assertTrue(childConceptVersionFromTaxonomy.childrenPaginationData.totalIsExact);
-			Assert.assertTrue(childConceptVersionFromTaxonomy.getChildren().size() < conceptVersionFromTaxonomy.childrenPaginationData.approximateTotal);
+			Assert.assertNotNull(childConceptVersionFromTaxonomy.children);
+			Assert.assertNotNull(childConceptVersionFromTaxonomy.children.paginationData);
+			Assert.assertNotNull(childConceptVersionFromTaxonomy.children.results);
+			Assert.assertEquals(childConceptVersionFromTaxonomy.children.results.length, 1);
+			Assert.assertEquals(childConceptVersionFromTaxonomy.children.paginationData.approximateTotal, childSequences.length);
+			Assert.assertTrue(childConceptVersionFromTaxonomy.children.paginationData.totalIsExact);
+			Assert.assertTrue(childConceptVersionFromTaxonomy.children.results.length < conceptVersionFromTaxonomy.children.paginationData.approximateTotal);
 
-			foundChildSequences.add(childConceptVersionFromTaxonomy.getChildren().iterator().next().getConChronology().getIdentifiers().sequence);
+			foundChildSequences.add(childConceptVersionFromTaxonomy.children.results[0].getConChronology().getIdentifiers().sequence);
 		}
 		Assert.assertEquals(foundChildSequences.size(), childSequences.length);
 		for (int i = 0; i < childSequences.length; ++i) {
@@ -1845,9 +1847,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		conceptVersionResult = checkFail(taxonomyResponse).readEntity(String.class);
 		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
 		// validate conceptVersionFromTaxonomy child includes newConceptSequence
-		Assert.assertTrue(conceptVersionFromTaxonomy.getChildren().size() > 0);
+		Assert.assertTrue(conceptVersionFromTaxonomy.children.results.length > 0);
 		boolean foundNewConceptAsChildOfSpecifiedParent = false;
-		for (RestConceptVersion child : conceptVersionFromTaxonomy.getChildren()) {
+		for (RestConceptVersion child : conceptVersionFromTaxonomy.children.results) {
 			if (child.getConChronology().getIdentifiers().sequence == newConceptSequence) {
 				foundNewConceptAsChildOfSpecifiedParent = true;
 				break;
@@ -4084,7 +4086,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.descriptionTypePrefs, "synonym,fsn"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restConceptVersion/children/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			xpath = "/restConceptVersion/children/results/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
 			node = XMLUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
@@ -4099,7 +4101,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.coordToken, fsnDescriptionPreferredToken.token))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restConceptVersion/children/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			xpath = "/restConceptVersion/children/results/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
 			node = XMLUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
@@ -4114,7 +4116,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 									param(RequestParameters.descriptionTypePrefs, "fsn,synonym"))))
 					.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 					.readEntity(String.class);
-			xpath = "/restConceptVersion/children/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
+			xpath = "/restConceptVersion/children/results/conChronology[identifiers/sequence=" + MetaData.HEALTH_CONCEPT.getConceptSequence() + "]/description";
 			node = XMLUtils.getNodeFromXml(result, xpath);
 			nodeList = null;
 			Assert.assertTrue(node != null && node.getNodeType() == Node.ELEMENT_NODE);
