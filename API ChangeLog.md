@@ -14,8 +14,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
-* 2017/06/29 - 1.15.5
+* 2017/06/29 - 1.16.0
     * Modifed RestConceptVersion to contain Pagination data and modified TaxonomyAPIs version API to accept pageNum and maxPageSize parameters or to default values and to paginate concept children
+    * Added exceptionMessages for recording errors encountered while populating RestConceptVersion components, including sememes, parents and children
 * 2017/06/29 - 1.15.4
     * Modified getObjectForVuid to work on specific view coordinate parameters and changed to validate VUID uniqueness and validity before allowing create or edit of VUID sememe
 * 2017/06/05 - 1.15.3
