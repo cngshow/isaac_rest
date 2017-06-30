@@ -3,6 +3,9 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/07/?? - 4.11 - PENDING
+	*
+
 * 2017/06/30 - 4.10
 	* Modifying getObjectForVuid to work on specific view coordinate parameters and changing to validate VUID uniqueness and validity before allowing create or edit of VUID sememe.
 
