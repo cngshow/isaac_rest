@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.vuid;
 
 import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
@@ -32,6 +33,7 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -117,7 +119,62 @@ public class VuidAPIs
 				RequestParameters.vuid,
 				RequestParameters.COORDINATE_PARAM_NAMES);
 
-		log.info("Retrieving object (if any) for VUID " + vuid + "...");
+		Optional<Integer> nid = getObjectForVuid(vuid + "");
+		
+		if (! nid.isPresent()) {
+			log.info("No object exists for VUID " + vuid + "...");
+			return new RestOptionalIdentifiedObject(null);
+		}
+		
+		RestIdentifiedObject objectToReturn = new RestIdentifiedObject(nid.get());
+		log.info("Found object for VUID " + vuid + ": " + objectToReturn);
+		
+		return new RestOptionalIdentifiedObject(objectToReturn);
+	}
+
+	public static Optional<Integer> getObjectForVuid(String vuidString) throws RestException {
+		log.info("Retrieving object (if any) for VUID " + vuidString + "...");
+
+		long vuid = 0;
+		try {
+			vuid = Long.parseLong(vuidString);
+		} catch (Exception e) {
+			final String msg = "Invalid VUID string value \"" + vuidString + "\"";
+			log.info(msg);
+			throw new RestException(msg);
+		}
+
+		final boolean isValid = LookupService.getService(VuidService.class).isVuidValid(vuid);
+		if (! isValid) {
+			log.info("VUID " + vuid + " is " + (isValid ? "VALID" : "NOT VALID"));
+
+			throw new RestException(RequestParameters.vuid, vuid + "", "VUID " + vuid + " not valid");
+		}
+		
+		final Optional<Integer> vuidSememeNidForVuid = getActiveVuidSememeNidForVuid(vuid + "");
+		final Optional<Integer> nid = vuidSememeNidForVuid.isPresent() ? Optional.of(Get.sememeService().getSememe(vuidSememeNidForVuid.get()).getReferencedComponentNid()) : Optional.empty();
+		if (! nid.isPresent()) {
+			log.info("No object NID exists for VUID " + vuid + "...");
+
+			return nid;
+		}
+		
+		log.info("Found object NID for VUID " + vuid + ": " + nid);
+		
+		return nid;
+	}
+
+	public static Optional<Integer> getActiveVuidSememeNidForVuid(String vuidString) throws RestException {
+		log.info("Retrieving active VUID sememe nid (if any) for VUID " + vuidString + "...");
+
+		long vuid = 0;
+		try {
+			vuid = Long.parseLong(vuidString);
+		} catch (Exception e) {
+			final String msg = "Invalid VUID string value \"" + vuidString + "\"";
+			log.info(msg);
+			throw new RestException(msg);
+		}
 
 		boolean isValid = LookupService.getService(VuidService.class).isVuidValid(vuid);
 		if (! isValid) {
@@ -126,17 +183,19 @@ public class VuidAPIs
 			throw new RestException(RequestParameters.vuid, vuid + "", "VUID " + vuid + " not valid");
 		}
 		
-		Optional<Integer> nid = Frills.getNidForVUID(vuid);
-		
-		if (! nid.isPresent()) {
-			log.info("No object exists for VUID " + vuid + "...");
+		Set<Integer> nids = Frills.getVuidSememeNidsForVUID(vuid);
 
-			return new RestOptionalIdentifiedObject(null);
+		if (nids.size() > 1) {
+			final String msg = "Found multiple existing ACTIVE VUID sememe NIDs matching VUID \"" + vuid + "\"";
+			log.error(msg);
+			throw new RestException(msg);
+		} else if (nids.size() == 0) {
+			log.info("No VUID sememes exists for VUID " + vuid + "...");
+
+			return Optional.empty();
+		} else {
+			log.info("Found sememe for VUID " + vuid + ": " + nids.toString());
+			return Optional.of(nids.iterator().next());
 		}
-		
-		RestIdentifiedObject objectToReturn = new RestIdentifiedObject(nid.get());
-		log.info("Found object for VUID " + vuid + ": " + objectToReturn);
-		
-		return new RestOptionalIdentifiedObject(objectToReturn);
 	}
 }

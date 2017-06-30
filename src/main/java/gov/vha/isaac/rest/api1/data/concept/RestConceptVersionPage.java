@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.data.concept;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.rest.api.data.Pagination;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -38,17 +39,24 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 public class RestConceptVersionPage
 {
-	
 	/**
-	 * Link to retrieve current page
+	 * Pagination information
+	 * 
+	 * If results.length < paginationData.approximateTotal,
+	 * then that is an indication that the results set has been truncated due to pagination (size of results likely corresponds to the specified maxPageSize,
+	 * unless the page returned includes the last item (final tranche) of the total set).
+	 * The paginationData object also contains URL suggestions for how to get prior and subsequent tranches of data.
+	 * The paginationData.totalIsExact should always be set to true.
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Pagination paginationData;
 
 	/**
-	 * The contained results
+	 * The contained results (see paginationData, above)
 	 */
 	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestConceptVersion[] results;
 
 	protected RestConceptVersionPage()
