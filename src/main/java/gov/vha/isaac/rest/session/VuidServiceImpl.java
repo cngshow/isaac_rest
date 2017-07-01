@@ -35,6 +35,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.data.RestBoolean;
 import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -79,20 +80,35 @@ public class VuidServiceImpl implements VuidService {
 		though they know it isn't in real mode
 	 *
 	 * @param vuidToValidate The VUID that should be validated
-	 * @return true, if the VUID is valid, false if it's certain conditions aren't met, an excpetion is thrown for a bad VUID
+	 * @return true, if the VUID is valid, false if it's certain conditions aren't met, an exception is thrown for a bad VUID
 	 */
 	public boolean isVuidValid(long vuidToValidate) throws RestException {
 		String vuidServiceUrl = getVuidValidateServiceUrl();
 
 		if (StringUtils.isBlank(vuidServiceUrl)) {
-			throw new RuntimeException("Failed determining VUID validation service URL");
+			if (ApplicationConfig.getInstance().isDebugDeploy())
+			{
+				log.warn("Cannot validate VUID due to missing validation service URL");
+				return true;
+			}
+			else
+			{
+				throw new RuntimeException("Failed determining VUID validation service URL");
+			}
 		}
 		URL url = null;
 		try {
 			url = new URL(vuidServiceUrl);
 		} catch (MalformedURLException e) {
-			log.error("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e);
-			throw new RuntimeException("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e); 
+			if (ApplicationConfig.getInstance().isDebugDeploy())
+			{
+				log.warn("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e);
+				return true;
+			}
+			else
+			{
+				throw new RuntimeException("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e); 
+			}
 		}
 
 		Map<String, String> params = new HashMap<>();
@@ -118,7 +134,7 @@ public class VuidServiceImpl implements VuidService {
 				RestExceptionResponse message = new ObjectMapper().readValue(resultJson, RestExceptionResponse.class);
 				log.error("VUID server sent an error: " + message.conciseMessage + " " + message.verboseMessage);
 				ok = true;
-				throw new RuntimeException(message.conciseMessage + " " + message.verboseMessage);
+				throw new RestException(message.conciseMessage);
 			}
 			catch (Exception e)
 			{
@@ -166,7 +182,15 @@ public class VuidServiceImpl implements VuidService {
 			url = new URL(vuidServiceUrl);
 		} catch (MalformedURLException e) {
 			log.error("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e);
-			throw new RuntimeException("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e); 
+			if (ApplicationConfig.getInstance().isDebugDeploy())
+			{
+				log.warn("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e);
+				return Optional.empty();
+			}
+			else
+			{
+				throw new RuntimeException("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e); 
+			}
 		}
 
 		Map<String, String> params = new HashMap<>();
@@ -185,7 +209,7 @@ public class VuidServiceImpl implements VuidService {
 				RestExceptionResponse message = new ObjectMapper().readValue(resultJson, RestExceptionResponse.class);
 				log.error("VUID server sent an error: " + message.conciseMessage + " " + message.verboseMessage);
 				ok = true;
-				throw new RuntimeException(message.conciseMessage + " " + message.verboseMessage);
+				throw new RestException(message.conciseMessage);
 			}
 			catch (Exception e)
 			{

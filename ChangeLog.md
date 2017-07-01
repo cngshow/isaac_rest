@@ -4,25 +4,27 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/07/?? - 4.11 - PENDING
-	*
+    * fix some exception handling issues that were causing the useful error message to appear in the wrong field upon return from vuid validation.
+    * Make it not fail vuid validation if no vuid server is available, when we are in debug mode.
 
 * 2017/06/30 - 4.10
-	* Modifying getObjectForVuid to work on specific view coordinate parameters and changing to validate VUID uniqueness and validity before allowing create or edit of VUID sememe.
+    * Modifying getObjectForVuid to work on specific view coordinate parameters and changing to validate VUID uniqueness and validity before allowing 
+        create or edit of VUID sememe.
 
 * 2017/06/27 - 4.9
-	* Intermediate build for testers.
+    * Intermediate build for testers.
 
 * 2017/06/26 - 4.8
-	* Changes for VUID server error message handling.
+    * Changes for VUID server error message handling.
 
 * 2017/06/22 - 4.7
-	* Updated context for most developer installs.
-	* Updating log event with latest dev box token.
-	* Adding commented-out example values to prisme.properties under src/test/resources.
+    * Updated context for most developer installs.
+    * Updating log event with latest dev box token.
+    * Adding commented-out example values to prisme.properties under src/test/resources.
 
 * 2017/06/16 - 4.6
-	* Improvement and cleanup for ssoToken handling.
-	* Documentation improvements and code cleanup. 
+    * Improvement and cleanup for ssoToken handling.
+    * Documentation improvements and code cleanup. 
 
 * 2017/06/14 - 4.5
     * Fix a bunch of issues with how we were handling the ssoToken internally, which lead to prisme not being able to parse back the ssoToken in some cases.
