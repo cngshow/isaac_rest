@@ -170,13 +170,6 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<String> exceptionMessages = new ArrayList<>();
 
-//	/**
-//	 * Pagination data
-//	 */
-//	@XmlElement
-//	@JsonInclude(JsonInclude.Include.NON_NULL)
-//	public Pagination childrenPaginationData;
-
 	protected RestConceptVersion()
 	{
 		//for Jaxb

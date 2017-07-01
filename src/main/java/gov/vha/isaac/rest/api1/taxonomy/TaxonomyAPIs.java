@@ -79,6 +79,12 @@ public class TaxonomyAPIs
 	 * If no version parameter is specified, returns the latest version.
 	 * Pagination parameters may restrict which children are returned, but only effect the direct children of the specified concept,
 	 * and are ignored (defaulted) during populating children of children and descendants. 
+	 * 
+	 * When Parents and Children are returned, the order of the parents and children is alphabetical, HOWEVER if there are a large number
+	 * of children - such that you only get back one page of children - only the returned page of children will be sorted.  The sort will 
+	 * NOT be correct across multiple pages.  Each page will be sorted independently.  If the end user needs to display all children, sorted, 
+	 * they will have to fetch all pages, and then sort.
+	 * 
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.
 	 * @param parentHeight - How far to walk up (expand) the parent tree
@@ -232,8 +238,7 @@ public class TaxonomyAPIs
 		} else {
 			alreadyAddedChildren.add(conceptSequence);
 		}
-		//TODO 3 we need to guard against very large result returns - we must cap this, and, ideally, introduce paging, 
-		//or something along those lines to handle very large result sets.
+
 		int childCount = 0;
 		final int first = pageNum == 1 ? 0 : ((pageNum - 1) * maxPageSize + 1);
 		final int last = pageNum * maxPageSize;
@@ -247,7 +252,6 @@ public class TaxonomyAPIs
 				continue;
 			} else if (childCount > last) {
 				// Ignore unrequested pages subsequent to requested page
-				log.warn("Limiting the number of taxonomy children under concept SEQ=" + childSequence + ", UUID=" + Get.conceptService().getConcept(childSequence).getPrimordialUuid() + ", DESC=" + Get.conceptDescriptionText(childSequence));
 				break;
 			}
 		

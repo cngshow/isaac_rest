@@ -263,91 +263,6 @@ public class MappingAPIs
 	
 	/**
 	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
-	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
-	 * will be included for all referenced concepts which align with your current coordinates.  When comments is passed, all comments attached to each mapItem are 
-	 * included.
-	 * @param processId if set, specifies that retrieved components should be checked against the specified active
-	 * workflow process, and if existing in the process, only the version of the corresponding object prior to the version referenced
-	 * in the workflow process should be returned or referenced.  If no version existed prior to creation of the workflow process,
-	 * then either no object will be returned or an exception will be thrown, depending on context.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may 
-	 * be obtained by a separate (prior) call to getCoordinatesToken().
-	 * @return the mapping items versions object.
-	 * 
-	 *  TODO I believe we deprecated this, supposed to use the pages query now.
-	 * 
-	 * @throws RestException 
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.mappingItemsComponent + "{" + RequestParameters.id +"}")
-	public RestMappingItemVersion[] getMappingItems(
-		@PathParam(RequestParameters.id) String id,
-		@QueryParam(RequestParameters.expand) String expand,
-		@QueryParam(RequestParameters.processId) String processId,
-		@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
-	{
-		SecurityUtils.validateRole(securityContext, getClass());
-
-		//TODO 1 Dan this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
-		//will make it fast for early pages... still slow for later pages, unless we enhance the underlying isaac code to handle paging natively
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.id,
-				RequestParameters.expand,
-				RequestParameters.processId,
-				RequestParameters.COORDINATE_PARAM_NAMES);
-		
-		ArrayList<RestMappingItemVersion> results = new ArrayList<>();
-		
-		int sememeConceptSequence = Util.convertToConceptSequence(id);
-		
-		Positions positions = Positions.getPositions(sememeConceptSequence);
-		
-		UUID processIdUUID = Util.validateWorkflowProcess(processId);
-		
-		List<RestMappingSetDisplayField> displayFields = MappingAPIs.getMappingSetDisplayFieldsFromMappingSet(
-				Get.identifierService().getConceptNid(sememeConceptSequence), RequestInfo.get().getStampCoordinate());
-		try
-		{
-			Get.sememeService().getSememesFromAssemblage(sememeConceptSequence).forEach(sememeC -> 
-			{
-				@SuppressWarnings({ "unchecked", "rawtypes" })
-				Optional<LatestVersion<DynamicSememe<?>>> latest = ((SememeChronology)sememeC).getLatestVersion(DynamicSememe.class, 
-						Util.getPreWorkflowStampCoordinate(processIdUUID, sememeC.getNid()));
-				
-				if (latest.isPresent())
-				{
-					//TODO handle contradictions
-					results.add(new RestMappingItemVersion(((DynamicSememe<?>)latest.get().value()), 
-						positions.targetPos, positions.qualfierPos,
-						RequestInfo.get().shouldExpand(ExpandUtil.referencedDetails),
-						RequestInfo.get().shouldExpand(ExpandUtil.comments),
-						processIdUUID, displayFields));
-				}
-				if (results.size() >= 250)
-				{
-					throw new RuntimeException("Java 9 will fix this with takeWhile...");
-				}
-				
-			});
-		}
-		catch (RuntimeException e)
-		{
-			if (e.getMessage() != null && e.getMessage().startsWith("Java 9 will"))
-			{
-				log.warn("Cutting results short, as paging isn't yet implemented!");
-			}
-			else
-			{
-				throw e;
-			}
-		}
-		return results.toArray(new RestMappingItemVersion[results.size()]);
-	}
-
-	/**
-	 * @param id - A UUID, nid, or concept sequence that identifies the map set to list items for.  Should be from {@link RestMappingSetVersion#identifiers}}
 	 * @param pageNum The pagination page number >= 1 to return
 	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0, defaults to 250
 	 * @param expand - A comma separated list of fields to expand.  Supports 'referencedDetails,comments'.  When referencedDetails is passed, descriptions
@@ -365,7 +280,7 @@ public class MappingAPIs
 	 */
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Path(RestPaths.mappingItemsPagedComponent + "{" + RequestParameters.id +"}")
+	@Path(RestPaths.mappingItemsComponent + "{" + RequestParameters.id +"}")
 	public RestMappingItemVersionPage getMappingItemPage(
 		@PathParam(RequestParameters.id) String id,
 		@QueryParam(RequestParameters.pageNum) @DefaultValue(RequestParameters.pageNumDefault) int pageNum,
@@ -376,8 +291,6 @@ public class MappingAPIs
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
 
-		//TODO 1 Dan this MUST be paged - note, we can use the fact that the sememe iterate iterates in order, to figure out where to start/stop the ranges.
-		//will make it fast for early pages... still slow for later pages, unless we enhance the underlying isaac code to handle paging natively
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),
 				RequestParameters.id,
@@ -420,7 +333,7 @@ public class MappingAPIs
 						sememes.getTotal(),
 						true,
 						sememes.getTotal() > (pageNum * maxPageSize),
-						RestPaths.mappingItemsPagedComponent + id,
+						RestPaths.mappingItemsComponent + id,
 						items.toArray(new RestMappingItemVersion[items.size()])
 						);
 		return results;

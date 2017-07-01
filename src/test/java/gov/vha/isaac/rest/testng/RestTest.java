@@ -2348,7 +2348,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		// Should now be 3 items
 		// Test pagination (page 0 with maximum of 2 entries (out of 3))
-		Response getMappingItemsPagedResponse = target(RestPaths.mappingAPIsPathComponent + RestPaths.mappingItemsPagedComponent + testMappingSetUUID)
+		Response getMappingItemsPagedResponse = target(RestPaths.mappingAPIsPathComponent + RestPaths.mappingItemsComponent + testMappingSetUUID)
 				.queryParam(RequestParameters.pageNum, 1)
 				.queryParam(RequestParameters.maxPageSize, 2)
 				.request()
@@ -2358,7 +2358,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(retrievedMappingItemsPaged);
 		Assert.assertEquals(retrievedMappingItemsPaged.results.length, 2);
 		// Test pagination (page 0 with maximum of 10 entries (out of 3))
-		getMappingItemsPagedResponse = target(RestPaths.mappingAPIsPathComponent + RestPaths.mappingItemsPagedComponent + testMappingSetUUID)
+		getMappingItemsPagedResponse = target(RestPaths.mappingAPIsPathComponent + RestPaths.mappingItemsComponent + testMappingSetUUID)
 				.queryParam(RequestParameters.pageNum, 1)
 				.queryParam(RequestParameters.maxPageSize, 10)
 				.request()
@@ -2374,7 +2374,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		String retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
-		RestMappingItemVersion[] retrievedMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		RestMappingItemVersion[] retrievedMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersionPage.class, retrievedMappingItemsResult).results;
 		RestMappingItemVersion mappingItemMatchingNewItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
 			if (currentMappingItem.identifiers.getFirst().equals(newMappingItemUUID)
@@ -2420,7 +2420,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
-		retrievedMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		retrievedMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersionPage.class, retrievedMappingItemsResult).results;
 		RestMappingItemVersion mappingItemMatchingUpdatedItem = null;
 		for (RestMappingItemVersion currentMappingItem : retrievedMappingItems) {
 			if (currentMappingItem.identifiers.getFirst().equals(newMappingItemUUID)
@@ -2520,7 +2520,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
-		RestMappingItemVersion[] cloneTargetMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		RestMappingItemVersion[] cloneTargetMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersionPage.class, retrievedMappingItemsResult).results;
 		Assert.assertTrue(cloneTargetMappingItems != null && cloneTargetMappingItems.length > 0);
 
 		// Get clone mapping items
@@ -2529,7 +2529,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
-		RestMappingItemVersion[] cloneMappingItems = XMLUtils.unmarshalObjectArray(RestMappingItemVersion.class, retrievedMappingItemsResult);
+		RestMappingItemVersion[] cloneMappingItems = XMLUtils.unmarshalObject(RestMappingItemVersionPage.class, retrievedMappingItemsResult).results;
 		Assert.assertTrue(cloneMappingItems != null);
 		Assert.assertEquals(cloneMappingItems.length, cloneTargetMappingItems.length);
 

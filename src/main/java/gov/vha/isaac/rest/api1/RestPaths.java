@@ -36,7 +36,6 @@ public class RestPaths
 	public static final String updateStateComponent = "state/";
 	public static final String versionsComponent = "versions/";
 	public static final String versionComponent = "version/";
-	public static final String childrenComponent = "children/";
 	public static final String objectChronologyTypeComponent = "objectChronologyType/";
 	public static final String identifiedObjectsComponent = "identifiedObjects/";
 	public static final String sememeTypeComponent = "sememeType/";
@@ -85,7 +84,6 @@ public class RestPaths
 	public static final String mappingSetsComponent = "mappingSets/";
 	public static final String mappingItemComponent = "mappingItem/";
 	public static final String mappingItemsComponent = "mappingItems/";
-	public static final String mappingItemsPagedComponent = "mappingItemsPaged/";
 	public static final String mappingFieldsComponent = "fields/";
 	public static final String mappingFieldComponentTypesComponent = "fieldComponentTypes/";
 	public static final String mappingSetAppPathComponent = mappingAPIsPathComponent + mappingSetComponent;

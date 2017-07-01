@@ -15,8 +15,13 @@ Bug fixes should not be documented here, rather, than should be documented in th
 
 *** Don't forget to update the value in the class RestSystemInfo ***
 * 2017/06/29 - 1.16.0
-    * Modifed RestConceptVersion to contain Pagination data and modified TaxonomyAPIs version API to accept pageNum and maxPageSize parameters or to default values and to paginate concept children
-    * Added exceptionMessages for recording errors encountered while populating RestConceptVersion components, including sememes, parents and children
+    * Modifed RestConceptVersion to contain Pagination data and modified TaxonomyAPIs version API to accept pageNum and maxPageSize parameters or to
+        default values and to paginate concept children.  The 'children' variable of RestConceptVersion was changed from a list of RestConceptVersion
+        into a RestConceptVersionPage.  
+    * Added 'exceptionMessages' to the RestConceptVersion object, for recording errors encountered while populating RestConceptVersion components, 
+        including sememes, parents and children.  This will normally be empty - if ever present, it indicates a partial return due to an unexpected error.
+    * Removed the mapping API endpoint of 'mappingItemsPaged', changed the behaivor of 'mappingItems' so that it now returns a RestMappingItemVersionPage
+        instead of a RestMappingItemVersion array.
 * 2017/06/29 - 1.15.4
     * Modified getObjectForVuid to work on specific view coordinate parameters and changed to validate VUID uniqueness and validity before allowing create or edit of VUID sememe
 * 2017/06/05 - 1.15.3
