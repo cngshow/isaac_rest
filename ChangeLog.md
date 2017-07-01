@@ -6,6 +6,8 @@ API version number, not the release version number.
 * 2017/07/?? - 4.11 - PENDING
     * fix some exception handling issues that were causing the useful error message to appear in the wrong field upon return from vuid validation.
     * Make it not fail vuid validation if no vuid server is available, when we are in debug mode.
+    * add metadata terminology type flag to any concept that is a child of ISAAC Metadata, when the 'terminologyTypes' field is requested on a 
+        RestConceptVersion or a RestConceptChronology
 
 * 2017/06/30 - 4.10
     * Modifying getObjectForVuid to work on specific view coordinate parameters and changing to validate VUID uniqueness and validity before allowing 
