@@ -11,6 +11,10 @@ API version number, not the release version number.
     * Change to the updated isaac search API that allows good performance while doing 'prefix search' with less than 3 characters, and a type filter.
         This feature will NOT work properly without a rebuild index (via the latest version of ISAAC) - or having a a complete new DB that was built 
         with the latest version of ISAAC.
+    * Added an API /write/1/system/rebuildIndex which will regenerate the lucene index in a background thread.  To trigger this in a developer enviornment, 
+        get an edit token: http://localhost:8180/rest/1/coordinate/editToken?ssoToken=TEST and then submit that edit token via a POST call (for example): 
+        http://localhost:8180/rest/write/1/system/rebuildIndex?editToken=sCe3jZqsv04=AQAAAAEAAAFdCoNGCwADYlQAAABUAAAACKBR5iBP4VF0l9lT284urQ0HAAAAAgAAAAMAAAAEAAAABQAAAAYAAAAHAAAACA==
+
 
 * 2017/06/30 - 4.10
     * Modifying getObjectForVuid to work on specific view coordinate parameters and changing to validate VUID uniqueness and validity before allowing 
