@@ -8,6 +8,9 @@ API version number, not the release version number.
     * Make it not fail vuid validation if no vuid server is available, when we are in debug mode.
     * add metadata terminology type flag to any concept that is a child of ISAAC Metadata, when the 'terminologyTypes' field is requested on a 
         RestConceptVersion or a RestConceptChronology
+    * Change to the updated isaac search API that allows good performance while doing 'prefix search' with less than 3 characters, and a type filter.
+        This feature will NOT work properly without a rebuild index (via the latest version of ISAAC) - or having a a complete new DB that was built 
+        with the latest version of ISAAC.
 
 * 2017/06/30 - 4.10
     * Modifying getObjectForVuid to work on specific view coordinate parameters and changing to validate VUID uniqueness and validity before allowing 

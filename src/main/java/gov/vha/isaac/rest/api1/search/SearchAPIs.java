@@ -241,7 +241,6 @@ public class SearchAPIs
 	 *   - "sememe" - to only return concepts that define sememes
 	 *   - "metadata" - to only return concepts that are defined in the metadata hierarchy.
 	 *  This option can only be set to a single value per call - no combinations are allowed.  
-	 *  It is HIGHLY recommended that if you utilize this feature, you only submit queries that are at LEAST 3 letters long, to get reasonable performance.
 	 * @param mergeOnConcept - Optional - if set to true - only one result will be returned per concept - even if that concept had 2 or more descriptions 
 	 *   that matched the query.  When false, you will get a search result for EACH matching description.  When true, you will only get one search result, 
 	 *   which is the search result with the best score for that concept (compared to the other search results for that concept)
@@ -290,11 +289,13 @@ public class SearchAPIs
 		log.debug("Performing prefix search for '" + query + "'");
 		
 		boolean mergeOnConcepts = StringUtils.isBlank(mergeOnConcept) ? false : RequestInfoUtils.parseBooleanParameter(RequestParameters.mergeOnConcept, mergeOnConcept);
+		boolean metadataRestrict = false;
 		
 		Predicate<Integer> filter = null;
 		if (StringUtils.isNotBlank(restrictTo))
 		{
 			String temp = restrictTo.toLowerCase(Locale.ENGLISH).trim();
+			metadataRestrict = true;
 			switch (temp)
 			{
 				case "association" :
@@ -337,15 +338,8 @@ public class SearchAPIs
 					});
 					break;
 				case "metadata" :
-					filter = (nid -> 
-					{
-						int conSequence = Frills.findConcept(nid);
-						if (conSequence >= 0)
-						{
-							return Get.taxonomyService().wasEverKindOf(conSequence, MetaData.ISAAC_METADATA.getConceptSequence());
-						}
-						return false;
-					});
+					//metadata restrict is now part of the query construction.
+					filter = null;
 					break;
 				default :
 					throw new RestException("restrictTo", "Invalid restriction.  Must be 'association', 'mapset', 'sememe' or 'metadata'");
@@ -355,7 +349,7 @@ public class SearchAPIs
 		DescriptionIndexer indexer = LookupService.get().getService(DescriptionIndexer.class);
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
-		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, Long.MAX_VALUE, filter);
+		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, Long.MAX_VALUE, filter, metadataRestrict);
 		
 		if (mergeOnConcepts)
 		{
