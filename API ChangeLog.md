@@ -14,6 +14,14 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2017/06/05 - 1.15.5
+    * Added an API /write/1/system/rebuildIndex which will regenerate the lucene index in a background thread.  To trigger this in a developer environment, 
+        get an edit token: http://localhost:8180/rest/1/coordinate/editToken?ssoToken=TEST and then submit that edit token via a POST call (for example): 
+        http://localhost:8180/rest/write/1/system/rebuildIndex?editToken=sCe3jZqsv04=AQAAAAEAAAFdCoNGCwADYlQAAABUAAAACKBR5iBP4VF0l9lT284urQ0HAAAAAgAAAAMAAAAEAAAABQAAAAYAAAAHAAAACA==
+    * Fixed a performance limitation of /search/prefix such that the 'restrictTo' option no longer requires 3 or more characters for good performance.
+    * Make it not fail vuid validation on sememe write if no vuid server is available, when we are in debug mode.
+    * Add ISAAC_MODULE flag to any concept that is a child of ISAAC Metadata, when the 'terminologyTypes' field is requested on a 
+        RestConceptVersion or a RestConceptChronology.  This is returned in addtion to any other module the particular concept was edited on.
 * 2017/06/05 - 1.15.4
     * Modified getObjectForVuid to work on specific view coordinate parameters and changed to validate VUID uniqueness and validity before allowing create or edit of VUID sememe
 * 2017/06/05 - 1.15.3

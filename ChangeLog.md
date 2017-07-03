@@ -5,13 +5,13 @@ API version number, not the release version number.
 
 * 2017/07/?? - 4.11 - PENDING
     * fix some exception handling issues that were causing the useful error message to appear in the wrong field upon return from vuid validation.
-    * Make it not fail vuid validation if no vuid server is available, when we are in debug mode.
+    * Make it not fail vuid validation on sememe write if no vuid server is available, when we are in debug mode.
     * add metadata terminology type flag to any concept that is a child of ISAAC Metadata, when the 'terminologyTypes' field is requested on a 
         RestConceptVersion or a RestConceptChronology
     * Change to the updated isaac search API that allows good performance while doing 'prefix search' with less than 3 characters, and a type filter.
         This feature will NOT work properly without a rebuild index (via the latest version of ISAAC) - or having a a complete new DB that was built 
         with the latest version of ISAAC.
-    * Added an API /write/1/system/rebuildIndex which will regenerate the lucene index in a background thread.  To trigger this in a developer enviornment, 
+    * Added an API /write/1/system/rebuildIndex which will regenerate the lucene index in a background thread.  To trigger this in a developer environment, 
         get an edit token: http://localhost:8180/rest/1/coordinate/editToken?ssoToken=TEST and then submit that edit token via a POST call (for example): 
         http://localhost:8180/rest/write/1/system/rebuildIndex?editToken=sCe3jZqsv04=AQAAAAEAAAFdCoNGCwADYlQAAABUAAAACKBR5iBP4VF0l9lT284urQ0HAAAAAgAAAAMAAAAEAAAABQAAAAYAAAAHAAAACA==
 
