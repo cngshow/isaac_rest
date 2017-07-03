@@ -146,7 +146,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	 * {@link MetaData#ISAAC_METADATA}
 	 * 
 	 * Note that this field is typically not populated - and when it is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the 
-	 * parameter 'terminologyTypes=true' is passed.
+	 * parameter 'terminologyType=true' is passed.
 	 * 
 	 * Note that this is calculated WITH taking into account the view coordinate, including the active / inactive state of the concept in any particular terminology.
 	 * This means that if a concept is present in both Snomed CT and the US Extension modules, but your view coordinate excludes the US Extension, this will not 

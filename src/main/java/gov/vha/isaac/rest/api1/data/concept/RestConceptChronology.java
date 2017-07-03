@@ -91,7 +91,7 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	 * {@link MetaData#ISAAC_METADATA}
 	 * 
 	 * Note that this field is typically not populated - and when it is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the 
-	 * parameter 'terminologyTypes=true' is passed.
+	 * parameter 'terminologyType=true' is passed.
 	 * 
 	 * Note that this is calculated WITHOUT taking into account the view coordinate, or the active / inactive state of the concept in any particular terminology.
 	 * 
