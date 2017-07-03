@@ -310,21 +310,28 @@ public class CoordinateAPIs
 	 * user, module, and path concepts as well as, optionally, a workflow process.  Each EditToken expires after a set amount of time
 	 * and is otherwise usable for a write operation exactly once, after which it becomes expired and unusable for further write operations.
 	 * An expired token may be renewed by passing it as an editToken parameter to another getEditToken() call.
-	 * Additionally, all write operations return a <code>RestWriteResponse</code> object containing a renewed, and therefore readily usable EditToken.
+	 * 
+	 * All write operations return a <code>RestWriteResponse</code> object containing a renewed, and therefore readily usable EditToken.
+	 * 
 	 * If a previously-retrieved editToken parameter is passed, it will be used. The editToken parameter is incompatible with ssoToken and userId parameters.
 	 * If editToken is not passed and PRISME services are configured (prisme.properties exists and prisme_roles_by_token_url is set)
 	 * then a valid SSO token string must be passed in the ssoToken parameter
-	 * If editToken is not passed and PRISME services are not configured and userId is passed
-	 * then the userId parameter is parsed, to load a test user with all roles, as an existing concept id (UUID, NID or concept sequence),
-	 * a case-insensitive keyword "DEFAULT" or the FSN description of an existing user concept
-	 * If editToken is not passed and PRISME services are not configured and ssoToken is passed
-	 * AND IT IS RUNNING AS A UNIT TEST UNDER src/test then the ssoToken is parsed, to load or create a test user with name and roles specified by a string with the syntax {name}:{role1}[{,role2}[{,role3}[...]]].  
+	 * 
+	 * ---------- DEVELOPER (Not Production) options below: --------------
+	 * 
+	 * If editToken is not passed and PRISME services are not configured and userId is passed then the userId parameter is parsed, to load a test user with all 
+	 * roles, as an existing concept id (UUID, NID or concept sequence), a case-insensitive keyword "DEFAULT" or the FSN description of an existing user concept
+	 * 
+	 * If editToken is not passed and PRISME services are not configured and ssoToken is passed AND IT IS RUNNING AS A UNIT TEST UNDER src/test then the ssoToken 
+	 * is parsed, to load or create a test user with name and roles specified by a string with the  syntax {name}:{role1}[{,role2}[{,role3}[...]]].  
+	 * 
 	 * If any additional optional parameters are passed, then their values will be applied to the token specified by the
 	 * required parameters, and the resulting RestEditToken will be returned.
 	 * 
 	 *
 	 * @param ssoToken specifies an explicit serialized SSO token string. Not valid with use of userId or editToken. 
-	 * @param editToken - optional previously-retrieved editToken string encoding user, module, path concept ids and optional workflow process id. Not valid with use of ssoToken or userId.
+	 * @param editToken - optional previously-retrieved editToken string encoding user, module, path concept ids and optional workflow process id. Not valid with use 
+	 *     of ssoToken or userId.
 	 * @param editModule - optional module concept id
 	 * @param editPath - optional path concept id
 	 * @param userId - optional test User id of an existing concept id (UUID, NID or concept sequence),
