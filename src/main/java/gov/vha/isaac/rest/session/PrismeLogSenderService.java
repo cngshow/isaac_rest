@@ -270,11 +270,14 @@ public class PrismeLogSenderService {
 	@PreDestroy
 	public void shutdownPrismeLogSenderService() {
 		LOGGER.info("Disabling {}...", this.getClass().getName());
-		try {
-			sendEvent(new Log4jLogEvent("LoggerConnectivity", null, "gov.vha.vuid.rest.session.LoggerConnectivity", Level.INFO,
-					new SimpleMessage("Log forwarding stopping"), null, null));
-		} catch (Exception e) {
-			LOGGER.info("Failed to send the shutdown notification to prisme", e);
+		if (sendEvents)
+		{
+			try {
+				sendEvent(new Log4jLogEvent("LoggerConnectivity", null, "gov.vha.vuid.rest.session.LoggerConnectivity", Level.INFO,
+						new SimpleMessage("Log forwarding stopping"), null, null));
+			} catch (Exception e) {
+				LOGGER.info("Failed to send the shutdown notification to prisme", e);
+			}
 		}
 		sendEvents = false;
 
