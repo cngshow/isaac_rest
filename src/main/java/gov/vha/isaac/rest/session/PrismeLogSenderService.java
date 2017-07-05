@@ -28,7 +28,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.inject.Singleton;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -39,15 +38,14 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext.ContextStack;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.message.SimpleMessage;
 import org.apache.logging.log4j.spi.StandardLevel;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.codehaus.plexus.util.StringUtils;
-import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
-import org.glassfish.hk2.runlevel.ErrorInformation;
 import org.glassfish.hk2.runlevel.RunLevel;
-import org.glassfish.hk2.runlevel.RunLevelFuture;
 import org.jvnet.hk2.annotations.Service;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -69,7 +67,8 @@ import gov.vha.isaac.rest.ApplicationConfig;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
-@RunLevel(1)
+//We start this service, when we reach a level where isaac starts.
+@RunLevel(LookupService.SL_L0)
 @Service
 public class PrismeLogSenderService {
 	private static Logger LOGGER = LogManager.getLogger(PrismeLogSenderService.class);
@@ -125,7 +124,6 @@ public class PrismeLogSenderService {
 	 */
 	private PrismeLogSenderService() {
 		// For HK2
-		PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties().getProperty("prisme_notify_url");
 		// Construct WebTarget from Client getClient(), constructing and caching new Client getClient() if null
 		CLIENT = ClientBuilder.newClient();
 	}
@@ -145,12 +143,22 @@ public class PrismeLogSenderService {
 			public void run() {
 
 				// disable() if not configured
+				LOGGER.info("prisme log sender thread init");
+				PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties().getProperty("prisme_notify_url");
+				
 				if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
 					LOGGER.warn("CANNOT LOG EVENTS TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties");
 					shutdownPrismeLogSenderService();
 					return;
 				}
-
+				
+				String temp = PRISME_NOTIFY_URL;
+				if (temp.contains("="))
+				{
+					temp = temp.substring(0,  temp.indexOf('='));
+				}
+				
+				LOGGER.info("Configuring the logger API to send to '{}'", temp);
 				sendEvents = true;
 
 				final int maxAttemptsForMessage = 10;
@@ -255,11 +263,19 @@ public class PrismeLogSenderService {
 		t.setDaemon(true);
 		t.setName("PrismeLogSender");
 		t.start();
+		enqueue(new Log4jLogEvent("LoggerConnectivity", null, "gov.vha.vuid.rest.session.LoggerConnectivity", Level.INFO,
+				new SimpleMessage("Log forwarding started"), null, null)); 
 	}
 
 	@PreDestroy
 	public void shutdownPrismeLogSenderService() {
 		LOGGER.info("Disabling {}...", this.getClass().getName());
+		try {
+			sendEvent(new Log4jLogEvent("LoggerConnectivity", null, "gov.vha.vuid.rest.session.LoggerConnectivity", Level.INFO,
+					new SimpleMessage("Log forwarding stopping"), null, null));
+		} catch (Exception e) {
+			LOGGER.info("Failed to send the shutdown notification to prisme", e);
+		}
 		sendEvents = false;
 
 		synchronized (waitLockObject_) {
@@ -453,22 +469,5 @@ public class PrismeLogSenderService {
 			root.put(entry.getKey(), entry.getValue() != null ? (entry.getValue() + "") : null);
 		}
 		return toJson(root);
-	}
-
-	@Service(name="PrismeLogSenderServiceRunLevelListener")
-	@Singleton
-	public static class RunLevelListener implements org.glassfish.hk2.runlevel.RunLevelListener {
-		private static Logger log = LogManager.getLogger(RunLevelListener.class);
-
-		@Override
-		public void onProgress(ChangeableRunLevelFuture currentJob, int levelAchieved) {
-			log.info("RunLevel " + (currentJob.isDown() ? "coming down from " : "going up from ") + levelAchieved + " to " + currentJob.getProposedLevel());
-			if (levelAchieved == LookupService.ISAAC_DEPENDENTS_RUNLEVEL && currentJob.isDown()) {
-				LookupService.getService(PrismeLogSenderService.class).shutdownPrismeLogSenderService();
-			}
-		}
-
-		@Override public void onCancelled(RunLevelFuture currentJob, int levelAchieved) { /* noop */ }
-		@Override public void onError(RunLevelFuture currentJob, ErrorInformation errorInformation) { /* noop */ }
 	}
 }
