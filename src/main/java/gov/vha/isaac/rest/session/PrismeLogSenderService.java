@@ -263,7 +263,8 @@ public class PrismeLogSenderService {
 		t.setDaemon(true);
 		t.setName("PrismeLogSender");
 		t.start();
-		enqueue(new Log4jLogEvent("LoggerConnectivity", null, "gov.vha.vuid.rest.session.LoggerConnectivity", Level.INFO,
+		//force this one onto the queue, as the thread above likely won't be started yet, and the normal add method will toss it.
+		EVENT_QUEUE.add(new Log4jLogEvent("LoggerConnectivity", null, "gov.vha.vuid.rest.session.LoggerConnectivity", Level.INFO,
 				new SimpleMessage("Log forwarding started"), null, null)); 
 	}
 
