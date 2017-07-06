@@ -3,6 +3,9 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/07/?? - 4.12 - PENDING
+    *
+
 * 2017/07/06 - 4.11
     * fix some exception handling issues that were causing the useful error message to appear in the wrong field upon return from vuid validation.
     * Make it not fail vuid validation on sememe write if no vuid server is available, when we are in debug mode.
