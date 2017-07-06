@@ -164,6 +164,7 @@ public class PrismeServiceUtils {
 		}
 
 		String responseJson = response.readEntity(String.class);
+		log.debug("Request '{}' returned '{}'", targetWithPath.toString(), responseJson);
 	
 		return responseJson;
 	}
@@ -173,8 +174,7 @@ public class PrismeServiceUtils {
 		WebTarget target = clientService.getClient().target(targetStr);
 		target = target.path(pathStr);
 		
-		final String result = getResultJsonFromPrisme(target, params);
-		return result;
+		return getResultJsonFromPrisme(target, params);
 	}
 
 	static String getResultJsonFromPrisme(String targetStr, String pathStr) {
