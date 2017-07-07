@@ -317,7 +317,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 									auxiliaryMetadataVersion);
 							
 							if (!IsaacMetadataAuxiliary.AUXILIARY_METADATA_VERSION.equals(auxiliaryMetadataVersion)) {
-								log.warn("Codebase and database are not of the same ISAAC Metadata version!");
+								log.warn("Isaac Metadata Auxiliary versions do not match between code and database!");
 							}
 								
 						}
@@ -488,7 +488,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		{
 			String baseMavenURL = null;
 			String mavenUsername = null;
-			String mavenPwd = null;
+			String mavenAccessCode = null;
 			String groupId = null;
 			String artifactId = null;
 			String version = null;
@@ -507,7 +507,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 					log.info("Reading database configuration from prisme.properties file");
 					baseMavenURL = props.getProperty("nexus_repository_url");
 					mavenUsername = props.getProperty("nexus_user");
-					mavenPwd = props.getProperty("nexus_pwd");
+					mavenAccessCode = props.getProperty("nexus_pwd");
 					groupId = props.getProperty("db_group_id");
 					artifactId = props.getProperty("db_artifact_id");
 					version = props.getProperty("db_version");
@@ -526,10 +526,10 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 				log.warn("Unable to determine specified DB - using developer default options!");
 				baseMavenURL = "https://vadev.mantech.com:8080/nexus/content/groups/everything/";
 				mavenUsername = "system";
-				mavenPwd = "system";
+				mavenAccessCode = "system";
 				groupId = "gov.vha.isaac.db";
 				artifactId = "vhat";
-				version = "2016.08.18-1.11";
+				version = "2017.05.04-1.13";
 				classifier = "all";
 			}
 
@@ -554,8 +554,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			tempDbFolder.delete();
 			tempDbFolder.mkdirs();
 			log.info("Downloading DB to " + tempDbFolder.getAbsolutePath());
-			URL cradle = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPwd, groupId, artifactId, version, classifier, "cradle.zip");
-			Task<File> task = new DownloadUnzipTask(mavenUsername, mavenPwd, cradle, true, true, tempDbFolder);
+			URL cradle = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenAccessCode, groupId, artifactId, version, classifier, "cradle.zip");
+			Task<File> task = new DownloadUnzipTask(mavenUsername, mavenAccessCode, cradle, true, true, tempDbFolder);
 			status_.bind(task.messageProperty());
 			Get.workExecutors().getExecutor().submit(task);
 			try
@@ -569,8 +569,8 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 			}
 			status_.unbind();
 
-			URL lucene = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenPwd, groupId, artifactId, version, classifier, "lucene.zip");
-			task = new DownloadUnzipTask(mavenUsername, mavenPwd, lucene, true, true, tempDbFolder);
+			URL lucene = ArtifactUtilities.makeFullURL(baseMavenURL, mavenUsername, mavenAccessCode, groupId, artifactId, version, classifier, "lucene.zip");
+			task = new DownloadUnzipTask(mavenUsername, mavenAccessCode, lucene, true, true, tempDbFolder);
 			status_.bind(task.messageProperty());
 			Get.workExecutors().getExecutor().submit(task);
 			try

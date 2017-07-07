@@ -64,7 +64,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetDisplayField;
  *
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
-@RunLevel(LookupService.ISAAC_DEPENDENTS_RUNLEVEL)
+@RunLevel(LookupService.SL_L5_ISAAC_DEPENDENTS_RUNLEVEL)
 @Service
 public class MapSetDisplayFieldsService {
 	private static Logger log = LogManager.getLogger(MapSetDisplayFieldsService.class);

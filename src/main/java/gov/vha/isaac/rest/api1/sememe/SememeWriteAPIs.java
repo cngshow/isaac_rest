@@ -649,9 +649,11 @@ public class SememeWriteAPIs
 		return true;
 	}
  
-	private static void validateDynamicSememeDataTypeForUpdate(RestDynamicSememeBase updateObject, String id, SememeType type, DynamicSememeData data, DynamicSememeDataType expectedType) throws RestException {
+	private static void validateDynamicSememeDataTypeForUpdate(RestDynamicSememeBase updateObject, String id, SememeType type, DynamicSememeData data, 
+			DynamicSememeDataType expectedType) throws RestException {
 		if (data.getDynamicSememeDataType() != expectedType) {
-			String msg = "passed mismatched sememe type (" + data.getDynamicSememeDataType() + ") of columnData for updating sememe " + id + " of type " + type + " (should be " + expectedType + ")";
+			String msg = "passed mismatched sememe type (" + data.getDynamicSememeDataType() + ") of columnData for updating sememe " + id + " of type " + type 
+					+ " (should be " + expectedType + ")";
 			log.info(msg + ": " + updateObject);
 			throw new RestException("sememeUpdateData.columnData", null, msg);
 		}

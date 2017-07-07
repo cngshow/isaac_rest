@@ -22,13 +22,26 @@ Bug fixes should not be documented here, rather, than should be documented in th
         including sememes, parents and children.  This will normally be empty - if ever present, it indicates a partial return due to an unexpected error.
     * Removed the mapping API endpoint of 'mappingItemsPaged', changed the behaivor of 'mappingItems' so that it now returns a RestMappingItemVersionPage
         instead of a RestMappingItemVersion array.
-* 2017/06/29 - 1.15.4
-    * Modified getObjectForVuid to work on specific view coordinate parameters and changed to validate VUID uniqueness and validity before allowing create or edit of VUID sememe
+
+* 2017/06/05 - 1.15.5
+    * Added an API /write/1/system/rebuildIndex which will regenerate the lucene index in a background thread.  To trigger this in a developer environment, 
+        get an edit token: http://localhost:8180/rest/1/coordinate/editToken?ssoToken=TEST and then submit that edit token via a POST call (for example): 
+        http://localhost:8180/rest/write/1/system/rebuildIndex?editToken=sCe3jZqsv04=AQAAAAEAAAFdCoNGCwADYlQAAABUAAAACKBR5iBP4VF0l9lT284urQ0HAAAAAgAAAAMAAAAEAAAABQAAAAYAAAAHAAAACA==
+    * Fixed a performance limitation of /search/prefix such that the 'restrictTo' option no longer requires 3 or more characters for good performance.
+    * Make it not fail vuid validation on sememe write if no vuid server is available, when we are in debug mode.
+    * Add ISAAC_MODULE flag to any concept that is a child of ISAAC Metadata, when the 'terminologyTypes' field is requested on a 
+        RestConceptVersion or a RestConceptChronology.  This is returned in addtion to any other module the particular concept was edited on.
+
+* 2017/06/05 - 1.15.4
+    * Modified getObjectForVuid to work on specific view coordinate parameters and changed to validate VUID uniqueness and validity before allowing 
+        create or edit of VUID sememe
+
 * 2017/06/05 - 1.15.3
     * Moving extendedDescriptionTypeConcept from RestSememeDescriptionCreate down into RestSememeDescriptionUpdate (which is a parent of RestSememeDescriptionCreate)
         The end result of this move is that extendedDescriptionTypeConcept is now available for direct edit during a description update.  This, in conjunction with a 
         change to filter out nested sememes of type DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE will prevent inadvertent cases of creating multiple extended description 
         types on a single description.  
+
 * 2017/06/05 - 1.15.2
     * Reverting out some changes to /write/1/intake/vetsXML so we go back to accepting XML directly
 

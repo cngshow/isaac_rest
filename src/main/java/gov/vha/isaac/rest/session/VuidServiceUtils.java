@@ -88,7 +88,7 @@ public class VuidServiceUtils {
 					throw new RestException(rer.conciseMessage);
 				}
 			} catch (IOException e) {
-				log.error("FAILED deserializing RestExceptionResponse \"" + responseString + "\"");
+				log.error("FAILED deserializing RestExceptionResponse \"" + responseString + "\"", e);
 			}
 
 			throw new RestException(response.getStatusInfo().getReasonPhrase());

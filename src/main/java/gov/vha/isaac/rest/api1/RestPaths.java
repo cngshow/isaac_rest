@@ -143,6 +143,7 @@ public class RestPaths
 	public static final String idAppPathComponent = appPathComponent + apiVersionComponent + idComponent;
 
 	public static final String systemAPIsPathComponent = apiVersionComponent + "system/";
+	public static final String systemAPIsRebuildIndexComponent = "rebuildIndex/";
 	public static final String commentAPIsPathComponent = apiVersionComponent + "comment/";
 	public static final String contentRequestAPIsPathComponent = apiVersionComponent + "request/";
 	public static final String exportAPIsPathComponent = apiVersionComponent + "export/";
