@@ -3,7 +3,7 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/07/?? - 4.12 - PENDING
+* 2017/07/13 - 4.12
     * Hooked up the xml intake API to the real processing code 
 
 * 2017/07/06 - 4.11
