@@ -19,22 +19,23 @@
 package gov.vha.isaac.rest.api1.data.concept;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.PrimitiveIterator.OfInt;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -52,6 +53,7 @@ import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api.data.Expandable;
 import gov.vha.isaac.rest.api.data.Expandables;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestStampedVersion;
@@ -107,10 +109,16 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	
 	/**
 	 * The child concepts(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
+	 * They are stored in the results member of the RestConceptVersionPage object.
+	 * If children.results.length < children.paginationData.approximateTotal,
+	 * then that is an indication that the results set has been truncated due to pagination (size of children.results likely corresponds to the specified maxPageSize,
+	 * unless the page returned includes the last item (final tranche) of the total set).
+	 * The children.paginationData object also contains URL suggestions for how to get prior and subsequent tranches of data.
+	 * The children.paginationData.totalIsExact should always be set to true.
 	 */
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	List<RestConceptVersion> children = new ArrayList<>();
+	public RestConceptVersionPage children;
 	
 	/**
 	 * The number of child concept(s) of the concept at this point in time ('is a' relationships).  Depending on the expand parameter, this may not be returned.
@@ -159,7 +167,14 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@XmlElement
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	RestIdentifiedObject[] terminologyTypes;
-	
+
+	/**
+	 * Exception messages encountered while populating data, including parents and children
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public List<String> exceptionMessages = new ArrayList<>();
+
 	protected RestConceptVersion()
 	{
 		//for Jaxb
@@ -209,13 +224,18 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				@Override
 				public void accept(SememeChronology sc)
 				{
-					if (!sememeMembershipSequences.contains(sc.getAssemblageSequence()) 
-						&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
-						&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
-						&& sc.getSememeType() != SememeType.DESCRIPTION 
-						&& sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, sc.getNid())).isPresent()) 
-					{
-						sememeMembershipSequences.add(sc.getAssemblageSequence());
+					try {
+						if (!sememeMembershipSequences.contains(sc.getAssemblageSequence()) 
+								&& sc.getSememeType() != SememeType.LOGIC_GRAPH 
+								&& sc.getSememeType() != SememeType.RELATIONSHIP_ADAPTOR
+								&& sc.getSememeType() != SememeType.DESCRIPTION 
+								&& sc.getLatestVersion(SememeVersionImpl.class, Util.getPreWorkflowStampCoordinate(processId, sc.getNid())).isPresent()) 
+						{
+							sememeMembershipSequences.add(sc.getAssemblageSequence());
+						}
+					} catch (RuntimeException e) {
+						exceptionMessages.add("Error checking sememe membership " + sc.getPrimordialUuid() + ": " + e.getLocalizedMessage());
+						throw e;
 					}
 				}
 			};
@@ -227,7 +247,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			int i = 0;
 			for (int sequence : sememeMembershipSequences)
 			{
-				sememeMembership[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+				try {
+					sememeMembership[i++] = new RestIdentifiedObject(sequence, ObjectChronologyType.CONCEPT);
+				} catch (RuntimeException e) {
+					exceptionMessages.add("Error creating identified object for concept SEQ=" + sequence + ": " + e.getLocalizedMessage());
+					throw e;
+				}
 			}
 		}
 		else
@@ -237,8 +262,14 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		
 		if (includeTerminologyType)
 		{
-			HashSet<Integer> terminologyTypeSequences = Frills.getTerminologyTypes(cv.getChronology(), RequestInfo.get().getStampCoordinate());
-			
+			HashSet<Integer> terminologyTypeSequences = null;
+			try {
+				terminologyTypeSequences = Frills.getTerminologyTypes(cv.getChronology(), RequestInfo.get().getStampCoordinate());
+			} catch (RuntimeException e) {
+				exceptionMessages.add("Error getting terminology types for concept " + cv.getChronology().getPrimordialUuid() + ": " + e.getLocalizedMessage());
+				throw e;
+			}
+
 			terminologyTypes = new RestIdentifiedObject[terminologyTypeSequences.size()];
 			int i = 0; 
 			for (int sequence : terminologyTypeSequences)
@@ -270,7 +301,12 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			Tree tree = null;
 			if (includeParents || includeChildren || countChildren || countParents)
 			{
-				tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
+				try {
+					tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(stated));
+				} catch (RuntimeException e) {
+					exceptionMessages.add("Error getting " + (stated ? "stated" : "inferred") + " taxonomy tree: " + e.getLocalizedMessage());
+					throw e;
+				}
 			}
 
 			if (includeParents)
@@ -285,8 +321,14 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 
 			if (includeChildren)
 			{
-				TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, 
-						includeTerminologyType, new ConceptSequenceSet(), processId);
+				try {
+					TaxonomyAPIs.addChildren(cv.getChronology().getConceptSequence(), this, tree, countChildren, countParents, 0, includeSememeMembership, 
+							includeTerminologyType, new ConceptSequenceSet(), processId,
+							TaxonomyAPIs.PAGE_NUM_DEFAULT, TaxonomyAPIs.MAX_PAGE_SIZE_DEFAULT);
+				} catch (RestException e) {
+					// RestException thrown due to Pagination Shouldn't happen with default values
+					throw new RuntimeException(e);
+				}
 			}
 			else if (countChildren)
 			{
@@ -316,13 +358,8 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 			}
 			conChronology = null;
 			parents.clear();
-			children.clear();
+			children = null;
 		}
-	}
-	
-	public void addChild(RestConceptVersion child)
-	{
-		this.children.add(child);
 	}
 	
 	public void addParent(RestConceptVersion parent)
@@ -350,10 +387,10 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 				rcv.sortParentsAndChildren();
 			}
 		}
-		if (children.size() > 0)
+		if (children != null && children.results.length > 1)
 		{
-			Collections.sort(children);
-			for (RestConceptVersion rcv : children)
+			Arrays.sort(children.results);
+			for (RestConceptVersion rcv : children.results)
 			{
 				rcv.sortParentsAndChildren();
 			}
@@ -404,15 +441,15 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 	@XmlTransient
 	public int getChildCount()
 	{
-		return (children == null  || children.size() == 0 ? (childCount == null ? 0 : childCount) : children.size());
+		return (children == null  || children.results == null || children.results.length == 0 ? (childCount == null ? 0 : childCount) : children.results.length);
 	}
 
 	/**
 	 * @return the children
 	 */
 	@XmlTransient
-	public List<RestConceptVersion> getChildren() {
-		return Collections.unmodifiableList(children);
+	public RestConceptVersionPage getChildren() {
+		return children;
 	}
 
 	/* (non-Javadoc)
@@ -423,6 +460,7 @@ public class RestConceptVersion implements Comparable<RestConceptVersion>
 		return "RestConceptVersion [conChronology=" + conChronology + ", conVersion=" + conVersion
 				+ ", isConceptDefined=" + isConceptDefined + ", parents=" + parents + ", children=" + children
 				+ ", childCount=" + childCount + ", parentCount=" + parentCount + ", sememeMembership="
-				+ sememeMembership + "]";
+				+ Arrays.toString(sememeMembership) + ", terminologyTypes=" + Arrays.toString(terminologyTypes)
+				+ "]";
 	}
 }

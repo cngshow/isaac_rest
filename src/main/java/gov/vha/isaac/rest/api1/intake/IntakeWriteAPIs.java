@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest.api1.intake;
 
+import java.io.File;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -28,7 +29,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.utility.importer.VHATDeltaImport;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -74,9 +77,27 @@ public class IntakeWriteAPIs
 		log.info("VHAT XML was posted for intake - length " + inputXML.length());
 		log.debug("Posted XML: '" + inputXML + "'");
 		
-		//TODO dan has to actually process this XML...
+		File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "xmlIntakeDebug");
+		debugOutput.mkdir();
 		
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
+		//need to enforce single threading on this process for now, as there are some issues with static code in ConverterUUID, and also 
+		//potential issues with the way some of the validation checks are being done.
+		synchronized (log) {
+			try
+			{
+				new VHATDeltaImport(inputXML, 
+					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getAuthorSequence()).get(),
+					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getModuleSequence()).get(), 
+					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getPathSequence()).get(), debugOutput);
+			}
+			catch (Exception e)
+			{
+				log.info("Failed processing input xml", e);
+				throw new RestException("Could not process the provided XML: " + e.getMessage());
+			}
+			
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
+		}
 		
 	}
 }

@@ -108,4 +108,13 @@ public class Pagination
 			nextUrl = null;
 		}
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Pagination [previousUrl=" + previousUrl + ", nextUrl=" + nextUrl + ", pageNum=" + pageNum
+				+ ", approximateTotal=" + approximateTotal + ", totalIsExact=" + totalIsExact + "]";
+	}
 }

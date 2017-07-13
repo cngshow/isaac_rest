@@ -142,7 +142,8 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
+	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
 	 * @return the list of descriptions that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
