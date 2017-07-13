@@ -18,6 +18,8 @@
  */
 package gov.vha.isaac.rest.api1.taxonomy;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,7 +42,6 @@ import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.tree.Tree;
-import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.rest.ExpandUtil;
 import gov.vha.isaac.rest.Util;
@@ -49,6 +50,7 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptVersionPage;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
@@ -66,12 +68,23 @@ public class TaxonomyAPIs
 {
 	private static Logger log = LogManager.getLogger(TaxonomyAPIs.class);
 
+	public final static int MAX_PAGE_SIZE_DEFAULT = 5000;
+	public final static int PAGE_NUM_DEFAULT = 1;
+
 	@Context
 	private SecurityContext securityContext;
 
 	/**
-	 * Returns a single version of a concept, with parents and children expanded to the specified levels.
+	 * Returns a single version of a concept, with parents and children expanded to the specified extent and levels.
 	 * If no version parameter is specified, returns the latest version.
+	 * Pagination parameters may restrict which children are returned, but only effect the direct children of the specified concept,
+	 * and are ignored (defaulted) during populating children of children and descendants. 
+	 * 
+	 * When Parents and Children are returned, the order of the parents and children is alphabetical, HOWEVER if there are a large number
+	 * of children - such that you only get back one page of children - only the returned page of children will be sorted.  The sort will 
+	 * NOT be correct across multiple pages.  Each page will be sorted independently.  If the end user needs to display all children, sorted, 
+	 * they will have to fetch all pages, and then sort.
+	 * 
 	 * @param id - A UUID, nid, or concept sequence to center this taxonomy lookup on.  If not provided, the default value 
 	 * is the UUID for the ISAAC_ROOT concept.
 	 * @param parentHeight - How far to walk up (expand) the parent tree
@@ -93,7 +106,8 @@ public class TaxonomyAPIs
 	 * @param expand - comma separated list of fields to expand.  Supports 'chronology'.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
 	 * obtained by a separate (prior) call to getCoordinatesToken().
-	 * 
+	 * @param pageNum The pagination page number >= 1 to return
+	 * @param maxPageSize The maximum number of results to return per page, must be greater than 0, defaults to (MAX_PAGE_SIZE_DEFAULT==5000)
 	 * @return the concept version object
 	 * @throws RestException 
 	 */
@@ -111,7 +125,9 @@ public class TaxonomyAPIs
 			@QueryParam(RequestParameters.terminologyType) @DefaultValue("false") String terminologyType,
 			@QueryParam(RequestParameters.expand) String expand,
 			@QueryParam(RequestParameters.processId) String processId,
-			@QueryParam(RequestParameters.coordToken) String coordToken) throws RestException
+			@QueryParam(RequestParameters.coordToken) String coordToken,
+			@QueryParam(RequestParameters.pageNum) @DefaultValue(PAGE_NUM_DEFAULT + "") int pageNum,
+			@QueryParam(RequestParameters.maxPageSize) @DefaultValue(MAX_PAGE_SIZE_DEFAULT + "") int maxPageSize) throws RestException
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
 
@@ -126,7 +142,8 @@ public class TaxonomyAPIs
 				RequestParameters.terminologyType,
 				RequestParameters.expand,
 				RequestParameters.processId,
-				RequestParameters.COORDINATE_PARAM_NAMES);
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.PAGINATION_PARAM_NAMES);
 
 		boolean countChildrenBoolean = Boolean.parseBoolean(countChildren.trim());
 		boolean countParentsBoolean = Boolean.parseBoolean(countParents.trim());
@@ -147,7 +164,7 @@ public class TaxonomyAPIs
 			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), 
 					RequestInfo.get().shouldExpand(ExpandUtil.chronologyExpandable), 
 					false, false, false, false, RequestInfo.get().getStated(), includeSememeMembership, includeTerminologyType,
-					processIdUUID);  
+					processIdUUID);
 			
 			Tree tree = Get.taxonomyService().getTaxonomyTree(RequestInfo.get().getTaxonomyCoordinate(RequestInfo.get().getStated()));
 			
@@ -164,7 +181,7 @@ public class TaxonomyAPIs
 			if (childDepth > 0)
 			{
 				addChildren(concept.getConceptSequence(), rcv, tree, countChildrenBoolean, countParentsBoolean, childDepth - 1, includeSememeMembership, 
-						includeTerminologyType, new ConceptSequenceSet(), processIdUUID);
+						includeTerminologyType, new ConceptSequenceSet(), processIdUUID, pageNum, maxPageSize);
 			}
 			else if (countChildrenBoolean)
 			{
@@ -176,6 +193,20 @@ public class TaxonomyAPIs
 		throw new RestException(RequestParameters.id, id, "No concept was found");
 	}
 
+	/**
+	 * @param conceptSequence
+	 * @param children
+	 * @param tree
+	 * @param countLeafChildren
+	 * @param countParents
+	 * @param remainingChildDepth
+	 * @param includeSememeMembership
+	 * @param includeTerminologyType
+	 * @param alreadyAddedChildren
+	 * @param processId
+	 * @param pageNum > 0
+	 * @param maxPageSize > 0
+	 */
 	public static void addChildren(
 			int conceptSequence,
 			RestConceptVersion rcv,
@@ -186,8 +217,20 @@ public class TaxonomyAPIs
 			boolean includeSememeMembership,
 			boolean includeTerminologyType,
 			ConceptSequenceSet alreadyAddedChildren,
-			UUID processId)
+			UUID processId,
+			int pageNum, // PAGE_NUM_DEFAULT == 1
+			int maxPageSize) // MAX_PAGE_SIZE_DEFAULT == 5000
+		throws RestException
 	{
+		if (pageNum < 1) {
+			// Bad pageNum parameter value
+			throw new RestException(RequestParameters.pageNum, pageNum + "", "pageNum (" + pageNum + ") should be >= 1");
+		}
+		if (maxPageSize < 1) {
+			// Bad maxPageSize parameter value
+			throw new RestException(RequestParameters.maxPageSize, maxPageSize + "", "maxPageSize (" + maxPageSize + ") should be >= 1");
+		}
+
 		if (alreadyAddedChildren.contains(conceptSequence)) {
 			// Avoiding infinite loop
 			log.warn("addChildren(" + conceptSequence + ") aborted potential infinite recursion");
@@ -195,15 +238,23 @@ public class TaxonomyAPIs
 		} else {
 			alreadyAddedChildren.add(conceptSequence);
 		}
-		//TODO 3 we need to guard against very large result returns - we must cap this, and, ideally, introduce paging, 
-		//or something along those lines to handle very large result sets.
-		for (int childSequence : tree.getChildrenSequences(conceptSequence))
+
+		int childCount = 0;
+		final int first = pageNum == 1 ? 0 : ((pageNum - 1) * maxPageSize + 1);
+		final int last = pageNum * maxPageSize;
+		final int[] totalChildrenSequences = tree.getChildrenSequences(conceptSequence);
+		List<RestConceptVersion> children = new ArrayList<>();
+		for (int childSequence : totalChildrenSequences)
 		{
-			if (rcv.getChildCount() > 5000)
-			{
-				log.warn("Limiting the number of taxonomy children under concept " + new RestIdentifiedObject(childSequence));
+			childCount++;
+			if (childCount < first) {
+				// Ignore unrequested pages prior to requested page
+				continue;
+			} else if (childCount > last) {
+				// Ignore unrequested pages subsequent to requested page
 				break;
 			}
+		
 			@SuppressWarnings("rawtypes")
 			ConceptChronology childConcept = null;
 			try
@@ -214,31 +265,46 @@ public class TaxonomyAPIs
 			{
 				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + new RestIdentifiedObject(conceptSequence) 
 					+ ". Not including child.", e);
-				//throw new RuntimeException("Internal Error!", e);
+				rcv.exceptionMessages.add("Error adding child concept SEQ=" + childSequence + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 			}
 			if (childConcept != null) {
-				@SuppressWarnings("unchecked")
-				Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
-						Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
-				if (cv.isPresent())
-				{
-					//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
-					//TODO handle contradictions
-					RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
-							includeSememeMembership, includeTerminologyType, processId);
-					rcv.addChild(childVersion);
-					if (remainingChildDepth > 0)
+				try {
+					@SuppressWarnings("unchecked")
+					Optional<LatestVersion<ConceptVersionImpl>> cv = childConcept.getLatestVersion(ConceptVersionImpl.class, 
+							Util.getPreWorkflowStampCoordinate(processId, childConcept.getNid()));
+					if (cv.isPresent())
 					{
-						addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
-								includeTerminologyType, alreadyAddedChildren, processId);
+						//expand chronology of child even if unrequested, otherwise, you can't identify what the child is
+						//TODO handle contradictions
+						RestConceptVersion childVersion = new RestConceptVersion(cv.get().value(), true, false, countParents, false, false, RequestInfo.get().getStated(), 
+								includeSememeMembership, includeTerminologyType, processId);
+						children.add(childVersion);
+						if (remainingChildDepth > 0)
+						{
+							addChildren(childConcept.getConceptSequence(), childVersion, tree, countLeafChildren, countParents, remainingChildDepth - 1, includeSememeMembership, 
+									includeTerminologyType, alreadyAddedChildren, processId, 1, MAX_PAGE_SIZE_DEFAULT);
+						}
+						else if (countLeafChildren)
+						{
+							countChildren(childConcept.getConceptSequence(), childVersion, tree, processId);
+						}
 					}
-					else if (countLeafChildren)
-					{
-						countChildren(childConcept.getConceptSequence(), childVersion, tree, processId);
-					}
+				} catch (RestException | RuntimeException e) {
+					rcv.exceptionMessages.add("Error adding child concept " + childConcept.getPrimordialUuid() + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
+					throw e;
 				}
 			}
 		}
+		
+		final String baseUrl = RestPaths.taxonomyAPIsPathComponent + RestPaths.versionComponent + "?" + RequestParameters.id + "=" + conceptSequence;
+
+		rcv.children = new RestConceptVersionPage(
+				pageNum, maxPageSize,
+				totalChildrenSequences.length,
+				true,
+				(last - first) < totalChildrenSequences.length,
+				baseUrl,
+				children.toArray(new RestConceptVersion[children.size()]));
 	}
 	
 	public static void countParents(int conceptSequence, RestConceptVersion rcv, Tree tree, UUID processId)
@@ -256,6 +322,7 @@ public class TaxonomyAPIs
 			{
 				log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + new RestIdentifiedObject(conceptSequence) 
 					+ ". Will not be included in count!", e);
+				rcv.exceptionMessages.add("Error counting parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 			}
 			
 			if (parentConcept != null) {
@@ -270,6 +337,7 @@ public class TaxonomyAPIs
 				} catch (Exception e) {
 					log.error("Unexpected error reading latest version of parent concept " + new RestIdentifiedObject(parentSequence) + " of child concept " 
 				+ new RestIdentifiedObject(conceptSequence) + ". Will not be included in count!", e);
+					rcv.exceptionMessages.add("Error counting latest version of parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 				}
 			}
 		}
@@ -292,7 +360,7 @@ public class TaxonomyAPIs
 			{
 				log.error("Failed finding concept for child concept SEQ=" + childSequence + " of parent concept " + new RestIdentifiedObject(conceptSequence) 
 					+ ". Not including child in count.", e);
-				//throw new RuntimeException("Internal Error!", e);
+				rcv.exceptionMessages.add("Error counting child concept SEQ=" + childSequence + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 			}
 			
 			if (childConcept != null) {
@@ -307,6 +375,7 @@ public class TaxonomyAPIs
 				} catch (Exception e) {
 					log.error("Failed finding latest version of child concept " + new RestIdentifiedObject(childSequence) + " of parent concept " 
 				+ new RestIdentifiedObject(conceptSequence) + ". Not including child in count.", e);
+					rcv.exceptionMessages.add("Error counting latest version of child concept SEQ=" + childSequence + " of parent concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 				}
 			}
 		}
@@ -326,7 +395,8 @@ public class TaxonomyAPIs
 	{
 		if (handledConcepts.contains(conceptSequence)) {
 			// Avoiding infinite loop
-			log.warn("addParents(" + conceptSequence + ") aborted potential infinite recursion");
+			String msg = "addParents(" + conceptSequence + ") aborted potential infinite recursion";
+			log.warn(msg);
 			return;
 		} else if (tree.getParentSequences(conceptSequence).length == 0) {
 			// If no parents, just add self
@@ -334,7 +404,7 @@ public class TaxonomyAPIs
 		} else {
 			ConceptSequenceSet passedHandledConcepts = new ConceptSequenceSet();
 			passedHandledConcepts.addAll(handledConcepts.stream());
-			
+
 			for (int parentSequence : tree.getParentSequences(conceptSequence))
 			{
 				// create a new perParentHandledConcepts for each parent
@@ -350,16 +420,17 @@ public class TaxonomyAPIs
 				}
 				catch (Exception e) {
 					log.error("Unexpected error reading parent concept " + parentSequence + " of child concept " + new RestIdentifiedObject(conceptSequence) 
-						+ ". Will not be included in result!", e);
+							+ ". Will not be included in result!", e);
+					rcv.exceptionMessages.add("Error reading parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 				}
-				
+
 				//if error is caught above parentConceptChronlogy will be null and not usable in the block below
 				if (parentConceptChronlogy != null) {
 					try {
 						@SuppressWarnings("unchecked")
 						Optional<LatestVersion<ConceptVersionImpl>> cv = parentConceptChronlogy.getLatestVersion(ConceptVersionImpl.class, 
 								Util.getPreWorkflowStampCoordinate(processId, parentConceptChronlogy.getNid()));
-						
+
 						if (cv.isPresent())
 						{
 							//expand chronology of the parent even if unrequested, otherwise, you can't identify what the child is
@@ -381,7 +452,8 @@ public class TaxonomyAPIs
 					catch (Exception e)
 					{
 						log.error("Unexpected error processing parent concept " + new RestIdentifiedObject(parentSequence) + " of child concept " 
-					+ new RestIdentifiedObject(conceptSequence) + ". May not be included in result!", e);
+								+ new RestIdentifiedObject(conceptSequence) + ". May not be included in result!", e);
+						rcv.exceptionMessages.add("Error reading parent concept SEQ=" + parentSequence + " of child concept SEQ=" + conceptSequence + ": " + e.getLocalizedMessage());
 					}
 				}
 				// Add perParentHandledConcepts concepts back to handledConcepts

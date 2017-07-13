@@ -85,8 +85,13 @@ public class RestConceptChronology implements Comparable<RestConceptChronology>
 	
 	/**
 	 * The identifiers of the terminologies (concepts that represent terminologies) that this concept is part of.  This is determined by whether or not there is 
-	 * version of this concept present with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  Note that this field is typically 
-	 * not populated - and when it is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the parameter 'terminologyTypes=true' is passed.
+	 * version of this concept present with a module that extends from one of the children of the {@link MetaData#MODULE} concepts.  
+	 * 
+	 * Additionally, this field will include the terminologyType of {@link MetaData#ISAAC_MODULE} if the concept is a kind of the metadata concept tree starting at
+	 * {@link MetaData#ISAAC_METADATA}
+	 * 
+	 * Note that this field is typically not populated - and when it is populated, it is only in response to a request via the Taxonomy or Concept APIs, when the 
+	 * parameter 'terminologyType=true' is passed.
 	 * 
 	 * Note that this is calculated WITHOUT taking into account the view coordinate, or the active / inactive state of the concept in any particular terminology.
 	 * 

@@ -141,8 +141,8 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 			// Assume that RestException indicates a BAD_REQUEST
 			status = Status.BAD_REQUEST;
 			RestExceptionResponse exceptionResponse = new RestExceptionResponse(
-					ex.getMessage(),
-					ex.toString(),
+					re.toString(),
+					re.toString(),
 					re.getParameterName(),
 					re.getParameterValue(),
 					status);
@@ -150,11 +150,9 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 		}
 		else
 		{
-			String response = "Unexpected Internal Error";
-
 			RestExceptionResponse exceptionResponse = new RestExceptionResponse(
-					response,
-					ex.getLocalizedMessage(),
+					"Unexpected Internal Error: " + ex.getMessage() == null ? "" : ex.getMessage(),
+					ex.toString(),
 					null,
 					null,
 					status);

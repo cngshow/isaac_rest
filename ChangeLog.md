@@ -3,19 +3,40 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/07/?? - 4.12 - PENDING
     * Hooked up the xml intake API to the real processing code 
 
-* 2017/06/?? - 4.8 - PENDING
-	*
+* 2017/07/06 - 4.11
+    * fix some exception handling issues that were causing the useful error message to appear in the wrong field upon return from vuid validation.
+    * Make it not fail vuid validation on sememe write if no vuid server is available, when we are in debug mode.
+    * add metadata terminology type flag to any concept that is a child of ISAAC Metadata, when the 'terminologyTypes' field is requested on a 
+        RestConceptVersion or a RestConceptChronology
+    * Change to the updated isaac search API that allows good performance while doing 'prefix search' with less than 3 characters, and a type filter.
+        This feature will NOT work properly without a rebuild index (via the latest version of ISAAC) - or having a a complete new DB that was built 
+        with the latest version of ISAAC.
+    * Added an API /write/1/system/rebuildIndex which will regenerate the lucene index in a background thread.  To trigger this in a developer environment, 
+        get an edit token: http://localhost:8180/rest/1/coordinate/editToken?ssoToken=TEST and then submit that edit token via a POST call (for example): 
+        http://localhost:8180/rest/write/1/system/rebuildIndex?editToken=sCe3jZqsv04=AQAAAAEAAAFdCoNGCwADYlQAAABUAAAACKBR5iBP4VF0l9lT284urQ0HAAAAAgAAAAMAAAAEAAAABQAAAAYAAAAHAAAACA==
+
+* 2017/06/30 - 4.10
+    * Modifying getObjectForVuid to work on specific view coordinate parameters and changing to validate VUID uniqueness and validity before allowing 
+        create or edit of VUID sememe.
+
+* 2017/06/27 - 4.9
+    * Intermediate build for testers.
+
+* 2017/06/26 - 4.8
+    * Changes for VUID server error message handling.
+>>>>>>> branch 'develop' of https://darmbrust@vadev.mantech.com:4848/git/r/ISAAC-rest.git
 
 * 2017/06/22 - 4.7
-	* Updated context for most developer installs.
-	* Updating log event with latest dev box token.
-	* Adding commented-out example values to prisme.properties under src/test/resources.
+    * Updated context for most developer installs.
+    * Updating log event with latest dev box token.
+    * Adding commented-out example values to prisme.properties under src/test/resources.
 
 * 2017/06/16 - 4.6
-	* Improvement and cleanup for ssoToken handling.
-	* Documentation improvements and code cleanup. 
+    * Improvement and cleanup for ssoToken handling.
+    * Documentation improvements and code cleanup. 
 
 * 2017/06/14 - 4.5
     * Fix a bunch of issues with how we were handling the ssoToken internally, which lead to prisme not being able to parse back the ssoToken in some cases.

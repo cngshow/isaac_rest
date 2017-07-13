@@ -21,6 +21,7 @@ package gov.vha.isaac.rest.api1.sememe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
@@ -90,6 +91,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeTypeCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeDescriptionUpdate;
+import gov.vha.isaac.rest.api1.vuid.VuidAPIs;
 import gov.vha.isaac.rest.session.LatestVersionUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
@@ -557,6 +559,26 @@ public class SememeWriteAPIs
 				sb = Get.sememeBuilderService().getMembershipSememeBuilder(referencedComponentNid, assemblageConceptSequence);
 				break;
 			case STRING:
+				/*
+				 * If VUID sememe, then make sure it is valid and not a duplicate
+				 */
+				if (assemblageConceptSequence == MetaData.VUID.getConceptSequence()) {
+					String vuidString = null;
+					try {
+						vuidString = ((DynamicSememeStringImpl)data[0]).getDataString();
+					} catch (Exception e) {
+						final String msg = "Failed retreiving string from passed DynamicSememeStringImpl data when attempting to add VUID ID sememe to concept NID=" + referencedComponentNid;
+						log.warn(msg, e);
+						throw new RestException(msg);
+					}
+
+					// getActiveVuidSememeNidForVuid throws RestException if vuidString invalid vuid or if more than one active
+					Optional<Integer> vuidSememeNid = VuidAPIs.getActiveVuidSememeNidForVuid(vuidString);
+
+					if (vuidSememeNid.isPresent()) {
+						throw new RestException("Cannot add already-existing VUID " + vuidString + " to concept NID=" + referencedComponentNid);
+					}
+				}
 				sb = Get.sememeBuilderService().getStringSememeBuilder(((DynamicSememeStringImpl)data[0]).getDataString(), referencedComponentNid, assemblageConceptSequence);
 				break;
 			case COMPONENT_NID:
@@ -627,9 +649,11 @@ public class SememeWriteAPIs
 		return true;
 	}
  
-	private static void validateDynamicSememeDataTypeForUpdate(RestDynamicSememeBase updateObject, String id, SememeType type, DynamicSememeData data, DynamicSememeDataType expectedType) throws RestException {
+	private static void validateDynamicSememeDataTypeForUpdate(RestDynamicSememeBase updateObject, String id, SememeType type, DynamicSememeData data, 
+			DynamicSememeDataType expectedType) throws RestException {
 		if (data.getDynamicSememeDataType() != expectedType) {
-			String msg = "passed mismatched sememe type (" + data.getDynamicSememeDataType() + ") of columnData for updating sememe " + id + " of type " + type + " (should be " + expectedType + ")";
+			String msg = "passed mismatched sememe type (" + data.getDynamicSememeDataType() + ") of columnData for updating sememe " + id + " of type " + type 
+					+ " (should be " + expectedType + ")";
 			log.info(msg + ": " + updateObject);
 			throw new RestException("sememeUpdateData.columnData", null, msg);
 		}
@@ -791,6 +815,28 @@ public class SememeWriteAPIs
 					}
 				} catch (Exception e) {
 					log.error("Failed checking update against current " + type + " sememe " + id + " version. Unconditionally performing update", e);
+				}
+
+				/*
+				 * If VUID sememe, then make sure it is valid and not a duplicate
+				 */
+				if (sememeChronology.getAssemblageSequence() == MetaData.VUID.getConceptSequence()) {
+					String vuidString = null;
+					try {
+						vuidString = ((DynamicSememeStringImpl)passedData[0]).getDataString();
+					} catch (Exception e) {
+						final String msg = "Failed retreiving string from passed DynamicSememeStringImpl data when attempting to update VUID ID sememe to concept NID=" + sememeChronology.getReferencedComponentNid();
+						log.warn(msg, e);
+						throw new RestException(msg);
+					}
+
+					// getActiveVuidSememeNidForVuid throws RestException if vuidString invalid vuid or if more than one matching sememe is active
+					Optional<Integer> vuidSememeNid = VuidAPIs.getActiveVuidSememeNidForVuid(vuidString);
+					if (vuidSememeNid.isPresent()) {
+						if (vuidSememeNid.get() != sememeChronology.getNid()) { // It is only ok to update status of self
+							throw new RestException("Cannot update to already-existing VUID " + vuidString + " to concept NID=" + sememeChronology.getReferencedComponentNid());
+						}
+					}
 				}
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
