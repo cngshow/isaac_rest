@@ -80,20 +80,24 @@ public class IntakeWriteAPIs
 		File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "xmlIntakeDebug");
 		debugOutput.mkdir();
 		
-		try
-		{
-			new VHATDeltaImport(inputXML, 
-				Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getAuthorSequence()).get(),
-				Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getModuleSequence()).get(), 
-				Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getPathSequence()).get(), debugOutput);
+		//need to enforce single threading on this process for now, as there are some issues with static code in ConverterUUID, and also 
+		//potential issues with the way some of the validation checks are being done.
+		synchronized (log) {
+			try
+			{
+				new VHATDeltaImport(inputXML, 
+					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getAuthorSequence()).get(),
+					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getModuleSequence()).get(), 
+					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getPathSequence()).get(), debugOutput);
+			}
+			catch (Exception e)
+			{
+				log.info("Failed processing input xml", e);
+				throw new RestException("Could not process the provided XML: " + e.getMessage());
+			}
+			
+			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
 		}
-		catch (Exception e)
-		{
-			log.info("Failed processing input xml", e);
-			throw new RestException("Could not process the provided XML: " + e.getMessage());
-		}
-		
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
 		
 	}
 }
