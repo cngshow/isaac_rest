@@ -132,6 +132,11 @@
 			<artifactId>rest-utils</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>ochre-importers</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
 		
 		<!-- Need to override the scope on these 3 logging packages -->
 		<dependency>
