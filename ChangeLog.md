@@ -27,7 +27,6 @@ API version number, not the release version number.
 
 * 2017/06/26 - 4.8
     * Changes for VUID server error message handling.
->>>>>>> branch 'develop' of https://darmbrust@vadev.mantech.com:4848/git/r/ISAAC-rest.git
 
 * 2017/06/22 - 4.7
     * Updated context for most developer installs.
