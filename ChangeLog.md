@@ -6,6 +6,7 @@ API version number, not the release version number.
 * 2017/07/?? - 4.13 - PENDING
     * Refactoring editToken code for maintainability, adding missing role-expiration checks, so it now updates roles from prisme every 5 minutes
         (as it was always supposed to, but was neglected)
+    * Hooking up vuid generation through to the XML importer
 
 * 2017/07/13 - 4.12
     * Hooked up the xml intake API to the real processing code 

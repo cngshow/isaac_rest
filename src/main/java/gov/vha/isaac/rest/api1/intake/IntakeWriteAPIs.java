@@ -35,9 +35,9 @@ import gov.vha.isaac.ochre.utility.importer.VHATDeltaImport;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
+import gov.vha.isaac.rest.api1.vuid.VuidWriteAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.SecurityUtils;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link IntakeWriteAPIs}
@@ -88,7 +88,19 @@ public class IntakeWriteAPIs
 				new VHATDeltaImport(inputXML, 
 					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getAuthorSequence()).get(),
 					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getModuleSequence()).get(), 
-					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getPathSequence()).get(), debugOutput);
+					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getPathSequence()).get(),
+					(() -> 
+					{
+						try
+						{
+							return new Long(VuidWriteAPIs.allocateVUID(1, "XML Import", RequestInfo.get().getEditToken().getUser().getSSOToken().get()).startInclusive);
+						}
+						catch (Exception e)
+						{
+							throw new RuntimeException("Failed to allocate a new VUID", e);
+						}
+					}),
+					debugOutput);
 			}
 			catch (Exception e)
 			{
@@ -96,7 +108,7 @@ public class IntakeWriteAPIs
 				throw new RestException("Could not process the provided XML: " + e.getMessage());
 			}
 			
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()));
+			return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken());
 		}
 		
 	}
