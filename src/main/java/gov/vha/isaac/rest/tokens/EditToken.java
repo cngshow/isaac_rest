@@ -20,20 +20,24 @@ package gov.vha.isaac.rest.tokens;
 
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.User;
+import gov.vha.isaac.ochre.api.UserService;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.ByteArrayDataBuffer;
 import gov.vha.isaac.ochre.api.util.PasswordHasher;
@@ -50,7 +54,7 @@ public class EditToken
 {
 	private static final Logger log = LoggerFactory.getLogger(EditToken.class);
 	
-	private static final byte tokenVersion = 1;
+	private static final byte tokenVersion = 2;
 	private static final int hashRounds = 2048;
 	private static final int hashLength = 64;
 	private static final int encodedHashLength = (int)Math.ceil(hashLength / 8f / 3f) * 4;  //http://stackoverflow.com/a/4715480
@@ -59,23 +63,58 @@ public class EditToken
 	private static volatile transient byte[] secret_;
 	private static final AtomicInteger globalIncrement = new AtomicInteger();  //Used for CSRF protection
 	
-	private static final ConcurrentHashMap<Integer, Long> validTokens = new ConcurrentHashMap<>();
-	private static final long tokenMaxAge = 1000l * 60l * 60l;  //one hour
-	 
+	private static final ConcurrentHashMap<Integer, Long> VALID_TOKENS = new ConcurrentHashMap<>();  //Map from the increment value to the time it was entered as valid.
+	private static final long tokenMaxAge = 1000l * 60l * 60l;  //when an edit token comes in that is older than an hour, it is invalid, and they must request a new one.
+	
+	//A cache from the encoded EditToken string to the decoded EditToken object - used to allow us to skip the decode steps.
+	private static final Map<String, EditToken> EDIT_TOKEN_LOOKUP_CACHE = Collections.synchronizedMap(new LinkedHashMap<String, EditToken>(100, 0.75F, true) 
+	{
+		private static final long serialVersionUID = -1236481390177598762L;
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<String, EditToken> eldest)
+		{
+			return size() > 100;
+		}
+	});
+	
 
 	// Generate UUID
 	// Using the text 'NO_ACTIVE_WORKFLOW'
 	// and the domain '5a2e7786-3e41-11dc-8314-0800200c9a66' (path ID from FSN description)
 	private static final UUID NULL_UUID = UUID.fromString("a051e620-4fe1-5174-97d9-53dbce2ead0d");
-
-	private long creationTime;
-	private int increment;
-	private final int authorSequence;
-	private final int moduleSequence;
-	private final int pathSequence;
-	private final UUID activeWorkflowProcessId;
-	private final Set<UserRole> roles = new TreeSet<>();
 	
+	
+	/**
+	 * @param encodedEditToken The string produced from a call to {@link #getSerialized()}
+	 * @return the EditToken object
+	 * @throws Exception If unparseable
+	 */
+	public static EditToken read(String encodedEditToken) throws Exception
+	{
+		EditToken et = EDIT_TOKEN_LOOKUP_CACHE.get(encodedEditToken);
+		
+		if (et == null)
+		{
+			et = new EditToken(encodedEditToken);
+			EDIT_TOKEN_LOOKUP_CACHE.put(et.getSerialized(), et);
+		}
+		return et;
+	}
+	
+	
+	/*
+	 * non-static variables and methods below
+	 */
+
+	//serialized to be passed back and forth
+	private final int authorSequence;
+	private int increment;
+	private long incrementTime;
+	private int moduleSequence;
+	private int pathSequence;
+	private UUID activeWorkflowProcessId;
+	
+	//Transient - non-serialized variables
 	private transient EditCoordinate editCoordinate = null;
 	private transient String serialization;
 	
@@ -87,37 +126,20 @@ public class EditToken
 	 * @param pathSequence
 	 * @param activeWorkflowProcessId
 	 */
-	EditToken(
+	public EditToken(
 			int authorSequence,
 			int moduleSequence,
 			int pathSequence,
-			UUID activeWorkflowProcessId,
-			UserRole...roles)
+			UUID activeWorkflowProcessId)
 	{
 		this.authorSequence = authorSequence;
 		this.moduleSequence = moduleSequence;
 		this.pathSequence = pathSequence;
 		this.activeWorkflowProcessId = activeWorkflowProcessId;
-		
-		if (roles != null && roles.length > 0) {
-			for (UserRole role : roles) {
-				this.roles.add(role);
-			}
-		}
-
-		creationTime = System.currentTimeMillis();
-		increment = globalIncrement.getAndIncrement();
-		validTokens.put(increment, System.currentTimeMillis());
-		serialization = serialize();
-	}
-	EditToken(
-			int authorSequence,
-			int moduleSequence,
-			int pathSequence,
-			UUID activeWorkflowProcessId,
-			Collection<UserRole> roles)
-	{
-		this(authorSequence, moduleSequence, pathSequence, activeWorkflowProcessId, roles != null ? roles.toArray(new UserRole[roles.size()]) : null);
+		this.increment = globalIncrement.getAndIncrement();
+		this.incrementTime = System.currentTimeMillis();
+		VALID_TOKENS.put(increment, System.currentTimeMillis());
+		this.serialization = serialize();
 	}
 
 	/**
@@ -125,7 +147,7 @@ public class EditToken
 	 * @param encodedData
 	 * @throws Exception
 	 */
-	EditToken(String encodedData) throws Exception
+	private EditToken(String encodedData) throws Exception
 	{
 		try {
 			long time = System.currentTimeMillis();
@@ -146,9 +168,9 @@ public class EditToken
 			}
 
 			increment = buffer.getInt();
-			creationTime = buffer.getLong();
+			incrementTime = buffer.getLong();
 
-			if ((System.currentTimeMillis() - creationTime) > tokenMaxAge)
+			if ((System.currentTimeMillis() - incrementTime) > tokenMaxAge)
 			{
 				throw new RestException("Edit Token Expired");
 			}
@@ -164,11 +186,6 @@ public class EditToken
 				activeWorkflowProcessId = tmpUuid;
 			}
 
-			byte numRoles = buffer.getByte();
-			for (byte i = 0; i < numRoles; ++i) {
-				roles.add(UserRole.safeValueOf(buffer.getInt()).get());
-			}
-
 			log.debug("token decode time " + (System.currentTimeMillis() - time) + "ms");
 
 			serialization = encodedData;
@@ -182,8 +199,8 @@ public class EditToken
 	{
 		try
 		{
-			log.info("Expiring unused tokens - size before: " + validTokens.size());
-			Iterator<Entry<Integer, Long>> x = validTokens.entrySet().iterator();
+			log.info("Expiring unused tokens - size before: " + VALID_TOKENS.size());
+			Iterator<Entry<Integer, Long>> x = VALID_TOKENS.entrySet().iterator();
 			while (x.hasNext())
 			{
 				if ((System.currentTimeMillis() -  x.next().getValue()) > tokenMaxAge)
@@ -191,7 +208,7 @@ public class EditToken
 					x.remove();
 				}
 			}
-			log.info("Finished expiring unused tokens - size after: " + validTokens.size());
+			log.info("Finished expiring unused tokens - size after: " + VALID_TOKENS.size());
 		}
 		catch (Exception e)
 		{
@@ -210,13 +227,6 @@ public class EditToken
 		{
 			throw new RuntimeException(e);
 		}
-	}
-	
-	/**
-	 * @return the creationTime
-	 */
-	public long getCreationTime() {
-		return creationTime;
 	}
 
 	/**
@@ -261,13 +271,6 @@ public class EditToken
 		return editCoordinate;
 	}
 
-	/**
-	 * @return the sorted set of roles
-	 */
-	public Set<UserRole> getRoles() {
-		return Collections.unmodifiableSet(roles);
-	}
-
 	public String getSerialized()
 	{
 		return serialization;
@@ -280,7 +283,7 @@ public class EditToken
 	 */
 	public boolean isValidForWrite()
 	{
-		return validTokens.remove(increment) == null ? false : true;
+		return VALID_TOKENS.remove(increment) == null ? false : true;
 	}
 	
 	private byte[] getBytesToWrite()
@@ -288,7 +291,7 @@ public class EditToken
 		ByteArrayDataBuffer buffer = new ByteArrayDataBuffer();
 		buffer.putByte(tokenVersion);
 		buffer.putInt(increment);
-		buffer.putLong(creationTime);
+		buffer.putLong(incrementTime);
 		buffer.putInt(authorSequence);
 		buffer.putInt(moduleSequence);
 		buffer.putInt(pathSequence);
@@ -297,11 +300,6 @@ public class EditToken
 			buffer.putUuid(NULL_UUID);
 		} else {
 			buffer.putUuid(activeWorkflowProcessId);
-		}
-		
-		buffer.putByte((byte)roles.size());
-		for (UserRole role : roles) {
-			buffer.putInt(role.ordinal());
 		}
 
 		buffer.trimToSize();
@@ -317,10 +315,7 @@ public class EditToken
 				if (secret_ == null)
 				{
 					byte[] temp = new byte[20];
-					
-					//Don't use secureRandom here, it hangs on linux, and we don't need that level of security.
-					//new Random().nextBytes(temp);
-					//SecureRandom.getInstanceStrong().nextBytes(temp);  //TODO determine if we need a better fix for this one.
+
 					new SecureRandom().nextBytes(temp);
 					secret_ = temp;
 					
@@ -330,15 +325,63 @@ public class EditToken
 		}
 		return secret_;
 	}
+	
+	/**
+	 * Increment the CSRF value, making this token valid for submit once again.  Returns itself for convenience.
+	 * @return
+	 */
+	public EditToken renewToken()
+	{
+		EDIT_TOKEN_LOOKUP_CACHE.remove(getSerialized());
+		VALID_TOKENS.remove(increment);
+		increment = globalIncrement.incrementAndGet();
+		incrementTime = System.currentTimeMillis();
+		serialization = serialize();
+		EDIT_TOKEN_LOOKUP_CACHE.put(getSerialized(), this);
+		VALID_TOKENS.put(increment, incrementTime);
+		return this;
+	}
+	
+	public void updateActiveWorkflowProcessId(UUID workflowProcessId)
+	{
+		EDIT_TOKEN_LOOKUP_CACHE.remove(getSerialized());
+		this.activeWorkflowProcessId = workflowProcessId;
+		this.serialization = serialize();
+		EDIT_TOKEN_LOOKUP_CACHE.put(getSerialized(), this);
+	}
+	
+	public void updateValues(int moduleSequence, int pathSequence, UUID workflowProcessId)
+	{
+		EDIT_TOKEN_LOOKUP_CACHE.remove(getSerialized());
+		this.moduleSequence = moduleSequence;
+		this.pathSequence = pathSequence;
+		this.activeWorkflowProcessId = workflowProcessId;
+		this.serialization = serialize();
+		EDIT_TOKEN_LOOKUP_CACHE.put(getSerialized(), this);
+	}
+	
+	/**
+	 * Return the user object tied to this EditToken (which also contains the role information)
+	 * @return
+	 */
+	public User getUser()
+	{
+		Optional<User> user = LookupService.get().getService(UserService.class).get(authorSequence);
+		if (!user.isPresent())
+		{
+			throw new RuntimeException("Should be impossible to have an editToken without a user available!");
+		}
+		return user.get();
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "EditToken [increment=" + increment + ", creationTime=" + creationTime + ", authorSequence="
+		return "EditToken [increment=" + increment + ", incrementTime=" + incrementTime + ", authorSequence="
 				+ authorSequence + ", moduleSequence=" + moduleSequence + ", pathSequence=" + pathSequence
-				+ ", activeWorkflowProcessId=" + activeWorkflowProcessId + ", roles=" + roles + ", serialization=" + serialization
+				+ ", activeWorkflowProcessId=" + activeWorkflowProcessId + ", serialization=" + serialization
 				+ "]";
 	}
 
@@ -347,12 +390,10 @@ public class EditToken
 		UUID randomUuid = UUID.randomUUID();
 		
 		EditToken t = new EditToken(
-				//5678,
 				1,
 				2,
 				3,
-				randomUuid,
-				UserRole.SUPER_USER, UserRole.EDITOR, UserRole.READ_ONLY);
+				randomUuid);
 		String token = t.serialize();
 		System.out.println(token);
 		EditToken t1 = new EditToken(token);

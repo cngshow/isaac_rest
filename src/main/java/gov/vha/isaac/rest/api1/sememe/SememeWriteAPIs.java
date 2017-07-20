@@ -97,7 +97,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link SememeWriteAPIs}
@@ -510,7 +509,7 @@ public class SememeWriteAPIs
 				log.error("Unexpected error enabling the index on newly created sememe set!", e);
 			}
 		});
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), 
 				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
 	
@@ -621,7 +620,7 @@ public class SememeWriteAPIs
 		{
 			throw new RestException("Failed committing new association item sememe");
 		}
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), built.getPrimordialUuid());
 	}
 	
 	public static boolean equals(DynamicSememeData[] d1, DynamicSememeData[] d2) {
@@ -903,7 +902,7 @@ public class SememeWriteAPIs
 			
 			throw new RuntimeException("error committing", e);
 		}
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), sememeChronology.getPrimordialUuid());
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), sememeChronology.getPrimordialUuid());
 	}
 	
 	private SememeType readSememeType(int assemblageConceptSequence, DynamicSememeData[] data) throws RestException

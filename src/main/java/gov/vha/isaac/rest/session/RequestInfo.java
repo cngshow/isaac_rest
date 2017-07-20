@@ -28,14 +28,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserCache;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
@@ -53,7 +54,6 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 import gov.vha.isaac.rest.tokens.EditToken;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link RequestInfo}
@@ -68,15 +68,13 @@ public class RequestInfo
 {
 	private static Logger log = LogManager.getLogger(RequestInfo.class);
 
-	private final static User DEFAULT_READ_ONLY_USER = new User("READ_ONLY_USER", null, UserRole.READ_ONLY);
-	
 	private static EditCoordinate DEFAULT_EDIT_COORDINATE = null;
 	
 	private Map<String, List<String>> parameters_ = new HashMap<>();
 
 	private String coordinatesToken_ = null;
 
-	private User user_ = null;
+	private Optional<User> user_ = null;
 	private EditToken editToken_ = null;
 
 	private EditCoordinate editCoordinate_ = null;
@@ -192,15 +190,18 @@ public class RequestInfo
 				log.debug("No individual coordinate parameters to apply to token \"{}\"", requestInfo.get().coordinatesToken_);
 
 			} else { // If ANY coordinate parameter other than coordToken value set, then calculate new CoordinatesToken string
-				log.debug("Applying {} individual parameters to coordinates token \"{}\": {}", requestInfo.get().coordinatesToken_, coordinateParameters.size(), coordinateParameters.toString());
+				log.debug("Applying {} individual parameters to coordinates token \"{}\": {}", requestInfo.get().coordinatesToken_, coordinateParameters.size(), 
+						coordinateParameters.toString());
 
 				// TaxonomyCoordinate components
 				boolean stated = CoordinatesUtil.getStatedFromParameter(coordinateParameters.get(RequestParameters.stated), token);
 
 				// LanguageCoordinate components
 				int langCoordLangSeq = CoordinatesUtil.getLanguageCoordinateLanguageSequenceFromParameter(coordinateParameters.get(RequestParameters.language), token); 
-				int[] langCoordDialectPrefs = CoordinatesUtil.getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(coordinateParameters.get(RequestParameters.dialectPrefs), token);
-				int[] langCoordDescTypePrefs = CoordinatesUtil.getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(coordinateParameters.get(RequestParameters.descriptionTypePrefs), token);
+				int[] langCoordDialectPrefs = CoordinatesUtil.getLanguageCoordinateDialectAssemblagePreferenceSequencesFromParameter(
+						coordinateParameters.get(RequestParameters.dialectPrefs), token);
+				int[] langCoordDescTypePrefs = CoordinatesUtil.getLanguageCoordinateDescriptionTypePreferenceSequencesFromParameter(
+						coordinateParameters.get(RequestParameters.descriptionTypePrefs), token);
 
 				// StampCoordinate components
 				long stampTime = CoordinatesUtil.getStampCoordinateTimeFromParameter(coordinateParameters.get(RequestParameters.time), token); 
@@ -212,7 +213,8 @@ public class RequestInfo
 				// LogicCoordinate components
 				int logicStatedSeq = CoordinatesUtil.getLogicCoordinateStatedAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicStatedAssemblage), token);
 				int logicInferredSeq = CoordinatesUtil.getLogicCoordinateInferredAssemblageFromParameter(coordinateParameters.get(RequestParameters.logicInferredAssemblage), token);
-				int logicDescProfileSeq = CoordinatesUtil.getLogicCoordinateDescProfileAssemblageFromParameter(coordinateParameters.get(RequestParameters.descriptionLogicProfile), token);
+				int logicDescProfileSeq = CoordinatesUtil.getLogicCoordinateDescProfileAssemblageFromParameter(
+						coordinateParameters.get(RequestParameters.descriptionLogicProfile), token);
 				int logicClassifierSeq = CoordinatesUtil.getLogicCoordinateClassifierAssemblageFromParameter(coordinateParameters.get(RequestParameters.classifier), token);
 
 				CoordinatesToken tokenObj = CoordinatesTokens.getOrCreate(
@@ -270,22 +272,19 @@ public class RequestInfo
 	}
 
 	public boolean hasUser() {
-		return user_ != null;
+		return user_ != null && user_.isPresent();
 	}
 	public void setDefaultReadOnlyUser() {
-		user_ = DEFAULT_READ_ONLY_USER;
+		user_ = Optional.of(new User("READ_ONLY_USER", MetaData.USER.getPrimordialUuid(), null, UserRole.READ_ONLY));
+		LookupService.get().getService(UserProvider.class).addUser(user_.get());
 	}
+	
 	public Optional<User> getUser() throws RestException {
 		if (user_ == null) {
-			//Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptSequence(getEditToken().getAuthorSequence());
-			Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptId(getEditToken().getAuthorSequence());
-			if (userUuid.isPresent()) {
-				Optional<User> userOptional = LookupService.getService(UserCache.class).get(userUuid.get());
-				user_ = userOptional.isPresent() ? userOptional.get() : null;
-			}
+			user_ = Optional.of(getEditToken().getUser());
 		}
 		
-		return user_ != null ? Optional.of(user_) : Optional.empty();
+		return user_;
 	}
 	
 	/**
@@ -302,8 +301,6 @@ public class RequestInfo
 				// FAIL if userId and ssoToken parameters both set
 				RequestInfoUtils.validateIncompatibleParameters(parameters_, RequestParameters.editToken, RequestParameters.ssoToken, RequestParameters.userId);
 
-				EditToken editToken = null;
-
 				Integer module = null;
 				Integer path = null;
 				UUID workflowProcessid = null;
@@ -311,20 +308,24 @@ public class RequestInfo
 				EditCoordinate defaultEditCoordinate = getDefaultEditCoordinate();
 				
 				// Set default EditToken parameters to values in passedEditToken if set, otherwise set to default
-				Optional<EditToken> passedEditToken = EditTokens.getEditTokenParameterTokenObjectValue(parameters_);
-				if (passedEditToken.isPresent()) {
+				Optional<String> passedEditTokenSerialized = RequestInfoUtils.getEditTokenParameterStringValue(parameters_);
+				PrismeUserService userService = LookupService.getService(PrismeUserService.class);
+				
+				if (passedEditTokenSerialized.isPresent()) {
 					// Found valid EditToken passed as parameter
-					log.debug("Applying EditToken {} parameter \"{}\"", RequestParameters.editToken, passedEditToken.get().getSerialized());
+					log.debug("Applying EditToken {} parameter \"{}\"", RequestParameters.editToken, passedEditTokenSerialized.get());
+					EditToken passedEditToken = EditToken.read(passedEditTokenSerialized.get());
 
 					// Set local values to values from passed EditToken
-					module = passedEditToken.get().getModuleSequence();
-					path = passedEditToken.get().getPathSequence();
-					workflowProcessid = passedEditToken.get().getActiveWorkflowProcessId();
+					module = passedEditToken.getModuleSequence();
+					path = passedEditToken.getPathSequence();
+					workflowProcessid = passedEditToken.getActiveWorkflowProcessId();
 
 					// Override values from passed EditToken with values from parameters
 					if (parameters_.containsKey(RequestParameters.processId)) {
 						RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.processId);
-						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, parameters_.get(RequestParameters.processId).iterator().next());
+						workflowProcessid = RequestInfoUtils.parseUuidParameter(RequestParameters.processId, parameters_.get(RequestParameters.processId)
+								.iterator().next());
 					}
 					if (parameters_.containsKey(RequestParameters.editModule)) {
 						module = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editModule);
@@ -333,37 +334,41 @@ public class RequestInfo
 						path = RequestInfoUtils.getConceptSequenceFromParameter(parameters_, RequestParameters.editPath);
 					}
 					
-					// Create new EditToken based on any passed parameters
-					// This call will only create a new edit token if one of
-					// its characteristics is not already cached
-					editToken = EditTokens.getOrCreate(
-							passedEditToken.get().getAuthorSequence(),
-							module,
-							path,
-							workflowProcessid,
-							passedEditToken.get().getRoles()
-							);
-					
-					Optional<UUID> userUuid = Get.identifierService().getUuidPrimordialFromConceptId(editToken.getAuthorSequence());
-					if (LookupService.getService(UserCache.class).get(userUuid.get()).isPresent()) {
-						user_ = LookupService.getService(UserCache.class).get(userUuid.get()).get();
-					} else {
-						String name = Get.conceptDescriptionText(editToken.getAuthorSequence());
-						User user = new User(name, userUuid.get(), editToken.getRoles());
-						LookupService.getService(UserCache.class).put(user);
-						user_ = user;
+					passedEditToken.updateValues(module, path, workflowProcessid);
+					if (!passedEditToken.getUser().rolesStillValid())
+					{
+						if (userService.usePrismeForRolesByToken()) 
+						{
+							log.info("Rechecking roles for user " + passedEditToken.getUser().getName());
+							try
+							{
+								passedEditToken.getUser().updateRoles(userService.getUser(passedEditToken.getUser().getSSOToken().get()).get().getRoles().toArray(new UserRole[0]));
+								log.debug("Roles updated: " + passedEditToken.getUser().toString());
+							}
+							catch (Exception e)
+							{
+								log.error("Failed to refresh roles", e);
+								throw new RestException("Failed to revalidate roles");
+							}
+						}
+						else
+						{
+							//if we aren't using prisme, roles can't expire...
+							passedEditToken.getUser().updateRoles(passedEditToken.getUser().getRoles().toArray(new UserRole[0]));
+						}
 					}
+					editToken_ = passedEditToken;
+					user_ = Optional.of(passedEditToken.getUser());
 				} else {
 					// No valid EditToken passed as parameter
 					Optional<User> userOptional = Optional.empty();
 					
-					PrismeUserService userService = LookupService.getService(PrismeUserService.class);
-
 					// IF prisme.properties properties found then MUST use SSO token
 					if (userService.usePrismeForRolesByToken()) {
 						// FAIL if userId parameter set
 						if (parameters_.containsKey(RequestParameters.userId)) {
-							throw new SecurityException(new RestException(RequestParameters.userId, parameters_.get(RequestParameters.userId) + "", "Cannot specify userId parameter when PRISME configured"));
+							throw new SecurityException(new RestException(RequestParameters.userId, parameters_.get(RequestParameters.userId) 
+									+ "", "Cannot specify userId parameter when PRISME configured"));
 						}
 						log.debug("Constructing new EditToken from User from PRISME with SSO token {}", parameters_.get(RequestParameters.ssoToken));
 						// Validate ssoToken parameter
@@ -394,20 +399,25 @@ public class RequestInfo
 								try {
 									// Attempt to retrieve UUID generated by hashing the passed string
 									// as an FSN, which must be in the MetaData.USER UUID domain
-									userConceptSequence = RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.userId, EditTokenUtil.getUuidFromUserFsn(userIdParameterValue).toString());
+									userConceptSequence = RequestInfoUtils.getConceptSequenceFromParameter(RequestParameters.userId, 
+											UserProvider.getUuidFromUserName(userIdParameterValue).toString());
 								} catch (Exception e) {
 								}
 							}
 
 							if (userConceptSequence == null) {
-								throw new RestException(RequestParameters.userId, userIdParameterValue, "Unable to determine test User concept sequence from parameter.  Must be a concept id, an existing User FSN, or the (case insensitive) word \"DEFAULT\"");
+								throw new RestException(RequestParameters.userId, userIdParameterValue, 
+										"Unable to determine test User concept sequence from parameter.  Must be a concept id, an existing User FSN, or the (case insensitive)"
+										+" word \"DEFAULT\"");
 							}
 
-							String userName = Get.conceptDescriptionText(userConceptSequence); // TODO should get FSN only?
+							String userName = Get.conceptDescriptionText(userConceptSequence);
 							userOptional = Optional.of(new User(
 									userName,
 									Get.identifierService().getUuidPrimordialFromConceptId(userConceptSequence).get(),
+									"",
 									UserRole.values()));
+							LookupService.get().getService(UserProvider.class).addUser(userOptional.get());
 						} else {
 							if (parameters_.containsKey(RequestParameters.ssoToken)) {
 								RequestInfoUtils.validateSingleParameterValue(parameters_, RequestParameters.ssoToken);
@@ -428,19 +438,16 @@ public class RequestInfo
 					}
 					
 					// Must have EditToken, SSO token (real or parsable, if in src/test) or userId in order to get author
-					user_ = userOptional.isPresent() ? userOptional.get() : null;
-					if (user_ == null)
+					user_ = userOptional;
+					if (user_ == null || !user_.isPresent())
 					{
 						throw new RestException("Edit token cannot be constructed without user information!");
 					}
-					editToken = EditTokenUtil.getUserToken(
-							user_,
+					editToken_ = new EditToken(UserProvider.getAuthorSequence(user_.get().getName()), 
 							module != null ? module : defaultEditCoordinate.getModuleSequence(),
 							path != null ? path : defaultEditCoordinate.getPathSequence(),
 							workflowProcessid);
 				}
-
-				editToken_ = editToken;
 
 				log.debug("Created EditToken \"{}\"", requestInfo.get().editToken_);
 			} catch (RestException e) {

@@ -48,7 +48,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.EditToken;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link WorkflowWriteAPIs}
@@ -104,10 +103,10 @@ public class WorkflowWriteAPIs {
 						workflowProcessCreationData.getName(),
 						workflowProcessCreationData.getDescription());
 
-				EditToken updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, newProcessId);
+				existingToken.updateActiveWorkflowProcessId(newProcessId);
 
 				return new RestWriteResponse(
-						updatedToken,
+						existingToken.renewToken(),
 						newProcessId,
 						null,
 						null);
@@ -163,9 +162,7 @@ public class WorkflowWriteAPIs {
 					throw new RestException("Invalid process advancement for process " + existingToken.getActiveWorkflowProcessId() + ": " + processAdvancementData);
 				}
 
-				EditToken updatedToken = EditTokens.renew(existingToken);
-
-				return new RestWriteResponse(updatedToken);
+				return new RestWriteResponse(existingToken.renewToken());
 			} else {
 				throw new RestException("Cannot advance a process unless a process is active. Acquire the process active and try again.");
 			}
@@ -235,15 +232,14 @@ public class WorkflowWriteAPIs {
 
 			// If acquire set the owner to user.  If release set owner to BPMNInfo.UNOWNED_PROCESS.
 			UUID newLockOwner;
-			EditToken updatedToken;
 			if (boolAcquireLock) {
 				newLockOwner = Get.identifierService()
 						.getUuidPrimordialFromConceptId(RequestInfo.get().getEditToken().getAuthorSequence())
 						.get();
-				updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, uuidProcessId);
+				existingToken.updateActiveWorkflowProcessId(uuidProcessId);
 			} else {
 				newLockOwner = BPMNInfo.UNOWNED_PROCESS;
-				updatedToken = EditTokens.renewWithSpecifiedProcessId(existingToken, null);
+				existingToken.updateActiveWorkflowProcessId(null);
 			}
 
 			// Perform acquire or release
@@ -251,7 +247,7 @@ public class WorkflowWriteAPIs {
 
 			provider.setProcessOwner(uuidProcessId, newLockOwner);
 
-			return new RestWriteResponse(updatedToken);
+			return new RestWriteResponse(existingToken.renewToken());
 		} catch (Exception e) {
 			String actionRequested;
 			if (boolAcquireLock) {
@@ -304,7 +300,7 @@ public class WorkflowWriteAPIs {
 						nid,
 						ec);
 
-				return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), null, nid, null);
+				return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), null, nid, null);
 			} else {
 				throw new RestException("Cannot remove a component from a process unless the process is active. Acquire the process active and try again.");
 			}

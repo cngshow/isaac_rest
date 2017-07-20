@@ -38,7 +38,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserCache;
 import gov.vha.isaac.ochre.api.UserRole;
 
 /**
@@ -74,18 +73,10 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.ochre.api.UserRoleService#getUserRoles(java.util.UUID)
-	 * 
-	 * This method should throw exception if the user has not already been cached
-	 */
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.rest.session.PrismeUserService#getUserRoles(java.util.UUID)
-	 */
 	@Override
-	public Set<UserRole> getUserRoles(UUID userId)
+	public User getUser(UUID userId)
 	{
-		return LookupService.getService(UserCache.class).get(userId).get().getRoles();
+		return LookupService.getService(UserProvider.class).get(userId).get();
 	}
 
 	/* (non-Javadoc)
@@ -99,7 +90,7 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	 * @see gov.vha.isaac.rest.session.PrismeUserService#getAllUserRoles()
 	 */
 	@Override
-	public Set<UserRole> getAllUserRoles()
+	public Set<UserRole> getAllPossibleUserRoles()
 	{
 		if (usePrismeForAllRoles()) {
 			try {
@@ -149,30 +140,6 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	@Override
 	public boolean usePrismeForSsoTokenByName() {
 		return getSsoTokenByNameUrl() != null;
-	}
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.rest.session.PrismeUserService#safeGetToken(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public Optional<String> safeGetToken(String id, String password) {
-		try {
-			return Optional.of(getToken(id, password));
-		} catch (Exception e) {
-			System.err.println(e);
-			e.printStackTrace();
-			return Optional.empty();
-		} 
-	}
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.rest.session.PrismeUserService#getToken(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public String getToken(String id, String password) throws Exception {		
-		if (usePrismeForSsoTokenByName()) {
-			return getUserSsoTokenFromPrisme(id, password);
-		} else {
-			throw new RuntimeException("Cannot generate SSO token for " + id + " without access to PRISME");
-		}
 	}
 
 	// Private helpers

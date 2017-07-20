@@ -24,13 +24,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -80,7 +77,6 @@ import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
@@ -191,13 +187,11 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcess;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
-import gov.vha.isaac.rest.session.PrismeUserService;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
 import gov.vha.isaac.rest.tokens.EditToken;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 /**
  * {@link RestTest}
@@ -235,7 +229,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private static JsonNodeFactory jfn = JsonNodeFactory.instance;
 
-	private final static PrismeUserService PRISME_USER_SERVICE = LookupService.getService(PrismeUserService.class);
+	private final static TestPrismeIntegratedUserService PRISME_USER_SERVICE = LookupService.getService(TestPrismeIntegratedUserService.class);
 
 	// Example tokens
 	//	private static final String readOnlyToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC6%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx94%5CxB0%5Ce%7C%5Cx9C%5CxB0%5CxA6%5CxA8%5CxE1%5CxE1t%5CxBC%5CvK%22%2C+%22a%40%5Cx8A%5CxACT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D";
@@ -638,7 +632,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		EditToken retrievedEditToken = null;
 		try {
-			retrievedEditToken = EditTokens.getOrCreate(restEditTokenObject.token);
+			retrievedEditToken = EditToken.read(restEditTokenObject.token);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -649,7 +643,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String retrievedEditTokenString = retrievedEditToken.getSerialized();
 		EditToken newEditToken = null;
 		try {
-			newEditToken = EditTokens.getOrCreate(retrievedEditTokenString);
+			newEditToken = EditToken.read(retrievedEditTokenString);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -695,7 +689,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	//	}
 
 	@Test
-	public void testWorkflowAPIs()
+	public void testWorkflowAPIs() throws Exception
 	{
 		// Get an editToken string
 		Response getEditTokenResponse = target(editTokenRequestPath.replaceFirst(RestPaths.appPathComponent, ""))
@@ -708,7 +702,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Construct and EditToken object from editToken String
 		EditToken editToken = null;
 		try {
-			editToken = EditTokens.getOrCreate(restEditTokenObject.token);
+			editToken = EditToken.read(restEditTokenObject.token);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -766,7 +760,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Update edit token with new value containing processId
 		try {
-			editToken = EditTokens.getOrCreate(writeResponse.editToken.token);
+			editToken = EditToken.read(writeResponse.editToken.token);
 		} catch (Exception e) {
 			Assert.fail("Failed creating EditToken from writeResponse.editToken.token=\"" + writeResponse.editToken.token + "\"", e);
 		}
@@ -862,8 +856,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertNotNull(availableAction.getRole());
 			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
-					|| editToken.getRoles().contains(UserRole.SUPER_USER));
+					editToken.getUser().getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
+					|| editToken.getUser().getRoles().contains(UserRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundEditAction); // definition-specific
 		Assert.assertTrue(foundCancelWorkflowAction); // definition-specific
@@ -885,8 +879,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.put(Entity.xml(lockingRequestType));
 		expectFail(lockProcessResponse);
 
-		//NUNO: added this here to renew token because of tests were failing. It should not be needed.
-		EditTokens.renew(editToken);
+		editToken.renewToken();
 
 		// Release lock on process
 		lockingRequestType = Boolean.toString(false);
@@ -906,7 +899,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Acquire lock on process
 		lockingRequestType = Boolean.toString(true);
 		lockProcessResponse = target(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent
-				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + editToken.getActiveWorkflowProcessId().toString())
+				+ RestPaths.updatePathComponent + RestPaths.process + RestPaths.lock + process.getId().toString())
 				.queryParam(RequestParameters.editToken, renewedEditToken.token)
 				.queryParam(RequestParameters.acquireLock, lockingRequestType)
 				.request()
@@ -937,6 +930,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(xml));
 		expectFail(advanceProcessResponse);
 		renewedEditToken = writeResponse.editToken;
+		editToken = EditToken.read(renewedEditToken.token);
+		editToken.renewToken();
 
 		// Create a concept in this workflow process
 		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
@@ -973,10 +968,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(e);
 		}
 
-		editToken = EditTokens.renew(editToken);
-
 		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, renewedEditToken.token)
+				.queryParam(RequestParameters.editToken, editToken.getSerialized())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
@@ -1046,6 +1039,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//		}
 		//TODO [WF]- I had to comment out another test that is randomly broken...
 		//		Assert.assertTrue(foundCreatedConceptNidInProcess);
+		
+		editToken.renewToken();
 
 		// Attempt to advance process to edit.  Should work now that components have been added.
 		xml = null;
@@ -1121,8 +1116,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertNotNull(availableAction.getRole());
 			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
-					|| editToken.getRoles().contains(UserRole.SUPER_USER));
+					editToken.getUser().getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
+					|| editToken.getUser().getRoles().contains(UserRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundQaFailsAction);
 		Assert.assertTrue(foundCancelWorkflowAction);
@@ -2155,7 +2150,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Add synthetic VUID and SCTID to test concepts to test display field value population
 		String editTokenString = getEditTokenString(TEST_SSO_TOKEN);
-		EditToken token = EditTokens.getOrCreate(editTokenString);
+		EditToken token = EditToken.read(editTokenString);
 		final String ITEM_SOURCE_CONCEPT_FAKE_VUID = 12345L + "";
 		final String ITEM_SOURCE_CONCEPT_FAKE_SCTID = 23456L + "";
 		final String ITEM_SOURCE_CONCEPT_FAKE_CODE = "SRC_FAKE_CODE";

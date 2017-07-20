@@ -149,7 +149,7 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 				RequestInfo.get().getEditCoordinate();
 			} else {
 				// Set a default read_only user for clients that do not pass SSO token or EditToken
-				// The user has a name of "READ_ONLY_USER," a null UUID id and ALL UserRole values
+				// The user has a name of "READ_ONLY_USER," a null UUID id and only the read only role
 				RequestInfo.get().setDefaultReadOnlyUser();
 			}
 

@@ -47,7 +47,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -372,6 +371,6 @@ public class CoordinateAPIs
 
 		// All work is done in RequestInfo.get().getEditToken(), initially invoked by RestContainerRequestFilter
 
-		return new RestEditToken(EditTokens.renew(RequestInfo.get().getEditToken()));
+		return new RestEditToken(RequestInfo.get().getEditToken().renewToken());
 	}
 }

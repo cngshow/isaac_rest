@@ -77,4 +77,23 @@ public class TestPrismeIntegratedUserService extends PrismeIntegratedUserService
 			}
 		}
 	}
+	
+	
+	public Optional<String> safeGetToken(String id, String password) {
+		try {
+			return Optional.of(getToken(id, password));
+		} catch (Exception e) {
+			System.err.println(e);
+			e.printStackTrace();
+			return Optional.empty();
+		} 
+	}
+
+	public String getToken(String id, String password) throws Exception {		
+		if (usePrismeForSsoTokenByName()) {
+			return getUserSsoTokenFromPrisme(id, password);
+		} else {
+			throw new RuntimeException("Cannot generate SSO token for " + id + " without access to PRISME");
+		}
+	}
 }
