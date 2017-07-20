@@ -31,6 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.util.StringUtils;
 import gov.vha.isaac.ochre.utility.importer.VHATDeltaImport;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -77,7 +78,7 @@ public class IntakeWriteAPIs
 		log.info("VHAT XML was posted for intake - length " + inputXML.length());
 		log.debug("Posted XML: '" + inputXML + "'");
 		
-		File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "xmlIntakeDebug");
+		File debugOutput = new File(StringUtils.stringForFortify(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "xmlIntakeDebug"));
 		debugOutput.mkdir();
 		
 		//need to enforce single threading on this process for now, as there are some issues with static code in ConverterUUID, and also 
