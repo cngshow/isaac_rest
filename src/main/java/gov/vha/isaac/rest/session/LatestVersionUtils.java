@@ -83,11 +83,25 @@ public class LatestVersionUtils {
 		return Optional.empty();
 	}
 
+	/**
+	 * Calls {@link #getLatestVersionForUpdate(ObjectChronology, Class)} with ConceptVersion.class for the Class
+	 * @param conceptChronology
+	 * @return
+	 * @throws RestException
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T extends ConceptVersion<T>> Optional<T> getLatestVersionForUpdate(ConceptChronology<T> conceptChronology) throws RestException {
 		return getLatestVersionForUpdate((ConceptChronology)conceptChronology, ConceptVersion.class);
 	}
 
+	/**
+	 * First, tries to read the current version using the passed in stamp (but any state), and the module from the edit coordinate.
+	 * If no version is present using the edit coordinate module, then it tries again using the module(s) from the current read coordinate, with any state.
+	 * @param objectChronology
+	 * @param clazz
+	 * @return
+	 * @throws RestException
+	 */
 	public static <T extends StampedVersion> Optional<T> getLatestVersionForUpdate(ObjectChronology<T> objectChronology, Class<T> clazz) throws RestException {
 		StampCoordinate sc = Frills.makeStampCoordinateAnalogVaryingByModulesOnly(
 				RequestInfo.get().getStampCoordinate(),

@@ -63,7 +63,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -135,7 +134,7 @@ public class CommentWriteAPIs
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
+			return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), built.getPrimordialUuid());
 		}
 		catch (Exception e)
 		{
@@ -257,6 +256,6 @@ public class CommentWriteAPIs
 		{
 			throw new RestException("Failed updating comment id=" + id + ", new=" + dataToUpdateComment);
 		}
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), sc.getPrimordialUuid());
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), sc.getPrimordialUuid());
 	}
 }

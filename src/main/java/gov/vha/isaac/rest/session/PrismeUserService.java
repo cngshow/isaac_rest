@@ -20,13 +20,10 @@
 package gov.vha.isaac.rest.session;
 
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 import org.jvnet.hk2.annotations.Contract;
 
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.UserRoleService;
 
 /**
@@ -53,29 +50,21 @@ public interface PrismeUserService extends UserRoleService {
 	 */
 	Optional<User> getUser(String ssoToken);
 
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.ochre.api.UserRoleService#getUserRoles(java.util.UUID)
-	 * 
-	 * This method should throw exception if the user has not already been cached
+	/**
+	 * @return true, if the role list should come directly from prisme, false to use a local 
+	 * role list (for testing when prisme is not available)
 	 */
-	Set<UserRole> getUserRoles(UUID userId);
-
-	/* (non-Javadoc)
-	 * @see gov.vha.isaac.ochre.api.UserRoleService#getAllUserRoles()
-	 * 
-	 * This implementation gets all roles from PRISME IFF prisme.properties is in classpath
-	 * and contains a value for property "prisme_all_roles_url", otherwise it returns all of the
-	 * UserRole text values except for "automated"
-	 */
-	Set<UserRole> getAllUserRoles();
-
 	boolean usePrismeForAllRoles();
 
+	/**
+	 * @return true, if the roles for a user should come directly from prisme, false to use a local
+	 * test implementation
+	 */
 	boolean usePrismeForRolesByToken();
 
+	/**
+	 * @return true, if the ssoTokens should be looked up in prisme, false if sso isn't available 
+	 * due to being in a test mode
+	 */
 	boolean usePrismeForSsoTokenByName();
-
-	Optional<String> safeGetToken(String id, String password);
-
-	String getToken(String id, String password) throws Exception;
 }

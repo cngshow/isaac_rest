@@ -293,4 +293,24 @@ public class RequestInfoUtils {
 	
 		return paramSubset;
 	}
+	
+	/**
+	 *
+	 * This method returns an Optional containing a EditToken serialized string if it exists in the parameters map.
+	 *
+	 * @param allParams parameter name to value-list map provided in UriInfo by ContainerRequestContext
+	 * @return an Optional containing a EditToken string if it exists in the parameters map
+	 * @throws RestException
+	 */
+	protected static Optional<String> getEditTokenParameterStringValue(Map<String, List<String>> allParams) throws RestException {
+		List<String> editTokenParameterValues = allParams.get(RequestParameters.editToken);
+
+		if (editTokenParameterValues == null || editTokenParameterValues.size() == 0 || StringUtils.isBlank(editTokenParameterValues.get(0))) {
+			return Optional.empty();
+		} else if (editTokenParameterValues.size() > 1) {
+			throw new RestException(RequestParameters.editToken, "\"" + editTokenParameterValues + "\"", "too many (" + editTokenParameterValues.size()
+			+ " values - should only be passed with one value");
+		}
+		return Optional.of(editTokenParameterValues.get(0));
+	}
 }

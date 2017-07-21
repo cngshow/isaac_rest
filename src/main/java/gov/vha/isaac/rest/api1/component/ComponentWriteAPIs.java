@@ -39,27 +39,17 @@ import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
-import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
-import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
-import gov.vha.isaac.ochre.api.identity.StampedVersion;
-import gov.vha.isaac.ochre.model.sememe.version.ComponentNidSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
-import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponseEnumeratedDetails;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.session.LatestVersionNotFoundException;
-import gov.vha.isaac.rest.session.LatestVersionUtils;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
@@ -122,212 +112,34 @@ public class ComponentWriteAPIs
 
 		return resetState(setActive ? State.ACTIVE : State.INACTIVE, id);
 	}
-
-	private static class VersionUpdatePair<T extends StampedVersion> {
-		T mutable;
-		T latest;
-		
-		public void set(T mutable, T latest) {
-			this.mutable = mutable;
-			this.latest = latest;
-		}
-	}
 	
-	/**
-	 * Reset the state of the chronology IFF an existing version corresponding to passed edit and/or stamp coordinates
-	 * either does not exist or differs in state.
-	 * 
-	 * The clazz parameter should correspond to the target StampVersion implementation.
-	 * 
-	 * @param state - state to which to set new version of chronology
-	 * @param chronology - chronology for which to create a new version of the specified state
-	 * @param clazz - Java Class of StampVersion implementation for which to create a new version of the specified state
-	 * @return
-	 * @throws RestException
-	 */
-	private static <T extends ConceptVersion<T>> VersionUpdatePair<T> resetState(State state, ConceptChronology<T> chronology) throws RestException {	
-		return resetState(state, chronology, (Class<T>)null);
-	}
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static <T extends StampedVersion> VersionUpdatePair<T> resetState(State state, ObjectChronology<T> chronology, Class<T> clazz) throws RestException {		
-		Optional<T> latestVersion = LatestVersionUtils.getLatestVersionForUpdate(chronology, clazz);
-		
-		StampedVersion rawMutableVersion = null;
-		String detail = chronology.getOchreObjectType() + " " + chronology.getClass().getSimpleName() + " (UUID=" + chronology.getPrimordialUuid() + ")";
-		if (chronology instanceof SememeChronology) {
-			rawMutableVersion = ((SememeChronology)chronology).createMutableVersion(clazz, state, RequestInfo.get().getEditCoordinate());
-			detail = chronology.getOchreObjectType() + " " + chronology.getClass().getSimpleName() + " (UUID=" + chronology.getPrimordialUuid() + ", SEMEME SEQ=" + ((SememeChronology<?>)chronology).getSememeSequence() + ", REF COMP NID=" + ((SememeChronology<?>)chronology).getReferencedComponentNid() + ")";
-		} else if (chronology instanceof ConceptChronology) {
-			rawMutableVersion = ((ConceptChronology)chronology).createMutableVersion(state, RequestInfo.get().getEditCoordinate());
-		} else {
-			throw new RuntimeException("Unsupported ObjectChronology type " + detail);
-		}
-		
-		if (! latestVersion.isPresent()) {
-			throw new LatestVersionNotFoundException("Failed getting latest version of " + detail + ". May require different stamp or edit coordinate parameters.");
-		}
-
-		if (latestVersion.get().getState() == state) {
-			log.info("Not resetting state of " + detail + " from " + latestVersion.get().getState() + " to " + state);
-			return null;
-		}
-		VersionUpdatePair<T> versionsHolder = new VersionUpdatePair<>();
-		versionsHolder.set((T)rawMutableVersion, latestVersion.get());
-
-		return versionsHolder;
-	}
 	@SuppressWarnings("rawtypes")
 	public static ObjectChronology resetStateWithNoCommit(State state, String id) throws RestException {
 		final int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.id, id);
-		
-		final ObjectChronologyType type = Get.identifierService().getChronologyTypeForNid(nid);
 
-		ObjectChronology objectToCommit = null;
-
-		State priorState = null;
-		
-		try 
-		{
-			switch (type)
-			{
-				case CONCEPT:
-				{
-					ConceptChronology cc = Get.conceptService().getConcept(nid);
-
-					@SuppressWarnings("unchecked")
-					VersionUpdatePair<ConceptVersion> updatePair = resetState(state, cc);
-					if (updatePair != null) {
-						priorState = updatePair.latest.getState();
-						objectToCommit = cc;
-					}
-					break;
-				}
-					
-				case SEMEME:
-				{
-					SememeChronology<? extends SememeVersion<?>> sememe = Get.sememeService().getSememe(nid);
-	
-					switch (sememe.getSememeType()) 
-					{
-						case DESCRIPTION: {
-							@SuppressWarnings("unchecked")
-							VersionUpdatePair<DescriptionSememeImpl> sememeUpdatePair = resetState(state, (SememeChronology<DescriptionSememeImpl>)sememe, DescriptionSememeImpl.class);
-		
-							if (sememeUpdatePair != null) {
-								priorState = sememeUpdatePair.latest.getState();
-								sememeUpdatePair.mutable.setCaseSignificanceConceptSequence(sememeUpdatePair.latest.getCaseSignificanceConceptSequence());
-								sememeUpdatePair.mutable.setDescriptionTypeConceptSequence(sememeUpdatePair.latest.getDescriptionTypeConceptSequence());
-								sememeUpdatePair.mutable.setLanguageConceptSequence(sememeUpdatePair.latest.getLanguageConceptSequence());
-								sememeUpdatePair.mutable.setText(sememeUpdatePair.latest.getText());
-								objectToCommit = sememe;
-							}
-							break;
-						}
-						case STRING: {
-							@SuppressWarnings("unchecked")
-							VersionUpdatePair<StringSememeImpl> sememeUpdatePair = resetState(state, (SememeChronology<StringSememeImpl>)sememe, StringSememeImpl.class);
-		
-							if (sememeUpdatePair != null) {
-								priorState = sememeUpdatePair.latest.getState();
-								sememeUpdatePair.mutable.setString(sememeUpdatePair.latest.getString());
-								objectToCommit = sememe;
-							} 
-		
-							break;
-						}
-						case DYNAMIC: {
-							@SuppressWarnings("unchecked")
-							VersionUpdatePair<DynamicSememeImpl> sememeUpdatePair = resetState(state, (SememeChronology<DynamicSememeImpl>)sememe, DynamicSememeImpl.class);
-		
-							if (sememeUpdatePair != null) {
-								priorState = sememeUpdatePair.latest.getState();
-								sememeUpdatePair.mutable.setData(sememeUpdatePair.latest.getData());
-								objectToCommit = sememe;
-							}
-							break;
-						}
-						case COMPONENT_NID: {
-							@SuppressWarnings("unchecked")
-							VersionUpdatePair<ComponentNidSememeImpl> sememeUpdatePair = resetState(state, (SememeChronology<ComponentNidSememeImpl>)sememe, ComponentNidSememeImpl.class);
-		
-							if (sememeUpdatePair != null) {
-								priorState = sememeUpdatePair.latest.getState();
-								sememeUpdatePair.mutable.setComponentNid(sememeUpdatePair.latest.getComponentNid());
-								objectToCommit = sememe;
-							} 
-							break;
-						}
-						case LOGIC_GRAPH: {
-							@SuppressWarnings("unchecked")
-							VersionUpdatePair<LogicGraphSememeImpl> sememeUpdatePair = resetState(state, (SememeChronology<LogicGraphSememeImpl>)sememe, LogicGraphSememeImpl.class);
-		
-							if (sememeUpdatePair != null) {
-								priorState = sememeUpdatePair.latest.getState();
-								sememeUpdatePair.mutable.setGraphData(sememeUpdatePair.latest.getGraphData());
-								objectToCommit = sememe;
-							}
-							break;
-						}
-						case LONG: {
-							@SuppressWarnings("unchecked")
-							VersionUpdatePair<LongSememeImpl> sememeUpdatePair = resetState(state, (SememeChronology<LongSememeImpl>)sememe, LongSememeImpl.class);
-		
-							if (sememeUpdatePair != null) {
-								priorState = sememeUpdatePair.latest.getState();
-								sememeUpdatePair.mutable.setLongValue(sememeUpdatePair.latest.getLongValue());
-								objectToCommit = sememe;
-							}
-							break;
-						}
-						case MEMBER:
-							// TODO figure out why compiling of generics failing on command line but not in eclipse, requiring this hack
-							@SuppressWarnings("unchecked")
-							VersionUpdatePair<SememeVersion> sememeUpdatePair = resetState(state, (SememeChronology)sememe, SememeVersion.class);
-							
-							if (sememeUpdatePair != null) {
-								priorState = sememeUpdatePair.latest.getState();
-								objectToCommit = sememe;
-							}
-							break;
-						case RELATIONSHIP_ADAPTOR:
-						case UNKNOWN:
-						default:
-							String detail = sememe.getSememeType() + " (UUID=" + sememe.getPrimordialUuid() + ", SEMEME SEQ=" + sememe.getSememeSequence() + ", REF COMP NID=" + sememe.getReferencedComponentNid() + ")";
-
-							throw new RestException(RequestParameters.id, id, "Unsupported sememe of type " + detail);
-					}
-					break;
-				}
-	
-				case UNKNOWN_NID:
-				default :
-					throw new RestException(RequestParameters.id, id, "Could not locate component of unexpected type " + type + " to change its state");
-			}
+		//Figure out which read coordinate we should pass.
+		//First, tries to read the current version using the passed in stamp (but any state), and the module from the edit coordinate.
+		//If no version is present using the edit coordinate module, then it tries again using the module(s) from the current read coordinate, with any state.
 			
-			if (objectToCommit != null) {
-				log.debug("Built updated version of " + type + " " + id + " with state changed (from " + priorState + " to " + state + ")");
-			} else {
-				log.debug("No need to commit update of " + type + " " + id + " with unchanged state (" + state + ")");
-			}
+		StampCoordinate[] readCoordinates = new StampCoordinate[2];
+		readCoordinates[0] = Frills.makeStampCoordinateAnalogVaryingByModulesOnly(
+				RequestInfo.get().getStampCoordinate(),
+				RequestInfo.get().getEditCoordinate().getModuleSequence(),
+				null).makeAnalog(State.values()).makeAnalog(Long.MAX_VALUE);
+		readCoordinates[1] = RequestInfo.get().getStampCoordinate().makeAnalog(State.values()).makeAnalog(Long.MAX_VALUE);
 
-			return objectToCommit;
-		} 
-		catch (RestException e)
-		{
-			throw e;
-		} 
-		catch (Exception e) {	
-			log.error("Unexpected", e);
-			throw new RestException("Failed updating " + type + " " + id + " state to " + state + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+		
+		try {
+			return Frills.resetStateWithNoCommit(state, nid, RequestInfo.get().getEditCoordinate(), readCoordinates);
+		} catch (Exception e) {
+			throw new RestException(e.getMessage());
 		}
 	}
 
 	@SuppressWarnings("rawtypes")
 	public static RestWriteResponse resetState(State state, String id) throws RestException {
 		ObjectChronology objectToCommit = resetStateWithNoCommit(state, id);
-
-		int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.id, id);
-
+		
 		if (objectToCommit != null)
 		{
 			if (objectToCommit.getOchreObjectType() == OchreExternalizableObjectType.CONCEPT) {
@@ -348,14 +160,17 @@ public class ComponentWriteAPIs
 					throw re;
 				} catch (Exception e) {
 					log.error("Unexpected", e);
-					throw new RestException("Failed updating " + objectToCommit.getOchreObjectType() + " " + id + " state to " + state + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+					throw new RestException("Failed updating " + objectToCommit.getOchreObjectType() + " " + id + " state to " + state + ". Caught " + e.getClass().getName() 
+							+ " " + e.getLocalizedMessage());
 				}
 			} 
 
-			return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get());
+			return new RestWriteResponse(RequestInfo.get().getEditToken(), objectToCommit.getPrimordialUuid());
 		} else {
 			log.debug("Not committing update of " + id + " with unchanged state (" + state + ")");
-			return new RestWriteResponse(RequestInfo.get().getEditToken(), Get.identifierService().getUuidPrimordialForNid(nid).get(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+			return new RestWriteResponse(RequestInfo.get().getEditToken(), 
+					Get.identifierService().getUuidPrimordialForNid(RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.id, id)).get(), 
+					RestWriteResponseEnumeratedDetails.UNCHANGED);
 		}
 	}
 }

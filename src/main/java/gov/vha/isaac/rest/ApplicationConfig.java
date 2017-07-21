@@ -116,7 +116,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	private void configureSecret()
 	{
 		//This hacking is to prevent fortify from flagging an external data source path
-		File tempDirName = new File(stringForFortify(System.getProperty("java.io.tmpdir")));
+		File tempDirName = new File(gov.vha.isaac.ochre.api.util.StringUtils.stringForFortify(System.getProperty("java.io.tmpdir")));
 		File file = new File(tempDirName, contextPath.replaceAll("/", "_") + "-tokenSecret");
 
 		log.debug("Secret file for token encoding " + file.getAbsolutePath() + " " + (file.exists() ? "exists" : "does not exist"));
@@ -252,11 +252,11 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 						};
 						Get.configurationService().setGitConfiguration(gitConfig);
 
-						databaseRootLocation = stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
+						databaseRootLocation = gov.vha.isaac.ochre.api.util.StringUtils.stringForFortify(System.getProperty(DATA_STORE_ROOT_LOCATION_PROPERTY));
 						if (StringUtils.isBlank(databaseRootLocation) || !Files.isDirectory(Paths.get(databaseRootLocation)))
 						{
 							//if there isn't an official system property set, check this one or if the directory does not exist
-							String sysProp = stringForFortify(System.getProperty("isaacDatabaseLocation"));
+							String sysProp = gov.vha.isaac.ochre.api.util.StringUtils.stringForFortify(System.getProperty("isaacDatabaseLocation"));
 							if (StringUtils.isBlank(sysProp) || !Files.isDirectory(Paths.get(sysProp)))
 							{
 								databaseRootLocation = sysProp;
@@ -335,7 +335,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 								// Move corrupted database
 								log.info("Moving corrupted database");
-								File corruptDbLocation = new File(stringForFortify(dbLocation.getParent() + File.separator + "CORRUPT" + File.separator + LocalDateTime.now().format(fileDateTimeFormatter)));
+								File corruptDbLocation = new File(gov.vha.isaac.ochre.api.util.StringUtils.stringForFortify(dbLocation.getParent() + File.separator + "CORRUPT" + File.separator + LocalDateTime.now().format(fileDateTimeFormatter)));
 								log.info("DB Location: " + dbLocation.getAbsolutePath() + " to " + corruptDbLocation.getAbsolutePath());
 								FileUtils.moveDirectoryToDirectory(dbLocation, corruptDbLocation, true);
 								FileUtils.deleteDirectory(dbLocation);
@@ -418,7 +418,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 		File pomFile = null;
 		for (File file : targetDBLocation.listFiles()) {
 			if (file.isDirectory() && file.getName().endsWith(".data")) {
-				pomFile = new File(stringForFortify(file.getAbsolutePath() + File.separatorChar + "META-INF" + File.separatorChar + "maven" + File.separatorChar + groupId + File.separatorChar + artifactId  + File.separatorChar + "pom.xml"));
+				pomFile = new File(gov.vha.isaac.ochre.api.util.StringUtils.stringForFortify(file.getAbsolutePath() + File.separatorChar + "META-INF" + File.separatorChar + "maven" + File.separatorChar + groupId + File.separatorChar + artifactId  + File.separatorChar + "pom.xml"));
 				if (pomFile.exists() && pomFile.isFile()) {
 					log.info("Found the expected existing pom file at: {}" + pomFile.getAbsoluteFile());
 					break;
@@ -535,7 +535,7 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 
 			log.info("Checking for existing DB");
 
-			File targetDBLocation = new File(stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
+			File targetDBLocation = new File(gov.vha.isaac.ochre.api.util.StringUtils.stringForFortify(System.getProperty("java.io.tmpdir")), "ISAAC." + contextPath + ".db");
 
 			if (targetDBLocation.isDirectory())
 			{
@@ -653,15 +653,6 @@ public class ApplicationConfig extends ResourceConfig implements ContainerLifecy
 	public ServletContext getServletContext()
 	{
 		return context_;
-	}
-
-	private String stringForFortify(String convertString)
-	{
-		StringBuilder temp = new StringBuilder();
-		if (convertString != null) {
-			convertString.chars().forEach(c -> temp.append((char)c));
-		}
-		return temp.toString();
 	}
 	
 	private String getDatabaseIsaacMetadataVersion() {

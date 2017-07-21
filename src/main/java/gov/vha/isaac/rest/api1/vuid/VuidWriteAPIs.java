@@ -102,10 +102,23 @@ public class VuidWriteAPIs
 			//This should be impossible... but just in case, to save us headaches in the future....
 			throw new RestException(RequestParameters.ssoToken, "", "no ssoToken present?");
 		}
-
 		log.info("VUID request: block - " + blockSize + " reason = " + reason + " by - "+ RequestInfo.get().getUser().get().getName());
 		//TODO validate that when prisme.properties is present, we reject at this point if the token is invalid, or test, or of prisme isn't reachable.
 		SecurityUtils.validateRole(securityContext, getClass());
+		return allocateVUID(blockSize, reason, ssoToken);
+	}
+	
+	/**
+	 * A static implementation of {@link #allocate(int, String, String)} for internal re-use.
+	 * @param blockSize
+	 * @param reason
+	 * @param ssoToken
+	 * @return
+	 * @throws RestException
+	 */
+	public static RestVuidBlockData allocateVUID(int blockSize, String reason, String ssoToken) throws RestException
+	{
+		log.debug("Internal VUID request: block - " + blockSize + " reason = " + reason + " by - "+ RequestInfo.get().getUser().get().getName());
 		
 		RequestParameters.validateParameterNamesAgainstSupportedNames(
 				RequestInfo.get().getParameters(),

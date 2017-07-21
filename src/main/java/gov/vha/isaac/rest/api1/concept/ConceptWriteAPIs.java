@@ -67,12 +67,10 @@ import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.component.ComponentWriteAPIs;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptCreateData;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptUpdateData;
-import gov.vha.isaac.rest.session.LatestVersionNotFoundException;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -210,7 +208,7 @@ public class ConceptWriteAPIs
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 			
-			return new RestWriteResponseConceptCreate(EditTokens.renew(RequestInfo.get().getEditToken()), newCon.getPrimordialUuid(), createdObjects);
+			return new RestWriteResponseConceptCreate(RequestInfo.get().getEditToken().renewToken(), newCon.getPrimordialUuid(), createdObjects);
 		}
 		catch (RestException e)
 		{

@@ -119,7 +119,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -269,7 +268,7 @@ public class MappingWriteAPIs
 					+ mappingSetCloneData.inverseName + ", purpose=" + mappingSetCloneData.purpose + ", desc=" + mappingSetCloneData.description, e);
 		}
 		
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), 
 				Get.identifierService().getUuidPrimordialFromConceptId(mappingSetAssemblageConcept.getConceptSequence()).get());
 	}
 	
@@ -811,7 +810,7 @@ public class MappingWriteAPIs
 		{
 			throw new RuntimeException("Failed during commit", e);
 		}
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), 
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), 
 				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get());
 	}
 
@@ -1055,9 +1054,9 @@ public class MappingWriteAPIs
 					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 				}
 				
-				return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingConcept.getPrimordialUuid());
+				return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), mappingConcept.getPrimordialUuid());
 			} else {
-				return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingConcept.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+				return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), mappingConcept.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 			}
 		}
 		catch (RestException e)
@@ -1250,7 +1249,7 @@ public class MappingWriteAPIs
 			throw new RuntimeException("Failed committing new mapping item sememe", e);
 		}
 		
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), built.getPrimordialUuid());
 	}
 	
 	private static RestWriteResponse updateMappingItem(
@@ -1277,7 +1276,7 @@ public class MappingWriteAPIs
 
 				if (currentSememeVersion.getState() == state
 						&& SememeWriteAPIs.equals(currentData, newData)) {
-					return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
+					return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), mappingItemSememe.getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 				}
 			} else {
 				log.warn("Latest version not found of mapping item dynamic sememe {}. Updating unconditionally.", mappingItemSememe.getPrimordialUuid());
@@ -1301,7 +1300,7 @@ public class MappingWriteAPIs
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
-			return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), mappingItemSememe.getPrimordialUuid());
+			return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), mappingItemSememe.getPrimordialUuid());
 		}
 		catch (Exception e)
 		{

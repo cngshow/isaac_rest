@@ -74,7 +74,6 @@ import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
-import gov.vha.isaac.rest.tokens.EditTokens;
 
 
 /**
@@ -174,7 +173,7 @@ public class AssociationWriteAPIs
 			}
 		});
 		return new RestWriteResponse(
-				EditTokens.renew(RequestInfo.get().getEditToken()),
+				RequestInfo.get().getEditToken().renewToken(),
 				Get.identifierService().getUuidPrimordialFromConceptId(rdud.getDynamicSememeUsageDescriptorSequence()).get(), 
 				null, 
 				rdud.getDynamicSememeUsageDescriptorSequence());
@@ -264,7 +263,7 @@ public class AssociationWriteAPIs
 		{
 			throw new RestException("Failed committing new association item sememe");
 		}
-		return new RestWriteResponse(EditTokens.renew(RequestInfo.get().getEditToken()), built.getPrimordialUuid());
+		return new RestWriteResponse(RequestInfo.get().getEditToken().renewToken(), built.getPrimordialUuid());
 	}
 	
 	/**
@@ -366,7 +365,7 @@ public class AssociationWriteAPIs
 			throw new RuntimeException("error committing", e);
 		}
 		return new RestWriteResponse(
-				EditTokens.renew(RequestInfo.get().getEditToken()),
+				RequestInfo.get().getEditToken().renewToken(),
 				associationItemSememeChronology.getPrimordialUuid());
 		
 	}
