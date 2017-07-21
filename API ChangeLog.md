@@ -14,7 +14,7 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
-* 2017/06/29 - 1.16.1
+* 2017/07/21 - 1.16.1
     * Added vuidGeneration=true/false to the IntakeWriteAPI to allow enabling / disabling vuid generation
 
 * 2017/06/29 - 1.16.0
