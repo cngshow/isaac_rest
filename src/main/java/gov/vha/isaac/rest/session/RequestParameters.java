@@ -189,15 +189,17 @@ public class RequestParameters {
 	public final static String field = "field";
 
 	// VUID
-		public final static String blockSize = "blockSize";
-		public final static String reason = "reason";
-		public final static String vuid = "vuid";
-		public final static Set<String> VUID_PARAM_NAMES =
-				unmodifiableSet(
-						ssoToken,
-						blockSize,
-						reason,
-						vuid);
+	public final static String blockSize = "blockSize";
+	public final static String reason = "reason";
+	public final static String vuid = "vuid";
+	public final static Set<String> VUID_PARAM_NAMES =
+			unmodifiableSet(
+					ssoToken,
+					blockSize,
+					reason,
+					vuid);
+		
+	public final static String vuidGeneration = "vuidGeneration";
 	/**
 	 * Set of all known parameters usable to detect malformed or incorrect parameters
 	 */
@@ -254,7 +256,9 @@ public class RequestParameters {
 			includeCompleted,
 			includeCanceled,
 			
-			field
+			field,
+			
+			vuidGeneration
 			));
 		ALL_VALID_PARAMETERS = params;
 	}

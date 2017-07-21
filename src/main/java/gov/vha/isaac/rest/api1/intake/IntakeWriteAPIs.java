@@ -24,6 +24,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -38,6 +39,7 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.api1.vuid.VuidWriteAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
 
 /**
@@ -62,6 +64,8 @@ public class IntakeWriteAPIs
 	 * a RestWriteResponse only if it is fully valid.  Any error during processing will result in a RestException
 	 * being thrown.
 	 * 
+	 * @param vuidGeneration - true, to generate vuids where missing.  False to not generate any vuids.
+	 * Defaults to true / vuid generation on - if not provided
 	 * @param editToken - 
 	 *            EditToken string returned by previous call to 1/coordinate/editToken
 	 *            or as renewed EditToken returned by previous write API call in a RestWriteResponse
@@ -72,10 +76,25 @@ public class IntakeWriteAPIs
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Path(RestPaths.vetsXMLComponent)
-	public RestWriteResponse readVHATXML(String inputXML) throws RestException
+	public RestWriteResponse readVHATXML(String inputXML, 
+			@QueryParam(RequestParameters.vuidGeneration) String vuidGeneration) throws RestException
 	{
 		SecurityUtils.validateRole(securityContext, getClass());
-		log.info("VHAT XML was posted for intake - length " + inputXML.length());
+		
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.COORDINATE_PARAM_NAMES,
+				RequestParameters.editToken, 
+				RequestParameters.vuidGeneration);
+		
+		boolean generateVuids = true;
+		if (StringUtils.isNotBlank(vuidGeneration))
+		{
+			generateVuids = Boolean.valueOf(vuidGeneration);
+		}
+
+		
+		log.info("VHAT XML was posted for intake - length " + inputXML.length() + " with vuid generation " + generateVuids);
 		log.debug("Posted XML: '" + inputXML + "'");
 		
 		File debugOutput = new File(StringUtils.stringForFortify(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "xmlIntakeDebug"));
@@ -90,6 +109,7 @@ public class IntakeWriteAPIs
 					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getAuthorSequence()).get(),
 					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getModuleSequence()).get(), 
 					Get.identifierService().getUuidPrimordialFromConceptId(RequestInfo.get().getEditCoordinate().getPathSequence()).get(),
+					generateVuids ? 
 					(() -> 
 					{
 						try
@@ -100,7 +120,7 @@ public class IntakeWriteAPIs
 						{
 							throw new RuntimeException("Failed to allocate a new VUID", e);
 						}
-					}),
+					}) : null,
 					debugOutput);
 			}
 			catch (Exception e)

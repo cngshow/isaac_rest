@@ -14,6 +14,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2017/06/29 - 1.16.1
+    * Added vuidGeneration=true/false to the IntakeWriteAPI to allow enabling / disabling vuid generation
+
 * 2017/06/29 - 1.16.0
     * Modifed RestConceptVersion to contain Pagination data and modified TaxonomyAPIs version API to accept pageNum and maxPageSize parameters or to
         default values and to paginate concept children.  The 'children' variable of RestConceptVersion was changed from a list of RestConceptVersion
