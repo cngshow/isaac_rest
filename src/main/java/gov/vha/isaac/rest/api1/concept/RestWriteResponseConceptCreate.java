@@ -20,6 +20,7 @@ package gov.vha.isaac.rest.api1.concept;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.vha.isaac.MetaData;
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
@@ -36,6 +38,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
+import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.tokens.EditToken;
@@ -73,6 +76,13 @@ public class RestWriteResponseConceptCreate extends RestWriteResponse
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public RestIdentifiedObject extendedDescriptionTypeSememe;
 	
+	/**
+	 * The identifiers for the created has_parent association sememe (may be null)
+	 */
+	@XmlElement
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public RestIdentifiedObject hasParentAssociationSememe;
+
 	/**
 	 * The identifiers for the created logic graph
 	 */
@@ -127,10 +137,25 @@ public class RestWriteResponseConceptCreate extends RestWriteResponse
 						throw new RuntimeException("Unexpected created object type! " + o);
 					}
 				}
-				else if (sc.getSememeType() == SememeType.DYNAMIC 
-						&& sc.getAssemblageSequence() == DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence())
-				{
-					extendedDescriptionTypeSememe = new RestIdentifiedObject(sc);
+				else if (sc.getSememeType() == SememeType.DYNAMIC) {
+					UUID assemblageUuid = null;
+					String assemblageDesc = null;
+					try {
+						assemblageUuid = Get.identifierService().getUuidPrimordialFromConceptId(sc.getAssemblageSequence()).orElse(null);
+						assemblageDesc = Get.conceptDescriptionText(sc.getAssemblageSequence());
+					} catch (Exception e) {
+						// ignore
+					}
+					if (sc.getAssemblageSequence() == DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence())
+					{
+						extendedDescriptionTypeSememe = new RestIdentifiedObject(sc);
+					}
+					else if (assemblageUuid != null && assemblageUuid.equals(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID))
+					{
+						hasParentAssociationSememe = new RestIdentifiedObject(sc);
+					} else {
+						throw new RuntimeException("Unexpected created " + sc.getSememeType() + " sememe (assemblage UUID=" + assemblageUuid + ", DESC=" + assemblageDesc + ") type! " + o);
+					}
 				}
 				else if (sc.getSememeType() == SememeType.COMPONENT_NID)
 				{
@@ -142,7 +167,7 @@ public class RestWriteResponseConceptCreate extends RestWriteResponse
 				}
 				else
 				{
-					throw new RuntimeException("Unexpected created object type! " + o);
+					throw new RuntimeException("Unexpected created " + sc.getSememeType() + " sememe type! " + o);
 				}
 			}
 			else

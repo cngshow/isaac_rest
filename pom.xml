@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>4.12</version>
+		<version>4.13-SNAPSHOT</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
@@ -24,7 +24,7 @@
 	</scm>
 
 	<properties>
-		<isaac.version>4.12</isaac.version>
+		<isaac.version>4.13-SNAPSHOT</isaac.version>
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
@@ -138,6 +138,12 @@
 			<artifactId>ochre-importers</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>vhat-util</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		
 		
 		<!-- Need to override the scope on these 3 logging packages -->
 		<dependency>
