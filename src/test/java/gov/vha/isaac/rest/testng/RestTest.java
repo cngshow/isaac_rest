@@ -528,18 +528,30 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return newConceptSequence;
 	}
 
-	// PLACE TEST METHODS BELOW HERE
+	// VHAT-specific metadata
 	private static final UUID HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID = UUID.fromString("4ab30955-f50a-5f5f-8397-3fe473b22ed1");
+	private static ConceptChronology<? extends ConceptVersion<?>> HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = null;
+	private ConceptChronology<? extends ConceptVersion<?>> getVHATHasParentAssociation() throws Exception {
+		
+		if (HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT == null) {
+			File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "restTestVHATMetaDataImportDebug");
+			debugOutput.mkdir();
+			ConverterUUID.configureNamespace(TermAux.VHAT_MODULES.getPrimordialUuid());
+			IBDFCreationUtility importUtil = new IBDFCreationUtility(MetaData.USER.getPrimordialUuid(), MetaData.VHAT_EDIT.getPrimordialUuid(), MetaData.DEVELOPMENT_PATH.getPrimordialUuid(), debugOutput);
+			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
+			importUtil.configureConceptAsAssociation(HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT.getPrimordialUuid(), null);
+		}
+
+		return HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT;
+	}
+
+	// PLACE TEST METHODS BELOW HERE
 	@Test
 	public void testVHATHasParentAssociationSynchronization() throws Exception
 	{	
-		File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "restTestVHATMetaDataImportDebug");
-		debugOutput.mkdir();
-		ConverterUUID.configureNamespace(TermAux.VHAT_MODULES.getPrimordialUuid());
-		IBDFCreationUtility importUtil = new IBDFCreationUtility(MetaData.USER.getPrimordialUuid(), MetaData.VHAT_EDIT.getPrimordialUuid(), MetaData.DEVELOPMENT_PATH.getPrimordialUuid(), debugOutput);
-		ConceptChronology<? extends ConceptVersion<?>> has_parent = importUtil.createConcept(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
-		importUtil.configureConceptAsAssociation(has_parent.getPrimordialUuid(), null);
-
+		// Ensure metadata initialized
+		getVHATHasParentAssociation();
+		
 		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
 		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 
@@ -647,18 +659,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
 		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
 		Assert.assertNotNull(conceptVersionFromTaxonomy);
-		
-		// Confirm all three parents reflected in taxonomy
-		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
-		Set<Integer> parentConceptSequencesFromTaxonomy = new HashSet<>();
-		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
-			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
-		}
-		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
-		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
-		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
-		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
-		
+
 		// Confirm all three parents are reflected in logic graph sememe
 		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
 		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
@@ -678,6 +679,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
 		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
 		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+
+		// Confirm all three parents reflected in taxonomy
+		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
+		Set<Integer> parentConceptSequencesFromTaxonomy = new HashSet<>();
+		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+		}
+		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
 	}
 
 	@Test void testTaxonomyPagination() {
