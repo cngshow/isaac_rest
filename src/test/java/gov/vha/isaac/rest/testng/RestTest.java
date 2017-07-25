@@ -123,6 +123,7 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
+import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
@@ -529,16 +530,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	// VHAT-specific metadata
-	private static final UUID HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID = UUID.fromString("4ab30955-f50a-5f5f-8397-3fe473b22ed1");
 	private static ConceptChronology<? extends ConceptVersion<?>> HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = null;
 	private ConceptChronology<? extends ConceptVersion<?>> getVHATHasParentAssociation() throws Exception {
-		
 		if (HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT == null) {
 			File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "restTestVHATMetaDataImportDebug");
 			debugOutput.mkdir();
 			ConverterUUID.configureNamespace(TermAux.VHAT_MODULES.getPrimordialUuid());
 			IBDFCreationUtility importUtil = new IBDFCreationUtility(MetaData.USER.getPrimordialUuid(), MetaData.VHAT_EDIT.getPrimordialUuid(), MetaData.DEVELOPMENT_PATH.getPrimordialUuid(), debugOutput);
-			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
+			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
 			importUtil.configureConceptAsAssociation(HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT.getPrimordialUuid(), null);
 		}
 
@@ -604,7 +603,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(newConceptSequence > 0);
 		
 		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class,
-				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID)
+				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + getVHATHasParentAssociation().getPrimordialUuid())
 						.queryParam(RequestParameters.expand, "referencedConcept")
 						.queryParam(RequestParameters.maxPageSize, "2")
 						.queryParam(RequestParameters.pageNum, "1")
@@ -613,8 +612,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
 		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
 		Assert.assertEquals(pagedAssociations.results.length, 2);
-		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID));
-		Assert.assertEquals(pagedAssociations.results[1].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID));
+		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
+		Assert.assertEquals(pagedAssociations.results[1].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
 
 		int association1Source = Get.identifierService().getConceptSequence(pagedAssociations.results[0].sourceId.nid);
 		int association1Target = Get.identifierService().getConceptSequence(pagedAssociations.results[0].targetId.nid);
@@ -641,7 +640,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID.toString(), newConceptResponse.nid + "",
+								new String[] {getVHATHasParentAssociation().getPrimordialUuid().toString(), newConceptResponse.nid + "",
 										parent3.getPrimordialUuid().toString()})));
 		String result = checkFail(createThirdHasParentItemResponse).readEntity(String.class);
 		RestWriteResponse createdThirdHasParentAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
