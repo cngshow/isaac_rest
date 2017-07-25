@@ -68,15 +68,24 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.va.oia.terminology.converters.sharedUtils.IBDFCreationUtility;
+import gov.va.oia.terminology.converters.sharedUtils.stats.ConverterUUID;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.bootstrap.TermAux;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
@@ -96,10 +105,13 @@ import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
+import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
+import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
+import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
@@ -110,6 +122,7 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
+import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
@@ -515,7 +528,169 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return newConceptSequence;
 	}
 
+	// VHAT-specific metadata
+	private static final UUID HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID = UUID.fromString("4ab30955-f50a-5f5f-8397-3fe473b22ed1");
+	private static ConceptChronology<? extends ConceptVersion<?>> HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = null;
+	private ConceptChronology<? extends ConceptVersion<?>> getVHATHasParentAssociation() throws Exception {
+		
+		if (HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT == null) {
+			File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "restTestVHATMetaDataImportDebug");
+			debugOutput.mkdir();
+			ConverterUUID.configureNamespace(TermAux.VHAT_MODULES.getPrimordialUuid());
+			IBDFCreationUtility importUtil = new IBDFCreationUtility(MetaData.USER.getPrimordialUuid(), MetaData.VHAT_EDIT.getPrimordialUuid(), MetaData.DEVELOPMENT_PATH.getPrimordialUuid(), debugOutput);
+			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
+			importUtil.configureConceptAsAssociation(HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT.getPrimordialUuid(), null);
+		}
+
+		return HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT;
+	}
+
 	// PLACE TEST METHODS BELOW HERE
+	@Test
+	public void testVHATHasParentAssociationSynchronization() throws Exception
+	{	
+		// Ensure metadata initialized
+		getVHATHasParentAssociation();
+		
+		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
+		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
+
+		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
+		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
+
+		final UUID randomUuid = UUID.randomUUID();
+
+		final String fsn = "fsn for test concept " + randomUuid.toString();
+		final String pt = "preferred term for test concept " + randomUuid.toString();
+
+		final List<String> parentIds = new ArrayList<>();
+		parentIds.add(parent1Sequence + "");
+		parentIds.add(parent2Sequence + "");
+
+		List<String> preferredDialects = new ArrayList<>();
+		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
+		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
+
+		RestConceptCreateData newConceptData = new RestConceptCreateData(
+				parentIds,
+				fsn,
+				true,
+				requiredDescriptionsLanguageSequence + "",
+				requiredDescriptionsExtendedTypeSequence + "",
+				preferredDialects);
+
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newConceptData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+
+		EditToken defaultEditToken = EditToken.read(getEditTokenString(TEST_SSO_TOKEN));
+		EditToken vhatEditToken = new EditToken(
+				defaultEditToken.getAuthorSequence(),
+				MetaData.VHAT_EDIT.getConceptSequence(),
+				defaultEditToken.getPathSequence(),
+				defaultEditToken.getActiveWorkflowProcessId());
+		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, vhatEditToken.getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String newConceptSequenceWrapperXml = checkFail(createConceptResponse).readEntity(String.class);
+		RestWriteResponseConceptCreate newConceptResponse = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptResponse.sequence;
+		RestEditToken renewedToken = newConceptResponse.editToken;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newConceptSequence > 0);
+		
+		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class,
+				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID)
+						.queryParam(RequestParameters.expand, "referencedConcept")
+						.queryParam(RequestParameters.maxPageSize, "2")
+						.queryParam(RequestParameters.pageNum, "1")
+						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
+		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
+		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
+		Assert.assertEquals(pagedAssociations.results.length, 2);
+		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID));
+		Assert.assertEquals(pagedAssociations.results[1].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID));
+
+		int association1Source = Get.identifierService().getConceptSequence(pagedAssociations.results[0].sourceId.nid);
+		int association1Target = Get.identifierService().getConceptSequence(pagedAssociations.results[0].targetId.nid);
+		
+		int association2Source = Get.identifierService().getConceptSequence(pagedAssociations.results[1].sourceId.nid);
+		int association2Target = Get.identifierService().getConceptSequence(pagedAssociations.results[1].targetId.nid);
+
+		Assert.assertEquals(association1Source, newConceptSequence);
+		Assert.assertEquals(association2Source, newConceptSequence);
+		
+		Assert.assertTrue(
+				(association1Target == parent1Sequence && association2Target == parent2Sequence)
+				|| (association1Target == parent2Sequence && association2Target == parent1Sequence));
+	
+		// Test addition of new has_parent association to confirm corresponding logic graph update
+		// TODO use AssociationsAPI
+		final int parent3Sequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
+		ConceptChronology<? extends ConceptVersion<?>> parent3 = Get.conceptService().getConcept(parent3Sequence);
+
+		// Attempt to create third parent
+		Response createThirdHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent
+				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, renewedToken.token)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
+								new String[] {HAS_PARENT_VHAT_ASSOCIATION_TYPE_UUID.toString(), newConceptResponse.nid + "",
+										parent3.getPrimordialUuid().toString()})));
+		String result = checkFail(createThirdHasParentItemResponse).readEntity(String.class);
+		RestWriteResponse createdThirdHasParentAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+
+		// Retrieve concept to confirm three parents in taxonomy
+		Response taxonomyResponse = target(taxonomyRequestPath)
+				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+				.queryParam(RequestParameters.id, newConceptSequence)
+				.queryParam(RequestParameters.parentHeight, 1)
+				.queryParam(RequestParameters.childDepth, 0)
+				.queryParam(RequestParameters.pageNum, 1)
+				.queryParam(RequestParameters.maxPageSize, 6)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+		Assert.assertNotNull(conceptVersionFromTaxonomy);
+
+		// Confirm all three parents are reflected in logic graph sememe
+		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
+		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
+			String msg = "No logic graph sememe found for concept (" + newConceptResponse.nid + ")";
+			throw new RuntimeException(msg);
+		}
+		SememeChronology<LogicGraphSememeImpl> conceptLogicGraphSememeChronology = (SememeChronology<LogicGraphSememeImpl>)conceptLogicGraphSememeChronologyOptional.get();
+		Optional<LatestVersion<LogicGraphSememeImpl>> latestLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology)).getLatestVersion(LogicGraphSememeImpl.class, StampCoordinates.getDevelopmentLatestActiveOnly());
+		if (! latestLogicGraphSememeVersion.isPresent()) {
+			String msg = "No latest logic graph sememe version found for concept (" + newConceptResponse.nid + ")";
+			throw new RuntimeException(msg);
+		}		
+		Set<Integer> parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
+
+		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
+
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+
+		// Confirm all three parents reflected in taxonomy
+		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
+		Set<Integer> parentConceptSequencesFromTaxonomy = new HashSet<>();
+		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+		}
+		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
+	}
 
 	@Test void testTaxonomyPagination() {
 		// Construct a concept with multiple children

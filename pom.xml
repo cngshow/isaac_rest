@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>4.12</version>
+		<version>4.13</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>4.13</version>
+	<version>4.14</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -24,11 +24,12 @@
 	</scm>
 
 	<properties>
-		<isaac.version>4.12</isaac.version>
+		<isaac.version>4.13</isaac.version>
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
 		<enunciate.version>2.6.0-patch1</enunciate.version>
+		<cxf.version>3.1.10</cxf.version>
 	</properties>
 
 	<dependencies>
@@ -137,6 +138,12 @@
 			<artifactId>ochre-importers</artifactId>
 			<version>${isaac.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>gov.vha.isaac.ochre.modules</groupId>
+			<artifactId>vhat-util</artifactId>
+			<version>${isaac.version}</version>
+		</dependency>
+		
 		
 		<!-- Need to override the scope on these 3 logging packages -->
 		<dependency>
@@ -182,6 +189,23 @@
 			<scope>provided</scope>
 		</dependency>
 		
+		<!--  cxf  for SOAP services -->
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxws</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-transports-http</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+	
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>4.3.9.RELEASE</version>
+		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>
