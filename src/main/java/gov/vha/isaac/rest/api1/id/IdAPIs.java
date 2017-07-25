@@ -182,14 +182,10 @@ public class IdAPIs
 				case NID:
 					return new RestId(outputTypeFormat, object.get().getNid() + "");
 				case SCTID:
-					/*
-					return new RestId(outputTypeFormat, "" + Frills.getSctId(object.get().getNid(), RequestInfo.get().getStampCoordinate()).
-							orElseThrow(() -> new RestException("No SCTID was found on the specified component")));
-					*/
 					Optional<Long> sctId = Frills.getSctId(object.get().getNid(), RequestInfo.get().getStampCoordinate());
 					if (!sctId.isPresent())
 					{
-						throw new RestException("No SCTID was found on the specified component");
+						throw new RestException("No SCTID was found on the specified component '" + object.get().getPrimordialUuid() + "'");
 					}
 					return new RestId(outputTypeFormat, "" + sctId.get());
 				case CONCEPT_SEQUENCE:
@@ -213,14 +209,10 @@ public class IdAPIs
 				case UUID:
 					return new RestId(outputTypeFormat, object.get().getPrimordialUuid().toString());
 				case VUID:
-					/*
-					return new RestId(outputTypeFormat, "" + Frills.getVuId(object.get().getNid(), RequestInfo.get().getStampCoordinate()).
-							orElseThrow(() -> new RestException("No VUID was found on the specified component")));
-					*/
 					Optional<Long> vuId = Frills.getVuId(object.get().getNid(), RequestInfo.get().getStampCoordinate());
 					if (!vuId.isPresent())
 					{
-						throw new RestException("No VUID was found on the specified component");
+						throw new RestException("No VUID was found on the specified component '" + object.get().getPrimordialUuid() + "'");
 					}
 					return new RestId(outputTypeFormat, "" + vuId.get());
 				default :
