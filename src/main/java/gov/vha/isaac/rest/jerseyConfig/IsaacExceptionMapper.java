@@ -104,7 +104,7 @@ public class IsaacExceptionMapper implements ExceptionMapper<Exception>
 		}
 		else if (ex instanceof RestException)
 		{
-			log.info("RestException: " + ex.toString(), ex);
+			log.info("RestException: " + ex.toString());
 		}
 		else
 		{
