@@ -14,6 +14,10 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2017/07/25 - 1.16.2
+    * Added hasParentAssociationSememe to the RestWriteResponseConceptCreate
+    * Added initial SOAP services
+
 * 2017/07/21 - 1.16.1
     * Added vuidGeneration=true/false to the IntakeWriteAPI to allow enabling / disabling vuid generation
 
