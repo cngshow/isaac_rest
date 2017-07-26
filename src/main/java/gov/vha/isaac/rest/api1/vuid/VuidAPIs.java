@@ -186,7 +186,7 @@ public class VuidAPIs
 		Set<Integer> nids = Frills.getVuidSememeNidsForVUID(vuid);
 
 		if (nids.size() > 1) {
-			final String msg = "Found multiple existing ACTIVE VUID sememe NIDs matching VUID \"" + vuid + "\"";
+			final String msg = "Found multiple (" + nids.size() + ") existing ACTIVE VUID sememe NIDs matching VUID \"" + vuid + "\"";
 			log.error(msg);
 			throw new RestException(msg);
 		} else if (nids.size() == 0) {

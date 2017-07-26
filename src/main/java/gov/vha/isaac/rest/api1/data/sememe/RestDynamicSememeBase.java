@@ -43,10 +43,21 @@ import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, defaultImpl=RestDynamicSememeBase.class)
 public class RestDynamicSememeBase
 {
-	protected RestDynamicSememeBase()
+	public RestDynamicSememeBase()
 	{
 		//for jaxb
 	}
+
+	/**
+	 * @param columnData
+	 * @param active
+	 */
+	public RestDynamicSememeBase(RestDynamicSememeData[] columnData, Boolean active) {
+		super();
+		this.columnData = columnData;
+		this.active = active;
+	}
+
 	/**
 	 * The data to attach with this sememe instance (if any).  This may be null, empty, or a length up to the defined length of the sememe definition.
 	 * 
