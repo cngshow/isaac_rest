@@ -77,13 +77,11 @@ import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
@@ -105,13 +103,10 @@ import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
-import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
-import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
-import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
@@ -124,6 +119,7 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
+import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
@@ -685,15 +681,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				vhatEditToken.renewToken().getSerialized());
 		final ConceptChronology<? extends ConceptVersion<?>> testConcept1 = Get.conceptService().getConcept(testConcept1Sequence);
 		
-		final String testVuid = "12345"; // No validation in test
+		final String testVuid = "123456"; // No validation in test
 		
 		ObjectNode root = jfn.objectNode();
 		root.put("assemblageConcept", MetaData.VUID.getNid() + "");
 		root.put("referencedComponent", testConcept1.getNid() + "");
 		root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeStringImpl(testVuid)}));
 
-		//log.info("Sememe Create Json: " + toJson(root));
-
+		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 0, "Shouldn't be any hits on vuid 123456, yet there was...");
+		
 		//make one
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
 				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
@@ -702,44 +698,42 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		String result = checkFail(createSememeResponse).readEntity(String.class);
 
 		RestWriteResponse createdFirstVuidSememeWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
-
-		log.info("Found " + Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size() + " instances of VUID \"" + testVuid + "\"");
-
-		// TODO diagnose and fix problem causing Frills.getVuidSememeNidsForVUID(vuid) to fail to find single existing VUID
+		
+		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 1, "Should be exactly 1 hit on vuid 123456");
 
 		// Attempt to add same VUID to additional concept(s)
-//		for (int i = 2; i < 12; ++i) {
-//			log.info("Found " + Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size() + " instances of VUID \"" + testVuid + "\" before creating concept #" + i);
-//			
-//			// Create target concept 2
-//			final int anotherConceptSequence = createConcept(
-//					Arrays.asList(MetaData.ANONYMOUS_CONCEPT.getConceptSequence() + ""),
-//					"Concept " + i + " to test VUID " + testVuid + " uniqueness",
-//					false,
-//					MetaData.ENGLISH_LANGUAGE.getNid() + "",
-//					null,
-//					Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""),
-//					vhatEditToken.renewToken().getSerialized());
-//			final ConceptChronology<? extends ConceptVersion<?>> anotherConcept = Get.conceptService().getConcept(anotherConceptSequence);
-//
-//			root = jfn.objectNode();
-//			root.put("assemblageConcept", MetaData.VUID.getNid() + "");
-//			root.put("referencedComponent", anotherConcept.getNid() + "");
-//			root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeStringImpl(testVuid)}));
-//
-//			//log.info("Sememe Create Json: " + toJson(root));
-//
-//			//make another
-//			createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
-//					.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
-//					.request()
-//					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
-//			result = checkFail(createSememeResponse).readEntity(String.class); // TODO this should FAIL
-//
-//			RestWriteResponse createdSecondVuidSememeWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
-//
-//			log.info("Found " + Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)) + " instances of VUID \"" + testVuid + "\" after creating concept #" + i);
-//		}
+		for (int i = 2; i < 12; ++i) {
+			log.info("Found " + Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size() + " instances of VUID \"" + testVuid + "\" before creating concept #" + i);
+			
+			// Create target concept 2
+			final int anotherConceptSequence = createConcept(
+					Arrays.asList(MetaData.ANONYMOUS_CONCEPT.getConceptSequence() + ""),
+					"Concept " + i + " to test VUID " + testVuid + " uniqueness",
+					false,
+					MetaData.ENGLISH_LANGUAGE.getNid() + "",
+					null,
+					Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""),
+					vhatEditToken.renewToken().getSerialized());
+			final ConceptChronology<? extends ConceptVersion<?>> anotherConcept = Get.conceptService().getConcept(anotherConceptSequence);
+
+			root = jfn.objectNode();
+			root.put("assemblageConcept", MetaData.VUID.getNid() + "");
+			root.put("referencedComponent", anotherConcept.getNid() + "");
+			root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeStringImpl(testVuid)}));
+
+			//log.info("Sememe Create Json: " + toJson(root));
+
+			//make another
+			createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
+					.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+			Assert.assertEquals(createSememeResponse.getStatus(), Status.BAD_REQUEST.getStatusCode());  //expect failure
+			
+			Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 1, "Should be exactly 1 hit on vuid 123456");
+		}
+		
+		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 1, "Should be exactly 1 hit on vuid 123456");
 	}
 
 	@Test
