@@ -39,6 +39,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.ochre.api.PrismeRole;
@@ -324,6 +325,8 @@ public class UserServiceUtils {
 
 		Map<String, String> params = new HashMap<>();	
 		params.put("token", ssoToken);
+		params.put("isaac_db_uuid", Get.conceptService().getDataStoreId().toString());
+		log.debug("Using token '{}' and DB '{}'", ssoToken, Get.conceptService().getDataStoreId().toString());
 		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
 		log.debug("PRISME returned '" + jsonResultString + "'");
