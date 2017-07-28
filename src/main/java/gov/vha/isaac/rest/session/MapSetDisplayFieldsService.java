@@ -134,7 +134,13 @@ public class MapSetDisplayFieldsService {
 		ArrayList<RestMappingSetDisplayField> result = new ArrayList<RestMappingSetDisplayField>(getFields().size());
 		for (Field f : getFields().values())
 		{
-			result.add(new RestMappingSetDisplayField(f.getBackingConcept(), null));
+			try {
+				result.add(new RestMappingSetDisplayField(f.getBackingConcept(), null));
+			} catch (Exception e) {
+				String msg = "Failed constructing RestMappingSetDisplayField from field UUID=" + f.concept.getPrimordialUuid() + ", DESC=" + Get.conceptDescriptionText(f.concept.getNid()) + " BACKING=" + Get.conceptDescriptionText(f.getBackingConcept().getNid());
+				log.error(msg, e);
+				throw new RestException(msg);
+			}
 		}
 		
 		Collections.sort(result, new Comparator<RestMappingSetDisplayField>()

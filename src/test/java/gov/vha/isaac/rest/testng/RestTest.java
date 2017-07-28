@@ -548,7 +548,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			debugOutput.mkdir();
 			ConverterUUID.configureNamespace(TermAux.VHAT_MODULES.getPrimordialUuid());
 			IBDFCreationUtility importUtil = new IBDFCreationUtility(MetaData.USER.getPrimordialUuid(), MetaData.VHAT_EDIT.getPrimordialUuid(), MetaData.DEVELOPMENT_PATH.getPrimordialUuid(), debugOutput);
-			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
+			//HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
+			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID, "has_parent", true, null, State.ACTIVE);
 			importUtil.configureConceptAsAssociation(HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT.getPrimordialUuid(), null);
 		}
 
@@ -4874,7 +4875,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 
 		//No associations in the metadata
-		Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
+		//Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
 
 		//Make one
 		UUID random = UUID.randomUUID();
@@ -4922,12 +4923,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		RestAssociationTypeVersion[] createdAssociations = XMLUtils.unmarshalObjectArray(RestAssociationTypeVersion.class, result);
 
-		Assert.assertEquals(1, createdAssociations.length);
-		Assert.assertEquals(createdAssociations[0].associationName, "test");
-		Assert.assertEquals(createdAssociations[0].description, description);
-		Assert.assertEquals(createdAssociations[0].associationInverseName, "inverse Test");
-		Assert.assertEquals(createdAssociations[0].associationConcept.getIdentifiers().getFirst(), createdAssociationId.uuid);
-
+		Assert.assertTrue(createdAssociations.length > 0);
+		RestAssociationTypeVersion retrievedCreatedAssociation = null;
+		for (RestAssociationTypeVersion current : createdAssociations) {
+			if (current.associationName.equals("test")
+					&& current.description.equals(description)
+					&& current.associationInverseName.equals("inverse Test")
+					&& current.associationConcept.getIdentifiers().getFirst().equals(createdAssociationId.uuid)) {
+				retrievedCreatedAssociation = current;
+			}
+		}
+		Assert.assertNotNull(retrievedCreatedAssociation);
+		
 		//test create on association item(s)
 
 		// Attempt to make one with read_only token
@@ -4937,7 +4944,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
+								new String[] {retrievedCreatedAssociation.associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
 										MetaData.AND.getNid() + ""})));
 		assertResponseStatus(createAssociationItemResponse, Status.FORBIDDEN.getStatusCode());
 
@@ -4948,7 +4955,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
+								new String[] {retrievedCreatedAssociation.associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
 										MetaData.AND.getNid() + ""})));
 		result = checkFail(createAssociationItemResponse).readEntity(String.class);
 		RestWriteResponse createdAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
@@ -4964,7 +4971,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
 		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.NUCC_MODULES.getNid());
 		Assert.assertEquals(createdAssociationItem.targetId.nid.intValue(), MetaData.AND.getNid());
-		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
+		Assert.assertEquals(createdAssociationItem.associationType.sequence, retrievedCreatedAssociation.identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
 
 		// Attempt to update association item with read_only token
@@ -5014,7 +5021,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
 		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.NUCC_MODULES.getNid());
 		Assert.assertNull(createdAssociationItem.targetId);
-		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
+		Assert.assertEquals(createdAssociationItem.associationType.sequence, retrievedCreatedAssociation.identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
 
 
@@ -5034,7 +5041,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.LOINC_MODULES.getNid() + "", ""}))));
+								new String[] {retrievedCreatedAssociation.associationConcept.getIdentifiers().sequence + "", MetaData.LOINC_MODULES.getNid() + "", ""}))));
 
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent
 				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
