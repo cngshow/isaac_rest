@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -47,7 +47,7 @@ import gov.vha.isaac.rest.session.VuidService;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.vuidAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.VUID_REQUESTOR, UserRoleConstants.SUPER_USER})
+@RolesAllowed({PrismeRoleConstants.VUID_REQUESTOR, PrismeRoleConstants.SUPER_USER})
 public class VuidWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(VuidWriteAPIs.class);

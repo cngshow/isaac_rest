@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
@@ -28,7 +28,7 @@ import javafx.concurrent.Task;
  * @author darmbrust
  */
 @Path(RestPaths.writePathComponent + RestPaths.systemAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR})
+@RolesAllowed({PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.ADMINISTRATOR})
 public class SystemWriteAPIs {
 	private static Logger log = LogManager.getLogger(SystemWriteAPIs.class);
 

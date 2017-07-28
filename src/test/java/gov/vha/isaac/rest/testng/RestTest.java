@@ -74,7 +74,7 @@ import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.PrismeRole;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -1352,10 +1352,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertNotNull(availableAction.getOutcomeState());
 			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
+			Assert.assertTrue(PrismeRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getUser().getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
-					|| editToken.getUser().getRoles().contains(UserRole.SUPER_USER));
+					editToken.getUser().getRoles().contains(PrismeRole.safeValueOf(availableAction.getRole().enumId).get())
+					|| editToken.getUser().getRoles().contains(PrismeRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundEditAction); // definition-specific
 		Assert.assertTrue(foundCancelWorkflowAction); // definition-specific
@@ -1612,10 +1612,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertNotNull(availableAction.getOutcomeState()); // "Ready for Edit" or "Canceled During Review" or "Ready for Approve"
 			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
+			Assert.assertTrue(PrismeRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getUser().getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
-					|| editToken.getUser().getRoles().contains(UserRole.SUPER_USER));
+					editToken.getUser().getRoles().contains(PrismeRole.safeValueOf(availableAction.getRole().enumId).get())
+					|| editToken.getUser().getRoles().contains(PrismeRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundQaFailsAction);
 		Assert.assertTrue(foundCancelWorkflowAction);

@@ -37,7 +37,7 @@ import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.PrismeRole;
 import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
@@ -275,7 +275,7 @@ public class RequestInfo
 		return user_ != null && user_.isPresent();
 	}
 	public void setDefaultReadOnlyUser() {
-		user_ = Optional.of(new User("READ_ONLY_USER", MetaData.USER.getPrimordialUuid(), null, UserRole.READ_ONLY));
+		user_ = Optional.of(new User("READ_ONLY_USER", MetaData.USER.getPrimordialUuid(), null, PrismeRole.READ_ONLY));
 		LookupService.get().getService(UserProvider.class).addUser(user_.get());
 	}
 	
@@ -342,7 +342,7 @@ public class RequestInfo
 							log.info("Rechecking roles for user " + passedEditToken.getUser().getName());
 							try
 							{
-								passedEditToken.getUser().updateRoles(userService.getUser(passedEditToken.getUser().getSSOToken().get()).get().getRoles().toArray(new UserRole[0]));
+								passedEditToken.getUser().updateRoles(userService.getUser(passedEditToken.getUser().getSSOToken().get()).get().getRoles().toArray(new PrismeRole[0]));
 								log.debug("Roles updated: " + passedEditToken.getUser().toString());
 							}
 							catch (Exception e)
@@ -354,7 +354,7 @@ public class RequestInfo
 						else
 						{
 							//if we aren't using prisme, roles can't expire...
-							passedEditToken.getUser().updateRoles(passedEditToken.getUser().getRoles().toArray(new UserRole[0]));
+							passedEditToken.getUser().updateRoles(passedEditToken.getUser().getRoles().toArray(new PrismeRole[0]));
 						}
 					}
 					editToken_ = passedEditToken;
@@ -416,7 +416,7 @@ public class RequestInfo
 									userName,
 									Get.identifierService().getUuidPrimordialFromConceptId(userConceptSequence).get(),
 									"",
-									UserRole.values()));
+									PrismeRole.values()));
 							LookupService.get().getService(UserProvider.class).addUser(userOptional.get());
 						} else {
 							if (parameters_.containsKey(RequestParameters.ssoToken)) {

@@ -24,7 +24,7 @@ import java.security.Principal;
 import javax.ws.rs.core.SecurityContext;
 
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.PrismeRole;
 
 /**
  * 
@@ -57,8 +57,8 @@ public class RestApplicationSecurityContext implements SecurityContext {
 		{
 			return false;
 		}
-		for (UserRole role : user.getRoles()) {
-			if (role.getText().equalsIgnoreCase(s)) {
+		for (PrismeRole role : user.getRoles()) {
+			if (role.toString().equalsIgnoreCase(s)) {
 				return true;
 			}
 		}
