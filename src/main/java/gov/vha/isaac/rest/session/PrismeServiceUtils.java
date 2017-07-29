@@ -25,16 +25,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import javax.ws.rs.core.MediaType;
 
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.rest.services.ClientService;
+import gov.vha.isaac.rest.utils.CommonPrismeServiceUtils;
 
 /**
  * 
@@ -116,68 +114,15 @@ public class PrismeServiceUtils {
 		return prismeProperties_;
 	}
 
-	public static String getTargetFromUrl(URL url) {
-		try {
-			StringBuilder target = new StringBuilder();
-			target.append(url.getProtocol());
-			target.append("://");
-			target.append(url.getHost());
-			if (url.getPort() > 0) {
-				target.append(":" + url.getPort());
-			}
-
-			return target.toString();
-		} catch (RuntimeException e) {
-			log.error("FAILED getting target from URL '" + url + "'", e);
-			throw e;
-		}
-	}
-
-	static String postJsonToPrisme(WebTarget targetWithPath, String json) {
-		return postJsonToPrisme(targetWithPath, json, (Map<String, String>)null);
-	}
-	static String postJsonToPrisme(WebTarget targetWithPath, String json, Map<String, String> params) {
-		if (params != null) {
-			for (Map.Entry<String, String> entry : params.entrySet()) {
-				targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
-			}
-		}
-		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
-
-		if (response.getStatus() != Status.OK.getStatusCode()) {
-			throw new RuntimeException("Failed performing POST " + targetWithPath + " of \"" + json + "\" + with CODE=" + response.getStatus() + " and REASON=" + response.getStatusInfo());
-		}
-
-		String responseJson = response.readEntity(String.class);
-	
-		return responseJson;
-	}
-
-	static String getResultJsonFromPrisme(WebTarget targetWithPath, Map<String, String> params) {
-		for (Map.Entry<String, String> entry : params.entrySet()) {
-			targetWithPath = targetWithPath.queryParam(entry.getKey(), entry.getValue());
-		}
-		Response response = targetWithPath.request().accept(MediaType.APPLICATION_JSON).get();
-
-		if (response.getStatus() != Status.OK.getStatusCode()) {
-			throw new RuntimeException("Failed performing GET " + targetWithPath + " with CODE=" + response.getStatus() + " and REASON=" + response.getStatusInfo());
-		}
-
-		String responseJson = response.readEntity(String.class);
-		log.debug("Request '{}' returned '{}'", targetWithPath.toString(), responseJson);
-	
-		return responseJson;
-	}
-	
-	static String getResultJsonFromPrisme(String targetStr, String pathStr, Map<String, String> params) {
+	public static String getResultJsonFromPrisme(String targetStr, String pathStr, Map<String, String> params) {
 		ClientService clientService = LookupService.getService(ClientService.class);
 		WebTarget target = clientService.getClient().target(targetStr);
 		target = target.path(pathStr);
 		
-		return getResultJsonFromPrisme(target, params);
+		return CommonPrismeServiceUtils.getResultJsonFromPrisme(target, params);
 	}
 
-	static String getResultJsonFromPrisme(String targetStr, String pathStr) {
+	public static String getResultJsonFromPrisme(String targetStr, String pathStr) {
 		return getResultJsonFromPrisme(targetStr, pathStr, new HashMap<>());
 	}
 }

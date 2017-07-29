@@ -40,6 +40,7 @@ import gov.vha.isaac.rest.api.data.RestBoolean;
 import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api.exceptions.RestExceptionResponse;
+import gov.vha.isaac.rest.utils.CommonPrismeServiceUtils;
 
 /**
  * The Class VuidServiceImpl
@@ -113,7 +114,7 @@ public class VuidServiceImpl implements VuidService {
 
 		Map<String, String> params = new HashMap<>();
 		params.put(RequestParameters.vuid, vuidToValidate + "");
-		String target = PrismeServiceUtils.getTargetFromUrl(url);
+		String target = CommonPrismeServiceUtils.getTargetFromUrl(url);
 		String resultJson = null;
 		try {
 			resultJson = VuidServiceUtils.getResultJsonFromVuidService(target, url.getPath(), params, (Entity<?>)null);
@@ -197,7 +198,7 @@ public class VuidServiceImpl implements VuidService {
 		params.put("blockSize", blockSize + "");
 		params.put("reason", reason);
 		params.put("ssoToken", ssoToken);
-		String target = PrismeServiceUtils.getTargetFromUrl(url);
+		String target = CommonPrismeServiceUtils.getTargetFromUrl(url);
 		String resultJson = VuidServiceUtils.getResultJsonFromVuidService(target, url.getPath(), params, Entity.xml(""));
 		log.trace("Retrieved from " + vuidServiceUrl + " resultJson=\"" + resultJson + "\"");
 		

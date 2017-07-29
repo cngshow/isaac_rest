@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response.Status;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api.exceptions.RestExceptionResponse;
+import gov.vha.isaac.rest.services.ClientService;
 
 /**
  * 

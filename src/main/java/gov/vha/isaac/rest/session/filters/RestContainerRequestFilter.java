@@ -37,8 +37,8 @@ import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
-import gov.vha.isaac.rest.session.RestApplicationSecurityContext;
 import gov.vha.isaac.rest.tokens.EditToken;
+import gov.vha.isaac.rest.user.RestApplicationSecurityContext;
 
 /**
  * 

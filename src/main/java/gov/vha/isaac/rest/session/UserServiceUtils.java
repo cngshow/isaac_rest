@@ -34,6 +34,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import gov.vha.isaac.rest.utils.CommonPrismeServiceUtils;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -275,7 +276,7 @@ public class UserServiceUtils {
 	}
 
 	static Set<PrismeRole> getAllRolesFromUrl(URL url) throws JsonParseException, JsonMappingException, IOException {
-		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath());
+		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(CommonPrismeServiceUtils.getTargetFromUrl(url), url.getPath());
 		
 		Set<PrismeRole> roles = new HashSet<>();
 		
@@ -298,7 +299,7 @@ public class UserServiceUtils {
 		Map<String, String> params = new HashMap<>();	
 		params.put("id", id);
 		params.put("password", password);
-		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
+		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(CommonPrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		Map<?, ?> map = null;
@@ -327,7 +328,7 @@ public class UserServiceUtils {
 		params.put("token", ssoToken);
 		params.put("isaac_db_uuid", Get.conceptService().getDataStoreId().toString());
 		log.debug("Using token '{}' and DB '{}'", ssoToken, Get.conceptService().getDataStoreId().toString());
-		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
+		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(CommonPrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
 		log.debug("PRISME returned '" + jsonResultString + "'");
 		return Optional.of(UserServiceUtils.getUserFromJson(jsonResultString, ssoToken));
