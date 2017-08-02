@@ -4,7 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.16 - PENDING
-    *
+    * Increment fake vuids within a session (vuids generated when a real vuid server couldn't be contacted)
 
 * 2017/07/25 - 4.15
     * Changes for has_parent found during testing.
