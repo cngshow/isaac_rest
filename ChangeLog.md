@@ -4,7 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.17 - PENDING
-    *
+    * Fixed system/extendedDescriptionTypes so it doesn't return VHAT extended types for the concept Isaac Module.
 
 * 2017/08/03 - 4.16
     * Increment fake vuids within a session (vuids generated when a real vuid server couldn't be contacted)

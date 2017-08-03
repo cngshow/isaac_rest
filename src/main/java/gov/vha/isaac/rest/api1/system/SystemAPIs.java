@@ -541,11 +541,10 @@ public class SystemAPIs
 					+ "It should be a direct child of " + MetaData.MODULE.getPrimordialUuid());
 		}
 		
-		
 		Frills.getAllChildrenOfConcept(MetaData.DESCRIPTION_TYPE_IN_SOURCE_TERMINOLOGY.getConceptSequence(), true, true).forEach(descType ->
 		{
 			ConceptChronology<? extends ConceptVersion<?>> concept = Get.conceptService().getConcept(descType);
-			if (Frills.getTerminologyTypes(concept, null).contains(cc.getConceptSequence()))
+			if (cc.getConceptSequence() != MetaData.ISAAC_MODULE.getConceptSequence() && Frills.getTerminologyTypes(concept, null).contains(cc.getConceptSequence()))
 			{
 				results.add(new RestConceptChronology(concept, false, false, false, null));
 			}
