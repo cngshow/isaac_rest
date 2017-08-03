@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.vuid;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -31,7 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.StringUtils;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.rest.ApplicationConfig;
 import gov.vha.isaac.rest.api.data.vuid.RestVuidBlockData;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -47,10 +48,11 @@ import gov.vha.isaac.rest.session.VuidService;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.vuidAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.VUID_REQUESTOR, UserRoleConstants.SUPER_USER})
+@RolesAllowed({PrismeRoleConstants.VUID_REQUESTOR, PrismeRoleConstants.SUPER_USER})
 public class VuidWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(VuidWriteAPIs.class);
+	private static AtomicInteger debugModeIncrement_ = new AtomicInteger(-1);
 
 	@Context
 	private SecurityContext securityContext;
@@ -92,6 +94,12 @@ public class VuidWriteAPIs
 			@QueryParam(RequestParameters.reason) String reason,
 			@QueryParam(RequestParameters.ssoToken) String ssoToken) throws RestException
 	{
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.ssoToken,
+				RequestParameters.blockSize,
+				RequestParameters.reason);
+		
 		// The ssoToken, as passed in to this call, has been decoded by jersey - but we don't want the decoded parameter.
 		//We want it exactly as it was - which was pulled off and stashed by the filter.  So, use the token from the RequestInfo, instead.
 		if (RequestInfo.get().getParameters().get(RequestParameters.ssoToken) != null && RequestInfo.get().getParameters().get(RequestParameters.ssoToken).size() > 0) {
@@ -120,12 +128,6 @@ public class VuidWriteAPIs
 	{
 		log.debug("Internal VUID request: block - " + blockSize + " reason = " + reason + " by - "+ RequestInfo.get().getUser().get().getName());
 		
-		RequestParameters.validateParameterNamesAgainstSupportedNames(
-				RequestInfo.get().getParameters(),
-				RequestParameters.ssoToken,
-				RequestParameters.blockSize,
-				RequestParameters.reason);
-
 		if (StringUtils.isBlank(reason)) {
 			throw new RestException("reason", null, "blank or null request reason");
 		}
@@ -148,9 +150,14 @@ public class VuidWriteAPIs
 			}
 			else if (ApplicationConfig.getInstance().isDebugDeploy())
 			{
-				RestVuidBlockData myBlock = new RestVuidBlockData(-1, blockSize * -1);
-				log.info("Returning fake vuid data:" + myBlock.startInclusive+ ":" + myBlock.endInclusive);
-				return myBlock;
+				synchronized (debugModeIncrement_)
+				{
+					int start = debugModeIncrement_.get();
+					int end = debugModeIncrement_.addAndGet((blockSize * -1) + 1);
+					RestVuidBlockData myBlock = new RestVuidBlockData(start, end);
+					log.info("Returning fake vuid data:" + myBlock.startInclusive+ ":" + myBlock.endInclusive);
+					return myBlock;
+				}
 			}
 			else
 			{

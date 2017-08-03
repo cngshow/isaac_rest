@@ -21,8 +21,8 @@ package gov.vha.isaac.rest.api1.sememe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -33,14 +33,16 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
@@ -104,7 +106,7 @@ import gov.vha.isaac.rest.session.SecurityUtils;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
+@RolesAllowed({PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.EDITOR})
 public class SememeWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(SememeWriteAPIs.class);
@@ -397,6 +399,7 @@ public class SememeWriteAPIs
 							Frills.getAnnotationSememe(Get.identifierService().getSememeNid(sememeChronology.getNid()), 
 									DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence()).get();
 					
+					@SuppressWarnings({ "unchecked", "rawtypes" })
 					DynamicSememeImpl mutableVersion =(DynamicSememeImpl)((SememeChronology)(extendedDescriptionTypeSememeChronology))
 							.createMutableVersion(DynamicSememeImpl.class , State.ACTIVE, RequestInfo.get().getEditCoordinate());
 					mutableVersion.setData(new DynamicSememeData[] {new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptId(passedExtendedType).get())});
@@ -705,20 +708,22 @@ public class SememeWriteAPIs
 		
 		State stateToUse = (sememeUpdateData.active == null || sememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> sememeChronology = SememeAPIs.findSememeChronology(id);
-		
+
 		DynamicSememeData[] passedData = RestDynamicSememeData.translate(sememeUpdateData.columnData, true);
 		
 		SememeType type = sememeChronology.getSememeType();
 
 		checkTypeMap(type, passedData);
-		
+
 		switch (type)
 		{
 			case DYNAMIC:
 			{
+				Optional<DynamicSememeImpl> currentVersion = Optional.empty();
 				try {
-					@SuppressWarnings("unchecked")
-					Optional<DynamicSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class);
+					@SuppressWarnings({ "unchecked" })
+					final SememeChronology<DynamicSememeImpl> dynamicSememeImplChronology = (SememeChronology<DynamicSememeImpl>)sememeChronology;
+					currentVersion = LatestVersionUtils.getLatestVersionForUpdate(dynamicSememeImplChronology, DynamicSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -766,7 +771,6 @@ public class SememeWriteAPIs
 				LongSememeImpl mutable = (LongSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableLongSememe.class,
 						stateToUse, RequestInfo.get().getEditCoordinate());
 				mutable.setLongValue(((DynamicSememeLongImpl)passedData[0]).getDataLong());
-
 				break;
 			}
 			case MEMBER:
@@ -842,7 +846,6 @@ public class SememeWriteAPIs
 				StringSememeImpl mutable = (StringSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableStringSememe.class,
 						stateToUse, RequestInfo.get().getEditCoordinate());
 				mutable.setString(((DynamicSememeStringImpl)passedData[0]).getDataString());
-
 				break;
 			}
 			case COMPONENT_NID:
@@ -872,7 +875,6 @@ public class SememeWriteAPIs
 				ComponentNidSememeImpl mutable = (ComponentNidSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableComponentNidSememe.class,
 						stateToUse, RequestInfo.get().getEditCoordinate());
 				mutable.setComponentNid(((DynamicSememeNidImpl)passedData[0]).getDataNid());
-
 				break;
 			}
 			case LOGIC_GRAPH:  //Unsupported here and below
@@ -885,8 +887,12 @@ public class SememeWriteAPIs
 
 		try
 		{
+			Optional<UUID> assemblageUuid = Get.identifierService().getUuidPrimordialFromConceptId(sememeChronology.getAssemblageSequence());
+			Optional<UUID> referencedConceptUuid = Get.identifierService().getUuidPrimordialFromConceptId(sememeChronology.getReferencedComponentNid());
+
 			Get.commitService().addUncommitted(sememeChronology).get();
-			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of sememe item " + sememeChronology.getPrimordialUuid()).get();
+			@SuppressWarnings("deprecation")
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of " + type + " sememe item " + sememeChronology.getPrimordialUuid() + " of assemblage " + assemblageUuid.orElse(null) + " for concept " + referencedConceptUuid.orElse(null)).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);

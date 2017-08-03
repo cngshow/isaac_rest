@@ -57,6 +57,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.rest.ApplicationConfig;
+import gov.vha.isaac.rest.utils.CommonPrismeServiceUtils;
 
 /**
  *
@@ -136,6 +137,13 @@ public class PrismeLogSenderService {
 		}
 	}
 
+	public String getPrismeNotifyUrl() {
+		return PrismeServiceUtils.getPrismeProperties().getProperty("prisme_notify_url");
+	}
+	public String getApplicationName() {
+		return ApplicationConfig.getInstance().getContextPath();
+	}
+
 	@PostConstruct
 	public void startupPrismeLogSenderService() {
 		final Runnable runnable = new Runnable() {
@@ -144,7 +152,7 @@ public class PrismeLogSenderService {
 
 				// disable() if not configured
 				LOGGER.info("prisme log sender thread init");
-				PRISME_NOTIFY_URL = PrismeServiceUtils.getPrismeProperties().getProperty("prisme_notify_url");
+				PRISME_NOTIFY_URL = getPrismeNotifyUrl();
 				
 				if (StringUtils.isBlank(PRISME_NOTIFY_URL)) {
 					LOGGER.warn("CANNOT LOG EVENTS TO PRISME LOGGER API BECAUSE prisme_notify_url NOT CONFIGURED IN prisme.properties");
@@ -347,7 +355,7 @@ public class PrismeLogSenderService {
 		final String token_error_key = "token_error";
 
 		// This must be called after ApplicationConfig.onStartup()
-		final String application_name_value = ApplicationConfig.getInstance().getContextPath();
+		final String application_name_value = getApplicationName();
 
 		Map<String, Object> dto = new HashMap<>();
 
@@ -430,7 +438,7 @@ public class PrismeLogSenderService {
 		params.put(security_token_key, securityToken);
 
 		// Post eventInputJson to webTargetWithPath with params
-		String responseJson = PrismeServiceUtils.postJsonToPrisme(webTargetWithPath, eventInputJson, params);
+		String responseJson = CommonPrismeServiceUtils.postJsonToPrisme(webTargetWithPath, eventInputJson, params);
 
 		// Construct json ObjectMapper to read response
 		ObjectMapper mapper = new ObjectMapper();

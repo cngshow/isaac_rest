@@ -42,7 +42,7 @@ import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
@@ -79,7 +79,7 @@ import gov.vha.isaac.rest.session.SecurityUtils;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.conceptAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
+@RolesAllowed({PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.EDITOR})
 public class ConceptWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(ConceptWriteAPIs.class);

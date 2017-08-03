@@ -18,9 +18,15 @@
  */
 package gov.vha.isaac.rest.api1.data.mapping;
 
+import java.util.Optional;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.commons.logging.Log;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -53,6 +59,8 @@ import gov.vha.isaac.rest.session.RequestInfo;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 {
+	private static Logger log = LogManager.getLogger(RestMappingSetDisplayField.class);
+
 	/**
 	 * when componentType is set to a value such as SOURCE or TARGET (basically, any type other than ITEM_EXTENDED) the id is set to a UUID 
 	 * that represents a sememe to compute the value from or the UUID constant for the description option, then this field will be populated with the 
@@ -131,7 +139,13 @@ public class RestMappingSetDisplayField extends RestMappingSetDisplayFieldBase
 			}
 		}
 		
-		description = prefix + Frills.getDescription(concept.getPrimordialUuid(), RequestInfo.get().getTaxonomyCoordinate()).get();
+		Optional<String> descriptionOptional = Frills.getDescription(concept.getPrimordialUuid(), RequestInfo.get().getTaxonomyCoordinate());
+		if (! descriptionOptional.isPresent()) {
+			String msg = "Failed populating " +  componentType + " RestMappingSetDisplayField. No description found for concept " + concept;
+			log.error(msg);
+			throw new RuntimeException(msg);
+		}
+		description = prefix + descriptionOptional.get();
 		//If the view coordinate is on FSN, we may have one (or more) semantic tags in these labels.  Strip them.
 		description = description.replaceAll("\\s\\(" + IsaacMetadataAuxiliary.METADATA_SEMANTIC_TAG + "\\)", "");
 	}

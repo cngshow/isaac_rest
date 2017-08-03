@@ -41,7 +41,7 @@ import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
@@ -83,11 +83,10 @@ import gov.vha.isaac.rest.session.SecurityUtils;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
 @Path(RestPaths.searchAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
+@RolesAllowed({PrismeRoleConstants.AUTOMATED, PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.ADMINISTRATOR, PrismeRoleConstants.READ_ONLY, PrismeRoleConstants.EDITOR, PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER})
 public class SearchAPIs
 {
 	private static Logger log = LogManager.getLogger();
-	private static final UUID codeConstant = UUID.fromString("803af596-aea8-5184-b8e1-45f801585d17");  //TODO this goes away when we can identify static sememes
 
 	@Context
 	private SecurityContext securityContext;
@@ -328,8 +327,9 @@ public class SearchAPIs
 						if (conSequence >= 0)
 						{
 							//TODO add a sememe on all static sememes so we can identify them.  For now, hard code a few common ones.
+							//TODO should use the new 'identifier' sememe here...
 							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SCTID.getConceptSequence() == conSequence 
-									|| Get.identifierService().getConceptSequenceForUuids(codeConstant) == conSequence)
+									|| MetaData.CODE.getConceptSequence() == conSequence)
 							{
 								return true;
 							}

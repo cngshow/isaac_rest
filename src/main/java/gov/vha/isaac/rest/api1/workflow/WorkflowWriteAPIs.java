@@ -33,7 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail;
 import gov.vha.isaac.ochre.workflow.provider.BPMNInfo;
@@ -55,7 +55,7 @@ import gov.vha.isaac.rest.tokens.EditToken;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.writePathComponent + RestPaths.workflowAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER})
+@RolesAllowed({PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.EDITOR, PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER})
 public class WorkflowWriteAPIs {
 	private static Logger log = LogManager.getLogger(WorkflowWriteAPIs.class);
 

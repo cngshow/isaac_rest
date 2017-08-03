@@ -21,7 +21,7 @@ package gov.vha.isaac.rest.api1.data.enumerations;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.PrismeRole;
 
 
 /**
@@ -39,17 +39,17 @@ public class RestUserRoleType extends Enumeration
 		//for jaxb
 	}
 	
-	public RestUserRoleType(UserRole st)
+	public RestUserRoleType(PrismeRole st)
 	{
 		super(st.name(), null, st.ordinal());
 	}
 
 	public static RestUserRoleType[] getAll()
 	{
-		RestUserRoleType[] result = new RestUserRoleType[UserRole.values().length];
-		for (int i = 0; i < UserRole.values().length; i++)
+		RestUserRoleType[] result = new RestUserRoleType[PrismeRole.values().length];
+		for (int i = 0; i < PrismeRole.values().length; i++)
 		{
-			result[i] = new RestUserRoleType(UserRole.values()[i]);
+			result[i] = new RestUserRoleType(PrismeRole.values()[i]);
 		}
 		return result;
 	}

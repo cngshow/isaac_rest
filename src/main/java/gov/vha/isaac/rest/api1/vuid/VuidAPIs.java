@@ -35,7 +35,7 @@ import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.data.RestBoolean;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -53,7 +53,7 @@ import gov.vha.isaac.rest.session.VuidService;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  */
 @Path(RestPaths.vuidAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.AUTOMATED, UserRoleConstants.SUPER_USER, UserRoleConstants.ADMINISTRATOR, UserRoleConstants.READ_ONLY, UserRoleConstants.EDITOR, UserRoleConstants.REVIEWER, UserRoleConstants.APPROVER, UserRoleConstants.MANAGER, UserRoleConstants.VUID_REQUESTOR})
+@RolesAllowed({PrismeRoleConstants.AUTOMATED, PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.ADMINISTRATOR, PrismeRoleConstants.READ_ONLY, PrismeRoleConstants.EDITOR, PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER, PrismeRoleConstants.VUID_REQUESTOR})
 public class VuidAPIs
 {
 	private static Logger log = LogManager.getLogger(VuidAPIs.class);
@@ -186,7 +186,7 @@ public class VuidAPIs
 		Set<Integer> nids = Frills.getVuidSememeNidsForVUID(vuid);
 
 		if (nids.size() > 1) {
-			final String msg = "Found multiple existing ACTIVE VUID sememe NIDs matching VUID \"" + vuid + "\"";
+			final String msg = "Found multiple (" + nids.size() + ") existing ACTIVE VUID sememe NIDs matching VUID \"" + vuid + "\"";
 			log.error(msg);
 			throw new RestException(msg);
 		} else if (nids.size() == 0) {

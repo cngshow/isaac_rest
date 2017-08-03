@@ -38,7 +38,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.PrismeRole;
 
 /**
  * The Class PrismeIntegratedUserService
@@ -80,17 +80,17 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	}
 
 	/* (non-Javadoc)
-	 * @see gov.vha.isaac.ochre.api.UserRoleService#getAllUserRoles()
+	 * @see gov.vha.isaac.ochre.api.PrismeRoleService#getAllPrismeRoles()
 	 * 
 	 * This implementation gets all roles from PRISME IFF prisme.properties is in classpath
 	 * and contains a value for property "prisme_all_roles_url", otherwise it returns all of the
-	 * UserRole text values except for "automated"
+	 * PrismeRole text values except for "automated"
 	 */
 	/* (non-Javadoc)
-	 * @see gov.vha.isaac.rest.session.PrismeUserService#getAllUserRoles()
+	 * @see gov.vha.isaac.rest.session.PrismeUserService#getAllPrismeRoles()
 	 */
 	@Override
-	public Set<UserRole> getAllPossibleUserRoles()
+	public Set<PrismeRole> getAllPossibleUserRoles()
 	{
 		if (usePrismeForAllRoles()) {
 			try {
@@ -99,12 +99,10 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 				throw new RuntimeException(e);
 			}
 		} else {
-			Set<UserRole> availableRoles = new HashSet<>();
+			Set<PrismeRole> availableRoles = new HashSet<>();
 
-			for (UserRole role : UserRole.values()) {
-				if (role != UserRole.AUTOMATED) { // AUTOMATED will not be a PRISME role
-					availableRoles.add(role);
-				}
+			for (PrismeRole role : PrismeRole.values()) {
+				availableRoles.add(role);
 			}
 
 			return Collections.unmodifiableSet(availableRoles);
@@ -164,11 +162,11 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 		}
 		return user;
 	}
-	protected Set<UserRole> getAllRolesFromPrisme() throws JsonParseException, JsonMappingException, IOException {
+	protected Set<PrismeRole> getAllRolesFromPrisme() throws JsonParseException, JsonMappingException, IOException {
 		String prismeAllRolesUrlStr = getPrismeAllRolesUrl();
 		log.trace("Retrieved from prisme.properties prismeAllRolesUrlStr=\"" + prismeAllRolesUrlStr + "\"");
 		URL url = new URL(prismeAllRolesUrlStr);
-		Set<UserRole> allRolesFromFromPrisme = UserServiceUtils.getAllRolesFromUrl(url);
+		Set<PrismeRole> allRolesFromFromPrisme = UserServiceUtils.getAllRolesFromUrl(url);
 		log.trace("Retrieved from " + prismeAllRolesUrlStr + " allRolesFromFromPrisme=" + allRolesFromFromPrisme);
 		return allRolesFromFromPrisme;
 	}

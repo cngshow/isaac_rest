@@ -20,7 +20,6 @@ package gov.vha.isaac.rest.api1.concept;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -150,7 +149,7 @@ public class RestWriteResponseConceptCreate extends RestWriteResponse
 					{
 						extendedDescriptionTypeSememe = new RestIdentifiedObject(sc);
 					}
-					else if (assemblageUuid != null && assemblageUuid.equals(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID))
+					else if (assemblageUuid != null && assemblageUuid.equals(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE.getPrimordialUuid()))
 					{
 						hasParentAssociationSememe = new RestIdentifiedObject(sc);
 					} else {

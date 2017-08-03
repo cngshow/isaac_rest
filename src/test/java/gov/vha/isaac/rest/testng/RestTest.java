@@ -19,7 +19,6 @@
 package gov.vha.isaac.rest.testng;
 
 import static gov.vha.isaac.ochre.api.constants.Constants.DATA_STORE_ROOT_LOCATION_PROPERTY;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,7 +36,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
-
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -45,7 +43,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,7 +53,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -67,25 +63,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import gov.va.oia.terminology.converters.sharedUtils.IBDFCreationUtility;
 import gov.va.oia.terminology.converters.sharedUtils.stats.ConverterUUID;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.PrismeRole;
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.UserRole;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
-import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
-import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
-import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
-import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
@@ -105,13 +95,10 @@ import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
-import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.api.index.IndexServiceBI;
 import gov.vha.isaac.ochre.api.logic.NodeSemantic;
-import gov.vha.isaac.ochre.api.util.UuidT5Generator;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
-import gov.vha.isaac.ochre.model.configuration.EditCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.LogicCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
@@ -122,7 +109,6 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
-import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
@@ -245,13 +231,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private final static TestPrismeIntegratedUserService PRISME_USER_SERVICE = LookupService.getService(TestPrismeIntegratedUserService.class);
 
-	// Example tokens
-	//	private static final String readOnlyToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC6%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx94%5CxB0%5Ce%7C%5Cx9C%5CxB0%5CxA6%5CxA8%5CxE1%5CxE1t%5CxBC%5CvK%22%2C+%22a%40%5Cx8A%5CxACT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D";
-	//	private static final String gregToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC2%5CxEE%5CxFA%5CxE1%5Cx91%5CxBF3%5CxA9%5Cx16K%22%2C+%22%7EK%5CxC4%5CxEFX%7C%5Cx96%5CxA8%5CxA3%5CxA2%5CxC4%5CxB1%3D%5CxFF%5Cx01K%22%2C+%22oC%5Cx83%5CxF7%40%3A%5Cx94%5CxAC%5CxAF%5CxB6%5CxE1%5CxF4c%5CxB8%5CbK%22%2C+%22+M%5Cx89%5CxB8Xe%5CxF9%5CxD4%5CxC0%5CxDB%5CxAB%5Cx99%5Ce%5CxD7e%40%22%5D";
-	//	private static final String joelToken="%5B%22u%5Cf%5Cx8F%5CxB1X%5C%22%5CxC7%5CxF2%5CxE8%5CxA5%5CxD8%5CxE3t%5CxFFUK%22%2C+%22%2CJ%5Cx83%5CxA3%5Cx13k%5Cx96%5CxFC%5CxE6%5CxF3%5CxCF%5CxF2%7C%5CxB8MK%22%2C+%224%5Cf%5Cx8C%5CxBA%5Cx1Ft%5CxDD%5CxB5%5CxA4%5CxB8%5CxC0%5CxE9Q%5CxAB%5CnK%22%2C+%22z%5D%5Cx83%5CxAFT%7B%5Cx9C%5CxB3%5CxE8%5CxAC%5CxA7%5Cx95%5Cx17%5CxDBiL%22%5D";
-
-	private static final String TEST_SSO_TOKEN = usePrismeForRolesByToken() ? getTokenFromPrisme("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com") : "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager,vuid_requestor";
-	private static final String TEST_READ_ONLY_SSO_TOKEN = usePrismeForRolesByToken() ? getTokenFromPrisme("readonly@readonly.com", "readonly@readonly.com") : "TestReadOnlyUser:read_only";
+	private static final String TEST_SSO_TOKEN = usePrismeForRolesByToken() ? 
+			getTokenFromPrisme("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com") 
+			: "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager,vuid_requestor";
+	private static final String TEST_READ_ONLY_SSO_TOKEN = usePrismeForRolesByToken() ? 
+			getTokenFromPrisme("readonly@readonly.com", "readonly@readonly.com") : "TestReadOnlyUser:read_only";
 
 	private static boolean usePrismeForRolesByToken() {
 		try {
@@ -293,7 +277,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	@BeforeClass
-	public void testDataLoad()
+	public void testDataLoad() throws Exception
 	{
 		//Load in the test data
 		try
@@ -317,6 +301,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.fail("Test data file not found", e);
 		}
 		Assert.assertTrue(Get.conceptDescriptionText(MetaData.ASSEMBLAGE.getConceptSequence()).equals("assemblage (ISAAC)"));
+		
+		// Ensure VHAT has_parent association metadata initialized
+		getVHATHasParentAssociation();
 	}
 
 	@Test
@@ -501,6 +488,16 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			String descriptionsLanguageConceptId,
 			String descriptionsExtendedTypeId,
 			Collection<String> descriptionsPreferredDialects) {
+		return createConcept(parentConceptIds, fsn, createSemanticTag, descriptionsLanguageConceptId, descriptionsExtendedTypeId, descriptionsPreferredDialects, getEditTokenString(TEST_SSO_TOKEN));
+	}
+	public int createConcept(
+			Collection<String> parentConceptIds,
+			String fsn,
+			boolean createSemanticTag,
+			String descriptionsLanguageConceptId,
+			String descriptionsExtendedTypeId,
+			Collection<String> descriptionsPreferredDialects,
+			String editTokenString) {
 		RestConceptCreateData newConceptData = new RestConceptCreateData(
 				parentConceptIds,
 				fsn,
@@ -517,7 +514,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		}
 
 		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, getEditTokenString(TEST_SSO_TOKEN))
+				.queryParam(RequestParameters.editToken, editTokenString)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
@@ -536,162 +533,477 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			File debugOutput = new File(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "restTestVHATMetaDataImportDebug");
 			debugOutput.mkdir();
 			ConverterUUID.configureNamespace(TermAux.VHAT_MODULES.getPrimordialUuid());
-			IBDFCreationUtility importUtil = new IBDFCreationUtility(MetaData.USER.getPrimordialUuid(), MetaData.VHAT_EDIT.getPrimordialUuid(), MetaData.DEVELOPMENT_PATH.getPrimordialUuid(), debugOutput);
-			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
+			IBDFCreationUtility importUtil = new IBDFCreationUtility(MetaData.USER.getPrimordialUuid(), MetaData.VHAT_EDIT.getPrimordialUuid(), 
+					MetaData.DEVELOPMENT_PATH.getPrimordialUuid(), debugOutput);
+			//HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE_UUID, null, State.ACTIVE, null);
+			HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT = importUtil.createConcept(VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE.getPrimordialUuid(), "has_parent", true, null, 
+					State.ACTIVE);
 			importUtil.configureConceptAsAssociation(HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT.getPrimordialUuid(), null);
 		}
 
 		return HAS_PARENT_VHAT_ASSOCIATION_TYPE_OBJECT;
 	}
 
+	/**
+	 * @param data
+	 * @return
+	 */
+	private JsonNode toJsonObject(DynamicSememeData[] data)
+	{
+		ArrayNode on = jfn.arrayNode();
+		for (int i = 0; i < data.length; i++)
+		{
+			if (data[i] == null)
+			{
+				on.addNull();
+			}
+			else
+			{
+				on.add(toJsonObject(data[i], i));
+			}
+		}
+		return on;
+	}
+
+	/**
+	 * @param data
+	 * @return
+	 */
+	private JsonNode toJsonObject(DynamicSememeData data, int columnNumber)
+	{
+		ObjectNode on = jfn.objectNode();
+		switch(data.getDynamicSememeDataType())
+		{
+		case ARRAY:
+			on.put("@class", RestDynamicSememeArray.class.getName());
+			ArrayNode nested = jfn.arrayNode();
+			for (DynamicSememeData x : ((DynamicSememeArray)data).getDataArray())
+			{
+				nested.add(toJsonObject(x, columnNumber));
+			}
+			on.set("data", nested);
+			break;
+		case BOOLEAN:
+			on.put("@class", RestDynamicSememeBoolean.class.getName());
+			on.put("data", ((DynamicSememeBoolean)data).getDataBoolean());
+			break;
+		case BYTEARRAY:
+			on.put("@class", RestDynamicSememeByteArray.class.getName());
+			on.put("data", ((DynamicSememeByteArray)data).getDataByteArray());
+			break;
+		case DOUBLE:
+			on.put("@class", RestDynamicSememeDouble.class.getName());
+			on.put("data", ((DynamicSememeDouble)data).getDataDouble());
+			break;
+		case FLOAT:
+			on.put("@class", RestDynamicSememeFloat.class.getName());
+			on.put("data", ((DynamicSememeFloat)data).getDataFloat());
+			break;
+		case INTEGER:
+			on.put("@class", RestDynamicSememeInteger.class.getName());
+			on.put("data", ((DynamicSememeInteger)data).getDataInteger());
+			break;
+		case LONG:
+			on.put("@class", RestDynamicSememeLong.class.getName());
+			on.put("data", ((DynamicSememeLong)data).getDataLong());
+			break;
+		case NID:
+			on.put("@class", RestDynamicSememeNid.class.getName());
+			on.put("data", ((DynamicSememeNid)data).getDataNid());
+			break;
+		case SEQUENCE:
+			on.put("@class", RestDynamicSememeSequence.class.getName());
+			on.put("data", ((DynamicSememeSequence)data).getDataSequence());
+			break;
+		case STRING:
+			on.put("@class", RestDynamicSememeString.class.getName());
+			on.put("data", ((DynamicSememeString)data).getDataString());
+			break;
+		case UUID:
+			on.put("@class", RestDynamicSememeUUID.class.getName());
+			on.put("data", ((DynamicSememeUUID)data).getDataUUID().toString());
+			break;
+		case POLYMORPHIC:
+		case UNKNOWN:
+		default :
+			throw new RuntimeException("Unsupported type");
+		}
+		on.put("columnNumber", columnNumber);
+		return on;
+	}
+
+	private String toJson(ObjectNode root) throws JsonProcessingException, IOException
+	{
+		StringWriter ws = new StringWriter();
+		new ObjectMapper().writeTree(new JsonFactory().createGenerator(ws).setPrettyPrinter(new DefaultPrettyPrinter()), root);
+		return ws.toString();
+	}
+
+	private String jsonIze(String[] names, String[] values) throws JsonProcessingException, IOException
+	{
+		ObjectNode root = jfn.objectNode();
+		for (int i = 0; i < names.length; i++)
+		{
+			root.put(names[i], values[i]);
+		}
+		return toJson(root);
+	}
+
 	// PLACE TEST METHODS BELOW HERE
 	@Test
-	public void testVHATHasParentAssociationSynchronization() throws Exception
-	{	
+	public void testVUIDUniquenessValidation() throws Exception {
 		// Ensure metadata initialized
 		getVHATHasParentAssociation();
-		
-		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
-		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
 
-		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
-		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
-
-		final UUID randomUuid = UUID.randomUUID();
-
-		final String fsn = "fsn for test concept " + randomUuid.toString();
-		final String pt = "preferred term for test concept " + randomUuid.toString();
-
-		final List<String> parentIds = new ArrayList<>();
-		parentIds.add(parent1Sequence + "");
-		parentIds.add(parent2Sequence + "");
-
-		List<String> preferredDialects = new ArrayList<>();
-		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
-		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
-
-		RestConceptCreateData newConceptData = new RestConceptCreateData(
-				parentIds,
-				fsn,
-				true,
-				requiredDescriptionsLanguageSequence + "",
-				requiredDescriptionsExtendedTypeSequence + "",
-				preferredDialects);
-
-		String xml = null;
-		try {
-			xml = XMLUtils.marshallObject(newConceptData);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-
+		// Configure VHAT_EDIT EditToken
 		EditToken defaultEditToken = EditToken.read(getEditTokenString(TEST_SSO_TOKEN));
 		EditToken vhatEditToken = new EditToken(
 				defaultEditToken.getAuthorSequence(),
 				MetaData.VHAT_EDIT.getConceptSequence(),
 				defaultEditToken.getPathSequence(),
 				defaultEditToken.getActiveWorkflowProcessId());
-		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-				.queryParam(RequestParameters.editToken, vhatEditToken.getSerialized())
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		String newConceptSequenceWrapperXml = checkFail(createConceptResponse).readEntity(String.class);
-		RestWriteResponseConceptCreate newConceptResponse = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptResponse.sequence;
-		RestEditToken renewedToken = newConceptResponse.editToken;
-		// Confirm returned sequence is valid
-		Assert.assertTrue(newConceptSequence > 0);
 		
-		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class,
-				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + getVHATHasParentAssociation().getPrimordialUuid())
-						.queryParam(RequestParameters.expand, "referencedConcept")
-						.queryParam(RequestParameters.maxPageSize, "2")
-						.queryParam(RequestParameters.pageNum, "1")
-						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
-		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
-		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
-		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
-		Assert.assertEquals(pagedAssociations.results.length, 2);
-		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
-		Assert.assertEquals(pagedAssociations.results[1].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
-
-		int association1Source = Get.identifierService().getConceptSequence(pagedAssociations.results[0].sourceId.nid);
-		int association1Target = Get.identifierService().getConceptSequence(pagedAssociations.results[0].targetId.nid);
+		// Create target concept 1
+		final int testConcept1Sequence = createConcept(
+				Arrays.asList(MetaData.SNOROCKET_CLASSIFIER.getConceptSequence() + ""),
+				"Concept 1 to test VUID uniqueness",
+				false,
+				MetaData.ENGLISH_LANGUAGE.getNid() + "",
+				null,
+				Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""),
+				vhatEditToken.renewToken().getSerialized());
+		final ConceptChronology<? extends ConceptVersion<?>> testConcept1 = Get.conceptService().getConcept(testConcept1Sequence);
 		
-		int association2Source = Get.identifierService().getConceptSequence(pagedAssociations.results[1].sourceId.nid);
-		int association2Target = Get.identifierService().getConceptSequence(pagedAssociations.results[1].targetId.nid);
-
-		Assert.assertEquals(association1Source, newConceptSequence);
-		Assert.assertEquals(association2Source, newConceptSequence);
+		final String testVuid = "123456"; // No validation in test
 		
-		Assert.assertTrue(
-				(association1Target == parent1Sequence && association2Target == parent2Sequence)
-				|| (association1Target == parent2Sequence && association2Target == parent1Sequence));
-	
-		// Test addition of new has_parent association to confirm corresponding logic graph update
-		// TODO use AssociationsAPI
-		final int parent3Sequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
-		ConceptChronology<? extends ConceptVersion<?>> parent3 = Get.conceptService().getConcept(parent3Sequence);
+		ObjectNode root = jfn.objectNode();
+		root.put("assemblageConcept", MetaData.VUID.getNid() + "");
+		root.put("referencedComponent", testConcept1.getNid() + "");
+		root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeStringImpl(testVuid)}));
 
-		// Attempt to create third parent
-		Response createThirdHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent
-				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
-				.queryParam(RequestParameters.editToken, renewedToken.token)
+		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 0, "Shouldn't be any hits on vuid 123456, yet there was...");
+		
+		//make one
+		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
+				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
 				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
-						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {getVHATHasParentAssociation().getPrimordialUuid().toString(), newConceptResponse.nid + "",
-										parent3.getPrimordialUuid().toString()})));
-		String result = checkFail(createThirdHasParentItemResponse).readEntity(String.class);
-		RestWriteResponse createdThirdHasParentAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+		String result = checkFail(createSememeResponse).readEntity(String.class);
 
-		// Retrieve concept to confirm three parents in taxonomy
-		Response taxonomyResponse = target(taxonomyRequestPath)
-				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
-				.queryParam(RequestParameters.id, newConceptSequence)
-				.queryParam(RequestParameters.parentHeight, 1)
-				.queryParam(RequestParameters.childDepth, 0)
-				.queryParam(RequestParameters.pageNum, 1)
-				.queryParam(RequestParameters.maxPageSize, 6)
-				.request()
-				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
-		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
-		Assert.assertNotNull(conceptVersionFromTaxonomy);
+		RestWriteResponse createdFirstVuidSememeWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
 
-		// Confirm all three parents are reflected in logic graph sememe
-		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
-		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
-			String msg = "No logic graph sememe found for concept (" + newConceptResponse.nid + ")";
-			throw new RuntimeException(msg);
+		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 1, "Should be exactly 1 hit on vuid 123456");
+
+		// Attempt to add same VUID to additional concept(s)
+		for (int i = 2; i < 12; ++i) {
+			log.info("Found " + Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size() + " instances of VUID \"" + testVuid + "\" before creating concept #" + i);
+			
+			// Create target concept 2
+			final int anotherConceptSequence = createConcept(
+					Arrays.asList(MetaData.ANONYMOUS_CONCEPT.getConceptSequence() + ""),
+					"Concept " + i + " to test VUID " + testVuid + " uniqueness",
+					false,
+					MetaData.ENGLISH_LANGUAGE.getNid() + "",
+					null,
+					Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""),
+					vhatEditToken.renewToken().getSerialized());
+			final ConceptChronology<? extends ConceptVersion<?>> anotherConcept = Get.conceptService().getConcept(anotherConceptSequence);
+
+			root = jfn.objectNode();
+			root.put("assemblageConcept", MetaData.VUID.getNid() + "");
+			root.put("referencedComponent", anotherConcept.getNid() + "");
+			root.set("columnData", toJsonObject(new DynamicSememeData[] {new DynamicSememeStringImpl(testVuid)}));
+
+			//log.info("Sememe Create Json: " + toJson(root));
+
+			//make another
+			createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
+					.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
+					.request()
+					.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
+			Assert.assertEquals(createSememeResponse.getStatus(), Status.BAD_REQUEST.getStatusCode());  //expect failure
+			
+			Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 1, "Should be exactly 1 hit on vuid 123456");
 		}
-		SememeChronology<LogicGraphSememeImpl> conceptLogicGraphSememeChronology = (SememeChronology<LogicGraphSememeImpl>)conceptLogicGraphSememeChronologyOptional.get();
-		Optional<LatestVersion<LogicGraphSememeImpl>> latestLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology)).getLatestVersion(LogicGraphSememeImpl.class, StampCoordinates.getDevelopmentLatestActiveOnly());
-		if (! latestLogicGraphSememeVersion.isPresent()) {
-			String msg = "No latest logic graph sememe version found for concept (" + newConceptResponse.nid + ")";
-			throw new RuntimeException(msg);
-		}		
-		Set<Integer> parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
-
-		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
-
-		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
-		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
-		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
-
-		// Confirm all three parents reflected in taxonomy
-		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
-		Set<Integer> parentConceptSequencesFromTaxonomy = new HashSet<>();
-		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
-			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
-		}
-		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
-		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
-		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
-		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
+		
+		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 1, "Should be exactly 1 hit on vuid 123456");
 	}
 
-	@Test void testTaxonomyPagination() {
+//	@Test
+//	public void testVHATHasParentAssociationSynchronization() throws Exception
+//	{	
+//		// Ensure metadata initialized
+//		getVHATHasParentAssociation();
+//		
+//		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
+//		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
+//
+//		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
+//		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
+//
+//		final UUID randomUuid = UUID.randomUUID();
+//
+//		final String fsn = "fsn for test concept " + randomUuid.toString();
+//		final String pt = "preferred term for test concept " + randomUuid.toString();
+//
+//		final List<String> parentIds = new ArrayList<>();
+//		parentIds.add(parent1Sequence + "");
+//		parentIds.add(parent2Sequence + "");
+//
+//		List<String> preferredDialects = new ArrayList<>();
+//		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
+//		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
+//
+//		RestConceptCreateData newConceptData = new RestConceptCreateData(
+//				parentIds,
+//				fsn,
+//				true,
+//				requiredDescriptionsLanguageSequence + "",
+//				requiredDescriptionsExtendedTypeSequence + "",
+//				preferredDialects);
+//
+//		String xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(newConceptData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//
+//		EditToken defaultEditToken = EditToken.read(getEditTokenString(TEST_SSO_TOKEN));
+//		EditToken vhatEditToken = new EditToken(
+//				defaultEditToken.getAuthorSequence(),
+//				MetaData.VHAT_EDIT.getConceptSequence(),
+//				defaultEditToken.getPathSequence(),
+//				defaultEditToken.getActiveWorkflowProcessId());
+//		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+//				.queryParam(RequestParameters.editToken, vhatEditToken.getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+//		String newConceptSequenceWrapperXml = checkFail(createConceptResponse).readEntity(String.class);
+//		RestWriteResponseConceptCreate newConceptResponse = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
+//		int newConceptSequence = newConceptResponse.sequence;
+//		RestEditToken renewedToken = newConceptResponse.editToken;
+//		// Confirm returned sequence is valid
+//		Assert.assertTrue(newConceptSequence > 0);
+//		
+//		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class,
+//				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + getVHATHasParentAssociation().getPrimordialUuid())
+//						.queryParam(RequestParameters.expand, "referencedConcept")
+//						.queryParam(RequestParameters.maxPageSize, "2")
+//						.queryParam(RequestParameters.pageNum, "1")
+//						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+//		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
+//		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
+//		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
+//		Assert.assertEquals(pagedAssociations.results.length, 2);
+//		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
+//		Assert.assertEquals(pagedAssociations.results[1].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
+//
+//		int association1Source = Get.identifierService().getConceptSequence(pagedAssociations.results[0].sourceId.nid);
+//		int association1Target = Get.identifierService().getConceptSequence(pagedAssociations.results[0].targetId.nid);
+//		
+//		int association2Source = Get.identifierService().getConceptSequence(pagedAssociations.results[1].sourceId.nid);
+//		int association2Target = Get.identifierService().getConceptSequence(pagedAssociations.results[1].targetId.nid);
+//
+//		Assert.assertEquals(association1Source, newConceptSequence);
+//		Assert.assertEquals(association2Source, newConceptSequence);
+//		
+//		Assert.assertTrue(
+//				(association1Target == parent1Sequence && association2Target == parent2Sequence)
+//				|| (association1Target == parent2Sequence && association2Target == parent1Sequence));
+//	
+//		// Test addition of new has_parent association to confirm corresponding logic graph update
+//		// TODO use AssociationsAPI
+//		int parent3Sequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
+//		ConceptChronology<? extends ConceptVersion<?>> parent3 = Get.conceptService().getConcept(parent3Sequence);
+//
+//		// Attempt to create third parent
+//		Response createThirdHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent
+//				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
+//				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
+//						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
+//								new String[] {getVHATHasParentAssociation().getPrimordialUuid().toString(), newConceptResponse.nid + "",
+//										parent3.getPrimordialUuid().toString()})));
+//		String result = checkFail(createThirdHasParentItemResponse).readEntity(String.class);
+//		RestWriteResponse createdThirdHasParentAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+//
+//		// Retrieve concept to confirm three parents in taxonomy
+//		Response taxonomyResponse = target(taxonomyRequestPath)
+//				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+//				.queryParam(RequestParameters.id, newConceptSequence)
+//				.queryParam(RequestParameters.parentHeight, 1)
+//				.queryParam(RequestParameters.childDepth, 0)
+//				.queryParam(RequestParameters.pageNum, 1)
+//				.queryParam(RequestParameters.maxPageSize, 6)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+//		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+//		Assert.assertNotNull(conceptVersionFromTaxonomy);
+//
+//		// Confirm all three parents are reflected in logic graph sememe
+//		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
+//		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
+//			String msg = "No logic graph sememe found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}
+//		SememeChronology<LogicGraphSememeImpl> conceptLogicGraphSememeChronology = (SememeChronology<LogicGraphSememeImpl>)conceptLogicGraphSememeChronologyOptional.get();
+//		Optional<LatestVersion<LogicGraphSememeImpl>> latestLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology)).getLatestVersion(LogicGraphSememeImpl.class, StampCoordinates.getDevelopmentLatestActiveOnly());
+//		if (! latestLogicGraphSememeVersion.isPresent()) {
+//			String msg = "No latest logic graph sememe version found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}		
+//		Set<Integer> parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
+//
+//		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
+//
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+//
+//		// Confirm all three parents reflected in taxonomy
+//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
+//		Set<Integer> parentConceptSequencesFromTaxonomy = new HashSet<>();
+//		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+//			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+//		}
+//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
+//
+//		// Test modification of existing has_parent association/relationship
+//		parent3Sequence = MetaData.CHINESE_LANGUAGE.getConceptSequence();
+//		parent3 = Get.conceptService().getConcept(parent3Sequence);
+//		
+//		RestDynamicSememeBase updateData = new RestDynamicSememeBase(
+//				new RestDynamicSememeData[] { new RestDynamicSememeUUID(0, parent3.getPrimordialUuid()) },
+//				true);
+//		xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(updateData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		Response updateThirdHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent
+//				+ RestPaths.updatePathComponent + createdThirdHasParentAssociationItemId.uuid.toString())
+//				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(updateData));
+//		result = checkFail(updateThirdHasParentItemResponse).readEntity(String.class);
+//		RestWriteResponse changedThirdHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+//		
+//		// Retrieve concept to confirm three parents in taxonomy
+//		taxonomyResponse = target(taxonomyRequestPath)
+//				.queryParam(RequestParameters.id, newConceptSequence)
+//				.queryParam(RequestParameters.parentHeight, 1)
+//				.queryParam(RequestParameters.childDepth, 0)
+//				.queryParam(RequestParameters.pageNum, 1)
+//				.queryParam(RequestParameters.maxPageSize, 6)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+//		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+//		Assert.assertNotNull(conceptVersionFromTaxonomy);
+//
+//		// Confirm all three parents are reflected in logic graph sememe
+//		conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
+//		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
+//			String msg = "No logic graph sememe found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}
+//		conceptLogicGraphSememeChronology = (SememeChronology<LogicGraphSememeImpl>)conceptLogicGraphSememeChronologyOptional.get();
+//		latestLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology)).getLatestVersion(LogicGraphSememeImpl.class, StampCoordinates.getDevelopmentLatestActiveOnly());
+//		if (! latestLogicGraphSememeVersion.isPresent()) {
+//			String msg = "No latest logic graph sememe version found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}		
+//		parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
+//
+//		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
+//
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+//
+//		// Confirm all three parents reflected in taxonomy
+//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
+//		parentConceptSequencesFromTaxonomy = new HashSet<>();
+//		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+//			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+//		}
+//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
+//		
+//		// Test retirement of a has_parent sememe
+//		updateData = new RestDynamicSememeBase(
+//				new RestDynamicSememeData[] { new RestDynamicSememeUUID(0, parent3.getPrimordialUuid()) },
+//				false);
+//		xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(updateData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		updateThirdHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent
+//				+ RestPaths.updatePathComponent + createdThirdHasParentAssociationItemId.uuid.toString())
+//				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(updateData));
+//		result = checkFail(updateThirdHasParentItemResponse).readEntity(String.class);
+//		changedThirdHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+//		
+//		// Retrieve concept to confirm three parents in taxonomy
+//		taxonomyResponse = target(taxonomyRequestPath)
+//				.queryParam(RequestParameters.id, newConceptSequence)
+//				.queryParam(RequestParameters.parentHeight, 1)
+//				.queryParam(RequestParameters.childDepth, 0)
+//				.queryParam(RequestParameters.pageNum, 1)
+//				.queryParam(RequestParameters.maxPageSize, 6)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+//		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+//		Assert.assertNotNull(conceptVersionFromTaxonomy);
+//
+//		// Confirm only 2 parents are reflected in logic graph sememe
+//		conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
+//		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
+//			String msg = "No logic graph sememe found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}
+//		conceptLogicGraphSememeChronology = (SememeChronology<LogicGraphSememeImpl>)conceptLogicGraphSememeChronologyOptional.get();
+//		latestLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology)).getLatestVersion(LogicGraphSememeImpl.class, StampCoordinates.getDevelopmentLatestActiveOnly());
+//		if (! latestLogicGraphSememeVersion.isPresent()) {
+//			String msg = "No latest logic graph sememe version found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}		
+//		parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
+//
+//		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 2);
+//
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
+//		Assert.assertTrue(!parentSequencesFromLogicGraph.contains(parent3Sequence));
+//
+//		// Confirm all three parents reflected in taxonomy
+//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
+//		parentConceptSequencesFromTaxonomy = new HashSet<>();
+//		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+//			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+//		}
+//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
+//		Assert.assertTrue(!parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
+//	}
+
+	@Test
+	void testTaxonomyPagination() {
 		// Construct a concept with multiple children
 		final String randomTestString = "Taxonomy Pagination Test " + UUID.randomUUID().toString();		
 		
@@ -1028,10 +1340,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertNotNull(availableAction.getOutcomeState());
 			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
+			Assert.assertTrue(PrismeRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getUser().getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
-					|| editToken.getUser().getRoles().contains(UserRole.SUPER_USER));
+					editToken.getUser().getRoles().contains(PrismeRole.safeValueOf(availableAction.getRole().enumId).get())
+					|| editToken.getUser().getRoles().contains(PrismeRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundEditAction); // definition-specific
 		Assert.assertTrue(foundCancelWorkflowAction); // definition-specific
@@ -1288,10 +1600,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			}
 			Assert.assertNotNull(availableAction.getOutcomeState()); // "Ready for Edit" or "Canceled During Review" or "Ready for Approve"
 			Assert.assertNotNull(availableAction.getRole());
-			Assert.assertTrue(UserRole.safeValueOf(availableAction.getRole().enumId).isPresent());
+			Assert.assertTrue(PrismeRole.safeValueOf(availableAction.getRole().enumId).isPresent());
 			Assert.assertTrue(
-					editToken.getUser().getRoles().contains(UserRole.safeValueOf(availableAction.getRole().enumId).get())
-					|| editToken.getUser().getRoles().contains(UserRole.SUPER_USER));
+					editToken.getUser().getRoles().contains(PrismeRole.safeValueOf(availableAction.getRole().enumId).get())
+					|| editToken.getUser().getRoles().contains(PrismeRole.SUPER_USER));
 		}
 		Assert.assertTrue(foundQaFailsAction);
 		Assert.assertTrue(foundCancelWorkflowAction);
@@ -4551,7 +4863,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 
 		//No associations in the metadata
-		Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
+		//Assert.assertTrue(result.endsWith("<restAssociationTypeVersions></restAssociationTypeVersions>"));
 
 		//Make one
 		UUID random = UUID.randomUUID();
@@ -4599,12 +4911,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		RestAssociationTypeVersion[] createdAssociations = XMLUtils.unmarshalObjectArray(RestAssociationTypeVersion.class, result);
 
-		Assert.assertEquals(1, createdAssociations.length);
-		Assert.assertEquals(createdAssociations[0].associationName, "test");
-		Assert.assertEquals(createdAssociations[0].description, description);
-		Assert.assertEquals(createdAssociations[0].associationInverseName, "inverse Test");
-		Assert.assertEquals(createdAssociations[0].associationConcept.getIdentifiers().getFirst(), createdAssociationId.uuid);
-
+		Assert.assertTrue(createdAssociations.length > 0);
+		RestAssociationTypeVersion retrievedCreatedAssociation = null;
+		for (RestAssociationTypeVersion current : createdAssociations) {
+			if (current.associationName.equals("test")
+					&& current.description.equals(description)
+					&& current.associationInverseName.equals("inverse Test")
+					&& current.associationConcept.getIdentifiers().getFirst().equals(createdAssociationId.uuid)) {
+				retrievedCreatedAssociation = current;
+			}
+		}
+		Assert.assertNotNull(retrievedCreatedAssociation);
+		
 		//test create on association item(s)
 
 		// Attempt to make one with read_only token
@@ -4614,7 +4932,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
+								new String[] {retrievedCreatedAssociation.associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
 										MetaData.AND.getNid() + ""})));
 		assertResponseStatus(createAssociationItemResponse, Status.FORBIDDEN.getStatusCode());
 
@@ -4625,7 +4943,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
+								new String[] {retrievedCreatedAssociation.associationConcept.getIdentifiers().sequence + "", MetaData.NUCC_MODULES.getNid() + "",
 										MetaData.AND.getNid() + ""})));
 		result = checkFail(createAssociationItemResponse).readEntity(String.class);
 		RestWriteResponse createdAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
@@ -4641,7 +4959,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
 		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.NUCC_MODULES.getNid());
 		Assert.assertEquals(createdAssociationItem.targetId.nid.intValue(), MetaData.AND.getNid());
-		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
+		Assert.assertEquals(createdAssociationItem.associationType.sequence, retrievedCreatedAssociation.identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "active");
 
 		// Attempt to update association item with read_only token
@@ -4691,7 +5009,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(createdAssociationItem.identifiers.getFirst(), createdAssociationItemId.uuid);
 		Assert.assertEquals(createdAssociationItem.sourceId.nid.intValue(), MetaData.NUCC_MODULES.getNid());
 		Assert.assertNull(createdAssociationItem.targetId);
-		Assert.assertEquals(createdAssociationItem.associationType.sequence, createdAssociations[0].identifiers.sequence);
+		Assert.assertEquals(createdAssociationItem.associationType.sequence, retrievedCreatedAssociation.identifiers.sequence);
 		Assert.assertEquals(createdAssociationItem.associationItemStamp.state.toString().toLowerCase(), "inactive");
 
 
@@ -4711,7 +5029,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(
 						jsonIze(new String[] {"associationType", "sourceId", "targetId"},
-								new String[] {createdAssociations[0].associationConcept.getIdentifiers().sequence + "", MetaData.LOINC_MODULES.getNid() + "", ""}))));
+								new String[] {retrievedCreatedAssociation.associationConcept.getIdentifiers().sequence + "", MetaData.LOINC_MODULES.getNid() + "", ""}))));
 
 		checkFail(target(RestPaths.writePathComponent + RestPaths.associationAPIsPathComponent
 				+ RestPaths.associationItemComponent + RestPaths.createPathComponent)
@@ -5004,110 +5322,5 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		descriptions = XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, result);
 
 		Assert.assertEquals(descriptions[0].descriptionExtendedTypeConcept.sequence.intValue(), MetaData.BOOLEAN_LITERAL.getConceptSequence());
-	}
-
-	/**
-	 * @param data
-	 * @return
-	 */
-	private JsonNode toJsonObject(DynamicSememeData[] data)
-	{
-		ArrayNode on = jfn.arrayNode();
-		for (int i = 0; i < data.length; i++)
-		{
-			if (data[i] == null)
-			{
-				on.addNull();
-			}
-			else
-			{
-				on.add(toJsonObject(data[i], i));
-			}
-		}
-		return on;
-	}
-
-	/**
-	 * @param data
-	 * @return
-	 */
-	private JsonNode toJsonObject(DynamicSememeData data, int columnNumber)
-	{
-		ObjectNode on = jfn.objectNode();
-		switch(data.getDynamicSememeDataType())
-		{
-		case ARRAY:
-			on.put("@class", RestDynamicSememeArray.class.getName());
-			ArrayNode nested = jfn.arrayNode();
-			for (DynamicSememeData x : ((DynamicSememeArray)data).getDataArray())
-			{
-				nested.add(toJsonObject(x, columnNumber));
-			}
-			on.set("data", nested);
-			break;
-		case BOOLEAN:
-			on.put("@class", RestDynamicSememeBoolean.class.getName());
-			on.put("data", ((DynamicSememeBoolean)data).getDataBoolean());
-			break;
-		case BYTEARRAY:
-			on.put("@class", RestDynamicSememeByteArray.class.getName());
-			on.put("data", ((DynamicSememeByteArray)data).getDataByteArray());
-			break;
-		case DOUBLE:
-			on.put("@class", RestDynamicSememeDouble.class.getName());
-			on.put("data", ((DynamicSememeDouble)data).getDataDouble());
-			break;
-		case FLOAT:
-			on.put("@class", RestDynamicSememeFloat.class.getName());
-			on.put("data", ((DynamicSememeFloat)data).getDataFloat());
-			break;
-		case INTEGER:
-			on.put("@class", RestDynamicSememeInteger.class.getName());
-			on.put("data", ((DynamicSememeInteger)data).getDataInteger());
-			break;
-		case LONG:
-			on.put("@class", RestDynamicSememeLong.class.getName());
-			on.put("data", ((DynamicSememeLong)data).getDataLong());
-			break;
-		case NID:
-			on.put("@class", RestDynamicSememeNid.class.getName());
-			on.put("data", ((DynamicSememeNid)data).getDataNid());
-			break;
-		case SEQUENCE:
-			on.put("@class", RestDynamicSememeSequence.class.getName());
-			on.put("data", ((DynamicSememeSequence)data).getDataSequence());
-			break;
-		case STRING:
-			on.put("@class", RestDynamicSememeString.class.getName());
-			on.put("data", ((DynamicSememeString)data).getDataString());
-			break;
-		case UUID:
-			on.put("@class", RestDynamicSememeUUID.class.getName());
-			on.put("data", ((DynamicSememeUUID)data).getDataUUID().toString());
-			break;
-		case POLYMORPHIC:
-		case UNKNOWN:
-		default :
-			throw new RuntimeException("Unsupported type");
-		}
-		on.put("columnNumber", columnNumber);
-		return on;
-	}
-
-	private String toJson(ObjectNode root) throws JsonProcessingException, IOException
-	{
-		StringWriter ws = new StringWriter();
-		new ObjectMapper().writeTree(new JsonFactory().createGenerator(ws).setPrettyPrinter(new DefaultPrettyPrinter()), root);
-		return ws.toString();
-	}
-
-	private String jsonIze(String[] names, String[] values) throws JsonProcessingException, IOException
-	{
-		ObjectNode root = jfn.objectNode();
-		for (int i = 0; i < names.length; i++)
-		{
-			root.put(names[i], values[i]);
-		}
-		return toJson(root);
 	}
 }

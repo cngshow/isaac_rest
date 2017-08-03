@@ -34,14 +34,16 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import gov.vha.isaac.rest.utils.CommonPrismeServiceUtils;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.User;
-import gov.vha.isaac.ochre.api.UserRole;
+import gov.vha.isaac.ochre.api.PrismeRole;
 
 /**
  * 
@@ -93,7 +95,7 @@ public class UserServiceUtils {
 			String[] components = arg.split(":");
 	
 			String name = null;
-			Set<UserRole> roles = new HashSet<>();
+			Set<PrismeRole> roles = new HashSet<>();
 			if (components.length == 2) {
 				if (components[0].matches("[A-Za-z][A-Za-z0-9_]*")) {
 					name = components[0].trim();
@@ -102,8 +104,8 @@ public class UserServiceUtils {
 	
 					for (int i = 0; i < roleStrings.length; ++i) {
 						final String roleString = roleStrings[i].trim();
-						if (UserRole.safeValueOf(roleString).isPresent()) {
-							roles.add(UserRole.safeValueOf(roleString).get());
+						if (PrismeRole.safeValueOf(roleString).isPresent()) {
+							roles.add(PrismeRole.safeValueOf(roleString).get());
 						} else {
 							log.warn("Not adding unsupported role \"" + roleString + "\"");
 						}
@@ -115,7 +117,7 @@ public class UserServiceUtils {
 				StringBuilder builder = new StringBuilder();
 				builder.append("{\"roles\":[");
 				boolean addedRole = false;
-				for (UserRole role : roles) {
+				for (PrismeRole role : roles) {
 					if (addedRole) {
 						builder.append(",");
 					}
@@ -254,14 +256,14 @@ public class UserServiceUtils {
 			throw new RuntimeException("Failed extracting 'user' field from json '" + jsonToUse + "'");
 		}
 
-		Set<UserRole> roleSet = new HashSet<>();
+		Set<PrismeRole> roleSet = new HashSet<>();
 		Collection<?> roles = (Collection<?>)map.get("roles");
 		for (Object roleMapObject : roles) {
 			Map<?,?> roleMap = (Map<?,?>)roleMapObject;
 			String roleName = (String)roleMap.get("name");
 			
-			if (UserRole.safeValueOf(roleName).isPresent()) {
-				roleSet.add(UserRole.safeValueOf(roleName).get());
+			if (PrismeRole.safeValueOf(roleName).isPresent()) {
+				roleSet.add(PrismeRole.safeValueOf(roleName).get());
 			} else {
 				log.warn("Not adding to user \"" + userName + "\" unsupported role \"" + roleName + "\"");
 			}
@@ -273,21 +275,21 @@ public class UserServiceUtils {
 		return newUser;
 	}
 
-	static Set<UserRole> getAllRolesFromUrl(URL url) throws JsonParseException, JsonMappingException, IOException {
-		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath());
+	static Set<PrismeRole> getAllRolesFromUrl(URL url) throws JsonParseException, JsonMappingException, IOException {
+		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(CommonPrismeServiceUtils.getTargetFromUrl(url), url.getPath());
 		
-		Set<UserRole> roles = new HashSet<>();
+		Set<PrismeRole> roles = new HashSet<>();
 		
 		ObjectMapper mapper = new ObjectMapper();
 		Object returnedObject = mapper.readValue(jsonResultString, List.class);
 		
 		for (Object roleFromPrisme : (List<?>)returnedObject) {
-			if (UserRole.safeValueOf(roleFromPrisme.toString()).isPresent()) {
-				roles.add(UserRole.safeValueOf(roleFromPrisme.toString()).get());
+			if (PrismeRole.safeValueOf(roleFromPrisme.toString()).isPresent()) {
+				roles.add(PrismeRole.safeValueOf(roleFromPrisme.toString()).get());
 			} else {
 				log.warn("Not adding unsupported role \"" + roleFromPrisme.toString() + "\"");
 			}
-			roles.add(UserRole.valueOf(roleFromPrisme.toString()));
+			roles.add(PrismeRole.valueOf(roleFromPrisme.toString()));
 		}
 		
 		return Collections.unmodifiableSet(roles);
@@ -297,7 +299,7 @@ public class UserServiceUtils {
 		Map<String, String> params = new HashMap<>();	
 		params.put("id", id);
 		params.put("password", password);
-		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
+		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(CommonPrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		Map<?, ?> map = null;
@@ -324,7 +326,9 @@ public class UserServiceUtils {
 
 		Map<String, String> params = new HashMap<>();	
 		params.put("token", ssoToken);
-		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(PrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
+		params.put("isaac_db_uuid", Get.conceptService().getDataStoreId().toString());
+		log.debug("Using token '{}' and DB '{}'", ssoToken, Get.conceptService().getDataStoreId().toString());
+		String jsonResultString = PrismeServiceUtils.getResultJsonFromPrisme(CommonPrismeServiceUtils.getTargetFromUrl(url), url.getPath(), params);
 		
 		log.debug("PRISME returned '" + jsonResultString + "'");
 		return Optional.of(UserServiceUtils.getUserFromJson(jsonResultString, ssoToken));

@@ -28,6 +28,8 @@ import javax.ws.rs.client.ClientBuilder;
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
 
+import gov.vha.isaac.rest.services.ClientService;
+
 /**
  * 
  * {@link ClientServiceImpl}

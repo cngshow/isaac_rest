@@ -31,7 +31,7 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
-import gov.vha.isaac.ochre.api.UserRoleConstants;
+import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.ochre.api.util.StringUtils;
 import gov.vha.isaac.ochre.utility.importer.VHATDeltaImport;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
@@ -49,7 +49,7 @@ import gov.vha.isaac.rest.session.SecurityUtils;
  */
 
 @Path(RestPaths.writePathComponent + RestPaths.intakeAPIsPathComponent)
-@RolesAllowed({UserRoleConstants.SUPER_USER, UserRoleConstants.EDITOR})
+@RolesAllowed({PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.EDITOR})
 public class IntakeWriteAPIs
 {
 	private static Logger log = LogManager.getLogger(IntakeWriteAPIs.class);
