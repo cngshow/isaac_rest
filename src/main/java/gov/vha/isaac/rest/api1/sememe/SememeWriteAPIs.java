@@ -20,10 +20,9 @@ package gov.vha.isaac.rest.api1.sememe;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -34,21 +33,20 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
-import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.PrismeRoleConstants;
+import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
-import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
-import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
-import gov.vha.isaac.ochre.api.component.sememe.SememeBuildListenerI;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
 import gov.vha.isaac.ochre.api.component.sememe.SememeBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
@@ -70,7 +68,6 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
-import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
@@ -83,7 +80,6 @@ import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LongSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.StringSememeImpl;
-import gov.vha.isaac.ochre.modules.vhat.VHATIsAHasParentSynchronizingSememeBuildListener;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexerConfiguration;
 import gov.vha.isaac.ochre.workflow.provider.crud.WorkflowUpdater;
 import gov.vha.isaac.rest.api.data.wrappers.RestWriteResponse;
@@ -403,6 +399,7 @@ public class SememeWriteAPIs
 							Frills.getAnnotationSememe(Get.identifierService().getSememeNid(sememeChronology.getNid()), 
 									DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence()).get();
 					
+					@SuppressWarnings({ "unchecked", "rawtypes" })
 					DynamicSememeImpl mutableVersion =(DynamicSememeImpl)((SememeChronology)(extendedDescriptionTypeSememeChronology))
 							.createMutableVersion(DynamicSememeImpl.class , State.ACTIVE, RequestInfo.get().getEditCoordinate());
 					mutableVersion.setData(new DynamicSememeData[] {new DynamicSememeUUIDImpl(Get.identifierService().getUuidPrimordialFromConceptId(passedExtendedType).get())});
@@ -711,20 +708,22 @@ public class SememeWriteAPIs
 		
 		State stateToUse = (sememeUpdateData.active == null || sememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
 		SememeChronology<?> sememeChronology = SememeAPIs.findSememeChronology(id);
-		
+
 		DynamicSememeData[] passedData = RestDynamicSememeData.translate(sememeUpdateData.columnData, true);
 		
 		SememeType type = sememeChronology.getSememeType();
 
 		checkTypeMap(type, passedData);
-		
+
 		switch (type)
 		{
 			case DYNAMIC:
 			{
 				Optional<DynamicSememeImpl> currentVersion = Optional.empty();
 				try {
-					currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<DynamicSememeImpl>)sememeChronology, DynamicSememeImpl.class);
+					@SuppressWarnings({ "unchecked" })
+					final SememeChronology<DynamicSememeImpl> dynamicSememeImplChronology = (SememeChronology<DynamicSememeImpl>)sememeChronology;
+					currentVersion = LatestVersionUtils.getLatestVersionForUpdate(dynamicSememeImplChronology, DynamicSememeImpl.class);
 
 					if (currentVersion.isPresent()) {
 						// This code short-circuits update if passed data are identical to current relevant version
@@ -743,35 +742,6 @@ public class SememeWriteAPIs
 				DynamicSememeImpl mutable = (DynamicSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableDynamicSememe.class,
 						stateToUse, RequestInfo.get().getEditCoordinate());
 				mutable.setData(passedData);
-				
-//				// Handle VHAT has_parent or logic graph sememe changes
-//				SememeBuildListenerI vHATIsAHasParentSynchronizingSememeBuildListener = LookupService.get().getService(SememeBuildListenerI.class, "VHATIsAHasParentSynchronizingSememeBuildListener");
-//				List<ObjectChronology<? extends StampedVersion>> builtObjects = new ArrayList<>();
-//				vHATIsAHasParentSynchronizingSememeBuildListener.applyAfter(RequestInfo.get().getEditCoordinate(), null, mutable, builtObjects);
-//				if (builtObjects.size() > 0) {
-//					// If builtObjects non empty then we know this was a VHAT has_parent or logic graph sememe
-//					String newData = passedData.toString();
-//					String oldData = currentVersion.isPresent() ? currentVersion.get().toString() : null;
-//					for (ObjectChronology<? extends StampedVersion> obj : builtObjects) {
-//						try {
-//							if (obj instanceof ConceptChronology) {
-//								Get.commitService().addUncommitted((ConceptChronology)obj).get();
-//							} else if (obj instanceof SememeChronology) {
-//								Get.commitService().addUncommitted((SememeChronology)obj).get();
-//							} else {
-//								String msg = "FAILED creating component dependencies for VHAT " + Get.conceptDescriptionText(mutable.getAssemblageSequence()) + " sememe " + sememeChronology.getPrimordialUuid() + ". Unexpected chronology type \"" + obj.getClass().getSimpleName() + "\"";
-//								log.error(msg);
-//								throw new RestException(msg);
-//							}
-//						} catch (RestException re) {
-//							throw re;
-//						} catch (Exception e) {
-//							String msg = "FAILED creating component dependencies for VHAT " + Get.conceptDescriptionText(mutable.getAssemblageSequence()) + " sememe " + sememeChronology.getPrimordialUuid() + ". " + e.getLocalizedMessage();
-//							log.error(msg, e);
-//							throw new RestException(msg);
-//						}
-//					}	
-//				}
 				break;
 			}
 			case LONG:
@@ -801,7 +771,6 @@ public class SememeWriteAPIs
 				LongSememeImpl mutable = (LongSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableLongSememe.class,
 						stateToUse, RequestInfo.get().getEditCoordinate());
 				mutable.setLongValue(((DynamicSememeLongImpl)passedData[0]).getDataLong());
-
 				break;
 			}
 			case MEMBER:
@@ -877,7 +846,6 @@ public class SememeWriteAPIs
 				StringSememeImpl mutable = (StringSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableStringSememe.class,
 						stateToUse, RequestInfo.get().getEditCoordinate());
 				mutable.setString(((DynamicSememeStringImpl)passedData[0]).getDataString());
-
 				break;
 			}
 			case COMPONENT_NID:
@@ -907,7 +875,6 @@ public class SememeWriteAPIs
 				ComponentNidSememeImpl mutable = (ComponentNidSememeImpl) ((SememeChronology)sememeChronology).createMutableVersion(MutableComponentNidSememe.class,
 						stateToUse, RequestInfo.get().getEditCoordinate());
 				mutable.setComponentNid(((DynamicSememeNidImpl)passedData[0]).getDataNid());
-
 				break;
 			}
 			case LOGIC_GRAPH:  //Unsupported here and below
@@ -920,8 +887,12 @@ public class SememeWriteAPIs
 
 		try
 		{
+			Optional<UUID> assemblageUuid = Get.identifierService().getUuidPrimordialFromConceptId(sememeChronology.getAssemblageSequence());
+			Optional<UUID> referencedConceptUuid = Get.identifierService().getUuidPrimordialFromConceptId(sememeChronology.getReferencedComponentNid());
+
 			Get.commitService().addUncommitted(sememeChronology).get();
-			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of sememe item " + sememeChronology.getPrimordialUuid()).get();
+			@SuppressWarnings("deprecation")
+			Optional<CommitRecord> commitRecord = Get.commitService().commit("Committing update of " + type + " sememe item " + sememeChronology.getPrimordialUuid() + " of assemblage " + assemblageUuid.orElse(null) + " for concept " + referencedConceptUuid.orElse(null)).get();
 			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
 			{
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
