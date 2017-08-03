@@ -1,10 +1,5 @@
 package gov.vha.isaac.soap;
 
-import gov.va.med.term.vhat.xml.model.ActionType;
-import gov.va.med.term.vhat.xml.model.DesignationType;
-import gov.va.med.term.vhat.xml.model.PropertyType;
-import gov.va.med.term.vhat.xml.model.Terminology;
-import gov.va.med.term.vhat.xml.model.Terminology.CodeSystem.Version.CodedConcepts.CodedConcept.Designations.Designation.SubsetMemberships.SubsetMembership;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
@@ -26,31 +21,24 @@ import gov.vha.isaac.ochre.associations.AssociationInstance;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
-import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
-import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.soap.exception.STSException;
 import gov.vha.isaac.soap.transfer.ConceptDetailTransfer;
 import gov.vha.isaac.soap.transfer.DesignationDetailTransfer;
 import gov.vha.isaac.soap.transfer.MapEntryValueListTransfer;
-import gov.vha.isaac.soap.transfer.MapEntryValueTransfer;
 import gov.vha.isaac.soap.transfer.PropertyTransfer;
 import gov.vha.isaac.soap.transfer.RelationshipTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetContentsListTransfer;
-import gov.vha.isaac.soap.transfer.ValueSetContentsTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetTransfer;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,30 +50,6 @@ public class CommonTerminology {
 	private static Logger log = LogManager.getLogger(CommonTerminology.class);
 
 	static TaxonomyService ts = Get.taxonomyService();
-
-	// TODO: Source all the following hardcoded UUID values from MetaData, once
-	// available
-	// ConceptChronology: VHAT Attribute Types <261>
-	// uuid:8287530a-b6b0-594d-bf46-252e09434f7e
-	// VHAT Metadata -> "Attribute Types"
-	final static UUID vhatPropertyTypesUUID = UUID.fromString("8287530a-b6b0-594d-bf46-252e09434f7e");
-	final static int vhatPropertyTypesNid = Get.identifierService().getNidForUuids(vhatPropertyTypesUUID);
-
-	// ConceptChronology: Refsets (ISAAC) <325>
-	// uuid:fab80263-6dae-523c-b604-c69e450d8c7f
-	// VHAT Metadata -> "Refsets"
-	final static UUID vhatRefsetTypesUUID = UUID.fromString("fab80263-6dae-523c-b604-c69e450d8c7f");
-	final static int vhatRefsetTypesNid = Get.identifierService().getNidForUuids(vhatRefsetTypesUUID);
-
-	// conceptChronology: CODE (ISAAC) <77>
-	// uuid:803af596-aea8-5184-b8e1-45f801585d17
-	final static UUID codeAssemblageUUID = MetaData.CODE.getPrimordialUuid();
-	final static int codeAssemblageConceptSeq = Get.identifierService().getConceptSequenceForUuids(codeAssemblageUUID);
-
-	// ConceptChronology: Preferred Name (ISAAC) <257>
-	// uuid:a20e5175-6257-516a-a97d-d7f9655916b8
-	// VHAT Description Types -> Preferred Name
-	final static UUID preferredNameExtendedType = UUID.fromString("a20e5175-6257-516a-a97d-d7f9655916b8");
 
 	private static StampCoordinate STAMP_COORDINATES = new StampCoordinateImpl(StampPrecedence.PATH,
 			new StampPositionImpl(System.currentTimeMillis(), MetaData.DEVELOPMENT_PATH.getConceptSequence()),
@@ -363,8 +327,8 @@ public class CommonTerminology {
 								// skip code and vuid properties - they are
 								// handled already
 								if (nestedSememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
-										&& nestedSememe.getAssemblageSequence() != codeAssemblageConceptSeq) {
-									if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(), vhatPropertyTypesNid)) {
+										&& nestedSememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence()) {
+									if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
 										PropertyTransfer property = buildProperty(nestedSememe);
 										if (property != null) {
 											properties.add(property);
@@ -372,7 +336,7 @@ public class CommonTerminology {
 									}
 
 									// a refset that doesn't represent a mapset
-									else if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(), vhatRefsetTypesNid)
+									else if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(), VHATConstants.VHAT_REFSETS.getNid())
 											&& !ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
 													IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE
 															.getNid())) {
@@ -402,7 +366,7 @@ public class CommonTerminology {
 	private static String getCodeFromNid(int componentNid) {
 
 		Optional<SememeChronology<? extends SememeVersion<?>>> sc = Get.sememeService()
-				.getSememesForComponentFromAssemblage(componentNid, codeAssemblageConceptSeq).findFirst();
+				.getSememesForComponentFromAssemblage(componentNid, MetaData.CODE.getConceptSequence()).findFirst();
 		if (sc.isPresent()) {
 			// There was a bug in the older terminology loaders which loaded
 			// 'Code' as a static sememe, but marked it as a dynamic sememe.
@@ -443,9 +407,9 @@ public class CommonTerminology {
 				.filter(s -> s.getSememeType() != SememeType.DESCRIPTION).forEach(sememe -> {
 
 					if ( sememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
-							&& sememe.getAssemblageSequence() != codeAssemblageConceptSeq ) {
+							&& sememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence() ) {
 						
-						if (ts.wasEverKindOf(sememe.getAssemblageSequence(), vhatPropertyTypesNid))
+						if (ts.wasEverKindOf(sememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid()))
 						{
 							properties.add(buildProperty(sememe));
 						}
@@ -509,7 +473,7 @@ public class CommonTerminology {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			Optional<LatestVersion<DescriptionSememe<?>>> latestVersion = ((SememeChronology) sememeChronology)
 					.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
-			if (latestVersion.isPresent() && preferredNameExtendedType.equals(Frills
+			if (latestVersion.isPresent() && VHATConstants.VHAT_PREFERRED_NAME.getPrimordialUuid().equals(Frills
 					.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeChronology.getNid()).orElse(null))) {
 				if (latestVersion.get().value().getState() == State.ACTIVE) {
 					descriptions.add(latestVersion.get().value().getText());

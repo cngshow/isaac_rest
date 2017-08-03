@@ -87,7 +87,6 @@ import gov.vha.isaac.rest.session.SecurityUtils;
 public class SearchAPIs
 {
 	private static Logger log = LogManager.getLogger();
-	private static final UUID codeConstant = UUID.fromString("803af596-aea8-5184-b8e1-45f801585d17");  //TODO this goes away when we can identify static sememes
 
 	@Context
 	private SecurityContext securityContext;
@@ -328,8 +327,9 @@ public class SearchAPIs
 						if (conSequence >= 0)
 						{
 							//TODO add a sememe on all static sememes so we can identify them.  For now, hard code a few common ones.
+							//TODO should use the new 'identifier' sememe here...
 							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SCTID.getConceptSequence() == conSequence 
-									|| Get.identifierService().getConceptSequenceForUuids(codeConstant) == conSequence)
+									|| MetaData.CODE.getConceptSequence() == conSequence)
 							{
 								return true;
 							}
