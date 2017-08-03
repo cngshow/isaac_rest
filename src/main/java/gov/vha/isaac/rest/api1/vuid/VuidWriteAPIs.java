@@ -153,7 +153,7 @@ public class VuidWriteAPIs
 				synchronized (debugModeIncrement_)
 				{
 					int start = debugModeIncrement_.get();
-					int end = debugModeIncrement_.addAndGet(blockSize * -1);
+					int end = debugModeIncrement_.addAndGet((blockSize * -1) + 1);
 					RestVuidBlockData myBlock = new RestVuidBlockData(start, end);
 					log.info("Returning fake vuid data:" + myBlock.startInclusive+ ":" + myBlock.endInclusive);
 					return myBlock;
