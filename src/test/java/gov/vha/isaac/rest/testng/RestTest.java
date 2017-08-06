@@ -71,11 +71,14 @@ import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.PrismeRole;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
@@ -109,7 +112,10 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
+import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
+import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
+import gov.vha.isaac.ochre.modules.vhat.VHATIsAHasParentSynchronizingChronologyChangeListener;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
@@ -160,6 +166,7 @@ import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionBaseUpdate;
 import gov.vha.isaac.rest.api1.data.mapping.RestMappingSetVersionClone;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResult;
 import gov.vha.isaac.rest.api1.data.search.RestSearchResultPage;
+import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeBase;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeColumnInfoCreate;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeData;
 import gov.vha.isaac.rest.api1.data.sememe.RestDynamicSememeDefinition;
@@ -730,6 +737,161 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 //	@Test
+//	public void testRetireVHATHasParentAssociation() throws Exception
+//	{	
+//		// Ensure metadata initialized
+//		getVHATHasParentAssociation();
+//		
+//		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
+//		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
+//
+//		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
+//		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
+//
+//		final UUID randomUuid = UUID.randomUUID();
+//
+//		final String fsn = "fsn for test concept " + randomUuid.toString();
+//		final String pt = "preferred term for test concept " + randomUuid.toString();
+//
+//		final List<String> parentIds = new ArrayList<>();
+//		parentIds.add(parent1Sequence + "");
+//		parentIds.add(parent2Sequence + "");
+//
+//		List<String> preferredDialects = new ArrayList<>();
+//		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
+//		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
+//
+//		RestConceptCreateData newConceptData = new RestConceptCreateData(
+//				parentIds,
+//				fsn,
+//				true,
+//				requiredDescriptionsLanguageSequence + "",
+//				requiredDescriptionsExtendedTypeSequence + "",
+//				preferredDialects);
+//
+//		String xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(newConceptData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//
+//		EditToken defaultEditToken = EditToken.read(getEditTokenString(TEST_SSO_TOKEN));
+//		EditToken vhatEditToken = new EditToken(
+//				defaultEditToken.getAuthorSequence(),
+//				MetaData.VHAT_EDIT.getConceptSequence(),
+//				defaultEditToken.getPathSequence(),
+//				defaultEditToken.getActiveWorkflowProcessId());
+//		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+//				.queryParam(RequestParameters.editToken, vhatEditToken.getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+//		String newConceptSequenceWrapperXml = checkFail(createConceptResponse).readEntity(String.class);
+//		RestWriteResponseConceptCreate newConceptResponse = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
+//		int newConceptSequence = newConceptResponse.sequence;
+//		RestEditToken renewedToken = newConceptResponse.editToken;
+//		// Confirm returned sequence is valid
+//		Assert.assertTrue(newConceptSequence > 0);
+//		
+//		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class,
+//				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + getVHATHasParentAssociation().getPrimordialUuid())
+//						.queryParam(RequestParameters.expand, "referencedConcept")
+//						.queryParam(RequestParameters.maxPageSize, "2")
+//						.queryParam(RequestParameters.pageNum, "1")
+//						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+//		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
+//		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
+//		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
+//		Assert.assertEquals(pagedAssociations.results.length, 2);
+//		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
+//		Assert.assertEquals(pagedAssociations.results[1].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
+//
+//		int association1Source = Get.identifierService().getConceptSequence(pagedAssociations.results[0].sourceId.nid);
+//		int association1Target = Get.identifierService().getConceptSequence(pagedAssociations.results[0].targetId.nid);
+//		
+//		int association2Source = Get.identifierService().getConceptSequence(pagedAssociations.results[1].sourceId.nid);
+//		int association2Target = Get.identifierService().getConceptSequence(pagedAssociations.results[1].targetId.nid);
+//
+//		Assert.assertEquals(association1Source, newConceptSequence);
+//		Assert.assertEquals(association2Source, newConceptSequence);
+//		
+//		RestAssociationItemVersion association2Sememe = pagedAssociations.results[1];
+//		Assert.assertNotNull(association2Sememe.identifiers.getFirst());
+//		
+//		Assert.assertTrue(
+//				(association1Target == parent1Sequence && association2Target == parent2Sequence)
+//				|| (association1Target == parent2Sequence && association2Target == parent1Sequence));
+//
+//		// Confirm exactly two activeHasParentSememes are attached to the concept
+//		Collection<DynamicSememeImpl> activeHasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
+//		Assert.assertEquals(activeHasParentSememes.size(), 2);
+//
+//		// Test retirement of a has_parent sememe
+//		RestDynamicSememeBase updateData = new RestDynamicSememeBase(
+//				new RestDynamicSememeData[] { new RestDynamicSememeUUID(0, association2Sememe.identifiers.getFirst()) },
+//				false);
+//		xml = null;
+//		try {
+//			xml = XMLUtils.marshallObject(updateData);
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//		Response retireSecondHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent
+//				+ RestPaths.updatePathComponent + association2Sememe.identifiers.getFirst().toString())
+//				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(updateData));
+//		String result = checkFail(retireSecondHasParentItemResponse).readEntity(String.class);
+//		RestWriteResponse retireSecondHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+//
+//		// Confirm only one activeHasParentSememe is attached to the concept
+//		activeHasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
+//		Assert.assertEquals(activeHasParentSememes.size(), 1);
+//		
+//		// Confirm only 1 parent is reflected in logic graph sememe
+//		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
+//		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
+//			String msg = "No logic graph sememe found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}
+//		SememeChronology<LogicGraphSememeImpl> conceptLogicGraphSememeChronology = (SememeChronology<LogicGraphSememeImpl>)conceptLogicGraphSememeChronologyOptional.get();
+//		Optional<LatestVersion<LogicGraphSememeImpl>> latestLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology)).getLatestVersion(LogicGraphSememeImpl.class, StampCoordinates.getDevelopmentLatestActiveOnly());
+//		if (! latestLogicGraphSememeVersion.isPresent()) {
+//			String msg = "No latest logic graph sememe version found for concept (" + newConceptResponse.nid + ")";
+//			throw new RuntimeException(msg);
+//		}		
+//		Set<Integer> parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
+//
+//		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 1);
+//
+//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
+//		Assert.assertTrue(! parentSequencesFromLogicGraph.contains(parent2Sequence));
+//
+//		// Retrieve concept to confirm only two parents in taxonomy
+//		Response taxonomyResponse = target(taxonomyRequestPath)
+//				.queryParam(RequestParameters.id, newConceptSequence)
+//				.queryParam(RequestParameters.parentHeight, 1)
+//				.queryParam(RequestParameters.childDepth, 0)
+//				.queryParam(RequestParameters.pageNum, 1)
+//				.queryParam(RequestParameters.maxPageSize, 6)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+//		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+//		Assert.assertNotNull(conceptVersionFromTaxonomy);
+//
+//		// Confirm all three parents reflected in taxonomy
+//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
+//
+//		Set<Integer> parentConceptSequencesFromTaxonomy = new HashSet<>();
+//		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+//			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+//		}
+//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 1);
+//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
+//	}
+
+//	@Test
 //	public void testVHATHasParentAssociationSynchronization() throws Exception
 //	{	
 //		// Ensure metadata initialized
@@ -829,20 +991,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		String result = checkFail(createThirdHasParentItemResponse).readEntity(String.class);
 //		RestWriteResponse createdThirdHasParentAssociationItemId = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
 //
-//		// Retrieve concept to confirm three parents in taxonomy
-//		Response taxonomyResponse = target(taxonomyRequestPath)
-//				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
-//				.queryParam(RequestParameters.id, newConceptSequence)
-//				.queryParam(RequestParameters.parentHeight, 1)
-//				.queryParam(RequestParameters.childDepth, 0)
-//				.queryParam(RequestParameters.pageNum, 1)
-//				.queryParam(RequestParameters.maxPageSize, 6)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
-//		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
-//		Assert.assertNotNull(conceptVersionFromTaxonomy);
-//
 //		// Confirm all three parents are reflected in logic graph sememe
 //		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
 //		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
@@ -862,6 +1010,20 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+//
+//		// Retrieve concept to confirm three parents in taxonomy
+//		Response taxonomyResponse = target(taxonomyRequestPath)
+//				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
+//				.queryParam(RequestParameters.id, newConceptSequence)
+//				.queryParam(RequestParameters.parentHeight, 1)
+//				.queryParam(RequestParameters.childDepth, 0)
+//				.queryParam(RequestParameters.pageNum, 1)
+//				.queryParam(RequestParameters.maxPageSize, 6)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		String taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+//		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+//		Assert.assertNotNull(conceptVersionFromTaxonomy);
 //
 //		// Confirm all three parents reflected in taxonomy
 //		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
@@ -894,19 +1056,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(updateData));
 //		result = checkFail(updateThirdHasParentItemResponse).readEntity(String.class);
 //		RestWriteResponse changedThirdHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
-//		
-//		// Retrieve concept to confirm three parents in taxonomy
-//		taxonomyResponse = target(taxonomyRequestPath)
-//				.queryParam(RequestParameters.id, newConceptSequence)
-//				.queryParam(RequestParameters.parentHeight, 1)
-//				.queryParam(RequestParameters.childDepth, 0)
-//				.queryParam(RequestParameters.pageNum, 1)
-//				.queryParam(RequestParameters.maxPageSize, 6)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
-//		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
-//		Assert.assertNotNull(conceptVersionFromTaxonomy);
 //
 //		// Confirm all three parents are reflected in logic graph sememe
 //		conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
@@ -927,6 +1076,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+//
+//		// Retrieve concept to confirm three parents in taxonomy
+//		taxonomyResponse = target(taxonomyRequestPath)
+//				.queryParam(RequestParameters.id, newConceptSequence)
+//				.queryParam(RequestParameters.parentHeight, 1)
+//				.queryParam(RequestParameters.childDepth, 0)
+//				.queryParam(RequestParameters.pageNum, 1)
+//				.queryParam(RequestParameters.maxPageSize, 6)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+//		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+//		Assert.assertNotNull(conceptVersionFromTaxonomy);
 //
 //		// Confirm all three parents reflected in taxonomy
 //		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 3);
@@ -956,19 +1118,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(updateData));
 //		result = checkFail(updateThirdHasParentItemResponse).readEntity(String.class);
 //		changedThirdHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
-//		
-//		// Retrieve concept to confirm three parents in taxonomy
-//		taxonomyResponse = target(taxonomyRequestPath)
-//				.queryParam(RequestParameters.id, newConceptSequence)
-//				.queryParam(RequestParameters.parentHeight, 1)
-//				.queryParam(RequestParameters.childDepth, 0)
-//				.queryParam(RequestParameters.pageNum, 1)
-//				.queryParam(RequestParameters.maxPageSize, 6)
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//		taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
-//		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
-//		Assert.assertNotNull(conceptVersionFromTaxonomy);
 //
 //		// Confirm only 2 parents are reflected in logic graph sememe
 //		conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
@@ -990,16 +1139,29 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2Sequence));
 //		Assert.assertTrue(!parentSequencesFromLogicGraph.contains(parent3Sequence));
 //
+//		// Retrieve concept to confirm only two parents in taxonomy
+//		taxonomyResponse = target(taxonomyRequestPath)
+//				.queryParam(RequestParameters.id, newConceptSequence)
+//				.queryParam(RequestParameters.parentHeight, 1)
+//				.queryParam(RequestParameters.childDepth, 0)
+//				.queryParam(RequestParameters.pageNum, 1)
+//				.queryParam(RequestParameters.maxPageSize, 6)
+//				.request()
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//		taxonomyResult = checkFail(taxonomyResponse).readEntity(String.class);
+//		conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
+//		Assert.assertNotNull(conceptVersionFromTaxonomy);
+//
 //		// Confirm all three parents reflected in taxonomy
 //		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
+//
 //		parentConceptSequencesFromTaxonomy = new HashSet<>();
 //		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
 //			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
 //		}
-//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 3);
+//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 2);
 //		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
 //		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
-//		Assert.assertTrue(!parentConceptSequencesFromTaxonomy.contains(parent3Sequence));
 //	}
 
 	@Test
