@@ -189,6 +189,8 @@ public class SearchAPIs
 				RestPaths.searchAppPathComponent + RestPaths.descriptionsComponent
 				+ "?" + RequestParameters.query + "=" + query;
 		
+		LookupService.get().getService(DescriptionIndexer.class).setStampCoordinate(RequestInfo.get().getStampCoordinate());
+		
 		if (StringUtils.isNotBlank(extendedDescriptionTypeId))
 		{
 			if (dt != null)
@@ -199,7 +201,7 @@ public class SearchAPIs
 			
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class)
-					.query(query, extendedDescTypeSequence, limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
+					.query(query, extendedDescTypeSequence, limit, Long.MAX_VALUE);
 			
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
@@ -211,7 +213,7 @@ public class SearchAPIs
 			log.debug("Performing description search for '" + query + "'");
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class)
-					.query(query, dt, limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
+					.query(query, dt, limit, Long.MAX_VALUE);
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
 					pageNum,
@@ -351,9 +353,10 @@ public class SearchAPIs
 		}
 		
 		DescriptionIndexer indexer = LookupService.get().getService(DescriptionIndexer.class);
+		indexer.setStampCoordinate(RequestInfo.get().getStampCoordinate());
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
-		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, Long.MAX_VALUE, filter, metadataRestrict, RequestInfo.get().getStampCoordinate());
+		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, Long.MAX_VALUE, filter, metadataRestrict);
 		
 		if (mergeOnConcepts)
 		{
@@ -535,6 +538,8 @@ public class SearchAPIs
 		}
 
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
+		
+		LookupService.get().getService(SememeIndexer.class).setStampCoordinate(RequestInfo.get().getStampCoordinate());
 	
 		if (treatAsString != null && treatAsString.booleanValue())
 		{
@@ -544,7 +549,7 @@ public class SearchAPIs
 			
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 					.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-					limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
+					limit, Long.MAX_VALUE);
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
 					pageNum,
@@ -563,7 +568,7 @@ public class SearchAPIs
 				List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
 								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns),
-								limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
+								limit, Long.MAX_VALUE);
 				return getRestSearchResultsFromOchreSearchResults(
 						ochreSearchResults,
 						pageNum,
@@ -582,7 +587,7 @@ public class SearchAPIs
 							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
 									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
 									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-									limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
+									limit, Long.MAX_VALUE);
 					return getRestSearchResultsFromOchreSearchResults(
 							ochreSearchResults,
 							pageNum,
@@ -596,7 +601,7 @@ public class SearchAPIs
 					//nope	Run it as a string search.
 					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-									limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
+									limit, Long.MAX_VALUE);
 					return getRestSearchResultsFromOchreSearchResults(
 							ochreSearchResults,
 							pageNum,
@@ -698,9 +703,11 @@ public class SearchAPIs
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
 		
+		LookupService.get().getService(SememeIndexer.class).setStampCoordinate(RequestInfo.get().getStampCoordinate());
+		
 		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-						limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
+						limit, Long.MAX_VALUE);
 		return getRestSearchResultsFromOchreSearchResults(
 				ochreSearchResults,
 				pageNum,
