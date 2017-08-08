@@ -6,8 +6,5 @@
 		id="CommonTerminologyWS" implementor="gov.vha.isaac.soap.CommonTerminologyWS"
 		endpointName="tns:stsPort"
 		serviceName="tns:ctService" address="/ctService">
-		<jaxws:features>
-			<bean class="org.apache.cxf.feature.LoggingFeature" />
-		</jaxws:features>
 	</jaxws:endpoint>
 </beans>
