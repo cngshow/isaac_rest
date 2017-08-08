@@ -92,7 +92,7 @@ public class CommonTerminology {
 
 		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(code, false,
 				null, 1000000, // limit
-				Long.MAX_VALUE, (Predicate<Integer>) null);
+				Long.MAX_VALUE, (Predicate<Integer>) null, null);
 
 		if (ochreSearchResults == null || ochreSearchResults.size() < 1) {
 			throw new STSException(String.format("No results found for %s.", code));
@@ -174,7 +174,7 @@ public class CommonTerminology {
 				new DynamicSememeStringImpl(searchString), false, processAssemblageRestrictions(sememeAssemblageId),
 				null, // toArray(dynamicSememeColumns),
 				pageSize, // limit
-				Long.MAX_VALUE);
+				Long.MAX_VALUE, null);
 
 		List<ValueSetContentsTransfer> valueSetContentsTransferList = new ArrayList<>();
 
