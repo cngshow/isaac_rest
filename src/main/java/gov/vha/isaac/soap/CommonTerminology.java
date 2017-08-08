@@ -1,7 +1,22 @@
 package gov.vha.isaac.soap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Predicate;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.h2.util.StringUtils;
+
+import gov.va.oia.terminology.converters.sharedUtils.IBDFCreationUtility.DescriptionType;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
+import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.TaxonomyService;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -10,6 +25,7 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.SememeService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeType;
 import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
@@ -17,6 +33,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
+import gov.vha.isaac.ochre.api.index.SearchResult;
 import gov.vha.isaac.ochre.associations.AssociationInstance;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -24,7 +41,13 @@ import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
+import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
+import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
+import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
+import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
+import gov.vha.isaac.rest.Util;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.soap.exception.STSException;
 import gov.vha.isaac.soap.transfer.ConceptDetailTransfer;
 import gov.vha.isaac.soap.transfer.DesignationDetailTransfer;
@@ -32,20 +55,14 @@ import gov.vha.isaac.soap.transfer.MapEntryValueListTransfer;
 import gov.vha.isaac.soap.transfer.PropertyTransfer;
 import gov.vha.isaac.soap.transfer.RelationshipTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetContentsListTransfer;
+import gov.vha.isaac.soap.transfer.ValueSetContentsTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetTransfer;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class CommonTerminology {
 	private static final int DEFAULT_PAGE_SIZE = 1000;
 	private static final int MAX_PAGE_SIZE = 5000;
+
+	public static final String AUTHORING_VERSION_NAME = "Authoring Version";
 
 	private static Logger log = LogManager.getLogger(CommonTerminology.class);
 
@@ -57,18 +74,35 @@ public class CommonTerminology {
 
 	public static ConceptDetailTransfer getConceptDetail(Long codeSystemVuid, String versionName, String code)
 			throws STSException {
+
+		// code is name
+
+		// validate input
 		prohibitAuthoringVersion(versionName);
 
 		prohibitNullValue(codeSystemVuid, "Code System VUID");
+
+		// Version name always "current" until we add versions
 		prohibitNullValue(versionName, "Version name");
+
 		prohibitNullValue(code, "Concept code");
 
 		ConceptService conceptService = Get.conceptService();
+		SememeService sememeService = Get.sememeService();
 
-		Integer nid = Frills.getNidForVUID(codeSystemVuid).orElse(0);
+		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(code, false,
+				null, 1000000, // limit
+				Long.MAX_VALUE, (Predicate<Integer>) null);
+
+		if (ochreSearchResults == null || ochreSearchResults.size() < 1) {
+			throw new STSException(String.format("No results found for %s.", code));
+		}
+
+		Optional<? extends SememeChronology<? extends SememeVersion<?>>> s = sememeService
+				.getOptionalSememe(ochreSearchResults.get(0).getNid());
 
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService
-				.getOptionalConcept(Get.identifierService().getConceptNid(nid));
+				.getOptionalConcept(Get.identifierService().getConceptNid(s.get().getReferencedComponentNid()));
 
 		ConceptDetailTransfer conceptDetailTransfer = new ConceptDetailTransfer();
 
@@ -79,12 +113,16 @@ public class CommonTerminology {
 
 			try {
 
+				// this can change based on LOINC or VHAT - how to handle all
+				// situations?
 				conceptDetailTransfer.setConceptCode(getCodeFromNid(concept.getNid()));
 				conceptDetailTransfer
 						.setConceptStatus(convertStateToString(concept.isLatestVersionActive(STAMP_COORDINATES)));
 
 				// create and populate list of PropertyTransfer objects
-				List<PropertyTransfer> properties = getConceptProperties(concept);
+//				List<PropertyTransfer> properties = getConceptProperties(concept);
+				List<PropertyTransfer> properties = getConceptProperties(ochreSearchResults.get(0).getNid());
+				
 				if (properties != null && properties.size() > 0) {
 					conceptDetailTransfer.setProperties(properties);
 				}
@@ -102,24 +140,71 @@ public class CommonTerminology {
 				}
 
 			} catch (Exception ex) {
-
+				String msg = String.format("A system error occured while searching for %s.", code);
+				log.error(msg, ex);
+				throw new STSException(msg);
 			}
+		} else {
+			throw new STSException(String.format("No results found for %s.", code));
 		}
 
 		return conceptDetailTransfer;
 	}
 
-	public static ValueSetContentsListTransfer getValueSetContents(Long subsetVuid, String versionName,
-			String designationName, String membershipStatus, Integer pageSize, Integer pageNumber) throws STSException {
+	public static ValueSetContentsListTransfer getValueSetContents(Long subsetVuid, // required
+			String versionName, // required, could be "current"
+			String designationName, // optional?
+			String membershipStatus, // optional active/inactive?
+			Integer pageSize, Integer pageNumber) throws STSException {
+
+		// validate parameters
+		subsetVuid = validateSubsetVuid(subsetVuid);
 		prohibitAuthoringVersion(versionName);
+		versionName = validateVersionName(versionName);
 
 		pageSize = validatePageSize(pageSize);
 		pageNumber = validatePageNumber(pageNumber);
 
-		ValueSetContentsListTransfer listTransfer = new ValueSetContentsListTransfer();
-		
-		//old code to be removed when code is complete 
-		
+		// create query
+		String searchString = "";
+		Set<String> sememeAssemblageId = null;
+
+		// execute query
+		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(
+				new DynamicSememeStringImpl(searchString), false, processAssemblageRestrictions(sememeAssemblageId),
+				null, // toArray(dynamicSememeColumns),
+				pageSize, // limit
+				Long.MAX_VALUE);
+
+		List<ValueSetContentsTransfer> valueSetContentsTransferList = new ArrayList<>();
+
+		// convert query results to ValueSetConentsListTransfer
+		int resultStart = (pageNumber - 1) * pageSize;
+		int resultEnd = pageNumber * pageSize;
+		int resultCounter = 0;
+
+		ValueSetContentsTransfer valueSetContents = null;
+		for (SearchResult sr : ochreSearchResults) {
+			if (sr.getScore() >= 1 && resultCounter > resultStart && resultCounter < resultEnd) {
+				valueSetContents = new ValueSetContentsTransfer();
+
+				valueSetContents.setDesignationName("designationName");
+				valueSetContents.setDesignationVuid(0L);
+				valueSetContents.setDesignationStatus("designationStatus");
+				valueSetContents.setDesignationType("designationType");
+				valueSetContents.setMembershipStatus("membershipStatus");
+				valueSetContents.setTotalNumberOfRecords(0L);
+
+				valueSetContentsTransferList.add(valueSetContents);
+				resultCounter++;
+			}
+		}
+
+		ValueSetContentsListTransfer valueSetContentsListTransfer = new ValueSetContentsListTransfer();
+		valueSetContentsListTransfer.setValueSetContentsTransfers(valueSetContentsTransferList);
+
+		// old code to be removed when code is complete
+
 		// SubsetContentsListView subsetContents =
 		// TerminologyDelegate.getSubsetContents(subsetVuid, versionName,
 		// designationName, membershipStatus, pageSize, pageNumber);
@@ -139,7 +224,31 @@ public class CommonTerminology {
 		// designationStatus, type, status));
 		// }
 		// listTransfer.setValueSetContentsTransfers(valueSetContent);
-		return listTransfer;
+		return valueSetContentsListTransfer;
+	}
+
+	private static Integer[] processAssemblageRestrictions(Set<String> sememeAssemblageIds) throws STSException {
+		Set<Integer> sequences = new HashSet<>(sememeAssemblageIds.size());
+
+		try {
+			for (String id : sememeAssemblageIds) {
+				sequences.add(Util.convertToConceptSequence(id));
+			}
+		} catch (RestException re) {
+			throw new STSException("");
+		}
+
+		return toArray(sequences);
+	}
+
+	private static String validateVersionName(String versionName) {
+		// TODO Auto-generated method stub
+		return versionName;
+	}
+
+	private static Long validateSubsetVuid(Long subsetVuid) {
+		// TODO Auto-generated method stub
+		return subsetVuid;
 	}
 
 	public static MapEntryValueListTransfer getMapEntriesFromSources(Long mapSetVuid, String mapSetVersionName,
@@ -154,9 +263,9 @@ public class CommonTerminology {
 		pageNumber = validatePageNumber(pageNumber);
 
 		MapEntryValueListTransfer mapEntryValueListTransfer = new MapEntryValueListTransfer();
-		
-		//old code to be removed when code is complete
-		
+
+		// old code to be removed when code is complete
+
 		// List<Long> mapSetsNotAcccessibleVuidList =
 		// TerminologyConfigDelegate.getMapSetsNotAccessibleVuidList();
 		// if(mapSetsNotAcccessibleVuidList.contains(mapSetVuid)){
@@ -263,14 +372,10 @@ public class CommonTerminology {
 		return pageNumber;
 	}
 
-	
 	private static void prohibitAuthoringVersion(String versionName) throws STSException {
-		// if
-		// (HibernateSessionFactory.AUTHORING_VERSION_NAME.equals(versionName))
-		// {
-		// throw new STSException(HibernateSessionFactory.AUTHORING_VERSION_NAME
-		// + " is not an allowed version name.");
-		// }
+		if (AUTHORING_VERSION_NAME.equals(versionName)) {
+			throw new STSException(AUTHORING_VERSION_NAME + " is not an allowed version name.");
+		}
 	}
 
 	private static void prohibitNullValue(Object value, String valueName) throws STSException {
@@ -310,9 +415,9 @@ public class CommonTerminology {
 							Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
 									sememe.getNid());
 							if (descType.isPresent()) {
-								// not right
-								// d.setType(getPreferredNameDescriptionType(concept.getNid()));
-								d.setType("TODO");
+								d.setType(DescriptionType
+										.parse(descriptionVersion.get().value().getDescriptionTypeConceptSequence())
+										.getConceptSpec().getConceptDescriptionText());
 							} else {
 								log.warn("No extended description type present on description "
 										+ sememe.getPrimordialUuid() + " "
@@ -328,7 +433,8 @@ public class CommonTerminology {
 								// handled already
 								if (nestedSememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
 										&& nestedSememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence()) {
-									if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
+									if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
+											VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
 										PropertyTransfer property = buildProperty(nestedSememe);
 										if (property != null) {
 											properties.add(property);
@@ -336,7 +442,8 @@ public class CommonTerminology {
 									}
 
 									// a refset that doesn't represent a mapset
-									else if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(), VHATConstants.VHAT_REFSETS.getNid())
+									else if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
+											VHATConstants.VHAT_REFSETS.getNid())
 											&& !ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
 													IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE
 															.getNid())) {
@@ -380,10 +487,9 @@ public class CommonTerminology {
 				if (sv.isPresent()) {
 					return sv.get().value().getString();
 				}
-			} 
+			}
 			// this path will become dead code, after the data is fixed.
-			else if (sc.get().getSememeType() == SememeType.DYNAMIC) 
-			{
+			else if (sc.get().getSememeType() == SememeType.DYNAMIC) {
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				Optional<LatestVersion<? extends DynamicSememe>> sv = ((SememeChronology) sc.get())
 						.getLatestVersion(DynamicSememe.class, STAMP_COORDINATES);
@@ -399,18 +505,38 @@ public class CommonTerminology {
 		return null;
 	}
 
-	private static List<PropertyTransfer> getConceptProperties(ConceptChronology<?> concept) {
+//	private static List<PropertyTransfer> getConceptProperties(ConceptChronology<?> concept) {
+//
+//		List<PropertyTransfer> properties = new ArrayList<>();
+//
+//		Get.sememeService().getSememesForComponent(concept.getNid())
+//				.filter(s -> s.getSememeType() != SememeType.DESCRIPTION).forEach(sememe -> {
+//
+//					if (sememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
+//							&& sememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence() && ts.wasEverKindOf(
+//									sememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
+//						PropertyTransfer property = buildProperty(sememe);
+//						if (property != null) {
+//							properties.add(buildProperty(sememe));
+//						}
+//					}
+//				});
+//
+//		return properties;
+//	}
+	
+	private static List<PropertyTransfer> getConceptProperties(int componentNid) {
 
 		List<PropertyTransfer> properties = new ArrayList<>();
 
-		Get.sememeService().getSememesForComponent(concept.getNid())
+		Get.sememeService().getSememesForComponent(componentNid)
 				.filter(s -> s.getSememeType() != SememeType.DESCRIPTION).forEach(sememe -> {
 
-					if ( sememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
-							&& sememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence() ) {
-						
-						if (ts.wasEverKindOf(sememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid()))
-						{
+					if (sememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
+							&& sememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence() && ts.wasEverKindOf(
+									sememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
+						PropertyTransfer property = buildProperty(sememe);
+						if (property != null) {
 							properties.add(buildProperty(sememe));
 						}
 					}
@@ -433,7 +559,7 @@ public class CommonTerminology {
 					.getLatestVersion(DynamicSememe.class, STAMP_COORDINATES);
 			if (sememeVersion.isPresent() && sememeVersion.get().value().getData() != null
 					&& sememeVersion.get().value().getData().length > 0) {
-				
+
 				if (!"has_parent".equals(sememeVersion.get().value().getData())) {
 					property.setValue(sememeVersion.get().value().getData()[0] == null ? null
 							: sememeVersion.get().value().getData()[0].dataToString());
@@ -445,7 +571,7 @@ public class CommonTerminology {
 			Optional<LatestVersion<? extends StringSememe>> sememeVersion = ((SememeChronology) sememe)
 					.getLatestVersion(StringSememe.class, STAMP_COORDINATES);
 			if (sememeVersion.isPresent()) {
-				
+
 				if (!"has_parent".equals(sememeVersion.get().value().getString())) {
 					property.setValue(sememeVersion.get().value().getString());
 					property.setStatus(convertStateToString(sememeVersion.get().value().getState()));
@@ -553,21 +679,19 @@ public class CommonTerminology {
 
 		for (AssociationInstance ai : AssociationUtilities.getSourceAssociations(concept.getNid(), STAMP_COORDINATES)) {
 			RelationshipTransfer relationship = new RelationshipTransfer();
+			String name = null;
+
 			try {
-				String code = null;
 
 				if (ai.getTargetComponent().isPresent()) {
-					code = getCodeFromNid(
+					name = getCodeFromNid(
 							Get.identifierService().getNidForUuids(ai.getTargetComponent().get().getPrimordialUuid()));
-					if (code == null || code.isEmpty()) {
-						log.warn("Failed to find new target code for concept "
-								+ ai.getTargetComponent().get().getPrimordialUuid());
-					} else {
-						relationship.setCode(code);
+					if (name != null && name.isEmpty()) {
+						relationship.setName(name);
 					}
 				}
 
-				relationship.setName(ai.getAssociationType().getAssociationName());
+				relationship.setCode(ai.getAssociationType().getAssociationName());
 				relationship.setStatus(convertStateToString(ai.getData().getState()));
 				relationship.setType(getPreferredNameDescriptionType(ai.getTargetComponent().get().getNid()));
 
@@ -588,4 +712,12 @@ public class CommonTerminology {
 	private static String convertStateToString(Boolean state) {
 		return (state) ? "Active" : "Inactive";
 	}
+
+	private static Integer[] toArray(Set<Integer> ints) {
+		if (ints == null) {
+			return null;
+		}
+		return ints.toArray(new Integer[ints.size()]);
+	}
+
 }

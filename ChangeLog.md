@@ -3,8 +3,12 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/08/?? - 4.17 - PENDING
+* 2017/08/?? - 4.18 - PENDING
+    *
+
+* 2017/08/07 - 4.17
     * Fixed system/extendedDescriptionTypes so it doesn't return VHAT extended types for the concept Isaac Module.
+    * Fix for issue 567259. Application is logging SOAP details to catalina.out.
 
 * 2017/08/03 - 4.16
     * Increment fake vuids within a session (vuids generated when a real vuid server couldn't be contacted)
