@@ -815,6 +815,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertEquals(association1Source, newConceptSequence);
 //		Assert.assertEquals(association2Source, newConceptSequence);
 //		
+//		RestAssociationItemVersion association1Sememe = pagedAssociations.results[0];
+//		
 //		RestAssociationItemVersion association2Sememe = pagedAssociations.results[1];
 //		Assert.assertNotNull(association2Sememe.identifiers.getFirst());
 //		
@@ -826,21 +828,18 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Collection<DynamicSememeImpl> activeHasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
 //		Assert.assertEquals(activeHasParentSememes.size(), 2);
 //
+//		// Ensure retired sememe version has different time
+//		Thread.sleep(1000);
+//		Get.commitService().commit("dummy commit").get();
+//		Thread.sleep(1000);
+//		
 //		// Test retirement of a has_parent sememe
-//		RestDynamicSememeBase updateData = new RestDynamicSememeBase(
-//				new RestDynamicSememeData[] { new RestDynamicSememeUUID(0, association2Sememe.identifiers.getFirst()) },
-//				false);
-//		xml = null;
-//		try {
-//			xml = XMLUtils.marshallObject(updateData);
-//		} catch (JAXBException e) {
-//			throw new RuntimeException(e);
-//		}
-//		Response retireSecondHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent
-//				+ RestPaths.updatePathComponent + association2Sememe.identifiers.getFirst().toString())
+//		Response retireSecondHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent
+//				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + association2Sememe.identifiers.getFirst().toString())
+//				.queryParam(RequestParameters.active, false + "")
 //				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
 //				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(updateData));
+//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).put(Entity.xml(""));
 //		String result = checkFail(retireSecondHasParentItemResponse).readEntity(String.class);
 //		RestWriteResponse retireSecondHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
 //
@@ -867,7 +866,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
 //		Assert.assertTrue(! parentSequencesFromLogicGraph.contains(parent2Sequence));
 //
-//		// Retrieve concept to confirm only two parents in taxonomy
+//		// Retrieve concept to confirm only one parent in taxonomy
 //		Response taxonomyResponse = target(taxonomyRequestPath)
 //				.queryParam(RequestParameters.id, newConceptSequence)
 //				.queryParam(RequestParameters.parentHeight, 1)
@@ -880,15 +879,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		RestConceptVersion conceptVersionFromTaxonomy = XMLUtils.unmarshalObject(RestConceptVersion.class, taxonomyResult);
 //		Assert.assertNotNull(conceptVersionFromTaxonomy);
 //
-//		// Confirm all three parents reflected in taxonomy
-//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
+//		// Confirm only one parent reflected in taxonomy
+//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 1);
 //
-//		Set<Integer> parentConceptSequencesFromTaxonomy = new HashSet<>();
-//		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
-//			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
-//		}
-//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 1);
-//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
+//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().get(0).getConChronology().getIdentifiers().nid, association1Sememe.targetConcept.getIdentifiers().nid);
 //	}
 
 //	@Test
