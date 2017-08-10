@@ -76,6 +76,7 @@ import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
+import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
@@ -885,81 +886,126 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().get(0).getConChronology().getIdentifiers().nid, association1Sememe.targetConcept.getIdentifiers().nid);
 //	}
 
-//	@Test
-//	public void testVHATHasParentAssociationSynchronization() throws Exception
-//	{	
-//		// Ensure metadata initialized
-//		getVHATHasParentAssociation();
-//		
-//		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
-//		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
-//
-//		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
-//		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
-//
-//		final UUID randomUuid = UUID.randomUUID();
-//
-//		final String fsn = "fsn for test concept " + randomUuid.toString();
-//		final String pt = "preferred term for test concept " + randomUuid.toString();
-//
-//		final List<String> parentIds = new ArrayList<>();
-//		parentIds.add(parent1Sequence + "");
-//		parentIds.add(parent2Sequence + "");
-//
-//		List<String> preferredDialects = new ArrayList<>();
-//		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
-//		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
-//
-//		RestConceptCreateData newConceptData = new RestConceptCreateData(
-//				parentIds,
-//				fsn,
-//				true,
-//				requiredDescriptionsLanguageSequence + "",
-//				requiredDescriptionsExtendedTypeSequence + "",
-//				preferredDialects);
-//
-//		String xml = null;
-//		try {
-//			xml = XMLUtils.marshallObject(newConceptData);
-//		} catch (JAXBException e) {
-//			throw new RuntimeException(e);
-//		}
-//
-//		EditToken defaultEditToken = EditToken.read(getEditTokenString(TEST_SSO_TOKEN));
-//		EditToken vhatEditToken = new EditToken(
-//				defaultEditToken.getAuthorSequence(),
-//				MetaData.VHAT_EDIT.getConceptSequence(),
-//				defaultEditToken.getPathSequence(),
-//				defaultEditToken.getActiveWorkflowProcessId());
-//		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
-//				.queryParam(RequestParameters.editToken, vhatEditToken.getSerialized())
-//				.request()
-//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-//		String newConceptSequenceWrapperXml = checkFail(createConceptResponse).readEntity(String.class);
-//		RestWriteResponseConceptCreate newConceptResponse = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
-//		int newConceptSequence = newConceptResponse.sequence;
-//		RestEditToken renewedToken = newConceptResponse.editToken;
-//		// Confirm returned sequence is valid
-//		Assert.assertTrue(newConceptSequence > 0);
-//		
+	@Test
+	public void testVHATHasParentAssociationSynchronization() throws Exception
+	{	
+		// Ensure metadata initialized
+		getVHATHasParentAssociation();
+		
+		final ConceptSpecification parent1 = MetaData.SNOROCKET_CLASSIFIER;
+		final ConceptSpecification parent2 = MetaData.ENGLISH_LANGUAGE;
+
+		final int requiredDescriptionsLanguageSequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
+		final int requiredDescriptionsExtendedTypeSequence = requiredDescriptionsLanguageSequence;
+
+		final UUID randomUuid = UUID.randomUUID();
+
+		final String fsn = "fsn for testVHATHasParentAssociationSynchronization test concept " + randomUuid.toString();
+		final String pt = "preferred term for testVHATHasParentAssociationSynchronization test concept " + randomUuid.toString();
+
+		final List<String> parentIds = new ArrayList<>();
+		parentIds.add(parent1.getConceptSequence() + "");
+		parentIds.add(parent2.getConceptSequence() + "");
+
+		List<String> preferredDialects = new ArrayList<>();
+		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
+		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
+
+		RestConceptCreateData newConceptData = new RestConceptCreateData(
+				parentIds,
+				fsn,
+				true,
+				requiredDescriptionsLanguageSequence + "",
+				requiredDescriptionsExtendedTypeSequence + "",
+				preferredDialects);
+
+		String xml = null;
+		try {
+			xml = XMLUtils.marshallObject(newConceptData);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+
+		EditToken defaultEditToken = EditToken.read(getEditTokenString(TEST_SSO_TOKEN));
+		EditToken vhatEditToken = new EditToken(
+				defaultEditToken.getAuthorSequence(),
+				MetaData.VHAT_EDIT.getConceptSequence(),
+				defaultEditToken.getPathSequence(),
+				defaultEditToken.getActiveWorkflowProcessId());
+		Response createConceptResponse = target(RestPaths.conceptCreateAppPathComponent)
+				.queryParam(RequestParameters.editToken, vhatEditToken.getSerialized())
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
+		String newConceptSequenceWrapperXml = checkFail(createConceptResponse).readEntity(String.class);
+		RestWriteResponseConceptCreate newConceptResponse = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
+		int newConceptSequence = newConceptResponse.sequence;
+		RestEditToken renewedToken = newConceptResponse.editToken;
+		// Confirm returned sequence is valid
+		Assert.assertTrue(newConceptSequence > 0);
+		
+		Collection<DynamicSememeImpl> hasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
+		DynamicSememeImpl foundAssociation1 = null;
+		DynamicSememeImpl foundAssociation2 = null;
+		for (DynamicSememeImpl association : hasParentSememes) {
+			if (association.getReferencedComponentNid() == newConceptResponse.nid) {
+				// Only VHAT has_parent associations should be on this concept (though that could change in the future)
+				Assert.assertEquals(association.getAssemblageSequence(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
+				
+				UUID targetUuid = ((DynamicSememeUUIDImpl)association.getData()[0]).getDataUUID();
+				
+				if (targetUuid.equals(parent1.getPrimordialUuid())) {
+					foundAssociation1 = association;
+				} else if (targetUuid.equals(parent2.getPrimordialUuid())) {
+					foundAssociation2 = association;
+				} else {
+					Assert.assertTrue(
+							targetUuid.equals(parent1.getPrimordialUuid())
+							|| targetUuid.equals(parent2.getPrimordialUuid()));
+				}
+			}
+		}
+		Assert.assertNotNull(foundAssociation1);
+		Assert.assertNotNull(foundAssociation2);
+		
 //		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class,
 //				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + getVHATHasParentAssociation().getPrimordialUuid())
-//						.queryParam(RequestParameters.expand, "referencedConcept")
-//						.queryParam(RequestParameters.maxPageSize, "2")
+//						.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept + "," + ExpandUtil.source + "," + ExpandUtil.target)
+//						.queryParam(RequestParameters.maxPageSize, "10")
 //						.queryParam(RequestParameters.pageNum, "1")
 //						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
 //		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
 //		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
-//		Assert.assertEquals(pagedAssociations.paginationData.approximateTotal, 2);
-//		Assert.assertEquals(pagedAssociations.results.length, 2);
-//		Assert.assertEquals(pagedAssociations.results[0].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
-//		Assert.assertEquals(pagedAssociations.results[1].associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
 //
-//		int association1Source = Get.identifierService().getConceptSequence(pagedAssociations.results[0].sourceId.nid);
-//		int association1Target = Get.identifierService().getConceptSequence(pagedAssociations.results[0].targetId.nid);
-//		
-//		int association2Source = Get.identifierService().getConceptSequence(pagedAssociations.results[1].sourceId.nid);
-//		int association2Target = Get.identifierService().getConceptSequence(pagedAssociations.results[1].targetId.nid);
+//		Assert.assertTrue(pagedAssociations.paginationData.approximateTotal >= 2);
+//		Assert.assertTrue(pagedAssociations.results.length >= 2);
+//
+//		List<RestAssociationItemVersion> relevantAssociations = new ArrayList<>();
+//		RestAssociationItemVersion foundAssociation1 = null;
+//		RestAssociationItemVersion foundAssociation2 = null;
+//		for (RestAssociationItemVersion association : pagedAssociations.results) {
+//			if (association.sourceId.sequence == newConceptSequence) {
+//				// Only VHAT has_parent associations should be on this concept (though that could change in the future)
+//				Assert.assertEquals(association.associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
+//				relevantAssociations.add(association);
+//				if (association.targetId.sequence == parent1Sequence) {
+//					foundAssociation1 = association;
+//				} else if (association.targetId.sequence == parent2Sequence) {
+//					foundAssociation2 = association;
+//				} else {
+//					Assert.assertTrue(
+//							association.targetId.sequence == parent1Sequence
+//							|| association.targetId.sequence == parent2Sequence);
+//				}
+//			}
+//		}
+//		Assert.assertNotNull(foundAssociation1);
+//		Assert.assertNotNull(foundAssociation2);
+//
+//		int association1Source = foundAssociation1.sourceId.sequence;
+//		int association1Target = foundAssociation1.targetId.sequence;
+//
+//		int association2Source = foundAssociation2.sourceId.sequence;
+//		int association2Target = foundAssociation2.targetId.sequence;
 //
 //		Assert.assertEquals(association1Source, newConceptSequence);
 //		Assert.assertEquals(association2Source, newConceptSequence);
@@ -967,9 +1013,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertTrue(
 //				(association1Target == parent1Sequence && association2Target == parent2Sequence)
 //				|| (association1Target == parent2Sequence && association2Target == parent1Sequence));
-//	
-//		// Test addition of new has_parent association to confirm corresponding logic graph update
-//		// TODO use AssociationsAPI
+	
+		// Test addition of new has_parent association to confirm corresponding logic graph update
+		// TODO use AssociationsAPI
 //		int parent3Sequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
 //		ConceptChronology<? extends ConceptVersion<?>> parent3 = Get.conceptService().getConcept(parent3Sequence);
 //
@@ -1156,7 +1202,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 //		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 2);
 //		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1Sequence));
 //		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2Sequence));
-//	}
+	}
 
 	@Test
 	void testTaxonomyPagination() {

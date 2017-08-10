@@ -25,13 +25,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import gov.vha.isaac.ochre.api.State;
-import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
-import gov.vha.isaac.ochre.api.externalizable.OchreExternalizableObjectType;
 import gov.vha.isaac.ochre.api.identity.StampedVersion;
 import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -48,41 +47,6 @@ public class LatestVersionUtils {
 	
 	private LatestVersionUtils() {}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static <T extends ConceptVersion<T>> Optional<T> getLatestVersion(ConceptChronology<T> conceptChronology, StampCoordinate sc) {
-		return getLatestVersion((ConceptChronology)conceptChronology, ConceptVersion.class, sc);
-	}
-
-	public static <T extends StampedVersion> Optional<T> getLatestVersion(ObjectChronology<T> objectChronology, Class<T> clazz, StampCoordinate sc) {
-		Optional<LatestVersion<T>> latestVersionOptional = objectChronology.getLatestVersion(clazz, sc);
-
-		if (latestVersionOptional.isPresent()) {
-			if (latestVersionOptional.get().contradictions().isPresent()) {
-				// TODO properly handle contradictions
-				final OchreExternalizableObjectType objectType = objectChronology.getOchreObjectType();
-				String detail = "object";
-				switch (objectType) {
-				case SEMEME:
-					detail = objectType + " UUID=" + objectChronology.getPrimordialUuid() + ", SEMEME SEQ=" + ((SememeChronology<?>)objectChronology).getSememeSequence() + ", REF COMP NID=" + ((SememeChronology<?>)objectChronology).getReferencedComponentNid();
-					break;
-				case CONCEPT:
-				case STAMP_ALIAS:
-				case STAMP_COMMENT:
-					detail = objectType + " UUID=" + objectChronology.getPrimordialUuid();
-					break;
-				default:
-					throw new RuntimeException("Unsupported OchreExternalizableObjectType for passed ObjectChronology UUID=" + objectChronology.getPrimordialUuid());
-				}
-				log.warn("Getting latest version of " + detail + " with " + latestVersionOptional.get().contradictions().get().size() 
-						+ " version contradictions");
-			}
-			
-			return Optional.of(latestVersionOptional.get().value());
-		}
-
-		return Optional.empty();
-	}
-
 	/**
 	 * Calls {@link #getLatestVersionForUpdate(ObjectChronology, Class)} with ConceptVersion.class for the Class
 	 * @param conceptChronology
@@ -92,6 +56,17 @@ public class LatestVersionUtils {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T extends ConceptVersion<T>> Optional<T> getLatestVersionForUpdate(ConceptChronology<T> conceptChronology) throws RestException {
 		return getLatestVersionForUpdate((ConceptChronology)conceptChronology, ConceptVersion.class);
+	}
+
+	/**
+	 * Calls {@link #getLatestVersionForUpdate(ObjectChronology, Class)} with SememeVersion.class for the Class
+	 * @param sememeChronology
+	 * @return
+	 * @throws RestException
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T extends SememeVersion<T>> Optional<T> getLatestVersionForUpdate(SememeChronology<T> sememeChronology) throws RestException {
+		return getLatestVersionForUpdate((SememeChronology)sememeChronology, SememeVersion.class);
 	}
 
 	/**
@@ -108,10 +83,10 @@ public class LatestVersionUtils {
 				RequestInfo.get().getEditCoordinate().getModuleSequence(),
 				null).makeAnalog(State.values()).makeAnalog(Long.MAX_VALUE);
 		
-		Optional<T> latestVersion =  getLatestVersion(objectChronology, clazz, sc);
+		Optional<T> latestVersion =  Frills.getLatestVersion(objectChronology, clazz, sc);
 		if (!latestVersion.isPresent()) {
 			sc = RequestInfo.get().getStampCoordinate().makeAnalog(State.values()).makeAnalog(Long.MAX_VALUE);
-			latestVersion = getLatestVersion(objectChronology, clazz, sc);
+			latestVersion = Frills.getLatestVersion(objectChronology, clazz, sc);
 		}
 		
 		return latestVersion;

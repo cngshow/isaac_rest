@@ -51,6 +51,7 @@ import gov.vha.isaac.ochre.api.component.concept.ConceptBuilderService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
@@ -199,7 +200,16 @@ public class ConceptWriteAPIs
 			
 			List<ObjectChronology<? extends StampedVersion>> createdObjects = new ArrayList<>();
 			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
-
+			
+			Get.commitService().addUncommitted(newCon).get();
+			for (ObjectChronology<? extends StampedVersion> object : createdObjects) {
+				if (object instanceof ConceptChronology) {
+					Get.commitService().addUncommitted((ConceptChronology<?>)object).get();
+				} else { // SememeChronology or FAIL
+					Get.commitService().addUncommitted((SememeChronology<?>)object).get();
+				}
+			}
+			
 			Optional<CommitRecord> commitRecord = Get.commitService().commit(
 					"creating new concept: NID=" + newCon.getNid() + ", FSN=" + creationData.fsn).get();
 			
