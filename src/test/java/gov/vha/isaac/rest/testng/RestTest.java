@@ -943,9 +943,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
 		
+		// Retrieve VHAT has_parent association sememes directly
 		Collection<DynamicSememeImpl> hasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
-		DynamicSememeImpl foundAssociation1 = null;
-		DynamicSememeImpl foundAssociation2 = null;
+		DynamicSememeImpl foundAssociationSememe1 = null;
+		DynamicSememeImpl foundAssociationSememe2 = null;
 		for (DynamicSememeImpl association : hasParentSememes) {
 			if (association.getReferencedComponentNid() == newConceptResponse.nid) {
 				// Only VHAT has_parent associations should be on this concept (though that could change in the future)
@@ -954,9 +955,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				UUID targetUuid = ((DynamicSememeUUIDImpl)association.getData()[0]).getDataUUID();
 				
 				if (targetUuid.equals(parent1.getPrimordialUuid())) {
-					foundAssociation1 = association;
+					foundAssociationSememe1 = association;
 				} else if (targetUuid.equals(parent2.getPrimordialUuid())) {
-					foundAssociation2 = association;
+					foundAssociationSememe2 = association;
 				} else {
 					Assert.assertTrue(
 							targetUuid.equals(parent1.getPrimordialUuid())
@@ -964,55 +965,51 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				}
 			}
 		}
+		Assert.assertNotNull(foundAssociationSememe1);
+		Assert.assertNotNull(foundAssociationSememe2);
+		
+		// Retrieve associations with new concept as source as array of RestAssociationItemVersion 
+		RestAssociationItemVersion[] retrievedHasParentAssociations = XMLUtils.unmarshalObjectArray(RestAssociationItemVersion.class,
+				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithSourceComponent + newConceptResponse.nid)
+						.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept)
+						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
+		Assert.assertNotNull(retrievedHasParentAssociations);
+
+		Assert.assertTrue(retrievedHasParentAssociations.length >= 2);
+
+		List<RestAssociationItemVersion> relevantAssociations = new ArrayList<>();
+		RestAssociationItemVersion foundAssociation1 = null;
+		RestAssociationItemVersion foundAssociation2 = null;
+		for (RestAssociationItemVersion association : retrievedHasParentAssociations) {
+			Assert.assertEquals(association.sourceId.sequence.intValue(), newConceptSequence);
+			if (association.associationType.sequence.intValue() == Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid())) {
+				relevantAssociations.add(association);
+				if (association.targetId.sequence == parent1.getConceptSequence()) {
+					foundAssociation1 = association;
+				} else if (association.targetId.sequence == parent2.getConceptSequence()) {
+					foundAssociation2 = association;
+				} else {
+					Assert.assertTrue(
+							association.targetId.sequence == parent1.getConceptSequence()
+							|| association.targetId.sequence == parent2.getConceptSequence());
+				}
+			}
+		}
 		Assert.assertNotNull(foundAssociation1);
 		Assert.assertNotNull(foundAssociation2);
+
+		int association1Source = foundAssociation1.sourceId.sequence;
+		int association1Target = foundAssociation1.targetId.sequence;
+
+		int association2Source = foundAssociation2.sourceId.sequence;
+		int association2Target = foundAssociation2.targetId.sequence;
+
+		Assert.assertEquals(association1Source, newConceptSequence);
+		Assert.assertEquals(association2Source, newConceptSequence);
 		
-//		RestAssociationItemVersionPage pagedAssociations = XMLUtils.unmarshalObject(RestAssociationItemVersionPage.class,
-//				checkFail(target(RestPaths.associationAPIsPathComponent + RestPaths.associationsWithTypeComponent + getVHATHasParentAssociation().getPrimordialUuid())
-//						.queryParam(RequestParameters.expand, ExpandUtil.referencedConcept + "," + ExpandUtil.source + "," + ExpandUtil.target)
-//						.queryParam(RequestParameters.maxPageSize, "10")
-//						.queryParam(RequestParameters.pageNum, "1")
-//						.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()).readEntity(String.class));
-//		Assert.assertTrue(pagedAssociations.paginationData.totalIsExact);
-//		Assert.assertEquals(pagedAssociations.paginationData.pageNum, 1);
-//
-//		Assert.assertTrue(pagedAssociations.paginationData.approximateTotal >= 2);
-//		Assert.assertTrue(pagedAssociations.results.length >= 2);
-//
-//		List<RestAssociationItemVersion> relevantAssociations = new ArrayList<>();
-//		RestAssociationItemVersion foundAssociation1 = null;
-//		RestAssociationItemVersion foundAssociation2 = null;
-//		for (RestAssociationItemVersion association : pagedAssociations.results) {
-//			if (association.sourceId.sequence == newConceptSequence) {
-//				// Only VHAT has_parent associations should be on this concept (though that could change in the future)
-//				Assert.assertEquals(association.associationType.sequence.intValue(), Get.identifierService().getConceptSequenceForUuids(getVHATHasParentAssociation().getPrimordialUuid()));
-//				relevantAssociations.add(association);
-//				if (association.targetId.sequence == parent1Sequence) {
-//					foundAssociation1 = association;
-//				} else if (association.targetId.sequence == parent2Sequence) {
-//					foundAssociation2 = association;
-//				} else {
-//					Assert.assertTrue(
-//							association.targetId.sequence == parent1Sequence
-//							|| association.targetId.sequence == parent2Sequence);
-//				}
-//			}
-//		}
-//		Assert.assertNotNull(foundAssociation1);
-//		Assert.assertNotNull(foundAssociation2);
-//
-//		int association1Source = foundAssociation1.sourceId.sequence;
-//		int association1Target = foundAssociation1.targetId.sequence;
-//
-//		int association2Source = foundAssociation2.sourceId.sequence;
-//		int association2Target = foundAssociation2.targetId.sequence;
-//
-//		Assert.assertEquals(association1Source, newConceptSequence);
-//		Assert.assertEquals(association2Source, newConceptSequence);
-//		
-//		Assert.assertTrue(
-//				(association1Target == parent1Sequence && association2Target == parent2Sequence)
-//				|| (association1Target == parent2Sequence && association2Target == parent1Sequence));
+		Assert.assertTrue(
+				(association1Target == parent1.getConceptSequence() && association2Target == parent2.getConceptSequence())
+				|| (association1Target == parent2.getConceptSequence() && association2Target == parent1.getConceptSequence()));
 	
 		// Test addition of new has_parent association to confirm corresponding logic graph update
 		// TODO use AssociationsAPI
