@@ -201,15 +201,6 @@ public class ConceptWriteAPIs
 			List<ObjectChronology<? extends StampedVersion>> createdObjects = new ArrayList<>();
 			ConceptChronology<? extends ConceptVersion<?>> newCon = builder.build(RequestInfo.get().getEditCoordinate(), ChangeCheckerMode.ACTIVE, createdObjects).getNoThrow();
 			
-			Get.commitService().addUncommitted(newCon).get();
-			for (ObjectChronology<? extends StampedVersion> object : createdObjects) {
-				if (object instanceof ConceptChronology) {
-					Get.commitService().addUncommitted((ConceptChronology<?>)object).get();
-				} else { // SememeChronology or FAIL
-					Get.commitService().addUncommitted((SememeChronology<?>)object).get();
-				}
-			}
-			
 			Optional<CommitRecord> commitRecord = Get.commitService().commit(
 					"creating new concept: NID=" + newCon.getNid() + ", FSN=" + creationData.fsn).get();
 			
