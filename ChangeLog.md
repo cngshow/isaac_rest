@@ -4,7 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.18 - PENDING
-    *
+    * Added SOAP web service ListMapEntriesFromSource.
 
 * 2017/08/07 - 4.17
     * Fixed system/extendedDescriptionTypes so it doesn't return VHAT extended types for the concept Isaac Module.
