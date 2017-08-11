@@ -19,6 +19,7 @@
 package gov.vha.isaac.rest.api1.component;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.PUT;
@@ -143,27 +144,37 @@ public class ComponentWriteAPIs
 		if (objectToCommit != null)
 		{
 			if (objectToCommit.getOchreObjectType() == OchreExternalizableObjectType.CONCEPT) {
-				Get.commitService().addUncommitted((ConceptChronology)objectToCommit);
+				try {
+					Get.commitService().addUncommitted((ConceptChronology)objectToCommit).get();
+				} catch (InterruptedException | ExecutionException e) {
+					throw new RuntimeException("Cannot addUncommitted() for commit concept with id=" + id, e);
+				}
 			} else if (objectToCommit.getOchreObjectType() == OchreExternalizableObjectType.SEMEME) {
-				Get.commitService().addUncommitted((SememeChronology)objectToCommit);
+				try {
+					Get.commitService().addUncommitted((SememeChronology)objectToCommit).get();
+				} catch (InterruptedException | ExecutionException e) {
+					throw new RuntimeException("Cannot addUncommitted() for commit sememe with id=" + id, e);
+				}
 			} else {
 				throw new RuntimeException("Cannot addUncommitted() for commit object with id=" + id + " of unsupported OchreObjectType " + objectToCommit.getOchreObjectType());
 			}
 
-			Task<Optional<CommitRecord>> commitRecord = Get.commitService().commit("updating " + objectToCommit.getOchreObjectType() + " with id " + id + " to " + state);
+			Task<Optional<CommitRecord>> commitTask = Get.commitService().commit("updating " + objectToCommit.getOchreObjectType() + " with id " + id + " to " + state);
 
-			if (RequestInfo.get().getActiveWorkflowProcessId() != null)
-			{
-				try {
-					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord.get());
-				} catch (RestException re) {
-					throw re;
-				} catch (Exception e) {
-					log.error("Unexpected", e);
-					throw new RestException("Failed updating " + objectToCommit.getOchreObjectType() + " " + id + " state to " + state + ". Caught " + e.getClass().getName() 
-							+ " " + e.getLocalizedMessage());
+			try {
+				if (RequestInfo.get().getActiveWorkflowProcessId() != null)
+				{
+					LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitTask.get());
+				} else {
+					commitTask.get();
 				}
-			} 
+			} catch (RestException re) {
+				throw re;
+			} catch (Exception e) {
+				log.error("Unexpected", e);
+				throw new RestException("Failed updating " + objectToCommit.getOchreObjectType() + " " + id + " state to " + state + ". Caught " + e.getClass().getName() 
+						+ " " + e.getLocalizedMessage());
+			}
 
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), objectToCommit.getPrimordialUuid());
 		} else {
