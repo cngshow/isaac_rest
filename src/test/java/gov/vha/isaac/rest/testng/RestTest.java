@@ -241,7 +241,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private static final String TEST_SSO_TOKEN = usePrismeForRolesByToken() ? 
 			getTokenFromPrisme("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com") 
-			: "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager,vuid_requestor";
+			: "TestUser:super_user,editor,read_only,approver,administrator,reviewer,vuid_requestor";
 	private static final String TEST_READ_ONLY_SSO_TOKEN = usePrismeForRolesByToken() ? 
 			getTokenFromPrisme("readonly@readonly.com", "readonly@readonly.com") : "TestReadOnlyUser:read_only";
 
@@ -749,6 +749,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		List<String> preferredDialects = new ArrayList<>();
 		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
 		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
+		
+		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
 
 		RestConceptCreateData newConceptData = new RestConceptCreateData(
 				parentIds,
@@ -818,12 +820,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(activeHasParentSememes.size(), 2);
 
 		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
-		// Ensure retired sememe version has different time
-		Thread.sleep(1000);
-		Get.commitService().commit("dummy commit").get();
-		Thread.sleep(1000);
-		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
-		
+
 		// Test retirement of a has_parent sememe
 		Response retireSecondHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent
 				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + association2Sememe.identifiers.getFirst().toString())
@@ -840,9 +837,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		activeHasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
 		Assert.assertEquals(activeHasParentSememes.size(), 1);
 		
-		//TODO This sleep should not be necessary, yet, without it, we sometimes fail.  Need to figure out why....
-		Thread.sleep(2000);
-		
+
 		// Confirm only 1 parent is reflected in logic graph sememe
 		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
 		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
@@ -860,10 +855,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 1);
 
-		//TODO Joel, this isn't working reliably, but I dont know why....
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
-//		Assert.assertTrue(! parentSequencesFromLogicGraph.contains(parent2Sequence));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
+		Assert.assertTrue(! parentSequencesFromLogicGraph.contains(parent2Sequence));
 
+	
 		// Retrieve concept to confirm only one parent in taxonomy
 		Response taxonomyResponse = target(taxonomyRequestPath)
 				.queryParam(RequestParameters.id, newConceptSequence)
@@ -1024,9 +1019,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
 		
-		//TODO This sleep should not be necessary, yet, without it, we sometimes fail.  Need to figure out why....
-		Thread.sleep(3000);
-
 		// Confirm all three parents are reflected in logic graph sememe
 		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
 		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
@@ -1040,13 +1032,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(msg);
 		}		
 		Set<Integer> parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
+		
+		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
 
-//TODO Joel this isn't working all the time, and I don't know why.
-//		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
-//
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1.getConceptSequence()));
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2.getConceptSequence()));
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1.getConceptSequence()));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2.getConceptSequence()));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
 
 		// Retrieve concept to confirm three parents in taxonomy
 		Response taxonomyResponse = target(taxonomyRequestPath)
@@ -1077,6 +1068,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		parent3Sequence = MetaData.CHINESE_LANGUAGE.getConceptSequence();
 		parent3 = Get.conceptService().getConcept(parent3Sequence);
 		
+		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
+		
 		RestDynamicSememeBase updateData = new RestDynamicSememeBase(
 				new RestDynamicSememeData[] { new RestDynamicSememeUUID(0, parent3.getPrimordialUuid()) },
 				true);
@@ -1095,9 +1088,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestWriteResponse changedThirdHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
 		
 		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
-
-		//TODO This sleep should not be necessary, yet, without it, we sometimes fail.  Need to figure out why....
-		Thread.sleep(3000);
 		
 		// Confirm all three parents are reflected in logic graph sememe
 		conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
@@ -1197,16 +1187,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(conceptVersionFromTaxonomy);
 
 		// Confirm all three parents reflected in taxonomy
-//TODO also failing sometimes, but don't know why
-//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
-//
-//		parentConceptSequencesFromTaxonomy = new HashSet<>();
-//		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
-//			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
-//		}
-//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 2);
-//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1.getConceptSequence()));
-//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2.getConceptSequence()));
+		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
+
+		parentConceptSequencesFromTaxonomy = new HashSet<>();
+		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+		}
+		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 2);
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1.getConceptSequence()));
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2.getConceptSequence()));
 	}
 
 	@Test
