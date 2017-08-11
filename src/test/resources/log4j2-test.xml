@@ -24,8 +24,8 @@
 
 	<Loggers>
 		<!-- Every configuration must have a root logger. If one is not configured the default root LoggerConfig is ERROR with Console appender attached. -->
-		<Root level="DEBUG">
-			<AppenderRef ref="appender-Console-all" level="INFO" />
+		<Root level="WARN">
+			<AppenderRef ref="appender-Console-all" level="DEBUG" />
 			<AppenderRef ref="appender-root-all" level="ALL" />
 
 			<AppenderRef ref="appender-prisme-all" level="WARN" />
@@ -37,6 +37,10 @@
 		<logger name="gov.va.legoEdit" level="TRACE" />
 		<logger name="org.ihtsdo" level="INFO" />
 		<logger name="gov.vha" level="TRACE" />
+		<logger name="gov.vha.isaac.rest.session" level="INFO" />
+		<logger name="gov.vha.isaac.ochre.api.LookupService" level="INFO" />
+		<logger name="gov.vha.isaac.ochre.query.provider.lucene.LuceneIndexer" level="INFO" />
+		<logger name="gov.vha.isaac.ochre.api.util.PasswordHasher" level="INFO" />
 		<logger name="com.mchange.v2.c3p0" level="INFO"/>
 		<Logger name="org.jvnet.hk2.logger" level="OFF"/>  <!-- HK2 is logging a debug message that is being mis-translated into an error by LOG4J2 https://issues.apache.org/jira/browse/LOG4J2-1003 -->
 	</Loggers>
