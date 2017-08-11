@@ -1,13 +1,30 @@
+/**
+ * Copyright Notice
+ *
+ * This is a work of the U.S. Government and is not subject to copyright
+ * protection in the United States. Foreign copyrights may apply.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package gov.vha.isaac.soap;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +51,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.index.SearchResult;
+import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.associations.AssociationInstance;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
 import gov.vha.isaac.ochre.impl.utility.Frills;
@@ -41,13 +59,8 @@ import gov.vha.isaac.ochre.mapping.constants.IsaacMappingConstants;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
-import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
-import gov.vha.isaac.ochre.query.provider.lucene.LuceneDescriptionType;
-import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
-import gov.vha.isaac.rest.Util;
-import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.soap.exception.STSException;
 import gov.vha.isaac.soap.transfer.ConceptDetailTransfer;
 import gov.vha.isaac.soap.transfer.DesignationDetailTransfer;
@@ -72,6 +85,14 @@ public class CommonTerminology {
 			new StampPositionImpl(System.currentTimeMillis(), MetaData.DEVELOPMENT_PATH.getConceptSequence()),
 			ConceptSequenceSet.EMPTY, State.ANY_STATE_SET);
 
+	/**
+	 * 
+	 * @param codeSystemVuid
+	 * @param versionName
+	 * @param code
+	 * @return
+	 * @throws STSException
+	 */
 	public static ConceptDetailTransfer getConceptDetail(Long codeSystemVuid, String versionName, String code)
 			throws STSException {
 
@@ -90,39 +111,92 @@ public class CommonTerminology {
 		ConceptService conceptService = Get.conceptService();
 		SememeService sememeService = Get.sememeService();
 
-		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(code, false,
-				null, 1000000, // limit
-				Long.MAX_VALUE, (Predicate<Integer>) null, null);
+		// get code system by codeSystemVUID
+		Integer codeSystemNid = Frills.getNidForVUID(codeSystemVuid).orElse(null);
+		log.debug("codeSystemNid:" + codeSystemNid);
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> codeSystemConcept = conceptService
+				.getOptionalConcept(Get.identifierService().getConceptNid(codeSystemNid));
+		log.debug("Terminology Type :" + codeSystemConcept.get().getConceptSequence() + " : "
+				+ codeSystemConcept.get().getConceptDescriptionText());
 
-		if (ochreSearchResults == null || ochreSearchResults.size() < 1) {
+		if (!codeSystemConcept.isPresent()) {
+			throw new STSException("Code system VUID '" + codeSystemVuid + "' not found.");
+		}
+
+		// if code is VUID do direct lookup, if contains ap
+		Optional<Integer> intValue = NumericUtils.getInt(code);
+
+		Optional<? extends SememeChronology<? extends SememeVersion<?>>> sememe;
+
+		if (intValue.isPresent()) {
+			sememe = sememeService.getOptionalSememe(intValue.get().intValue());
+		} else {
+			// do search
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(
+					"'" + code + "'", Integer.MAX_VALUE);
+
+			if (ochreSearchResults == null || ochreSearchResults.size() < 1) {
+				throw new STSException(String.format("No results found for %s.", code));
+			}
+
+			log.debug("count: " + ochreSearchResults.size());
+
+			sememe = sememeService.getOptionalSememe(ochreSearchResults.get(0).getNid());
+
+			// int count = 0;
+			//
+			// for (SearchResult sr : ochreSearchResults) {
+			// if (count < 5) {
+			// log.warn("score " + sr.getNid() + " " + sr.getScore());
+			//
+			// Optional<? extends SememeChronology<? extends SememeVersion<?>>>
+			// sv = sememeService
+			// .getOptionalSememe(sr.getNid());
+			//
+			// Optional<? extends ConceptChronology<? extends
+			// ConceptVersion<?>>> c1 = conceptService
+			// .getOptionalConcept(
+			// Get.identifierService().getConceptNid(sv.get().getReferencedComponentNid()));
+			//
+			// if (c1.isPresent()) {
+			// log.warn("codesystem {} : concept {}",
+			// codeSystemConcept.get().getConceptSequence(),
+			// c1.get().getConceptSequence());
+			// }
+			// if (c1.isPresent() && Frills.getTerminologyTypes(c1.get(), null)
+			// .contains(codeSystemConcept.get().getConceptSequence())) {
+			// log.warn("YYYYYYYYYYYYY " + count++ + "");
+			// break;
+			// }
+			//
+			// count++;
+			// }
+			// }
+		}
+
+		if (!sememe.isPresent()) {
 			throw new STSException(String.format("No results found for %s.", code));
 		}
 
-		Optional<? extends SememeChronology<? extends SememeVersion<?>>> s = sememeService
-				.getOptionalSememe(ochreSearchResults.get(0).getNid());
-
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService
-				.getOptionalConcept(Get.identifierService().getConceptNid(s.get().getReferencedComponentNid()));
+				.getOptionalConcept(Get.identifierService().getConceptNid(sememe.get().getReferencedComponentNid()));
 
 		ConceptDetailTransfer conceptDetailTransfer = new ConceptDetailTransfer();
 
 		if (c.isPresent()) {
-
 			@SuppressWarnings("rawtypes")
 			ConceptChronology concept = c.get();
 
 			try {
 
-				// this can change based on LOINC or VHAT - how to handle all
-				// situations?
 				conceptDetailTransfer.setConceptCode(getCodeFromNid(concept.getNid()));
 				conceptDetailTransfer
 						.setConceptStatus(convertStateToString(concept.isLatestVersionActive(STAMP_COORDINATES)));
 
 				// create and populate list of PropertyTransfer objects
-//				List<PropertyTransfer> properties = getConceptProperties(concept);
-				List<PropertyTransfer> properties = getConceptProperties(ochreSearchResults.get(0).getNid());
-				
+				List<PropertyTransfer> properties = getConceptProperties(concept);
+				// List<PropertyTransfer> properties = getProperties(concept);
+
 				if (properties != null && properties.size() > 0) {
 					conceptDetailTransfer.setProperties(properties);
 				}
@@ -151,11 +225,24 @@ public class CommonTerminology {
 		return conceptDetailTransfer;
 	}
 
-	public static ValueSetContentsListTransfer getValueSetContents(Long subsetVuid, // required
-			String versionName, // required, could be "current"
-			String designationName, // optional?
-			String membershipStatus, // optional active/inactive?
-			Integer pageSize, Integer pageNumber) throws STSException {
+	/**
+	 * 
+	 * @param subsetVuid
+	 *            VHAT subset VUID. Required.
+	 * @param versionName
+	 *            VHAT version. For now, only "current" is allowed.
+	 * @param designationName
+	 *            Name of designation to retrieve. Required.
+	 * @param membershipStatus
+	 *            Active or Inactive. Optional/null
+	 * @param pageSize
+	 *            Number of designations to retrieve. Optional
+	 * @param pageNumber
+	 * @return
+	 * @throws STSException
+	 */
+	public static ValueSetContentsListTransfer getValueSetContents(Long subsetVuid, String versionName,
+			String designationName, String membershipStatus, Integer pageSize, Integer pageNumber) throws STSException {
 
 		// validate parameters
 		subsetVuid = validateSubsetVuid(subsetVuid);
@@ -165,92 +252,129 @@ public class CommonTerminology {
 		pageSize = validatePageSize(pageSize);
 		pageNumber = validatePageNumber(pageNumber);
 
-		// create query
-		String searchString = "";
-		Set<String> sememeAssemblageId = null;
+		ConceptService conceptService = Get.conceptService();
 
-		// execute query
-		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(
-				new DynamicSememeStringImpl(searchString), false, processAssemblageRestrictions(sememeAssemblageId),
-				null, // toArray(dynamicSememeColumns),
-				pageSize, // limit
-				Long.MAX_VALUE, null);
+		ValueSetContentsListTransfer valueSetContentsList = new ValueSetContentsListTransfer();
+		List<ValueSetContentsTransfer> valueSetContents = new ArrayList<>();
 
-		List<ValueSetContentsTransfer> valueSetContentsTransferList = new ArrayList<>();
+		Integer nid = Frills.getNidForVUID(subsetVuid).orElse(0);
 
-		// convert query results to ValueSetConentsListTransfer
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = conceptService
+				.getOptionalConcept(Get.identifierService().getConceptNid(nid));
+
+		if (concept.isPresent()) {
+
+			Frills.getAllChildrenOfConcept(concept.get().getConceptSequence(), true, false)
+					.forEach(conceptSequenceId -> {
+
+						Get.sememeService()
+								.getSememesForComponent(Get.identifierService().getConceptNid(conceptSequenceId))
+								.forEach(sememe -> {
+
+									if (sememe.getSememeType() == SememeType.DESCRIPTION) {
+
+										@SuppressWarnings({ "unchecked", "rawtypes" })
+										Optional<LatestVersion<DescriptionSememe>> descriptionVersion = ((SememeChronology) sememe)
+												.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
+
+										if (descriptionVersion.isPresent()) {
+
+											ValueSetContentsTransfer v = new ValueSetContentsTransfer();
+
+											@SuppressWarnings({ "rawtypes", "unchecked" })
+											List<DescriptionSememe<?>> descSememeList = ((SememeChronology) sememe)
+													.getVisibleOrderedVersionList(STAMP_COORDINATES);
+											Collections.reverse(descSememeList);
+
+											for (DescriptionSememe<?> ds : descSememeList) {
+
+												// if designationName is not null, only include those that match
+												if (StringUtils.isNullOrEmpty(designationName)
+														|| org.apache.commons.lang3.StringUtils
+																.containsIgnoreCase(ds.getText(), designationName)) {
+
+													String vuid = getCodeFromNid(ds.getNid());
+													if (vuid != null) {
+														v.setDesignationVuid(Long.valueOf(vuid));
+													}
+
+													v.setDesignationName(ds.getText());
+													v.setDesignationStatus(
+															ds.getState() == State.ACTIVE ? "active" : "inactive");
+
+													v.setMembershipStatus(getSubsetMembershipStatus(sememe));
+													
+													Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(
+															STAMP_COORDINATES, ds.getNid());
+													if (descType.isPresent()) {
+														Optional<String> desc = Frills.getDescription(descType.get());
+														if (desc.isPresent()) {
+															v.setDesignationType(desc.get());
+														}
+													}
+
+													if (!StringUtils.isNullOrEmpty(v.getDesignationName())
+															|| (v.getDesignationVuid() != null)
+															|| !StringUtils.isNullOrEmpty(v.getDesignationStatus())) {
+														valueSetContents.add(v);
+													}
+												}
+											}
+										}
+									}
+								});
+					});
+		}
+		else
+		{
+			throw new STSException(String.format("Subset vuid '%s' does not exist!", subsetVuid));
+		}
+
 		int resultStart = (pageNumber - 1) * pageSize;
 		int resultEnd = pageNumber * pageSize;
-		int resultCounter = 0;
+		resultEnd = (resultEnd < valueSetContents.size()) ? resultEnd : valueSetContents.size();
 
-		ValueSetContentsTransfer valueSetContents = null;
-		for (SearchResult sr : ochreSearchResults) {
-			if (sr.getScore() >= 1 && resultCounter > resultStart && resultCounter < resultEnd) {
-				valueSetContents = new ValueSetContentsTransfer();
-
-				valueSetContents.setDesignationName("designationName");
-				valueSetContents.setDesignationVuid(0L);
-				valueSetContents.setDesignationStatus("designationStatus");
-				valueSetContents.setDesignationType("designationType");
-				valueSetContents.setMembershipStatus("membershipStatus");
-				valueSetContents.setTotalNumberOfRecords(0L);
-
-				valueSetContentsTransferList.add(valueSetContents);
-				resultCounter++;
-			}
+		if (resultEnd > resultStart) {
+			valueSetContentsList.setValueSetContentsTransfers(valueSetContents.subList(resultStart, resultEnd));
+			valueSetContentsList.setTotalNumberOfRecords(new Long(valueSetContents.size()));
 		}
 
-		ValueSetContentsListTransfer valueSetContentsListTransfer = new ValueSetContentsListTransfer();
-		valueSetContentsListTransfer.setValueSetContentsTransfers(valueSetContentsTransferList);
+		return valueSetContentsList;
 
-		// old code to be removed when code is complete
-
-		// SubsetContentsListView subsetContents =
-		// TerminologyDelegate.getSubsetContents(subsetVuid, versionName,
-		// designationName, membershipStatus, pageSize, pageNumber);
-		// listTransfer.setTotalNumberOfRecords(subsetContents.getTotalNumberOfRecords());
-		// List<ValueSetContentsTransfer> valueSetContent = new
-		// ArrayList<ValueSetContentsTransfer>();
-		// for (SubsetContentsView subsetContent :
-		// subsetContents.getSubsetContentsView()) {
-		// Long vuid = subsetContent.getDesignation().getVuid();
-		// String name = subsetContent.getDesignation().getName();
-		// String type = subsetContent.getDesignation().getType().getName();
-		// String designationStatus =
-		// (subsetContent.getDesignation().getActive()) ? "active" : "inactive";
-		// String status = (subsetContent.getSubsetRelationship().getActive()) ?
-		// "active" : "inactive";
-		// valueSetContent.add(new ValueSetContentsTransfer(vuid, name,
-		// designationStatus, type, status));
-		// }
-		// listTransfer.setValueSetContentsTransfers(valueSetContent);
-		return valueSetContentsListTransfer;
 	}
 
-	private static Integer[] processAssemblageRestrictions(Set<String> sememeAssemblageIds) throws STSException {
-		Set<Integer> sequences = new HashSet<>(sememeAssemblageIds.size());
-
-		try {
-			for (String id : sememeAssemblageIds) {
-				sequences.add(Util.convertToConceptSequence(id));
-			}
-		} catch (RestException re) {
-			throw new STSException("");
-		}
-
-		return toArray(sequences);
-	}
-
+	/**
+	 * 
+	 * @param versionName
+	 * @return
+	 */
 	private static String validateVersionName(String versionName) {
 		// TODO Auto-generated method stub
 		return versionName;
 	}
 
+	/**
+	 * 
+	 * @param subsetVuid
+	 * @return
+	 */
 	private static Long validateSubsetVuid(Long subsetVuid) {
 		// TODO Auto-generated method stub
 		return subsetVuid;
 	}
 
+	/**
+	 * 
+	 * @param mapSetVuid
+	 * @param mapSetVersionName
+	 * @param sourceValues
+	 * @param sourceDesignationTypeName
+	 * @param targetDesignationTypeName
+	 * @param pageSize
+	 * @param pageNumber
+	 * @return
+	 * @throws STSException
+	 */
 	public static MapEntryValueListTransfer getMapEntriesFromSources(Long mapSetVuid, String mapSetVersionName,
 			Collection<String> sourceValues, String sourceDesignationTypeName, String targetDesignationTypeName,
 			Integer pageSize, Integer pageNumber) throws STSException {
@@ -264,120 +388,60 @@ public class CommonTerminology {
 
 		MapEntryValueListTransfer mapEntryValueListTransfer = new MapEntryValueListTransfer();
 
-		// old code to be removed when code is complete
-
-		// List<Long> mapSetsNotAcccessibleVuidList =
-		// TerminologyConfigDelegate.getMapSetsNotAccessibleVuidList();
-		// if(mapSetsNotAcccessibleVuidList.contains(mapSetVuid)){
-		// return mapEntryValueListTransfer;
-		// }
-		//
-		// MapSetConfig mapSetConfig =
-		// TerminologyDelegate.getMapSetConfig(mapSetVuid);
-		// if (mapSetConfig.isFound() == false)
-		// {
-		// System.out.println("WARNING: MapSet configuration for VUID: " +
-		// mapSetVuid + " not found - using defaults.");
-		// }
-		// MapEntryCacheListDTO mapEntryCacheList = null;
-		//
-		// mapEntryCacheList = TerminologyDelegate.getMapEntries(
-		// TerminologyDelegate.MAP_ENTRIES_FROM_SOURCE_CALL, mapSetVuid,
-		// mapSetVersionName,
-		// sourceDesignationTypeName, targetDesignationTypeName,
-		// sourceValues, mapSetConfig.getSourceType(), null,
-		// mapSetConfig.getTargetType(),
-		// null, null, null, null, pageSize, pageNumber);
-		//
-		// List<MapEntryValueTransfer> mapEntryValueTransferList = new
-		// ArrayList<MapEntryValueTransfer>();
-		// for (MapEntryCacheDTO mapEntryCacheDTO :
-		// mapEntryCacheList.getMapEntryCaches())
-		// {
-		// MapEntryValueTransfer mapEntryValueTransfer = new
-		// MapEntryValueTransfer();
-		// mapEntryValueTransfer.setVuid(mapEntryCacheDTO.getMapEntryVuid());
-		// if
-		// (mapSetConfig.getSourceType().equals(TerminologyDelegate.CONCEPT_CODE_TYPE))
-		// {
-		// mapEntryValueTransfer.setSourceValue(mapEntryCacheDTO.getSourceConceptCode());
-		// }
-		// else if
-		// (mapSetConfig.getSourceType().equals(TerminologyDelegate.DESIGNATION_CODE_TYPE))
-		// {
-		// mapEntryValueTransfer.setSourceValue(mapEntryCacheDTO.getSourceDesignationCode());
-		// }
-		// else if
-		// (mapSetConfig.getSourceType().equals(TerminologyDelegate.DESIGNATION_NAME_TYPE))
-		// {
-		// mapEntryValueTransfer.setSourceValue(mapEntryCacheDTO.getSourceDesignationName());
-		// }
-		// DesignationType sourceDesType =
-		// TerminologyDelegate.getCachedDesignationType(mapEntryCacheDTO.getSourceDesignationTypeId());
-		// mapEntryValueTransfer.setSourceDesignationTypeName(sourceDesType.getName());
-		//
-		// if
-		// (mapSetConfig.getTargetType().equals(TerminologyDelegate.CONCEPT_CODE_TYPE))
-		// {
-		// mapEntryValueTransfer.setTargetValue(mapEntryCacheDTO.getTargetConceptCode());
-		// }
-		// else if
-		// (mapSetConfig.getTargetType().equals(TerminologyDelegate.DESIGNATION_CODE_TYPE))
-		// {
-		// mapEntryValueTransfer.setTargetValue(mapEntryCacheDTO.getTargetDesignationCode());
-		// }
-		// else if
-		// (mapSetConfig.getTargetType().equals(TerminologyDelegate.DESIGNATION_NAME_TYPE))
-		// {
-		// mapEntryValueTransfer.setTargetValue(mapEntryCacheDTO.getTargetDesignationName());
-		// }
-		// DesignationType targetDesType =
-		// TerminologyDelegate.getCachedDesignationType(mapEntryCacheDTO.getTargetDesignationTypeId());
-		// mapEntryValueTransfer.setTargetDesignationTypeName(targetDesType.getName());
-		// mapEntryValueTransfer.setTargetDesignationName(mapEntryCacheDTO.getTargetDesignationName());
-		// Version targetVersion =
-		// TerminologyDelegate.getCachedVersion(mapEntryCacheDTO.getTargetVersionId());
-		// mapEntryValueTransfer.setTargetCodeSystemVuid(targetVersion.getCodeSystem().getVuid());
-		// mapEntryValueTransfer.setTargetCodeSystemVersionName(targetVersion.getName());
-		// mapEntryValueTransfer.setOrder(mapEntryCacheDTO.getMapEntrySequence());
-		// mapEntryValueTransfer.setStatus(mapEntryCacheDTO.isMapEntryActive());
-		// mapEntryValueTransferList.add(mapEntryValueTransfer);
-		// }
-		//
-		// mapEntryValueListTransfer.setTotalNumberOfRecords(mapEntryCacheList.getTotalNumberOfRecords());
-		// mapEntryValueListTransfer.setMapEntryValueTransfers(mapEntryValueTransferList);
-
 		return mapEntryValueListTransfer;
 	}
 
+	/**
+	 * 
+	 * @param pageSize
+	 * @return
+	 * @throws STSException
+	 */
 	private static Integer validatePageSize(Integer pageSize) throws STSException {
 		if (pageSize == null) {
 			pageSize = DEFAULT_PAGE_SIZE;
 		} else if (pageSize > MAX_PAGE_SIZE) {
-			throw new STSException("Page size exceeded maximum size of: " + MAX_PAGE_SIZE);
+			throw new STSException(String.format("Page size exceeded maximum size of: %s",MAX_PAGE_SIZE));
 		} else if (pageSize < 1) {
-			throw new STSException("Invalid page size (" + pageSize + ").");
+			throw new STSException(String.format("Invalid page size (%s).", pageSize));
 		}
 
 		return pageSize;
 	}
 
+	/**
+	 * 
+	 * @param pageNumber
+	 * @return
+	 * @throws STSException
+	 */
 	private static Integer validatePageNumber(Integer pageNumber) throws STSException {
 		if (pageNumber == null) {
 			pageNumber = 1;
 		} else if (pageNumber < 1) {
-			throw new STSException("Invalid page number (" + pageNumber + ").");
+			throw new STSException(String.format("Invalid page number (%s).", pageNumber));
 		}
 
 		return pageNumber;
 	}
 
+	/**
+	 * 
+	 * @param versionName
+	 * @throws STSException
+	 */
 	private static void prohibitAuthoringVersion(String versionName) throws STSException {
 		if (AUTHORING_VERSION_NAME.equals(versionName)) {
-			throw new STSException(AUTHORING_VERSION_NAME + " is not an allowed version name.");
+			throw new STSException(String.format("%s is not an allowed version name.", AUTHORING_VERSION_NAME));
 		}
 	}
 
+	/**
+	 * 
+	 * @param value
+	 * @param valueName
+	 * @throws STSException
+	 */
 	private static void prohibitNullValue(Object value, String valueName) throws STSException {
 		if (value == null) {
 			String singularOrPlural = (valueName.endsWith("s") == true) ? "are" : "is";
@@ -474,6 +538,9 @@ public class CommonTerminology {
 
 		Optional<SememeChronology<? extends SememeVersion<?>>> sc = Get.sememeService()
 				.getSememesForComponentFromAssemblage(componentNid, MetaData.CODE.getConceptSequence()).findFirst();
+
+		// FIX: get code when code is not a VUID. ie LOINC vs VHAT.
+
 		if (sc.isPresent()) {
 			// There was a bug in the older terminology loaders which loaded
 			// 'Code' as a static sememe, but marked it as a dynamic sememe.
@@ -505,33 +572,12 @@ public class CommonTerminology {
 		return null;
 	}
 
-//	private static List<PropertyTransfer> getConceptProperties(ConceptChronology<?> concept) {
-//
-//		List<PropertyTransfer> properties = new ArrayList<>();
-//
-//		Get.sememeService().getSememesForComponent(concept.getNid())
-//				.filter(s -> s.getSememeType() != SememeType.DESCRIPTION).forEach(sememe -> {
-//
-//					if (sememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
-//							&& sememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence() && ts.wasEverKindOf(
-//									sememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
-//						PropertyTransfer property = buildProperty(sememe);
-//						if (property != null) {
-//							properties.add(buildProperty(sememe));
-//						}
-//					}
-//				});
-//
-//		return properties;
-//	}
-	
-	private static List<PropertyTransfer> getConceptProperties(int componentNid) {
+	private static List<PropertyTransfer> getConceptProperties(ConceptChronology<?> concept) {
 
 		List<PropertyTransfer> properties = new ArrayList<>();
 
-		Get.sememeService().getSememesForComponent(componentNid)
+		Get.sememeService().getSememesForComponent(concept.getNid())
 				.filter(s -> s.getSememeType() != SememeType.DESCRIPTION).forEach(sememe -> {
-
 					if (sememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
 							&& sememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence() && ts.wasEverKindOf(
 									sememe.getAssemblageSequence(), VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
@@ -705,19 +751,57 @@ public class CommonTerminology {
 		return relationships;
 	}
 
+	/**
+	 * 
+	 * @param state
+	 * @return
+	 */
 	private static String convertStateToString(State state) {
 		return (state.isActive()) ? "Active" : "Inactive";
 	}
 
+	/**
+	 * 
+	 * @param state
+	 * @return
+	 */
 	private static String convertStateToString(Boolean state) {
 		return (state) ? "Active" : "Inactive";
 	}
 
+	/**
+	 * 
+	 * @param ints
+	 * @return
+	 */
 	private static Integer[] toArray(Set<Integer> ints) {
 		if (ints == null) {
 			return null;
 		}
 		return ints.toArray(new Integer[ints.size()]);
+	}
+
+	/**
+	 * 
+	 * @param sememe
+	 * @return
+	 */
+	private static String getSubsetMembershipStatus(SememeChronology<?> sememe) {
+
+		List<String> status = new ArrayList<>();
+
+		Get.sememeService().getSememesForComponent(sememe.getNid()).forEach((nestedSememe) -> {
+			if (nestedSememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
+					&& nestedSememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence()) {
+				if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(), VHATConstants.VHAT_REFSETS.getNid())
+						&& !ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
+								IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getNid())) {
+					status.add(sememe.isLatestVersionActive(STAMP_COORDINATES) ? "active" : "inactive");
+				}
+			}
+		});
+
+		return (status!= null && status.size() > 0) ? status.get(0) : null;
 	}
 
 }
