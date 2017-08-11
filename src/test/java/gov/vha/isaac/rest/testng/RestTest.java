@@ -5479,4 +5479,237 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		Assert.assertEquals(descriptions[0].descriptionExtendedTypeConcept.sequence.intValue(), MetaData.BOOLEAN_LITERAL.getConceptSequence());
 	}
+	
+	@Test
+	public void testModuleSearch1() throws RestException
+	{
+		
+		int requestPageSize = 6;
+		String xPathToken = "/restCoordinatesToken/token";
+		
+		String result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.LOINC_MODULES.getConceptSequence() + "," 
+							+ MetaData.ISAAC_MODULE.getConceptSequence() + "," 
+							+ MetaData.VHAT_MODULES.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token1 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenLoincIsaacVhat = token1.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.LOINC_MODULES.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token2 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenLoinc = token2.getTextContent();
+
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.VHAT_MODULES.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token3 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenVhat = token3.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token4 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaac = token4.getTextContent();
+		
+		String xPathResults = "count(/restSearchResultPage/results)";
+		
+		String result1 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenLoincIsaacVhat)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count1 = XMLUtils.getNumberFromXml(result1, xPathResults);
+		Assert.assertEquals(count1, (double) requestPageSize);
+		
+		String result2 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenLoinc)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count2 = XMLUtils.getNumberFromXml(result2, xPathResults);
+		Assert.assertEquals(count2, (double) 0);
+					
+		String result3 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenVhat)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count3 = XMLUtils.getNumberFromXml(result3, xPathResults);
+		Assert.assertEquals(count3, (double) 0);
+		
+		String result4 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaac)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count4 = XMLUtils.getNumberFromXml(result4, xPathResults);
+		Assert.assertEquals(count4, (double) requestPageSize);
+	}
+	
+	@Test
+	public void testPathSearch1() throws RestException
+	{
+		
+		int requestPageSize = 6;
+		String xPathToken = "/restCoordinatesToken/token";
+		
+		String result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token1 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenDevPath = token1.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token2 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenMasterPath = token2.getTextContent();
+
+		String xPathResults = "count(/restSearchResultPage/results)";
+		
+		String result1 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count1 = XMLUtils.getNumberFromXml(result1, xPathResults);
+		Assert.assertEquals(count1, (double) requestPageSize);
+		
+		String result2 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count2 = XMLUtils.getNumberFromXml(result2, xPathResults);
+		Assert.assertEquals(count2, (double) 0);
+	}
+	
+	@Test
+	public void testModuleAndPathSearch1() throws RestException
+	{
+		
+		int requestPageSize = 6;
+		String xPathToken = "/restCoordinatesToken/token";
+		
+		String result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence() + "," 
+							+ MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token1 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacVhatDevPath = token1.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence() + "," 
+							+ MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token2 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacVhatMasterPath = token2.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token3 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacDevPath = token3.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token4 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacMasterPath = token4.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token5 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenVhatDevPath = token5.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token6 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenVhatMasterPath = token6.getTextContent();
+		
+		
+		String xPathResults = "count(/restSearchResultPage/results)";
+		
+		String result1 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacVhatDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count1 = XMLUtils.getNumberFromXml(result1, xPathResults);
+		Assert.assertEquals(count1, (double) requestPageSize);
+		
+		String result2 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacVhatMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count2 = XMLUtils.getNumberFromXml(result2, xPathResults);
+		Assert.assertEquals(count2, (double) 0);
+		
+		String result3 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count3 = XMLUtils.getNumberFromXml(result3, xPathResults);
+		Assert.assertEquals(count3, (double) requestPageSize);
+		
+		String result4 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count4 = XMLUtils.getNumberFromXml(result4, xPathResults);
+		Assert.assertEquals(count4, (double) 0);
+
+		String result5 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenVhatDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count5 = XMLUtils.getNumberFromXml(result5, xPathResults);
+		Assert.assertEquals(count5, (double) 0);
+		
+		String result6 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenVhatMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count6 = XMLUtils.getNumberFromXml(result6, xPathResults);
+		Assert.assertEquals(count6, (double) 0);
+	}
 }
