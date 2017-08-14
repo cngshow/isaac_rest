@@ -18,20 +18,34 @@
  */
 package gov.vha.isaac.soap;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.h2.util.StringUtils;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.input.SAXBuilder;
+import org.xml.sax.SAXException;
 
-import gov.va.oia.terminology.converters.sharedUtils.IBDFCreationUtility.DescriptionType;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -63,9 +77,12 @@ import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
 import gov.vha.isaac.soap.exception.STSException;
+import gov.vha.isaac.soap.services.dao.TerminologyConfigHelper;
+import gov.vha.isaac.soap.services.dto.config.MapSetConfig;
 import gov.vha.isaac.soap.transfer.ConceptDetailTransfer;
 import gov.vha.isaac.soap.transfer.DesignationDetailTransfer;
 import gov.vha.isaac.soap.transfer.MapEntryValueListTransfer;
+import gov.vha.isaac.soap.transfer.MapEntryValueTransfer;
 import gov.vha.isaac.soap.transfer.PropertyTransfer;
 import gov.vha.isaac.soap.transfer.RelationshipTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetContentsListTransfer;
@@ -85,6 +102,28 @@ public class CommonTerminology {
 	private static StampCoordinate STAMP_COORDINATES = new StampCoordinateImpl(StampPrecedence.PATH,
 			new StampPositionImpl(System.currentTimeMillis(), MetaData.DEVELOPMENT_PATH.getConceptSequence()),
 			ConceptSequenceSet.EMPTY, State.ANY_STATE_SET);
+	
+	// Default XML File and Schema
+	private static String configFileName = "TerminologyConfig.xml.hidden";
+	private static String schemaFileName = "TerminologyConfig.xsd";
+	
+	private static final String MAPSETS = "MapSets";
+	private static final String VUID = "VUID";
+	private static final String WEB_SERVICE_ACCESSIBLE = "WebServiceAccessible";
+	
+	public static final String CONCEPT_CODE_TYPE = "ConceptCode";
+	public static final String DESIGNATION_CODE_TYPE = "DesignationCode";
+	public static final String DESIGNATION_NAME_TYPE = "DesignationName";
+	public static final int MAP_ENTRIES_CALL = 1;
+	public static final int MAP_ENTRIES_FROM_SOURCE_CALL = 2;
+	
+	public static final String DESIGNATION_TYPE_NAME_KEY_PREFIX = "DTN:";
+	public static final String DESIGNATION_TYPE_ID_KEY_PREFIX = "DTID:";
+	public static final String MAP_SET_KEY_PREFIX = "MS:";
+	public static final String VERSION_NAME_KEY_PREFIX = "V_NAME:";
+	public static final String VERSION_ID_KEY_PREFIX = "V_ID:";
+	
+	public static final String CURRENT_VERSION = "current";
 
 	/**
 	 * 
@@ -373,8 +412,12 @@ public class CommonTerminology {
 	 * @return
 	 * @throws STSException
 	 */
-	public static MapEntryValueListTransfer getMapEntriesFromSources(Long mapSetVuid, String mapSetVersionName,
-			Collection<String> sourceValues, String sourceDesignationTypeName, String targetDesignationTypeName,
+	public static MapEntryValueListTransfer getMapEntriesFromSources(
+			Long mapSetVuid, 
+			String mapSetVersionName,
+			Collection<String> sourceValues, 
+			String sourceDesignationTypeName, 
+			String targetDesignationTypeName,
 			Integer pageSize, Integer pageNumber) throws STSException {
 		prohibitAuthoringVersion(mapSetVersionName);
 		prohibitNullValue(mapSetVuid, "MapSet VUID");
@@ -385,7 +428,107 @@ public class CommonTerminology {
 		pageNumber = validatePageNumber(pageNumber);
 
 		MapEntryValueListTransfer mapEntryValueListTransfer = new MapEntryValueListTransfer();
+		
+		List<Long> mapSetsNotAcccessibleVuidList = TerminologyConfigHelper.getMapSetsNotAccessibleVuidList();
+		
+		if(mapSetsNotAcccessibleVuidList.contains(mapSetVuid)){
+    		return mapEntryValueListTransfer;
+    	}
+		
+		MapSetConfig mapSetConfig = TerminologyConfigHelper.getMapSet(mapSetVuid);
+        if (mapSetConfig.isFound() == false)
+        {
+        	log.info("WARNING: MapSet configuration for VUID: " + mapSetVuid + " not found - using defaults.");
+        }
 
+        /*
+        MapEntryCacheListDTO mapEntryCacheList = null; 
+        
+        mapEntryCacheList = TerminologyDelegate.getMapEntries(
+        		MAP_ENTRIES_FROM_SOURCE_CALL,  //int callType
+        		mapSetVuid, //Long mapSetVuid,
+        		mapSetVersionName, //String mapSetVersionName,
+        		sourceDesignationTypeName, //String sourceDesignationTypeName, 
+        		targetDesignationTypeName, //String targetDesignationTypeName,
+        		sourceValues, //Collection<String> sourceValues, 
+        		mapSetConfig.getSourceType(), //String sourceValueType, 
+        		null, //Collection<String> targetValues,
+        		mapSetConfig.getTargetType(),//String targetValueType,
+        		null, //String sourcePreferredDesignationNameFilter,
+        		null, //String targetPreferredDesignationNameFilter,
+        		null, //Integer mapEntrySequence, 
+        		null, //Boolean mapEntryStatus, 
+        		pageSize, //Integer pageSize, 
+        		pageNumber); //Integer pageNumber
+        
+        //loop mapEntryCacheList to prepare response
+        
+        List<MapEntryValueTransfer> mapEntryValueTransferList = new ArrayList<MapEntryValueTransfer>();
+
+        for (MapEntryCacheDTO mapEntryCacheDTO : mapEntryCacheList.getMapEntryCaches())
+        {
+        	MapEntryValueTransfer mapEntryValueTransfer = new MapEntryValueTransfer();
+        	
+			//private Long Vuid;
+			//private String sourceValue;
+			//private String sourceDesignationTypeName;
+			//private String targetValue;
+			//private String targetDesignationTypeName;
+			//private String targetDesignationName;
+			//private Long targetCodeSystemVuid;
+			//private String targetCodeSystemVersionName;
+			//private Integer order;
+			//private Boolean status;
+        	
+        	mapEntryValueTransfer.setVuid(mapEntryCacheDTO.getMapEntryVuid());
+            if (mapSetConfig.getSourceType().equals(CONCEPT_CODE_TYPE))
+            {
+            	mapEntryValueTransfer.setSourceValue(mapEntryCacheDTO.getSourceConceptCode());
+            }
+            else if (mapSetConfig.getSourceType().equals(DESIGNATION_CODE_TYPE))
+            {
+            	mapEntryValueTransfer.setSourceValue(mapEntryCacheDTO.getSourceDesignationCode());
+            }
+            else if  (mapSetConfig.getSourceType().equals(DESIGNATION_NAME_TYPE))
+            {
+            	mapEntryValueTransfer.setSourceValue(mapEntryCacheDTO.getSourceDesignationName());
+            }
+        	
+            DesignationType sourceDesType = TerminologyDelegate.getCachedDesignationType(mapEntryCacheDTO.getSourceDesignationTypeId());
+            mapEntryValueTransfer.setSourceDesignationTypeName(sourceDesType.getName());
+            
+            if (mapSetConfig.getTargetType().equals(CONCEPT_CODE_TYPE))
+            {
+            	mapEntryValueTransfer.setTargetValue(mapEntryCacheDTO.getTargetConceptCode());
+            }
+            else if (mapSetConfig.getTargetType().equals(DESIGNATION_CODE_TYPE))
+            {
+            	mapEntryValueTransfer.setTargetValue(mapEntryCacheDTO.getTargetDesignationCode());
+            }
+            else if  (mapSetConfig.getTargetType().equals(DESIGNATION_NAME_TYPE))
+            {
+            	mapEntryValueTransfer.setTargetValue(mapEntryCacheDTO.getTargetDesignationName());
+            }
+        	
+            DesignationType targetDesType = TerminologyDelegate.getCachedDesignationType(mapEntryCacheDTO.getTargetDesignationTypeId());
+            
+            mapEntryValueTransfer.setTargetDesignationTypeName(targetDesType.getName());
+            mapEntryValueTransfer.setTargetDesignationName(mapEntryCacheDTO.getTargetDesignationName());
+            
+            Version targetVersion = TerminologyDelegate.getCachedVersion(mapEntryCacheDTO.getTargetVersionId());
+            
+            mapEntryValueTransfer.setTargetCodeSystemVuid(targetVersion.getCodeSystem().getVuid());
+            mapEntryValueTransfer.setTargetCodeSystemVersionName(targetVersion.getName());
+            mapEntryValueTransfer.setOrder(mapEntryCacheDTO.getMapEntrySequence());
+            mapEntryValueTransfer.setStatus(mapEntryCacheDTO.isMapEntryActive());
+            mapEntryValueTransferList.add(mapEntryValueTransfer);
+        }
+        
+        mapEntryValueListTransfer.setTotalNumberOfRecords(mapEntryCacheList.getTotalNumberOfRecords());
+        mapEntryValueListTransfer.setMapEntryValueTransfers(mapEntryValueTransferList);
+        */
+        
+        
 		return mapEntryValueListTransfer;
 	}
 
@@ -766,18 +909,6 @@ public class CommonTerminology {
 	 */
 	private static String convertStateToString(Boolean state) {
 		return (state) ? "Active" : "Inactive";
-	}
-
-	/**
-	 * 
-	 * @param ints
-	 * @return
-	 */
-	private static Integer[] toArray(Set<Integer> ints) {
-		if (ints == null) {
-			return null;
-		}
-		return ints.toArray(new Integer[ints.size()]);
 	}
 
 	/**
