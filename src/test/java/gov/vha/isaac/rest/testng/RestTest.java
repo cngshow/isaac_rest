@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +48,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.lucene.search.Query;
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
@@ -96,6 +99,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
@@ -117,6 +121,8 @@ import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.ochre.modules.vhat.VHATIsAHasParentSynchronizingChronologyChangeListener;
+import gov.vha.isaac.ochre.query.provider.lucene.LuceneIndexer;
+import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
@@ -5751,5 +5757,46 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.readEntity(String.class);
 		double count6 = XMLUtils.getNumberFromXml(result6, xPathResults);
 		Assert.assertEquals(count6, (double) 0);
+	}
+	
+	// TODO: Need to move to ISAAC/query-provider
+	@Test
+	public void testBuildingStampQuery()
+			throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IllegalArgumentException
+	{
+		String query = "cuff";
+		String field = "_string_content_";
+		boolean prefixSearch = true;
+		boolean metadataOnly = false;
+		LuceneIndexer li = LookupService.get().getService(DescriptionIndexer.class);
+		
+		Method buildTokenizedStringQuery = LuceneIndexer.class
+					.getDeclaredMethod("buildTokenizedStringQuery", String.class, String.class, boolean.class, boolean.class);
+		buildTokenizedStringQuery.setAccessible(true);
+		Query q_base = (Query) buildTokenizedStringQuery.invoke(li, query, field, prefixSearch, metadataOnly);
+		
+		Method buildStampQuery = LuceneIndexer.class
+				.getDeclaredMethod("buildStampQuery", Query.class, StampCoordinate.class);
+		buildStampQuery.setAccessible(true);
+		Query q_nullStamp = (Query) buildStampQuery.invoke(li, q_base, null);
+		Assert.assertEquals(q_base, q_nullStamp);
+		
+		StampCoordinate stamp = Get.coordinateFactory().createDevelopmentLatestStampCoordinate();
+		Query q_withStamp = (Query) buildStampQuery.invoke(li, q_base, stamp);
+		String str_q_withStamp = q_withStamp.toString();
+		boolean queryContainsDevPath = str_q_withStamp.contains(MetaData.DEVELOPMENT_PATH.getPrimordialUuid().toString());
+		Assert.assertNotEquals(q_base, q_withStamp);
+		Assert.assertTrue(queryContainsDevPath);
+		
+		stamp = Get.coordinateFactory().createStampCoordinate(Get.conceptSpecification(stamp.getStampPosition().getStampPath().getPathConceptSequence()), 
+					stamp.getStampPrecedence(), 
+					Arrays.asList(Get.conceptSpecification(MetaData.ISAAC_MODULE.getConceptSequence())),
+					stamp.getAllowedStates(),
+					2017, 1, 1, 1, 0, 0);
+		q_withStamp = (Query) buildStampQuery.invoke(li, q_base, stamp);
+		str_q_withStamp = q_withStamp.toString();
+		boolean queryContainsIsaacModule = str_q_withStamp.contains(MetaData.ISAAC_MODULE.getPrimordialUuid().toString());
+		Assert.assertNotEquals(q_base, q_withStamp);
+		Assert.assertTrue(queryContainsIsaacModule);
 	}
 }
