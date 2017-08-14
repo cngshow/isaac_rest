@@ -688,6 +688,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 0, "Shouldn't be any hits on vuid 123456, yet there was...");
 		
+		Get.startIndexTask((Class<IndexServiceBI>[])null).get();
+		
 		//make one
 		Response createSememeResponse = target(RestPaths.writePathComponent + RestPaths.sememeAPIsPathComponent + RestPaths.createPathComponent)
 				.queryParam(RequestParameters.editToken, vhatEditToken.renewToken().getSerialized())
