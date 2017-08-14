@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.h2.util.StringUtils;
 
 import gov.va.oia.terminology.converters.sharedUtils.IBDFCreationUtility.DescriptionType;
@@ -127,13 +128,17 @@ public class CommonTerminology {
 		Optional<Integer> intValue = NumericUtils.getInt(code);
 
 		Optional<? extends SememeChronology<? extends SememeVersion<?>>> sememe;
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept;
 
 		if (intValue.isPresent()) {
-			sememe = sememeService.getOptionalSememe(intValue.get().intValue());
+
+			concept = conceptService.getOptionalConcept(
+					Get.identifierService().getConceptNid(Frills.getNidForVUID(intValue.orElse(0)).orElse(null)));
+
 		} else {
 			// do search
-			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(
-					"'" + code + "'", Integer.MAX_VALUE);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
+					.query("'" + code + "'", Integer.MAX_VALUE);
 
 			if (ochreSearchResults == null || ochreSearchResults.size() < 1) {
 				throw new STSException(String.format("No results found for %s.", code));
@@ -172,46 +177,39 @@ public class CommonTerminology {
 			// count++;
 			// }
 			// }
-		}
 
-		if (!sememe.isPresent()) {
-			throw new STSException(String.format("No results found for %s.", code));
-		}
+			concept = conceptService.getOptionalConcept(
+					Get.identifierService().getConceptNid(sememe.get().getReferencedComponentNid()));
 
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService
-				.getOptionalConcept(Get.identifierService().getConceptNid(sememe.get().getReferencedComponentNid()));
+			if (!sememe.isPresent()) {
+				throw new STSException(String.format("No results found for %s.", code));
+			}
+
+		}
 
 		ConceptDetailTransfer conceptDetailTransfer = new ConceptDetailTransfer();
 
-		if (c.isPresent()) {
+		if (concept.isPresent()) {
 			@SuppressWarnings("rawtypes")
-			ConceptChronology concept = c.get();
+			ConceptChronology conceptChronology = concept.get();
 
 			try {
 
-				conceptDetailTransfer.setConceptCode(getCodeFromNid(concept.getNid()));
-				conceptDetailTransfer
-						.setConceptStatus(convertStateToString(concept.isLatestVersionActive(STAMP_COORDINATES)));
+				conceptDetailTransfer.setConceptCode(getCodeFromNid(conceptChronology.getNid()));
+				conceptDetailTransfer.setConceptStatus(
+						convertStateToString(conceptChronology.isLatestVersionActive(STAMP_COORDINATES)));
 
 				// create and populate list of PropertyTransfer objects
-				List<PropertyTransfer> properties = getConceptProperties(concept);
-				// List<PropertyTransfer> properties = getProperties(concept);
-
-				if (properties != null && properties.size() > 0) {
-					conceptDetailTransfer.setProperties(properties);
-				}
+				List<PropertyTransfer> properties = getConceptProperties(conceptChronology);
+				conceptDetailTransfer.setProperties(properties);
 
 				// create and populate list of DesignationDetailTransfer objects
-				List<DesignationDetailTransfer> designations = getDesignations(concept);
-				if (designations != null && designations.size() > 0) {
-					conceptDetailTransfer.setDesignations(designations);
-				}
+				List<DesignationDetailTransfer> designations = getDesignations(conceptChronology);
+				conceptDetailTransfer.setDesignations(designations);
 
 				// create and populate list of RelationshipTransfer objects
-				Collection<RelationshipTransfer> relationships = getRelationships(concept);
-				if (relationships != null && relationships.size() > 0) {
-					conceptDetailTransfer.setRelationships(relationships);
-				}
+				Collection<RelationshipTransfer> relationships = getRelationships(conceptChronology);
+				conceptDetailTransfer.setRelationships(relationships);
 
 			} catch (Exception ex) {
 				String msg = String.format("A system error occured while searching for %s.", code);
@@ -288,7 +286,9 @@ public class CommonTerminology {
 
 											for (DescriptionSememe<?> ds : descSememeList) {
 
-												// if designationName is not null, only include those that match
+												// if designationName is not
+												// null, only include those that
+												// match
 												if (StringUtils.isNullOrEmpty(designationName)
 														|| org.apache.commons.lang3.StringUtils
 																.containsIgnoreCase(ds.getText(), designationName)) {
@@ -303,7 +303,7 @@ public class CommonTerminology {
 															ds.getState() == State.ACTIVE ? "active" : "inactive");
 
 													v.setMembershipStatus(getSubsetMembershipStatus(sememe));
-													
+
 													Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(
 															STAMP_COORDINATES, ds.getNid());
 													if (descType.isPresent()) {
@@ -324,9 +324,7 @@ public class CommonTerminology {
 									}
 								});
 					});
-		}
-		else
-		{
+		} else {
 			throw new STSException(String.format("Subset vuid '%s' does not exist!", subsetVuid));
 		}
 
@@ -401,7 +399,7 @@ public class CommonTerminology {
 		if (pageSize == null) {
 			pageSize = DEFAULT_PAGE_SIZE;
 		} else if (pageSize > MAX_PAGE_SIZE) {
-			throw new STSException(String.format("Page size exceeded maximum size of: %s",MAX_PAGE_SIZE));
+			throw new STSException(String.format("Page size exceeded maximum size of: %s", MAX_PAGE_SIZE));
 		} else if (pageSize < 1) {
 			throw new STSException(String.format("Invalid page size (%s).", pageSize));
 		}
@@ -476,18 +474,15 @@ public class CommonTerminology {
 							d.setStatus(convertStateToString(descriptionVersion.get().value().getState()));
 
 							// Get the extended type
-							Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
-									sememe.getNid());
+							Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(
+									STAMP_COORDINATES, sememe.getNid());
 							if (descType.isPresent()) {
-								d.setType(DescriptionType
-										.parse(descriptionVersion.get().value().getDescriptionTypeConceptSequence())
-										.getConceptSpec().getConceptDescriptionText());
-							} else {
-								log.warn("No extended description type present on description "
-										+ sememe.getPrimordialUuid() + " "
-										+ descriptionVersion.get().value().getText());
+								Optional<String> desc = Frills.getDescription(descType.get());
+								if (desc.isPresent()) {
+									d.setType(desc.get());
+								}
 							}
-
+							
 							List<PropertyTransfer> properties = new ArrayList<>();
 							List<ValueSetTransfer> subsets = new ArrayList<>();
 
@@ -690,7 +685,8 @@ public class CommonTerminology {
 		if (sememe.getSememeType() == SememeType.DYNAMIC) {
 			ValueSetTransfer subset = new ValueSetTransfer();
 
-			subset.setName("name");
+			subset.setName(getPreferredNameDescriptionType(
+					Get.identifierService().getConceptNid(sememe.getAssemblageSequence())));
 
 			long vuid = Frills
 					.getVuId(Get.identifierService().getConceptNid(sememe.getAssemblageSequence()), STAMP_COORDINATES)
@@ -726,20 +722,23 @@ public class CommonTerminology {
 		for (AssociationInstance ai : AssociationUtilities.getSourceAssociations(concept.getNid(), STAMP_COORDINATES)) {
 			RelationshipTransfer relationship = new RelationshipTransfer();
 			String name = null;
+			String code = null;
 
 			try {
 
 				if (ai.getTargetComponent().isPresent()) {
-					name = getCodeFromNid(
-							Get.identifierService().getNidForUuids(ai.getTargetComponent().get().getPrimordialUuid()));
-					if (name != null && name.isEmpty()) {
+					name = getPreferredNameDescriptionType(ai.getTargetComponent().get().getNid());
+					if (name != null && !name.isEmpty()) {
 						relationship.setName(name);
+					}
+					code = getCodeFromNid(ai.getTargetComponent().get().getNid());
+					if (code != null && !code.isEmpty()) {
+						relationship.setCode(code);
 					}
 				}
 
-				relationship.setCode(ai.getAssociationType().getAssociationName());
+				relationship.setType(ai.getAssociationType().getAssociationName());
 				relationship.setStatus(convertStateToString(ai.getData().getState()));
-				relationship.setType(getPreferredNameDescriptionType(ai.getTargetComponent().get().getNid()));
 
 			} catch (Exception e) {
 				log.error("Association build failure");
@@ -801,7 +800,7 @@ public class CommonTerminology {
 			}
 		});
 
-		return (status!= null && status.size() > 0) ? status.get(0) : null;
+		return (status != null && status.size() > 0) ? status.get(0) : null;
 	}
 
 }
