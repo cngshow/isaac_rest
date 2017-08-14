@@ -4,7 +4,8 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.19 - PENDING
-    *
+    * Fix 572073 - When entering incorrect code, Webservice is not giving expected response.
+    * Fix 572778 - ReturnConceptDetails returning different results from CTT as compared to STS. Fix includes value set differences, add missing Properties even when empty and designation type.
 
 * 2017/08/11 - 4.18
     * Added SOAP web service ListMapEntriesFromSource.

@@ -170,9 +170,15 @@ public class CommonTerminology {
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept;
 
 		if (intValue.isPresent()) {
-
-			concept = conceptService.getOptionalConcept(
-					Get.identifierService().getConceptNid(Frills.getNidForVUID(intValue.orElse(0)).orElse(null)));
+			
+			Integer nid = Frills.getNidForVUID(intValue.orElse(0)).orElse(0);
+			if (nid != 0)
+			{
+				concept = conceptService.getOptionalConcept(Get.identifierService().getConceptNid(nid));
+			}
+			else {
+					throw new STSException(String.format("No results found for %s.", code));
+			}
 
 		} else {
 			// do search
