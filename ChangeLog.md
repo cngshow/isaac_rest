@@ -5,7 +5,10 @@ API version number, not the release version number.
 
 * 2017/08/?? - 4.19 - PENDING
     * Fix 572073 - When entering incorrect code, Webservice is not giving expected response.
-    * Fix 572778 - ReturnConceptDetails returning different results from CTT as compared to STS. Fix includes value set differences, add missing Properties even when empty and designation type.
+    * Fix 572778 - ReturnConceptDetails returning different results from CTT as compared to STS. Fix includes value set differences, add missing 
+        Properties even when empty and designation type.
+    * Search API enhancements per API changelog.  These enhancements REQUIRE a new index to work properly - you can either use a newly-build database,
+        or trigger a reindex of the datastore by using the /write/1/system/rebuildIndex trigger.
 
 * 2017/08/11 - 4.18
     * Added SOAP web service ListMapEntriesFromSource.
