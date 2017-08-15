@@ -23,14 +23,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.h2.util.StringUtils;
 
-import gov.va.oia.terminology.converters.sharedUtils.IBDFCreationUtility.DescriptionType;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -62,9 +60,12 @@ import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
 import gov.vha.isaac.soap.exception.STSException;
+import gov.vha.isaac.soap.services.dao.TerminologyConfigHelper;
+import gov.vha.isaac.soap.services.dto.config.MapSetConfig;
 import gov.vha.isaac.soap.transfer.ConceptDetailTransfer;
 import gov.vha.isaac.soap.transfer.DesignationDetailTransfer;
 import gov.vha.isaac.soap.transfer.MapEntryValueListTransfer;
+import gov.vha.isaac.soap.transfer.MapEntryValueTransfer;
 import gov.vha.isaac.soap.transfer.PropertyTransfer;
 import gov.vha.isaac.soap.transfer.RelationshipTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetContentsListTransfer;
@@ -84,6 +85,28 @@ public class CommonTerminology {
 	private static StampCoordinate STAMP_COORDINATES = new StampCoordinateImpl(StampPrecedence.PATH,
 			new StampPositionImpl(System.currentTimeMillis(), MetaData.DEVELOPMENT_PATH.getConceptSequence()),
 			ConceptSequenceSet.EMPTY, State.ANY_STATE_SET);
+
+	// Default XML File and Schema
+	private static String configFileName = "TerminologyConfig.xml.hidden";
+	private static String schemaFileName = "TerminologyConfig.xsd";
+
+	private static final String MAPSETS = "MapSets";
+	private static final String VUID = "VUID";
+	private static final String WEB_SERVICE_ACCESSIBLE = "WebServiceAccessible";
+
+	public static final String CONCEPT_CODE_TYPE = "ConceptCode";
+	public static final String DESIGNATION_CODE_TYPE = "DesignationCode";
+	public static final String DESIGNATION_NAME_TYPE = "DesignationName";
+	public static final int MAP_ENTRIES_CALL = 1;
+	public static final int MAP_ENTRIES_FROM_SOURCE_CALL = 2;
+
+	public static final String DESIGNATION_TYPE_NAME_KEY_PREFIX = "DTN:";
+	public static final String DESIGNATION_TYPE_ID_KEY_PREFIX = "DTID:";
+	public static final String MAP_SET_KEY_PREFIX = "MS:";
+	public static final String VERSION_NAME_KEY_PREFIX = "V_NAME:";
+	public static final String VERSION_ID_KEY_PREFIX = "V_ID:";
+
+	public static final String CURRENT_VERSION = "current";
 
 	/**
 	 * 
@@ -127,13 +150,21 @@ public class CommonTerminology {
 		Optional<Integer> intValue = NumericUtils.getInt(code);
 
 		Optional<? extends SememeChronology<? extends SememeVersion<?>>> sememe;
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept;
 
 		if (intValue.isPresent()) {
-			sememe = sememeService.getOptionalSememe(intValue.get().intValue());
+
+			Integer nid = Frills.getNidForVUID(intValue.orElse(0)).orElse(0);
+			if (nid != 0) {
+				concept = conceptService.getOptionalConcept(Get.identifierService().getConceptNid(nid));
+			} else {
+				throw new STSException(String.format("No results found for %s.", code));
+			}
+
 		} else {
 			// do search
-			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class).query(
-					"'" + code + "'", Integer.MAX_VALUE);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
+					.query("'" + code + "'", Integer.MAX_VALUE);
 
 			if (ochreSearchResults == null || ochreSearchResults.size() < 1) {
 				throw new STSException(String.format("No results found for %s.", code));
@@ -172,46 +203,39 @@ public class CommonTerminology {
 			// count++;
 			// }
 			// }
-		}
 
-		if (!sememe.isPresent()) {
-			throw new STSException(String.format("No results found for %s.", code));
-		}
+			concept = conceptService.getOptionalConcept(
+					Get.identifierService().getConceptNid(sememe.get().getReferencedComponentNid()));
 
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> c = conceptService
-				.getOptionalConcept(Get.identifierService().getConceptNid(sememe.get().getReferencedComponentNid()));
+			if (!sememe.isPresent()) {
+				throw new STSException(String.format("No results found for %s.", code));
+			}
+
+		}
 
 		ConceptDetailTransfer conceptDetailTransfer = new ConceptDetailTransfer();
 
-		if (c.isPresent()) {
+		if (concept.isPresent()) {
 			@SuppressWarnings("rawtypes")
-			ConceptChronology concept = c.get();
+			ConceptChronology conceptChronology = concept.get();
 
 			try {
 
-				conceptDetailTransfer.setConceptCode(getCodeFromNid(concept.getNid()));
-				conceptDetailTransfer
-						.setConceptStatus(convertStateToString(concept.isLatestVersionActive(STAMP_COORDINATES)));
+				conceptDetailTransfer.setConceptCode(getCodeFromNid(conceptChronology.getNid()));
+				conceptDetailTransfer.setConceptStatus(
+						convertStateToString(conceptChronology.isLatestVersionActive(STAMP_COORDINATES)));
 
 				// create and populate list of PropertyTransfer objects
-				List<PropertyTransfer> properties = getConceptProperties(concept);
-				// List<PropertyTransfer> properties = getProperties(concept);
-
-				if (properties != null && properties.size() > 0) {
-					conceptDetailTransfer.setProperties(properties);
-				}
+				List<PropertyTransfer> properties = getConceptProperties(conceptChronology);
+				conceptDetailTransfer.setProperties(properties);
 
 				// create and populate list of DesignationDetailTransfer objects
-				List<DesignationDetailTransfer> designations = getDesignations(concept);
-				if (designations != null && designations.size() > 0) {
-					conceptDetailTransfer.setDesignations(designations);
-				}
+				List<DesignationDetailTransfer> designations = getDesignations(conceptChronology);
+				conceptDetailTransfer.setDesignations(designations);
 
 				// create and populate list of RelationshipTransfer objects
-				Collection<RelationshipTransfer> relationships = getRelationships(concept);
-				if (relationships != null && relationships.size() > 0) {
-					conceptDetailTransfer.setRelationships(relationships);
-				}
+				Collection<RelationshipTransfer> relationships = getRelationships(conceptChronology);
+				conceptDetailTransfer.setRelationships(relationships);
 
 			} catch (Exception ex) {
 				String msg = String.format("A system error occured while searching for %s.", code);
@@ -288,7 +312,9 @@ public class CommonTerminology {
 
 											for (DescriptionSememe<?> ds : descSememeList) {
 
-												// if designationName is not null, only include those that match
+												// if designationName is not
+												// null, only include those that
+												// match
 												if (StringUtils.isNullOrEmpty(designationName)
 														|| org.apache.commons.lang3.StringUtils
 																.containsIgnoreCase(ds.getText(), designationName)) {
@@ -303,7 +329,7 @@ public class CommonTerminology {
 															ds.getState() == State.ACTIVE ? "active" : "inactive");
 
 													v.setMembershipStatus(getSubsetMembershipStatus(sememe));
-													
+
 													Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(
 															STAMP_COORDINATES, ds.getNid());
 													if (descType.isPresent()) {
@@ -324,9 +350,7 @@ public class CommonTerminology {
 									}
 								});
 					});
-		}
-		else
-		{
+		} else {
 			throw new STSException(String.format("Subset vuid '%s' does not exist!", subsetVuid));
 		}
 
@@ -378,6 +402,7 @@ public class CommonTerminology {
 	public static MapEntryValueListTransfer getMapEntriesFromSources(Long mapSetVuid, String mapSetVersionName,
 			Collection<String> sourceValues, String sourceDesignationTypeName, String targetDesignationTypeName,
 			Integer pageSize, Integer pageNumber) throws STSException {
+
 		prohibitAuthoringVersion(mapSetVersionName);
 		prohibitNullValue(mapSetVuid, "MapSet VUID");
 		prohibitNullValue(mapSetVersionName, "MapSet version name");
@@ -387,6 +412,142 @@ public class CommonTerminology {
 		pageNumber = validatePageNumber(pageNumber);
 
 		MapEntryValueListTransfer mapEntryValueListTransfer = new MapEntryValueListTransfer();
+		List<MapEntryValueTransfer> mapEntryValueTransferList = new ArrayList<>();
+
+		List<Long> mapSetsNotAcccessibleVuidList = TerminologyConfigHelper.getMapSetsNotAccessibleVuidList();
+
+		if (mapSetsNotAcccessibleVuidList.contains(mapSetVuid)) {
+			return mapEntryValueListTransfer;
+		}
+
+		MapSetConfig mapSetConfig = TerminologyConfigHelper.getMapSet(mapSetVuid);
+		if (mapSetConfig.isFound() == false) {
+			log.info("WARNING: MapSet configuration for VUID: " + mapSetVuid + " not found - using defaults.");
+		}
+
+		Integer nid = Frills.getNidForVUID(mapSetVuid).orElse(0);
+
+		ConceptService conceptService = Get.conceptService();
+
+		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = conceptService
+				.getOptionalConcept(Get.identifierService().getConceptNid(nid));
+
+		if (concept.isPresent()) {
+
+			Frills.getAllChildrenOfConcept(concept.get().getConceptSequence(), true, false)
+					.forEach(conceptSequenceId -> {
+
+						Get.sememeService()
+								.getSememesForComponent(Get.identifierService().getConceptNid(conceptSequenceId))
+								.forEach(sememe -> {
+
+									if (sememe.getSememeType() == SememeType.DESCRIPTION) {
+
+										@SuppressWarnings({ "unchecked", "rawtypes" })
+										Optional<LatestVersion<DescriptionSememe>> descriptionVersion = ((SememeChronology) sememe)
+												.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
+
+										if (descriptionVersion.isPresent()) {
+
+											MapEntryValueTransfer mapEntryValueTransfer = new MapEntryValueTransfer();
+
+											@SuppressWarnings({ "rawtypes", "unchecked" })
+											List<DescriptionSememe<?>> descSememeList = ((SememeChronology) sememe)
+													.getVisibleOrderedVersionList(STAMP_COORDINATES);
+											Collections.reverse(descSememeList);
+
+											for (DescriptionSememe<?> ds : descSememeList) {
+
+												String vuid = getCodeFromNid(ds.getNid());
+												if (vuid != null) {
+													mapEntryValueTransfer.setVuid(Long.valueOf(vuid));
+												}
+
+												//TODO: check these values
+												String sourceValue = new String();
+												if (CONCEPT_CODE_TYPE.equals(mapSetConfig.getSourceType())) {
+													sourceValue = getCodeFromNid(sememe.getReferencedComponentNid());
+													if (stringExistsInList(sourceValues, sourceValue)) {
+														mapEntryValueTransfer.setSourceValue(sourceValue);
+													}
+												} else if (DESIGNATION_CODE_TYPE.equals(mapSetConfig.getSourceType())) {
+													sourceValue = getCodeFromNid(sememe.getNid());
+													if (stringExistsInList(sourceValues, sourceValue)) {
+														mapEntryValueTransfer.setSourceValue(sourceValue);
+													}
+
+												} else if ((DESIGNATION_NAME_TYPE
+														.equals(mapSetConfig.getSourceType()))) {
+													sourceValue = getPreferredNameDescriptionType(sememe.getNid()); // getSourceDesignationName
+													if (stringExistsInList(sourceValues, sourceValue)) {
+														mapEntryValueTransfer.setSourceValue(sourceValue);
+													}
+												}
+
+												Optional<UUID> sourceDescType = Frills
+														.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
+																ds.getNid());
+												if (sourceDescType.isPresent()) {
+													Optional<String> desc = Frills.getDescription(sourceDescType.get());
+													if (desc.isPresent()) {
+														mapEntryValueTransfer.setSourceDesignationTypeName(desc.get());
+													}
+												}
+
+												// TODO: get target code
+												String targetValue = new String();
+												if (CONCEPT_CODE_TYPE.equals(mapSetConfig.getTargetType())) {
+													targetValue = ""; // mapEntryCacheDTO.getTargetConceptCode()
+													mapEntryValueTransfer.setTargetValue(targetValue);
+												} else if (DESIGNATION_CODE_TYPE
+														.equalsIgnoreCase(mapSetConfig.getTargetType())) {
+													targetValue = ""; // mapEntryCacheDTO.getTargetDesignationCode()
+													mapEntryValueTransfer.setTargetValue(targetValue);
+												} else if (DESIGNATION_NAME_TYPE
+														.equalsIgnoreCase(mapSetConfig.getTargetType())) {
+													targetValue = ""; // mapEntryCacheDTO.getTargetDesignationName()
+													mapEntryValueTransfer.setTargetValue(targetValue);
+												}
+
+												Optional<UUID> targetDescType = Frills
+														.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
+																sememe.getNid());
+												if (targetDescType.isPresent()) {
+													Optional<String> desc = Frills.getDescription(targetDescType.get());
+													if (desc.isPresent()) {
+														mapEntryValueTransfer.setTargetDesignationTypeName(desc.get());
+														mapEntryValueTransfer
+																.setTargetDesignationName("Target Designation Name");
+													}
+												}
+
+												// TODO: get target code system
+												// vuid and version name
+												mapEntryValueTransfer.setTargetCodeSystemVuid(0L); // "targetVersion.getCodeSystem().getVuid()");
+												mapEntryValueTransfer.setTargetCodeSystemVersionName(
+														"Target Code System Version Name");
+
+												mapEntryValueTransfer.setOrder(ds.getSememeSequence()); // mapEntryCacheDTO.getMapEntrySequence()
+												mapEntryValueTransfer.setStatus(ds.getState() == State.ACTIVE);
+
+												mapEntryValueTransferList.add(mapEntryValueTransfer);
+											}
+										}
+									}
+								});
+					});
+
+		}
+
+		int resultStart = (pageNumber - 1) * pageSize;
+		int resultEnd = pageNumber * pageSize;
+		resultEnd = (resultEnd < mapEntryValueTransferList.size()) ? resultEnd : mapEntryValueTransferList.size();
+
+		if (resultEnd > resultStart) {
+			mapEntryValueListTransfer
+					.setMapEntryValueTransfers(mapEntryValueTransferList.subList(resultStart, resultEnd));
+			mapEntryValueListTransfer.setTotalNumberOfRecords(Long.valueOf(mapEntryValueTransferList.size()));
+		}
 
 		return mapEntryValueListTransfer;
 	}
@@ -401,7 +562,7 @@ public class CommonTerminology {
 		if (pageSize == null) {
 			pageSize = DEFAULT_PAGE_SIZE;
 		} else if (pageSize > MAX_PAGE_SIZE) {
-			throw new STSException(String.format("Page size exceeded maximum size of: %s",MAX_PAGE_SIZE));
+			throw new STSException(String.format("Page size exceeded maximum size of: %s", MAX_PAGE_SIZE));
 		} else if (pageSize < 1) {
 			throw new STSException(String.format("Invalid page size (%s).", pageSize));
 		}
@@ -479,13 +640,10 @@ public class CommonTerminology {
 							Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
 									sememe.getNid());
 							if (descType.isPresent()) {
-								d.setType(DescriptionType
-										.parse(descriptionVersion.get().value().getDescriptionTypeConceptSequence())
-										.getConceptSpec().getConceptDescriptionText());
-							} else {
-								log.warn("No extended description type present on description "
-										+ sememe.getPrimordialUuid() + " "
-										+ descriptionVersion.get().value().getText());
+								Optional<String> desc = Frills.getDescription(descType.get());
+								if (desc.isPresent()) {
+									d.setType(desc.get());
+								}
 							}
 
 							List<PropertyTransfer> properties = new ArrayList<>();
@@ -690,7 +848,8 @@ public class CommonTerminology {
 		if (sememe.getSememeType() == SememeType.DYNAMIC) {
 			ValueSetTransfer subset = new ValueSetTransfer();
 
-			subset.setName("name");
+			subset.setName(getPreferredNameDescriptionType(
+					Get.identifierService().getConceptNid(sememe.getAssemblageSequence())));
 
 			long vuid = Frills
 					.getVuId(Get.identifierService().getConceptNid(sememe.getAssemblageSequence()), STAMP_COORDINATES)
@@ -726,20 +885,23 @@ public class CommonTerminology {
 		for (AssociationInstance ai : AssociationUtilities.getSourceAssociations(concept.getNid(), STAMP_COORDINATES)) {
 			RelationshipTransfer relationship = new RelationshipTransfer();
 			String name = null;
+			String code = null;
 
 			try {
 
 				if (ai.getTargetComponent().isPresent()) {
-					name = getCodeFromNid(
-							Get.identifierService().getNidForUuids(ai.getTargetComponent().get().getPrimordialUuid()));
-					if (name != null && name.isEmpty()) {
+					name = getPreferredNameDescriptionType(ai.getTargetComponent().get().getNid());
+					if (name != null && !name.isEmpty()) {
 						relationship.setName(name);
+					}
+					code = getCodeFromNid(ai.getTargetComponent().get().getNid());
+					if (code != null && !code.isEmpty()) {
+						relationship.setCode(code);
 					}
 				}
 
-				relationship.setCode(ai.getAssociationType().getAssociationName());
+				relationship.setType(ai.getAssociationType().getAssociationName());
 				relationship.setStatus(convertStateToString(ai.getData().getState()));
-				relationship.setType(getPreferredNameDescriptionType(ai.getTargetComponent().get().getNid()));
 
 			} catch (Exception e) {
 				log.error("Association build failure");
@@ -771,18 +933,6 @@ public class CommonTerminology {
 
 	/**
 	 * 
-	 * @param ints
-	 * @return
-	 */
-	private static Integer[] toArray(Set<Integer> ints) {
-		if (ints == null) {
-			return null;
-		}
-		return ints.toArray(new Integer[ints.size()]);
-	}
-
-	/**
-	 * 
 	 * @param sememe
 	 * @return
 	 */
@@ -801,7 +951,18 @@ public class CommonTerminology {
 			}
 		});
 
-		return (status!= null && status.size() > 0) ? status.get(0) : null;
+		return (status != null && status.size() > 0) ? status.get(0) : null;
+	}
+
+	private static boolean stringExistsInList(Collection<String> collection, String stringToFind) {
+
+		for (String s : collection) {
+			if (org.apache.commons.lang3.StringUtils.containsIgnoreCase(stringToFind, s)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }

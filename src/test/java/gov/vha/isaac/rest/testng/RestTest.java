@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +48,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.lucene.search.Query;
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.jersey.test.JerseyTestNg;
 import org.testng.Assert;
@@ -96,6 +99,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
+import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.coordinate.TaxonomyCoordinate;
 import gov.vha.isaac.ochre.api.externalizable.BinaryDataReaderService;
@@ -117,6 +121,8 @@ import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.ochre.modules.vhat.VHATIsAHasParentSynchronizingChronologyChangeListener;
+import gov.vha.isaac.ochre.query.provider.lucene.LuceneIndexer;
+import gov.vha.isaac.ochre.query.provider.lucene.indexers.DescriptionIndexer;
 import gov.vha.isaac.ochre.workflow.model.contents.ProcessDetail.ProcessStatus;
 import gov.vha.isaac.ochre.workflow.provider.WorkflowProvider;
 import gov.vha.isaac.rest.ApplicationConfig;
@@ -241,7 +247,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 	private static final String TEST_SSO_TOKEN = usePrismeForRolesByToken() ? 
 			getTokenFromPrisme("joel.kniaz@vetsez.com", "joel.kniaz@vetsez.com") 
-			: "TestUser:super_user,editor,read_only,approver,administrator,reviewer,manager,vuid_requestor";
+			: "TestUser:super_user,editor,read_only,approver,administrator,reviewer,vuid_requestor";
 	private static final String TEST_READ_ONLY_SSO_TOKEN = usePrismeForRolesByToken() ? 
 			getTokenFromPrisme("readonly@readonly.com", "readonly@readonly.com") : "TestReadOnlyUser:read_only";
 
@@ -749,6 +755,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		List<String> preferredDialects = new ArrayList<>();
 		preferredDialects.add(MetaData.GB_ENGLISH_DIALECT.getPrimordialUuid().toString());
 		preferredDialects.add(MetaData.US_ENGLISH_DIALECT.getPrimordialUuid().toString());
+		
+		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
 
 		RestConceptCreateData newConceptData = new RestConceptCreateData(
 				parentIds,
@@ -818,12 +826,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(activeHasParentSememes.size(), 2);
 
 		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
-		// Ensure retired sememe version has different time
-		Thread.sleep(1000);
-		Get.commitService().commit("dummy commit").get();
-		Thread.sleep(1000);
-		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
-		
+
 		// Test retirement of a has_parent sememe
 		Response retireSecondHasParentItemResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent + RestPaths.componentComponent
 				+ RestPaths.updatePathComponent + RestPaths.updateStateComponent + association2Sememe.identifiers.getFirst().toString())
@@ -840,9 +843,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		activeHasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
 		Assert.assertEquals(activeHasParentSememes.size(), 1);
 		
-		//TODO This sleep should not be necessary, yet, without it, we sometimes fail.  Need to figure out why....
-		Thread.sleep(2000);
-		
+
 		// Confirm only 1 parent is reflected in logic graph sememe
 		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
 		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
@@ -860,10 +861,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 1);
 
-		//TODO Joel, this isn't working reliably, but I dont know why....
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
-//		Assert.assertTrue(! parentSequencesFromLogicGraph.contains(parent2Sequence));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1Sequence));
+		Assert.assertTrue(! parentSequencesFromLogicGraph.contains(parent2Sequence));
 
+	
 		// Retrieve concept to confirm only one parent in taxonomy
 		Response taxonomyResponse = target(taxonomyRequestPath)
 				.queryParam(RequestParameters.id, newConceptSequence)
@@ -1024,9 +1025,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		
 		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
 		
-		//TODO This sleep should not be necessary, yet, without it, we sometimes fail.  Need to figure out why....
-		Thread.sleep(3000);
-
 		// Confirm all three parents are reflected in logic graph sememe
 		Optional<SememeChronology<? extends LogicGraphSememe<?>>> conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
 		if (! conceptLogicGraphSememeChronologyOptional.isPresent()) {
@@ -1040,13 +1038,12 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			throw new RuntimeException(msg);
 		}		
 		Set<Integer> parentSequencesFromLogicGraph = Frills.getParentConceptSequencesFromLogicGraph((LogicGraphSememe<?>)latestLogicGraphSememeVersion.get().value());
+		
+		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
 
-//TODO Joel this isn't working all the time, and I don't know why.
-//		Assert.assertEquals(parentSequencesFromLogicGraph.size(), 3);
-//
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1.getConceptSequence()));
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2.getConceptSequence()));
-//		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent1.getConceptSequence()));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent2.getConceptSequence()));
+		Assert.assertTrue(parentSequencesFromLogicGraph.contains(parent3Sequence));
 
 		// Retrieve concept to confirm three parents in taxonomy
 		Response taxonomyResponse = target(taxonomyRequestPath)
@@ -1077,6 +1074,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		parent3Sequence = MetaData.CHINESE_LANGUAGE.getConceptSequence();
 		parent3 = Get.conceptService().getConcept(parent3Sequence);
 		
+		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
+		
 		RestDynamicSememeBase updateData = new RestDynamicSememeBase(
 				new RestDynamicSememeData[] { new RestDynamicSememeUUID(0, parent3.getPrimordialUuid()) },
 				true);
@@ -1095,9 +1094,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestWriteResponse changedThirdHasParentAssociationItemResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
 		
 		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
-
-		//TODO This sleep should not be necessary, yet, without it, we sometimes fail.  Need to figure out why....
-		Thread.sleep(3000);
 		
 		// Confirm all three parents are reflected in logic graph sememe
 		conceptLogicGraphSememeChronologyOptional = Frills.getLogicGraphChronology(newConceptResponse.nid, true);
@@ -1197,16 +1193,15 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertNotNull(conceptVersionFromTaxonomy);
 
 		// Confirm all three parents reflected in taxonomy
-//TODO also failing sometimes, but don't know why
-//		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
-//
-//		parentConceptSequencesFromTaxonomy = new HashSet<>();
-//		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
-//			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
-//		}
-//		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 2);
-//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1.getConceptSequence()));
-//		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2.getConceptSequence()));
+		Assert.assertEquals(conceptVersionFromTaxonomy.getParents().size(), 2);
+
+		parentConceptSequencesFromTaxonomy = new HashSet<>();
+		for (RestConceptVersion parentConceptFromTaxonomy : conceptVersionFromTaxonomy.getParents()) {
+			parentConceptSequencesFromTaxonomy.add(parentConceptFromTaxonomy.getConChronology().getIdentifiers().sequence);
+		}
+		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 2);
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1.getConceptSequence()));
+		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2.getConceptSequence()));
 	}
 
 	@Test
@@ -5529,5 +5524,279 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		descriptions = XMLUtils.unmarshalObjectArray(RestSememeDescriptionVersion.class, result);
 
 		Assert.assertEquals(descriptions[0].descriptionExtendedTypeConcept.sequence.intValue(), MetaData.BOOLEAN_LITERAL.getConceptSequence());
+	}
+	
+	@Test
+	public void testModuleSearch() throws RestException
+	{
+		
+		int requestPageSize = 6;
+		String xPathToken = "/restCoordinatesToken/token";
+		
+		String result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.LOINC_MODULES.getConceptSequence() + "," 
+							+ MetaData.ISAAC_MODULE.getConceptSequence() + "," 
+							+ MetaData.VHAT_MODULES.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token1 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenLoincIsaacVhat = token1.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.LOINC_MODULES.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token2 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenLoinc = token2.getTextContent();
+
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.VHAT_MODULES.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token3 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenVhat = token3.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token4 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaac = token4.getTextContent();
+		
+		String xPathResults = "count(/restSearchResultPage/results)";
+		
+		String result1 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenLoincIsaacVhat)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count1 = XMLUtils.getNumberFromXml(result1, xPathResults);
+		Assert.assertEquals(count1, (double) requestPageSize);
+		
+		String result2 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenLoinc)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count2 = XMLUtils.getNumberFromXml(result2, xPathResults);
+		Assert.assertEquals(count2, (double) 0);
+					
+		String result3 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenVhat)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count3 = XMLUtils.getNumberFromXml(result3, xPathResults);
+		Assert.assertEquals(count3, (double) 0);
+		
+		String result4 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaac)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count4 = XMLUtils.getNumberFromXml(result4, xPathResults);
+		Assert.assertEquals(count4, (double) requestPageSize);
+	}
+	
+	@Test
+	public void testPathSearch() throws RestException
+	{
+		
+		int requestPageSize = 6;
+		String xPathToken = "/restCoordinatesToken/token";
+		
+		String result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token1 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenDevPath = token1.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token2 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenMasterPath = token2.getTextContent();
+
+		String xPathResults = "count(/restSearchResultPage/results)";
+		
+		String result1 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count1 = XMLUtils.getNumberFromXml(result1, xPathResults);
+		Assert.assertEquals(count1, (double) requestPageSize);
+		
+		String result2 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count2 = XMLUtils.getNumberFromXml(result2, xPathResults);
+		Assert.assertEquals(count2, (double) 0);
+	}
+	
+	@Test
+	public void testModuleAndPathSearch() throws RestException
+	{
+		
+		int requestPageSize = 6;
+		String xPathToken = "/restCoordinatesToken/token";
+		
+		String result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence() + "," 
+							+ MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token1 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacVhatDevPath = token1.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence() + "," 
+							+ MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token2 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacVhatMasterPath = token2.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token3 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacDevPath = token3.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.ISAAC_MODULE.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token4 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenIsaacMasterPath = token4.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.DEVELOPMENT_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token5 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenVhatDevPath = token5.getTextContent();
+		
+		result = target(coordinatesTokenRequestPath)
+				.queryParam(RequestParameters.modules, MetaData.VHAT_MODULES.getConceptSequence())
+				.queryParam(RequestParameters.path, MetaData.MASTER_PATH.getConceptSequence())
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		Node token6 = XMLUtils.getNodeFromXml(result, xPathToken);
+		String stampCoordTokenVhatMasterPath = token6.getTextContent();
+		
+		
+		String xPathResults = "count(/restSearchResultPage/results)";
+		
+		String result1 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacVhatDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count1 = XMLUtils.getNumberFromXml(result1, xPathResults);
+		Assert.assertEquals(count1, (double) requestPageSize);
+		
+		String result2 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacVhatMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count2 = XMLUtils.getNumberFromXml(result2, xPathResults);
+		Assert.assertEquals(count2, (double) 0);
+		
+		String result3 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count3 = XMLUtils.getNumberFromXml(result3, xPathResults);
+		Assert.assertEquals(count3, (double) requestPageSize);
+		
+		String result4 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenIsaacMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count4 = XMLUtils.getNumberFromXml(result4, xPathResults);
+		Assert.assertEquals(count4, (double) 0);
+
+		String result5 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenVhatDevPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count5 = XMLUtils.getNumberFromXml(result5, xPathResults);
+		Assert.assertEquals(count5, (double) 0);
+		
+		String result6 = target(descriptionSearchRequestPath)
+				.queryParam(RequestParameters.coordToken, stampCoordTokenVhatMasterPath)
+				.queryParam(RequestParameters.query, "dynamic*")
+				.queryParam(RequestParameters.maxPageSize, requestPageSize)
+				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get()
+				.readEntity(String.class);
+		double count6 = XMLUtils.getNumberFromXml(result6, xPathResults);
+		Assert.assertEquals(count6, (double) 0);
+	}
+	
+	// TODO: Need to move to ISAAC/query-provider
+	@Test
+	public void testBuildingStampQuery()
+			throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IllegalArgumentException
+	{
+		String query = "cuff";
+		String field = "_string_content_";
+		boolean prefixSearch = true;
+		boolean metadataOnly = false;
+		LuceneIndexer li = LookupService.get().getService(DescriptionIndexer.class);
+		
+		Method buildTokenizedStringQuery = LuceneIndexer.class
+					.getDeclaredMethod("buildTokenizedStringQuery", String.class, String.class, boolean.class, boolean.class);
+		buildTokenizedStringQuery.setAccessible(true);
+		Query q_base = (Query) buildTokenizedStringQuery.invoke(li, query, field, prefixSearch, metadataOnly);
+		
+		Method buildStampQuery = LuceneIndexer.class
+				.getDeclaredMethod("buildStampQuery", Query.class, StampCoordinate.class);
+		buildStampQuery.setAccessible(true);
+		Query q_nullStamp = (Query) buildStampQuery.invoke(li, q_base, null);
+		Assert.assertEquals(q_base, q_nullStamp);
+		
+		StampCoordinate stamp = Get.coordinateFactory().createDevelopmentLatestStampCoordinate();
+		Query q_withStamp = (Query) buildStampQuery.invoke(li, q_base, stamp);
+		String str_q_withStamp = q_withStamp.toString();
+		boolean queryContainsDevPath = str_q_withStamp.contains(MetaData.DEVELOPMENT_PATH.getPrimordialUuid().toString());
+		Assert.assertNotEquals(q_base, q_withStamp);
+		Assert.assertTrue(queryContainsDevPath);
+		
+		stamp = Get.coordinateFactory().createStampCoordinate(Get.conceptSpecification(stamp.getStampPosition().getStampPath().getPathConceptSequence()), 
+					stamp.getStampPrecedence(), 
+					Arrays.asList(Get.conceptSpecification(MetaData.ISAAC_MODULE.getConceptSequence())),
+					stamp.getAllowedStates(),
+					2017, 1, 1, 1, 0, 0);
+		q_withStamp = (Query) buildStampQuery.invoke(li, q_base, stamp);
+		str_q_withStamp = q_withStamp.toString();
+		boolean queryContainsIsaacModule = str_q_withStamp.contains(MetaData.ISAAC_MODULE.getPrimordialUuid().toString());
+		Assert.assertNotEquals(q_base, q_withStamp);
+		Assert.assertTrue(queryContainsIsaacModule);
 	}
 }
