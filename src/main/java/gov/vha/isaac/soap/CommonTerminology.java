@@ -119,8 +119,6 @@ public class CommonTerminology {
 	public static ConceptDetailTransfer getConceptDetail(Long codeSystemVuid, String versionName, String code)
 			throws STSException {
 
-		// code is name
-
 		// validate input
 		prohibitAuthoringVersion(versionName);
 
@@ -139,12 +137,15 @@ public class CommonTerminology {
 		log.debug("codeSystemNid:" + codeSystemNid);
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> codeSystemConcept = conceptService
 				.getOptionalConcept(Get.identifierService().getConceptNid(codeSystemNid));
-		log.debug("Terminology Type :" + codeSystemConcept.get().getConceptSequence() + " : "
-				+ codeSystemConcept.get().getConceptDescriptionText());
-
+		
 		if (!codeSystemConcept.isPresent()) {
 			throw new STSException("Code system VUID '" + codeSystemVuid + "' not found.");
 		}
+		
+		log.debug("Terminology Type :" + codeSystemConcept.get().getConceptSequence() + " : "
+				+ codeSystemConcept.get().getConceptDescriptionText());
+		
+		validateVersionName(versionName, codeSystemConcept.get().getConceptDescriptionText(), true);
 
 		// if code is VUID do direct lookup, if contains ap
 		Optional<Integer> intValue = NumericUtils.getInt(code);
@@ -271,8 +272,7 @@ public class CommonTerminology {
 		// validate parameters
 		subsetVuid = validateSubsetVuid(subsetVuid);
 		prohibitAuthoringVersion(versionName);
-		versionName = validateVersionName(versionName);
-
+		
 		pageSize = validatePageSize(pageSize);
 		pageNumber = validatePageNumber(pageNumber);
 
@@ -287,6 +287,8 @@ public class CommonTerminology {
 				.getOptionalConcept(Get.identifierService().getConceptNid(nid));
 
 		if (concept.isPresent()) {
+			
+			versionName = validateVersionName(versionName, concept.get().getConceptDescriptionText(), true);
 
 			Frills.getAllChildrenOfConcept(concept.get().getConceptSequence(), true, false)
 					.forEach(conceptSequenceId -> {
@@ -372,8 +374,18 @@ public class CommonTerminology {
 	 * @param versionName
 	 * @return
 	 */
-	private static String validateVersionName(String versionName) {
-		// TODO Auto-generated method stub
+	private static String validateVersionName(String versionName, String codeSystemName, boolean isRequired) throws STSException{
+		
+		if (isRequired && (versionName == null || versionName.trim().equals("")))
+		{
+			throw new STSException("Version name is a required parameter.");
+		}
+		
+		if (!versionName.equalsIgnoreCase(CURRENT_VERSION))
+		{
+			throw new STSException("Code system '" + codeSystemName + "' with version name '" + versionName + "' not found.");
+		}
+		
 		return versionName;
 	}
 
