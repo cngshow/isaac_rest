@@ -14,6 +14,13 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2017/08/15 - 1.16.3
+    * All search APIs (except for nidReferences) now pay attention to the coordToken during search.  The search specifically takes into account 
+        the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters to restrict the search to matching 
+        items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module (which also happens to be a 
+        /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology or even a 
+        particular version of a terminology. 
+
 * 2017/07/25 - 1.16.2
     * Added hasParentAssociationSememe to the RestWriteResponseConceptCreate
     * Added initial SOAP services

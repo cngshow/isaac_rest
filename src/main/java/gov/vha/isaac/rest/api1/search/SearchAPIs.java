@@ -83,7 +83,8 @@ import gov.vha.isaac.rest.session.SecurityUtils;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
 @Path(RestPaths.searchAPIsPathComponent)
-@RolesAllowed({PrismeRoleConstants.AUTOMATED, PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.ADMINISTRATOR, PrismeRoleConstants.READ_ONLY, PrismeRoleConstants.EDITOR, PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER})
+@RolesAllowed({PrismeRoleConstants.AUTOMATED, PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.ADMINISTRATOR, PrismeRoleConstants.READ_ONLY, PrismeRoleConstants.EDITOR, 
+	PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER})
 public class SearchAPIs
 {
 	private static Logger log = LogManager.getLogger();
@@ -129,6 +130,11 @@ public class SearchAPIs
 	 *  referencedConcept.
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
 	 * obtained by a separate (prior) call to getCoordinatesToken().
+	 * 
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
 	 * 
 	 * @return the list of descriptions that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
@@ -240,7 +246,13 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
+	 * 
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
 	 *
 	 * @return the list of descriptions that matched, along with their score. Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
@@ -465,7 +477,13 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
+	 *
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
 	 *
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
@@ -634,7 +652,13 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
+	 * 
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
 	 *  
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
@@ -705,7 +729,8 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
 
 	 * @return - the list of items that were found that matched - note that if the passed in UUID matched on a sememe - the returned top level object will
 	 * be the concept that references the sememe with the hit.  Scores are irrlevant with this call, you will either have an exact match, or no result.
