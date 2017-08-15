@@ -373,7 +373,7 @@ public class TerminologyConfigHelper {
 
 	private static Element getTerminologyConfigRootElement() throws Exception {
 		SAXBuilder builder = new SAXBuilder();
-		validateXMLAgainstSchema(configFileName, schemaFileName);
+		validateXMLAgainstSchema(fileRootDirectory + configFileName, fileRootDirectory + schemaFileName);
 		File xml = new File(fileRootDirectory + configFileName);
 		if (xml == null) {
 			throw new FileNotFoundException("Unable to locate file: " + fileRootDirectory + configFileName);
@@ -385,31 +385,30 @@ public class TerminologyConfigHelper {
 		return document.getRootElement();
 	}
 
-	private static void validateXMLAgainstSchema(String documentFilename, String schemaFilename) throws Exception {
+	private static boolean validateXMLAgainstSchema(String xsdPath, String xmlPath) throws Exception {
 
-		// parse an XML document into a DOM tree
-		DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-		org.w3c.dom.Document document = parser.parse(new File(fileRootDirectory + documentFilename));
-
-		// create a SchemaFactory capable of understanding WXS schemas
-		SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-		// added to avoid XXE injections
-		factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-
-		// load a WXS schema, represented by a Schema instance
-		Source schemaFile = new StreamSource(new File(fileRootDirectory + schemaFilename));
-		Schema schema = factory.newSchema(schemaFile);
-
-		// create a Validator instance, which can be used to validate an
-		// instance document
-		Validator validator = schema.newValidator();
-
-		// validate the DOM tree
 		try {
-			validator.validate(new DOMSource(document));
+			// create a SchemaFactory capable of understanding WXS schemas
+			SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+			// added to avoid XXE injections
+			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+	
+			// load a WXS schema, represented by a Schema instance
+			Source schemaFile = new StreamSource(new File(xsdPath));
+			Schema schema = factory.newSchema(schemaFile);
+	
+			// create a Validator instance, which can be used to validate an
+			// instance document
+			Validator validator = schema.newValidator();
+
+			// validate the DOM tree
+			validator.validate(new StreamSource(new File(xmlPath)));
+			return true;
+			
 		} catch (SAXException e) {
 			// instance document is invalid!
-		}
+		} 
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
