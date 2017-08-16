@@ -83,7 +83,8 @@ import gov.vha.isaac.rest.session.SecurityUtils;
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a> 
  */
 @Path(RestPaths.searchAPIsPathComponent)
-@RolesAllowed({PrismeRoleConstants.AUTOMATED, PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.ADMINISTRATOR, PrismeRoleConstants.READ_ONLY, PrismeRoleConstants.EDITOR, PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER})
+@RolesAllowed({PrismeRoleConstants.AUTOMATED, PrismeRoleConstants.SUPER_USER, PrismeRoleConstants.ADMINISTRATOR, PrismeRoleConstants.READ_ONLY, PrismeRoleConstants.EDITOR, 
+	PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER})
 public class SearchAPIs
 {
 	private static Logger log = LogManager.getLogger();
@@ -144,6 +145,11 @@ public class SearchAPIs
 	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be 
 	 * obtained by a separate (prior) call to getCoordinatesToken().
 	 * 
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
+	 * 
 	 * @return the list of descriptions that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
 	 * @throws RestException 
@@ -188,6 +194,7 @@ public class SearchAPIs
 		final String restPath =
 				RestPaths.searchAppPathComponent + RestPaths.descriptionsComponent
 				+ "?" + RequestParameters.query + "=" + query;
+		
 		if (StringUtils.isNotBlank(extendedDescriptionTypeId))
 		{
 			if (dt != null)
@@ -197,7 +204,8 @@ public class SearchAPIs
 			UUID extendedDescTypeSequence = Util.convertToConceptUUID(extendedDescriptionTypeId);
 			
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
-			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, extendedDescTypeSequence, limit, Long.MAX_VALUE);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class)
+					.query(query, extendedDescTypeSequence, limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
 			
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
@@ -208,7 +216,8 @@ public class SearchAPIs
 		} else {
 			log.debug("Performing description search for '" + query + "'");
 			int limit = calculateQueryLimit(maxPageSize, pageNum);
-			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class).query(query, dt, limit, Long.MAX_VALUE);
+			List<SearchResult> ochreSearchResults = LookupService.get().getService(DescriptionIndexer.class)
+					.query(query, dt, limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
 					pageNum,
@@ -253,7 +262,13 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
+	 * 
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
 	 *
 	 * @return the list of descriptions that matched, along with their score. Note that the textual value may _NOT_ be included,
 	 * if the description that matched is not active on the default path.
@@ -346,11 +361,11 @@ public class SearchAPIs
 					throw new RestException("restrictTo", "Invalid restriction.  Must be 'association', 'mapset', 'sememe' or 'metadata'");
 			}
 		}
-
+		
 		DescriptionIndexer indexer = LookupService.get().getService(DescriptionIndexer.class);
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
-		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, Long.MAX_VALUE, filter, metadataRestrict);
+		List<SearchResult> ochreSearchResults = indexer.query(query, true, null, limit, Long.MAX_VALUE, filter, metadataRestrict, RequestInfo.get().getStampCoordinate());
 		
 		if (mergeOnConcepts)
 		{
@@ -479,7 +494,13 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
+	 *
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
 	 *
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
@@ -541,7 +562,7 @@ public class SearchAPIs
 			
 			List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 					.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-					limit, Long.MAX_VALUE);
+					limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
 			return getRestSearchResultsFromOchreSearchResults(
 					ochreSearchResults,
 					pageNum,
@@ -559,7 +580,8 @@ public class SearchAPIs
 			{			
 				List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 						.query(NumberUtilities.wrapIntoRefexHolder(NumberUtilities.parseUnknown(query)), false, 
-								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, Long.MAX_VALUE);
+								processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns),
+								limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
 				return getRestSearchResultsFromOchreSearchResults(
 						ochreSearchResults,
 						pageNum,
@@ -577,7 +599,8 @@ public class SearchAPIs
 					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.queryNumericRange(NumberUtilities.wrapIntoRefexHolder(interval.getLeft()), interval.isLeftInclusive(), 
 									NumberUtilities.wrapIntoRefexHolder(interval.getRight()), interval.isRightInclusive(),
-									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, Long.MAX_VALUE);
+									processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
+									limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
 					return getRestSearchResultsFromOchreSearchResults(
 							ochreSearchResults,
 							pageNum,
@@ -591,7 +614,7 @@ public class SearchAPIs
 					//nope	Run it as a string search.
 					List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
 							.query(new DynamicSememeStringImpl(searchString),false, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
-									limit, Long.MAX_VALUE);
+									limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
 					return getRestSearchResultsFromOchreSearchResults(
 							ochreSearchResults,
 							pageNum,
@@ -648,7 +671,13 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
+	 * 
+	 * The search specifically takes into account the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters
+	 * to restrict the search to matching items.  'modules' are also evaluated recursively, so you can pass the identifier for the VHAT_MODULES module 
+	 * (which also happens to be a /system/terminologyTypes value - all "terminologyType" constants work here) to restrict a search to a particular terminology
+	 * or even a particular version of a terminology. 
 	 *  
 	 * @return  the list of sememes that matched, along with their score.  Note that the textual value may _NOT_ be included,
 	 * if the sememe that matched is not active on the default path.
@@ -692,9 +721,10 @@ public class SearchAPIs
 		restPath += (! StringUtils.isBlank(expand) ? ("&" + RequestParameters.expand + "=" + expand) : "");
 		
 		int limit = calculateQueryLimit(maxPageSize, pageNum);
-
+		
 		List<SearchResult> ochreSearchResults = LookupService.get().getService(SememeIndexer.class)
-				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), limit, Long.MAX_VALUE);
+				.query(nid, processAssemblageRestrictions(sememeAssemblageId), toArray(dynamicSememeColumns), 
+						limit, Long.MAX_VALUE, RequestInfo.get().getStampCoordinate());
 		return getRestSearchResultsFromOchreSearchResults(
 				ochreSearchResults,
 				pageNum,
@@ -720,7 +750,8 @@ public class SearchAPIs
 	 *  latest version of the referenced concept chronology.
 	 *  - 'versionsAll' if 'referencedConcept is included in the expand list, you may also include 'versionsAll' to return all versions of the 
 	 *  referencedConcept.
-	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained by a separate (prior) call to getCoordinatesToken().
+	 * @param coordToken specifies an explicit serialized CoordinatesToken string specifying all coordinate parameters. A CoordinatesToken may be obtained 
+	 * by a separate (prior) call to getCoordinatesToken().
 
 	 * @return - the list of items that were found that matched - note that if the passed in UUID matched on a sememe - the returned top level object will
 	 * be the concept that references the sememe with the hit.  Scores are irrlevant with this call, you will either have an exact match, or no result.
