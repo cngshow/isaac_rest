@@ -69,6 +69,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.va.oia.terminology.converters.sharedUtils.IBDFCreationUtility;
 import gov.va.oia.terminology.converters.sharedUtils.stats.ConverterUUID;
 import gov.vha.isaac.MetaData;
+import gov.vha.isaac.ochre.api.DataTarget;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.PrismeRole;
@@ -1204,6 +1205,64 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(parentConceptSequencesFromTaxonomy.size(), 2);
 		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent1.getConceptSequence()));
 		Assert.assertTrue(parentConceptSequencesFromTaxonomy.contains(parent2.getConceptSequence()));
+		
+		// Test automatic reactivation of has_parent association sememe by VHATIsAHasParentSynchronizingChronologyChangeListener
+		// due to logic graph change
+		
+		// Instead of creating a new VHAT has_parent association sememe for parent3,
+		// VHATIsAHasParentSynchronizingChronologyChangeListener should reactivate the existing retired sememe
+		final int retiredSememeNid = changedThirdHasParentAssociationItemResponse.nid;
+		
+		// loading and updating the existing logic graph sememe
+		@SuppressWarnings("unchecked")
+		LogicGraphSememeImpl newLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology))
+			.createMutableVersion(LogicGraphSememeImpl.class, State.ACTIVE, vhatEditToken.getEditCoordinate());
+		newLogicGraphSememeVersion.setGraphData(Frills.createConceptParentLogicalExpression(parent1.getConceptSequence(), parent2.getConceptSequence(), parent3.getConceptSequence()).getData(DataTarget.INTERNAL));
+		//log.debug("Created the logic graph " + newLogicGraphSememeVersion);
+		try {
+			Get.commitService().addUncommittedNoChecks(conceptLogicGraphSememeChronology).get();
+		} catch (RuntimeException | InterruptedException | ExecutionException e) {
+			log.error("FAILED calling addUncommitted() on logic graph of VHAT concept " + conceptLogicGraphSememeChronology.getReferencedComponentNid(), e);
+			throw e;
+		}
+		Get.commitService().commit("Committing new version of logic graph sememe " + conceptLogicGraphSememeChronology.getPrimordialUuid() 
+				+ " with 3 parent(s) for concept " 
+				+ conceptLogicGraphSememeChronology.getReferencedComponentNid()).get();
+		
+		// Wait for all VHATIsAHasParentSynchronizingChronologyChangeListener jobs to complete
+		LookupService.get().getService(VHATIsAHasParentSynchronizingChronologyChangeListener.class).waitForJobsToComplete();
+
+		// Retrieve VHAT has_parent association sememes to confirm version reactivated
+		hasParentSememes = VHATIsAHasParentSynchronizingChronologyChangeListener.getActiveHasParentAssociationDynamicSememesAttachedToComponent(newConceptResponse.nid);
+		foundAssociationSememe1 = null;
+		foundAssociationSememe2 = null;
+		DynamicSememeImpl foundAssociationSememe3 = null;
+		for (DynamicSememeImpl association : hasParentSememes) {
+			if (association.getReferencedComponentNid() == newConceptResponse.nid) {
+				// Only VHAT has_parent associations should be on this concept (though that could change in the future)
+				Assert.assertEquals(association.getAssemblageSequence(), VHATConstants.VHAT_HAS_PARENT_ASSOCIATION_TYPE.getConceptSequence());
+
+				UUID targetUuid = ((DynamicSememeUUIDImpl)association.getData()[0]).getDataUUID();
+
+				if (targetUuid.equals(parent1.getPrimordialUuid())) {
+					foundAssociationSememe1 = association;
+				} else if (targetUuid.equals(parent2.getPrimordialUuid())) {
+					foundAssociationSememe2 = association;
+				} else if (targetUuid.equals(parent3.getPrimordialUuid())) {
+					foundAssociationSememe3 = association;
+				} else {
+					Assert.assertTrue(
+							targetUuid.equals(parent1.getPrimordialUuid())
+							|| targetUuid.equals(parent2.getPrimordialUuid())
+							|| targetUuid.equals(parent3.getPrimordialUuid()));
+				}
+			}
+		}
+		Assert.assertNotNull(foundAssociationSememe1);
+		Assert.assertNotNull(foundAssociationSememe2);
+		Assert.assertNotNull(foundAssociationSememe3);
+		
+		Assert.assertEquals(foundAssociationSememe3.getNid(), retiredSememeNid);
 	}
 
 	@Test
