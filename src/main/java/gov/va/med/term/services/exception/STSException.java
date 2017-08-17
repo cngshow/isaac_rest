@@ -1,5 +1,6 @@
-package gov.vha.isaac.soap.exception;
+package gov.va.med.term.services.exception;
 
+//moved to this package since SOAP will show the package name in the error response.
 public class STSException extends Exception
 {
 

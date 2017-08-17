@@ -1,6 +1,6 @@
 package gov.vha.isaac.soap;
 
-import gov.vha.isaac.soap.exception.STSException;
+import gov.va.med.term.services.exception.STSException;
 import gov.vha.isaac.soap.transfer.ConceptDetailTransfer;
 
 import gov.vha.isaac.soap.transfer.MapEntryValueListTransfer;
