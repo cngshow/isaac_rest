@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.h2.util.StringUtils;
 
+import gov.va.med.term.services.exception.STSException;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.LookupService;
@@ -46,6 +47,10 @@ import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.DynamicSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.StringSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeColumnInfo;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
+import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUtility;
+import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.index.SearchResult;
@@ -59,7 +64,6 @@ import gov.vha.isaac.ochre.model.coordinate.StampCoordinateImpl;
 import gov.vha.isaac.ochre.model.coordinate.StampPositionImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
 import gov.vha.isaac.ochre.query.provider.lucene.indexers.SememeIndexer;
-import gov.vha.isaac.soap.exception.STSException;
 import gov.vha.isaac.soap.services.dao.TerminologyConfigHelper;
 import gov.vha.isaac.soap.services.dto.config.MapSetConfig;
 import gov.vha.isaac.soap.transfer.ConceptDetailTransfer;
@@ -86,14 +90,6 @@ public class CommonTerminology {
 			new StampPositionImpl(System.currentTimeMillis(), MetaData.DEVELOPMENT_PATH.getConceptSequence()),
 			ConceptSequenceSet.EMPTY, State.ANY_STATE_SET);
 
-	// Default XML File and Schema
-	private static String configFileName = "TerminologyConfig.xml.hidden";
-	private static String schemaFileName = "TerminologyConfig.xsd";
-
-	private static final String MAPSETS = "MapSets";
-	private static final String VUID = "VUID";
-	private static final String WEB_SERVICE_ACCESSIBLE = "WebServiceAccessible";
-
 	public static final String CONCEPT_CODE_TYPE = "ConceptCode";
 	public static final String DESIGNATION_CODE_TYPE = "DesignationCode";
 	public static final String DESIGNATION_NAME_TYPE = "DesignationName";
@@ -119,8 +115,6 @@ public class CommonTerminology {
 	public static ConceptDetailTransfer getConceptDetail(Long codeSystemVuid, String versionName, String code)
 			throws STSException {
 
-		// code is name
-
 		// validate input
 		prohibitAuthoringVersion(versionName);
 
@@ -139,12 +133,15 @@ public class CommonTerminology {
 		log.debug("codeSystemNid:" + codeSystemNid);
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> codeSystemConcept = conceptService
 				.getOptionalConcept(Get.identifierService().getConceptNid(codeSystemNid));
-		log.debug("Terminology Type :" + codeSystemConcept.get().getConceptSequence() + " : "
-				+ codeSystemConcept.get().getConceptDescriptionText());
 
 		if (!codeSystemConcept.isPresent()) {
 			throw new STSException("Code system VUID '" + codeSystemVuid + "' not found.");
 		}
+
+		log.debug("Terminology Type :" + codeSystemConcept.get().getConceptSequence() + " : "
+				+ codeSystemConcept.get().getConceptDescriptionText());
+
+		validateVersionName(versionName, codeSystemConcept.get().getConceptDescriptionText(), true);
 
 		// if code is VUID do direct lookup, if contains ap
 		Optional<Integer> intValue = NumericUtils.getInt(code);
@@ -271,7 +268,6 @@ public class CommonTerminology {
 		// validate parameters
 		subsetVuid = validateSubsetVuid(subsetVuid);
 		prohibitAuthoringVersion(versionName);
-		versionName = validateVersionName(versionName);
 
 		pageSize = validatePageSize(pageSize);
 		pageNumber = validatePageNumber(pageNumber);
@@ -287,6 +283,8 @@ public class CommonTerminology {
 				.getOptionalConcept(Get.identifierService().getConceptNid(nid));
 
 		if (concept.isPresent()) {
+
+			versionName = validateVersionName(versionName, concept.get().getConceptDescriptionText(), true);
 
 			Frills.getAllChildrenOfConcept(concept.get().getConceptSequence(), true, false)
 					.forEach(conceptSequenceId -> {
@@ -372,8 +370,18 @@ public class CommonTerminology {
 	 * @param versionName
 	 * @return
 	 */
-	private static String validateVersionName(String versionName) {
-		// TODO Auto-generated method stub
+	private static String validateVersionName(String versionName, String codeSystemName, boolean isRequired)
+			throws STSException {
+
+		if (isRequired && (versionName == null || versionName.trim().equals(""))) {
+			throw new STSException("Version name is a required parameter.");
+		}
+
+		if (!versionName.equalsIgnoreCase(CURRENT_VERSION)) {
+			throw new STSException(
+					"Code system '" + codeSystemName + "' with version name '" + versionName + "' not found.");
+		}
+
 		return versionName;
 	}
 
@@ -407,12 +415,19 @@ public class CommonTerminology {
 		prohibitNullValue(mapSetVuid, "MapSet VUID");
 		prohibitNullValue(mapSetVersionName, "MapSet version name");
 		prohibitNullValue(sourceValues, "Source values");
+		
+		//only allowing current for now
+		if (StringUtils.isNullOrEmpty(mapSetVersionName) || !mapSetVersionName.equalsIgnoreCase(CURRENT_VERSION)) {
+			throw new STSException(
+					"Version name '" + mapSetVersionName + "' does not exist.");
+		}
 
 		pageSize = validatePageSize(pageSize);
 		pageNumber = validatePageNumber(pageNumber);
 
 		MapEntryValueListTransfer mapEntryValueListTransfer = new MapEntryValueListTransfer();
 		List<MapEntryValueTransfer> mapEntryValueTransferList = new ArrayList<>();
+		mapEntryValueListTransfer.setTotalNumberOfRecords(0L);
 
 		List<Long> mapSetsNotAcccessibleVuidList = TerminologyConfigHelper.getMapSetsNotAccessibleVuidList();
 
@@ -429,114 +444,38 @@ public class CommonTerminology {
 
 		ConceptService conceptService = Get.conceptService();
 
-		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> concept = conceptService
-				.getOptionalConcept(Get.identifierService().getConceptNid(nid));
+		ConceptChronology<? extends ConceptVersion<?>> concept = conceptService
+				.getOptionalConcept(Get.identifierService().getConceptNid(nid)).orElse(null);
 
-		if (concept.isPresent()) {
+		if (concept != null) {
 
-			Frills.getAllChildrenOfConcept(concept.get().getConceptSequence(), true, false)
-					.forEach(conceptSequenceId -> {
+			Get.sememeService()
+					.getSememesForComponentFromAssemblage(concept.getConceptSequence(),
+							IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE.getConceptSequence())
+					.forEach(mappingSememe -> {
 
-						Get.sememeService()
-								.getSememesForComponent(Get.identifierService().getConceptNid(conceptSequenceId))
-								.forEach(sememe -> {
+						// Source and Target CodeSystem
+						@SuppressWarnings({ "unchecked", "rawtypes" })
+						Optional<LatestVersion<? extends DynamicSememe>> mappingSememeVersion = ((SememeChronology) mappingSememe)
+								.getLatestVersion(DynamicSememe.class, STAMP_COORDINATES);
 
-									if (sememe.getSememeType() == SememeType.DESCRIPTION) {
+						if (mappingSememeVersion.isPresent()) {
+							// Get referenced component for the MapSet values
+							ConceptChronology<? extends ConceptVersion<?>> cc = Get.conceptService()
+									.getConcept(mappingSememeVersion.get().value().getReferencedComponentNid());
+							@SuppressWarnings({ "rawtypes", "unchecked" })
+							Optional<LatestVersion<ConceptVersion<?>>> cv = ((ConceptChronology) cc)
+									.getLatestVersion(ConceptVersion.class, STAMP_COORDINATES);
 
-										@SuppressWarnings({ "unchecked", "rawtypes" })
-										Optional<LatestVersion<DescriptionSememe>> descriptionVersion = ((SememeChronology) sememe)
-												.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
+							if (cv.isPresent()) {
+								mapEntryValueTransferList.addAll(readMapEntryTypes(cv.get().value().getChronology().getNid(), mapSetConfig, sourceValues));
 
-										if (descriptionVersion.isPresent()) {
-
-											MapEntryValueTransfer mapEntryValueTransfer = new MapEntryValueTransfer();
-
-											@SuppressWarnings({ "rawtypes", "unchecked" })
-											List<DescriptionSememe<?>> descSememeList = ((SememeChronology) sememe)
-													.getVisibleOrderedVersionList(STAMP_COORDINATES);
-											Collections.reverse(descSememeList);
-
-											for (DescriptionSememe<?> ds : descSememeList) {
-
-												String vuid = getCodeFromNid(ds.getNid());
-												if (vuid != null) {
-													mapEntryValueTransfer.setVuid(Long.valueOf(vuid));
-												}
-
-												//TODO: check these values
-												String sourceValue = new String();
-												if (CONCEPT_CODE_TYPE.equals(mapSetConfig.getSourceType())) {
-													sourceValue = getCodeFromNid(sememe.getReferencedComponentNid());
-													if (stringExistsInList(sourceValues, sourceValue)) {
-														mapEntryValueTransfer.setSourceValue(sourceValue);
-													}
-												} else if (DESIGNATION_CODE_TYPE.equals(mapSetConfig.getSourceType())) {
-													sourceValue = getCodeFromNid(sememe.getNid());
-													if (stringExistsInList(sourceValues, sourceValue)) {
-														mapEntryValueTransfer.setSourceValue(sourceValue);
-													}
-
-												} else if ((DESIGNATION_NAME_TYPE
-														.equals(mapSetConfig.getSourceType()))) {
-													sourceValue = getPreferredNameDescriptionType(sememe.getNid()); // getSourceDesignationName
-													if (stringExistsInList(sourceValues, sourceValue)) {
-														mapEntryValueTransfer.setSourceValue(sourceValue);
-													}
-												}
-
-												Optional<UUID> sourceDescType = Frills
-														.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
-																ds.getNid());
-												if (sourceDescType.isPresent()) {
-													Optional<String> desc = Frills.getDescription(sourceDescType.get());
-													if (desc.isPresent()) {
-														mapEntryValueTransfer.setSourceDesignationTypeName(desc.get());
-													}
-												}
-
-												// TODO: get target code
-												String targetValue = new String();
-												if (CONCEPT_CODE_TYPE.equals(mapSetConfig.getTargetType())) {
-													targetValue = ""; // mapEntryCacheDTO.getTargetConceptCode()
-													mapEntryValueTransfer.setTargetValue(targetValue);
-												} else if (DESIGNATION_CODE_TYPE
-														.equalsIgnoreCase(mapSetConfig.getTargetType())) {
-													targetValue = ""; // mapEntryCacheDTO.getTargetDesignationCode()
-													mapEntryValueTransfer.setTargetValue(targetValue);
-												} else if (DESIGNATION_NAME_TYPE
-														.equalsIgnoreCase(mapSetConfig.getTargetType())) {
-													targetValue = ""; // mapEntryCacheDTO.getTargetDesignationName()
-													mapEntryValueTransfer.setTargetValue(targetValue);
-												}
-
-												Optional<UUID> targetDescType = Frills
-														.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
-																sememe.getNid());
-												if (targetDescType.isPresent()) {
-													Optional<String> desc = Frills.getDescription(targetDescType.get());
-													if (desc.isPresent()) {
-														mapEntryValueTransfer.setTargetDesignationTypeName(desc.get());
-														mapEntryValueTransfer
-																.setTargetDesignationName("Target Designation Name");
-													}
-												}
-
-												// TODO: get target code system
-												// vuid and version name
-												mapEntryValueTransfer.setTargetCodeSystemVuid(0L); // "targetVersion.getCodeSystem().getVuid()");
-												mapEntryValueTransfer.setTargetCodeSystemVersionName(
-														"Target Code System Version Name");
-
-												mapEntryValueTransfer.setOrder(ds.getSememeSequence()); // mapEntryCacheDTO.getMapEntrySequence()
-												mapEntryValueTransfer.setStatus(ds.getState() == State.ACTIVE);
-
-												mapEntryValueTransferList.add(mapEntryValueTransfer);
-											}
-										}
-									}
-								});
+							}
+						}
 					});
-
+		}
+		else {
+			throw new STSException("Map Set VUID: " + mapSetVuid + " does not exist."); 
 		}
 
 		int resultStart = (pageNumber - 1) * pageSize;
@@ -546,8 +485,9 @@ public class CommonTerminology {
 		if (resultEnd > resultStart) {
 			mapEntryValueListTransfer
 					.setMapEntryValueTransfers(mapEntryValueTransferList.subList(resultStart, resultEnd));
-			mapEntryValueListTransfer.setTotalNumberOfRecords(Long.valueOf(mapEntryValueTransferList.size()));
-		}
+		} 
+		
+		mapEntryValueListTransfer.setTotalNumberOfRecords(Long.valueOf(mapEntryValueTransferList.size()));
 
 		return mapEntryValueListTransfer;
 	}
@@ -674,13 +614,11 @@ public class CommonTerminology {
 											subsets.add(subset);
 										}
 									}
-
 								}
 							});
 							d.setProperties(properties);
 							d.setSubsets(subsets);
 							designations.add(d);
-
 						}
 					}
 				});
@@ -957,12 +895,115 @@ public class CommonTerminology {
 	private static boolean stringExistsInList(Collection<String> collection, String stringToFind) {
 
 		for (String s : collection) {
-			if (org.apache.commons.lang3.StringUtils.containsIgnoreCase(stringToFind, s)) {
+			if (org.apache.commons.lang3.StringUtils.equalsIgnoreCase(stringToFind, s)) {
 				return true;
 			}
 		}
-
 		return false;
+	}
+
+	private static List<MapEntryValueTransfer> readMapEntryTypes(int componentNid, MapSetConfig mapSetConfig, Collection<String> sourceValues) {
+
+		List<MapEntryValueTransfer> mapEntryValueTransferList = new ArrayList<>();
+
+		Get.sememeService().getSememesFromAssemblage(Get.identifierService().getConceptSequence(componentNid))
+				.forEach(sememe -> {
+
+					@SuppressWarnings({ "unchecked", "rawtypes" })
+					Optional<LatestVersion<? extends DynamicSememe>> sememeVersion = ((SememeChronology) sememe)
+							.getLatestVersion(DynamicSememe.class, STAMP_COORDINATES);
+					if (sememeVersion.isPresent() && sememeVersion.get().value().getData() != null
+							&& sememeVersion.get().value().getData().length > 0) {
+						MapEntryValueTransfer mapEntry = new MapEntryValueTransfer();
+
+						mapEntry.setVuid(Frills.getVuId(sememe.getNid(), STAMP_COORDINATES).orElse(null));
+
+						String code = getCodeFromNid(sememeVersion.get().value().getReferencedComponentNid());
+						if (null == code) {
+							code = Frills.getDescription(sememeVersion.get().value().getReferencedComponentNid())
+									.orElse("");
+						}
+
+						mapEntry.setSourceValue(getPreferredNameDescriptionType(
+								sememeVersion.get().value().getReferencedComponentNid()));
+
+						//TODO: this shouldn't be hard coded.
+						mapEntry.setSourceDesignationTypeName("Preferred Name");
+
+						mapEntry.setStatus(sememeVersion.get().value().getState() == State.ACTIVE);
+
+						DynamicSememeUtility ls = LookupService.get().getService(DynamicSememeUtility.class);
+						if (ls == null) {
+							throw new RuntimeException(
+									"An implementation of DynamicSememeUtility is not available on the classpath");
+						} else {
+							DynamicSememeColumnInfo[] dsci = ls.readDynamicSememeUsageDescription(sememeVersion.get().value().getAssemblageSequence()).getColumnInfo();
+							DynamicSememeData dsd[] = sememeVersion.get().value().getData();
+
+							for (DynamicSememeColumnInfo d : dsci) {
+								UUID columnUUID = d.getColumnDescriptionConcept();
+								int col = d.getColumnOrder();
+
+								if (dsd[col] != null && columnUUID != null) {
+									if (columnUUID.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid())) {
+										
+										mapEntry.setTargetValue(Frills.getDescription(UUID.fromString(dsd[col].getDataObject().toString())).orElse(""));
+										
+										UUID targetUuid = UUID.fromString(dsd[col].getDataObject().toString());
+										try {
+											ConceptChronology<? extends ConceptVersion<?>> targetComponent = Get.conceptService().getConcept(targetUuid);
+											
+											//TODO: FIX Target Designation Name
+											mapEntry.setTargetDesignationName(getPreferredNameDescriptionType(targetComponent.getNid()));
+											
+											//TODO: FIX Target Code System Vuid
+											mapEntry.setTargetCodeSystemVuid(Frills.getVuId(targetComponent.getNid()).orElse(9999999L));
+
+										} catch (Exception ex) {
+											//TODO
+										}
+										
+										//TODO: this shouldn't be hard coded.
+										mapEntry.setTargetDesignationTypeName("Preferred Name");
+									} else if (columnUUID.equals(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid())) {
+										log.debug("MAPPING_CODE_DESCRIPTION:" + dsd[col].getDataObject().toString());
+									} else if (columnUUID.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE.getPrimordialUuid())) {
+										// Currently ignored, no XML representation
+									} else if (columnUUID.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_SEQUENCE.getPrimordialUuid())) {
+										mapEntry.setOrder(Integer.parseInt(dsd[col].getDataObject().toString()));
+									} else {
+										log.warn("No mapping match found for UUID: ", columnUUID);
+									}
+								}
+							}
+							
+							
+							Get.sememeService()
+									.getSememesForComponentFromAssemblage(componentNid,IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(mappingStrExt -> {
+										@SuppressWarnings({ "unchecked", "rawtypes" })
+										Optional<LatestVersion<? extends DynamicSememe>> mappingStrExtVersion = ((SememeChronology) mappingStrExt)
+												.getLatestVersion(DynamicSememe.class, STAMP_COORDINATES);
+
+										if (mappingStrExtVersion.isPresent()) {
+											DynamicSememeData dsd2[] = mappingStrExtVersion.get().value().getData();
+											if (dsd2.length == 2) {
+												if (dsd2[0].getDataObject().equals(IsaacMappingConstants.get().MAPPING_TARGET_CODE_SYSTEM_VERSION.getNid())) {
+													mapEntry.setTargetCodeSystemVersionName(dsd2[1].getDataObject().toString());
+												}
+											}
+										}
+									});
+						}
+						
+						//filter records based on match to source values based on mapset config
+						if (stringExistsInList(sourceValues, mapEntry.getSourceValue()))
+						{
+							mapEntryValueTransferList.add(mapEntry);
+						}
+					}
+				});
+
+		return mapEntryValueTransferList;
 	}
 
 }

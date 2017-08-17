@@ -9,8 +9,8 @@ import gov.vha.isaac.soap.services.dto.config.PropertyConfig;
 import gov.vha.isaac.soap.services.dto.config.RelationshipConfig;
 import gov.vha.isaac.soap.services.dto.config.StateConfig;
 import gov.vha.isaac.soap.services.dto.config.SubsetConfig;
+import gov.va.med.term.services.exception.STSException;
 import gov.vha.isaac.soap.CommonTerminology;
-import gov.vha.isaac.soap.exception.STSException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
