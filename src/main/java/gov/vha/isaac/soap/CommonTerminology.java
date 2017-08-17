@@ -415,12 +415,19 @@ public class CommonTerminology {
 		prohibitNullValue(mapSetVuid, "MapSet VUID");
 		prohibitNullValue(mapSetVersionName, "MapSet version name");
 		prohibitNullValue(sourceValues, "Source values");
+		
+		//only allowing current for now
+		if (StringUtils.isNullOrEmpty(mapSetVersionName) || !mapSetVersionName.equalsIgnoreCase(CURRENT_VERSION)) {
+			throw new STSException(
+					"Version name '" + mapSetVersionName + "' does not exist.");
+		}
 
 		pageSize = validatePageSize(pageSize);
 		pageNumber = validatePageNumber(pageNumber);
 
 		MapEntryValueListTransfer mapEntryValueListTransfer = new MapEntryValueListTransfer();
 		List<MapEntryValueTransfer> mapEntryValueTransferList = new ArrayList<>();
+		mapEntryValueListTransfer.setTotalNumberOfRecords(0L);
 
 		List<Long> mapSetsNotAcccessibleVuidList = TerminologyConfigHelper.getMapSetsNotAccessibleVuidList();
 
@@ -461,11 +468,14 @@ public class CommonTerminology {
 									.getLatestVersion(ConceptVersion.class, STAMP_COORDINATES);
 
 							if (cv.isPresent()) {
-								mapEntryValueListTransfer.setMapEntryValueTransfers(
-										readMapEntryTypes(cv.get().value().getChronology().getNid()));
+								mapEntryValueTransferList.addAll(readMapEntryTypes(cv.get().value().getChronology().getNid(), mapSetConfig, sourceValues));
+
 							}
 						}
 					});
+		}
+		else {
+			throw new STSException("Map Set VUID: " + mapSetVuid + " does not exist."); 
 		}
 
 		int resultStart = (pageNumber - 1) * pageSize;
@@ -475,9 +485,9 @@ public class CommonTerminology {
 		if (resultEnd > resultStart) {
 			mapEntryValueListTransfer
 					.setMapEntryValueTransfers(mapEntryValueTransferList.subList(resultStart, resultEnd));
-			mapEntryValueListTransfer.setTotalNumberOfRecords(
-					Long.valueOf(mapEntryValueListTransfer.getMapEntryDetailTransfers().size()));
-		}
+		} 
+		
+		mapEntryValueListTransfer.setTotalNumberOfRecords(Long.valueOf(mapEntryValueTransferList.size()));
 
 		return mapEntryValueListTransfer;
 	}
@@ -885,15 +895,14 @@ public class CommonTerminology {
 	private static boolean stringExistsInList(Collection<String> collection, String stringToFind) {
 
 		for (String s : collection) {
-			if (org.apache.commons.lang3.StringUtils.containsIgnoreCase(stringToFind, s)) {
+			if (org.apache.commons.lang3.StringUtils.equalsIgnoreCase(stringToFind, s)) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
-	private static List<MapEntryValueTransfer> readMapEntryTypes(int componentNid) {
+	private static List<MapEntryValueTransfer> readMapEntryTypes(int componentNid, MapSetConfig mapSetConfig, Collection<String> sourceValues) {
 
 		List<MapEntryValueTransfer> mapEntryValueTransferList = new ArrayList<>();
 
@@ -921,8 +930,7 @@ public class CommonTerminology {
 						//TODO: this shouldn't be hard coded.
 						mapEntry.setSourceDesignationTypeName("Preferred Name");
 
-						boolean isActive = sememeVersion.get().value().getState() == State.ACTIVE;
-						mapEntry.setStatus(isActive);
+						mapEntry.setStatus(sememeVersion.get().value().getState() == State.ACTIVE);
 
 						DynamicSememeUtility ls = LookupService.get().getService(DynamicSememeUtility.class);
 						if (ls == null) {
@@ -940,22 +948,16 @@ public class CommonTerminology {
 									if (columnUUID.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid())) {
 										
 										mapEntry.setTargetValue(Frills.getDescription(UUID.fromString(dsd[col].getDataObject().toString())).orElse(""));
-
+										
 										UUID targetUuid = UUID.fromString(dsd[col].getDataObject().toString());
 										try {
 											ConceptChronology<? extends ConceptVersion<?>> targetComponent = Get.conceptService().getConcept(targetUuid);
 											
-											Collection<RelationshipTransfer> r = getRelationships(targetComponent);
-
-											// Target Designation Name
-											//TODO: FIX
+											//TODO: FIX Target Designation Name
 											mapEntry.setTargetDesignationName(getPreferredNameDescriptionType(targetComponent.getNid()));
 											
-											//TODO: FIX
+											//TODO: FIX Target Code System Vuid
 											mapEntry.setTargetCodeSystemVuid(Frills.getVuId(targetComponent.getNid()).orElse(9999999L));
-											
-											//check to see which designations this is retrieving
-											//List<DesignationDetailTransfer> designations = getDesignations(targetComponent);
 
 										} catch (Exception ex) {
 											//TODO
@@ -963,8 +965,9 @@ public class CommonTerminology {
 										
 										//TODO: this shouldn't be hard coded.
 										mapEntry.setTargetDesignationTypeName("Preferred Name");
-										
-									} else if (columnUUID.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE .getPrimordialUuid())) {
+									} else if (columnUUID.equals(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid())) {
+										log.debug("MAPPING_CODE_DESCRIPTION:" + dsd[col].getDataObject().toString());
+									} else if (columnUUID.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE.getPrimordialUuid())) {
 										// Currently ignored, no XML representation
 									} else if (columnUUID.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_SEQUENCE.getPrimordialUuid())) {
 										mapEntry.setOrder(Integer.parseInt(dsd[col].getDataObject().toString()));
@@ -992,7 +995,11 @@ public class CommonTerminology {
 									});
 						}
 						
-						mapEntryValueTransferList.add(mapEntry);
+						//filter records based on match to source values based on mapset config
+						if (stringExistsInList(sourceValues, mapEntry.getSourceValue()))
+						{
+							mapEntryValueTransferList.add(mapEntry);
+						}
 					}
 				});
 
