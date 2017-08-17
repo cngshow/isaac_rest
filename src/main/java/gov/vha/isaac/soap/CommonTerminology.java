@@ -155,7 +155,7 @@ public class CommonTerminology {
 			if (nid != 0) {
 				concept = conceptService.getOptionalConcept(Get.identifierService().getConceptNid(nid));
 			} else {
-				throw new STSException(String.format("No results found for %s.", code));
+				throw new STSException("Cannot find concept with code: " + code);
 			}
 
 		} else {
@@ -164,7 +164,7 @@ public class CommonTerminology {
 					.query("'" + code + "'", Integer.MAX_VALUE);
 
 			if (ochreSearchResults == null || ochreSearchResults.size() < 1) {
-				throw new STSException(String.format("No results found for %s.", code));
+				throw new STSException("Cannot find concept with code: " + code);
 			}
 
 			log.debug("count: " + ochreSearchResults.size());
@@ -205,7 +205,7 @@ public class CommonTerminology {
 					Get.identifierService().getConceptNid(sememe.get().getReferencedComponentNid()));
 
 			if (!sememe.isPresent()) {
-				throw new STSException(String.format("No results found for %s.", code));
+				throw new STSException("Cannot find concept with code: " + code);
 			}
 
 		}
@@ -240,7 +240,7 @@ public class CommonTerminology {
 				throw new STSException(msg);
 			}
 		} else {
-			throw new STSException(String.format("No results found for %s.", code));
+			throw new STSException("Cannot find concept with code: " + code);
 		}
 
 		return conceptDetailTransfer;
