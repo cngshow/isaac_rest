@@ -286,68 +286,61 @@ public class CommonTerminology {
 
 			versionName = validateVersionName(versionName, concept.get().getConceptDescriptionText(), true);
 
-			Frills.getAllChildrenOfConcept(concept.get().getConceptSequence(), true, false)
-					.forEach(conceptSequenceId -> {
+			Get.sememeService().getSememesFromAssemblage(concept.get().getConceptSequence()).forEach(sememe -> {
 
-						Get.sememeService()
-								.getSememesForComponent(Get.identifierService().getConceptNid(conceptSequenceId))
-								.forEach(sememe -> {
+				SememeChronology<? extends SememeVersion<?>> ss = Get.sememeService()
+						.getSememe(sememe.getReferencedComponentNid());
 
-									if (sememe.getSememeType() == SememeType.DESCRIPTION) {
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Optional<LatestVersion<DescriptionSememe>> descriptionVersion = ((SememeChronology) ss)
+						.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
 
-										@SuppressWarnings({ "unchecked", "rawtypes" })
-										Optional<LatestVersion<DescriptionSememe>> descriptionVersion = ((SememeChronology) sememe)
-												.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
+				if (descriptionVersion.isPresent()) {
 
-										if (descriptionVersion.isPresent()) {
+					ValueSetContentsTransfer valueSet = new ValueSetContentsTransfer();
 
-											ValueSetContentsTransfer v = new ValueSetContentsTransfer();
+					@SuppressWarnings({ "rawtypes", "unchecked" })
+					List<DescriptionSememe<?>> descSememeList = ((SememeChronology) ss)
+							.getVisibleOrderedVersionList(STAMP_COORDINATES);
+					Collections.reverse(descSememeList);
 
-											@SuppressWarnings({ "rawtypes", "unchecked" })
-											List<DescriptionSememe<?>> descSememeList = ((SememeChronology) sememe)
-													.getVisibleOrderedVersionList(STAMP_COORDINATES);
-											Collections.reverse(descSememeList);
+					for (DescriptionSememe<?> ds : descSememeList) {
+						String name = ds.getText();
+						String status = getSubsetMembershipStatus(ss);
 
-											for (DescriptionSememe<?> ds : descSememeList) {
+						// do no add if no designation name or vuid or status
+						if ((StringUtils.isNullOrEmpty(designationName)
+								|| org.apache.commons.lang3.StringUtils.containsIgnoreCase(name, designationName))
+								&& (StringUtils.isNullOrEmpty(membershipStatus) || status.equals(membershipStatus))) {
 
-												// if designationName is not
-												// null, only include those that
-												// match
-												if (StringUtils.isNullOrEmpty(designationName)
-														|| org.apache.commons.lang3.StringUtils
-																.containsIgnoreCase(ds.getText(), designationName)) {
+							String vuid = getCodeFromNid(ds.getNid());
+							if (vuid != null) {
+								valueSet.setDesignationVuid(Long.valueOf(vuid));
+							}
 
-													String vuid = getCodeFromNid(ds.getNid());
-													if (vuid != null) {
-														v.setDesignationVuid(Long.valueOf(vuid));
-													}
+							valueSet.setDesignationName(ds.getText());
+							valueSet.setDesignationStatus(ds.getState() == State.ACTIVE ? "active" : "inactive");
 
-													v.setDesignationName(ds.getText());
-													v.setDesignationStatus(
-															ds.getState() == State.ACTIVE ? "active" : "inactive");
+							Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
+									ds.getNid());
+							if (descType.isPresent()) {
+								Optional<String> desc = Frills.getDescription(descType.get());
+								if (desc.isPresent()) {
+									valueSet.setDesignationType(desc.get());
+								}
+							}
+							valueSet.setMembershipStatus(status);
 
-													v.setMembershipStatus(getSubsetMembershipStatus(sememe));
+							if (!StringUtils.isNullOrEmpty(valueSet.getDesignationName())
+									|| (valueSet.getDesignationVuid() != null)
+									|| !StringUtils.isNullOrEmpty(valueSet.getDesignationStatus())) {
+								valueSetContents.add(valueSet);
+							}
+						}
+					}
+				}
+			});
 
-													Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(
-															STAMP_COORDINATES, ds.getNid());
-													if (descType.isPresent()) {
-														Optional<String> desc = Frills.getDescription(descType.get());
-														if (desc.isPresent()) {
-															v.setDesignationType(desc.get());
-														}
-													}
-
-													if (!StringUtils.isNullOrEmpty(v.getDesignationName())
-															|| (v.getDesignationVuid() != null)
-															|| !StringUtils.isNullOrEmpty(v.getDesignationStatus())) {
-														valueSetContents.add(v);
-													}
-												}
-											}
-										}
-									}
-								});
-					});
 		} else {
 			throw new STSException(String.format("Subset vuid '%s' does not exist!", subsetVuid));
 		}
@@ -358,8 +351,8 @@ public class CommonTerminology {
 
 		if (resultEnd > resultStart) {
 			valueSetContentsList.setValueSetContentsTransfers(valueSetContents.subList(resultStart, resultEnd));
-			valueSetContentsList.setTotalNumberOfRecords(new Long(valueSetContents.size()));
 		}
+		valueSetContentsList.setTotalNumberOfRecords(Long.valueOf(valueSetContents.size()));
 
 		return valueSetContentsList;
 
@@ -415,11 +408,10 @@ public class CommonTerminology {
 		prohibitNullValue(mapSetVuid, "MapSet VUID");
 		prohibitNullValue(mapSetVersionName, "MapSet version name");
 		prohibitNullValue(sourceValues, "Source values");
-		
-		//only allowing current for now
+
+		// only allowing current for now
 		if (StringUtils.isNullOrEmpty(mapSetVersionName) || !mapSetVersionName.equalsIgnoreCase(CURRENT_VERSION)) {
-			throw new STSException(
-					"Version name '" + mapSetVersionName + "' does not exist.");
+			throw new STSException("Version name '" + mapSetVersionName + "' does not exist.");
 		}
 
 		pageSize = validatePageSize(pageSize);
@@ -468,14 +460,14 @@ public class CommonTerminology {
 									.getLatestVersion(ConceptVersion.class, STAMP_COORDINATES);
 
 							if (cv.isPresent()) {
-								mapEntryValueTransferList.addAll(readMapEntryTypes(cv.get().value().getChronology().getNid(), mapSetConfig, sourceValues));
+								mapEntryValueTransferList.addAll(readMapEntryTypes(
+										cv.get().value().getChronology().getNid(), mapSetConfig, sourceValues));
 
 							}
 						}
 					});
-		}
-		else {
-			throw new STSException("Map Set VUID: " + mapSetVuid + " does not exist."); 
+		} else {
+			throw new STSException("Map Set VUID: " + mapSetVuid + " does not exist.");
 		}
 
 		int resultStart = (pageNumber - 1) * pageSize;
@@ -485,8 +477,8 @@ public class CommonTerminology {
 		if (resultEnd > resultStart) {
 			mapEntryValueListTransfer
 					.setMapEntryValueTransfers(mapEntryValueTransferList.subList(resultStart, resultEnd));
-		} 
-		
+		}
+
 		mapEntryValueListTransfer.setTotalNumberOfRecords(Long.valueOf(mapEntryValueTransferList.size()));
 
 		return mapEntryValueListTransfer;
@@ -902,7 +894,8 @@ public class CommonTerminology {
 		return false;
 	}
 
-	private static List<MapEntryValueTransfer> readMapEntryTypes(int componentNid, MapSetConfig mapSetConfig, Collection<String> sourceValues) {
+	private static List<MapEntryValueTransfer> readMapEntryTypes(int componentNid, MapSetConfig mapSetConfig,
+			Collection<String> sourceValues) {
 
 		List<MapEntryValueTransfer> mapEntryValueTransferList = new ArrayList<>();
 
@@ -927,7 +920,7 @@ public class CommonTerminology {
 						mapEntry.setSourceValue(getPreferredNameDescriptionType(
 								sememeVersion.get().value().getReferencedComponentNid()));
 
-						//TODO: this shouldn't be hard coded.
+						// TODO: this shouldn't be hard coded.
 						mapEntry.setSourceDesignationTypeName("Preferred Name");
 
 						mapEntry.setStatus(sememeVersion.get().value().getState() == State.ACTIVE);
@@ -937,7 +930,8 @@ public class CommonTerminology {
 							throw new RuntimeException(
 									"An implementation of DynamicSememeUtility is not available on the classpath");
 						} else {
-							DynamicSememeColumnInfo[] dsci = ls.readDynamicSememeUsageDescription(sememeVersion.get().value().getAssemblageSequence()).getColumnInfo();
+							DynamicSememeColumnInfo[] dsci = ls.readDynamicSememeUsageDescription(
+									sememeVersion.get().value().getAssemblageSequence()).getColumnInfo();
 							DynamicSememeData dsd[] = sememeVersion.get().value().getData();
 
 							for (DynamicSememeColumnInfo d : dsci) {
@@ -945,41 +939,56 @@ public class CommonTerminology {
 								int col = d.getColumnOrder();
 
 								if (dsd[col] != null && columnUUID != null) {
-									if (columnUUID.equals(DynamicSememeConstants.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT.getPrimordialUuid())) {
-										
-										mapEntry.setTargetValue(Frills.getDescription(UUID.fromString(dsd[col].getDataObject().toString())).orElse(""));
-										
+									if (columnUUID.equals(DynamicSememeConstants
+											.get().DYNAMIC_SEMEME_COLUMN_ASSOCIATION_TARGET_COMPONENT
+													.getPrimordialUuid())) {
+
+										mapEntry.setTargetValue(Frills
+												.getDescription(UUID.fromString(dsd[col].getDataObject().toString()))
+												.orElse(""));
+
 										UUID targetUuid = UUID.fromString(dsd[col].getDataObject().toString());
 										try {
-											ConceptChronology<? extends ConceptVersion<?>> targetComponent = Get.conceptService().getConcept(targetUuid);
-											
-											//TODO: FIX Target Designation Name
-											mapEntry.setTargetDesignationName(getPreferredNameDescriptionType(targetComponent.getNid()));
-											
-											//TODO: FIX Target Code System Vuid
-											mapEntry.setTargetCodeSystemVuid(Frills.getVuId(targetComponent.getNid()).orElse(9999999L));
+											ConceptChronology<? extends ConceptVersion<?>> targetComponent = Get
+													.conceptService().getConcept(targetUuid);
+
+											// TODO: FIX Target Designation Name
+											mapEntry.setTargetDesignationName(
+													getPreferredNameDescriptionType(targetComponent.getNid()));
+
+											// TODO: FIX Target Code System Vuid
+											mapEntry.setTargetCodeSystemVuid(
+													Frills.getVuId(targetComponent.getNid()).orElse(9999999L));
 
 										} catch (Exception ex) {
-											//TODO
+											// TODO
 										}
-										
-										//TODO: this shouldn't be hard coded.
+
+										// TODO: this shouldn't be hard coded.
 										mapEntry.setTargetDesignationTypeName("Preferred Name");
-									} else if (columnUUID.equals(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid())) {
+									} else if (columnUUID.equals(
+											IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid())) {
 										log.debug("MAPPING_CODE_DESCRIPTION:" + dsd[col].getDataObject().toString());
-									} else if (columnUUID.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE.getPrimordialUuid())) {
-										// Currently ignored, no XML representation
-									} else if (columnUUID.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_SEQUENCE.getPrimordialUuid())) {
+									} else if (columnUUID.equals(
+											IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_EQUIVALENCE_TYPE
+													.getPrimordialUuid())) {
+										// Currently ignored, no XML
+										// representation
+									} else if (columnUUID
+											.equals(IsaacMappingConstants.get().DYNAMIC_SEMEME_COLUMN_MAPPING_SEQUENCE
+													.getPrimordialUuid())) {
 										mapEntry.setOrder(Integer.parseInt(dsd[col].getDataObject().toString()));
 									} else {
 										log.warn("No mapping match found for UUID: ", columnUUID);
 									}
 								}
 							}
-							
-							
+
 							Get.sememeService()
-									.getSememesForComponentFromAssemblage(componentNid,IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION.getConceptSequence()).forEach(mappingStrExt -> {
+									.getSememesForComponentFromAssemblage(componentNid,
+											IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION
+													.getConceptSequence())
+									.forEach(mappingStrExt -> {
 										@SuppressWarnings({ "unchecked", "rawtypes" })
 										Optional<LatestVersion<? extends DynamicSememe>> mappingStrExtVersion = ((SememeChronology) mappingStrExt)
 												.getLatestVersion(DynamicSememe.class, STAMP_COORDINATES);
@@ -987,17 +996,20 @@ public class CommonTerminology {
 										if (mappingStrExtVersion.isPresent()) {
 											DynamicSememeData dsd2[] = mappingStrExtVersion.get().value().getData();
 											if (dsd2.length == 2) {
-												if (dsd2[0].getDataObject().equals(IsaacMappingConstants.get().MAPPING_TARGET_CODE_SYSTEM_VERSION.getNid())) {
-													mapEntry.setTargetCodeSystemVersionName(dsd2[1].getDataObject().toString());
+												if (dsd2[0].getDataObject().equals(
+														IsaacMappingConstants.get().MAPPING_TARGET_CODE_SYSTEM_VERSION
+																.getNid())) {
+													mapEntry.setTargetCodeSystemVersionName(
+															dsd2[1].getDataObject().toString());
 												}
 											}
 										}
 									});
 						}
-						
-						//filter records based on match to source values based on mapset config
-						if (stringExistsInList(sourceValues, mapEntry.getSourceValue()))
-						{
+
+						// filter records based on match to source values based
+						// on mapset config
+						if (stringExistsInList(sourceValues, mapEntry.getSourceValue())) {
 							mapEntryValueTransferList.add(mapEntry);
 						}
 					}

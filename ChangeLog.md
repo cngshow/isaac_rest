@@ -4,7 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.21 - PENDING
-    *
+    * Fix 575255 - Change ListValueSetContents web service to use Issac MetaData instead of VHAT.
 
 * 2017/08/17 - 4.20
     * Changes to web services to handle missing and incorrect input values for ListMapEntriesFromSource.
