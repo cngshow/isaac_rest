@@ -44,6 +44,12 @@
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 	
-	
-	
+	<filter> 
+		<filter-name>restWriteRequestSynchronizingFilter</filter-name> 
+		<filter-class>gov.vha.isaac.rest.session.filters.RestWriteRequestSynchronizingFilter</filter-class> 
+	</filter> 
+	<filter-mapping> 
+		<filter-name>restWriteRequestSynchronizingFilter</filter-name> 
+		<url-pattern>/write/*</url-pattern>
+	</filter-mapping>
 </web-app>
