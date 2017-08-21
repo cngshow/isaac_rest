@@ -4,7 +4,8 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.22 - PENDING
-    *
+    * Fix a bug where one could not attach an SCTID to a concept when you were using a database that doesn't currently contain any SCTIDs, such 
+        as VETs.
 
 * 2017/08/21 - 4.21
     * Fix 575255 - Change ListValueSetContents web service to use Issac MetaData instead of VHAT.
