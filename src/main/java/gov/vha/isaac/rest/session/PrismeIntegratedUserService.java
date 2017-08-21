@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.User;
+import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.ochre.api.PrismeRole;
 
 /**
@@ -66,10 +67,45 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	 */
 	@Override
 	public Optional<User> getUser(String ssoToken) {
+		if (usePrismeForRolesByToken()) {
+			try {
+				return getUserFromPrisme(ssoToken);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			// To run without PRISME (for testing only),
+			// comment-out the below "throw"
+			// and uncomment the following try/catch block
+			final String msg = "Not properly configured to retrieve roles from PRISME";
+			throw new RuntimeException(msg, new RestException(msg));
+
+			// To run without PRISME (for testing only),
+			// comment-out the above "throw"
+			// and uncomment the following try/catch block
+//			try {
+//				return UserServiceUtils.getUserFromTestToken(ssoToken);
+//			} catch (IOException e) {
+//				throw new RuntimeException(e);
+//			}
+		}
+	}
+
+	public Optional<String> safeGetToken(String id, String password) {
 		try {
-			return getUserFromPrisme(ssoToken);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+			return Optional.of(getToken(id, password));
+		} catch (Exception e) {
+			System.err.println(e);
+			e.printStackTrace();
+			return Optional.empty();
+		} 
+	}
+
+	public String getToken(String id, String password) throws Exception {		
+		if (usePrismeForSsoTokenByName()) {
+			return getUserSsoTokenFromPrisme(id, password);
+		} else {
+			throw new RuntimeException("Cannot generate SSO token for " + id + " without access to PRISME");
 		}
 	}
 
