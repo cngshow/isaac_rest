@@ -54,6 +54,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.associations.AssociationUtilities;
+import gov.vha.isaac.ochre.impl.utility.Frills;
 import gov.vha.isaac.ochre.mapping.data.MappingUtils;
 import gov.vha.isaac.ochre.model.sememe.DynamicSememeUsageDescriptionImpl;
 import gov.vha.isaac.ochre.model.sememe.version.SememeVersionImpl;
@@ -472,10 +473,14 @@ public class SememeAPIs
 		{
 			return new RestDynamicSememeDefinition(DynamicSememeUsageDescriptionImpl.read(conceptSequence));
 		}
+		else if (Frills.definesIdentifierSememe(conceptSequence))
+		{
+			return new RestDynamicSememeDefinition(DynamicSememeUsageDescriptionImpl.mockIdentifierType());
+		}
 		else
 		{
 			//Not annotated as a dynamic sememe.  We have to find a real value to determine if this is used as a static sememe.
-			//TODO 3 Dan someday, we will fix the underlying APIs to allow us to know the static sememe typing up front....
+			//TODO 3 Dan someday, we will fix the underlying APIs to allow us to know the static sememe typing up front....			
 			Optional<SememeChronology<? extends SememeVersion<?>>> sc = Get.sememeService().getSememesFromAssemblage(conceptSequence).findAny();
 			if (sc.isPresent())
 			{

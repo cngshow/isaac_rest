@@ -341,14 +341,17 @@ public class SearchAPIs
 						int conSequence = Frills.findConcept(nid);
 						if (conSequence >= 0)
 						{
-							//TODO add a sememe on all static sememes so we can identify them.  For now, hard code a few common ones.
-							//TODO should use the new 'identifier' sememe here...
-							if (MetaData.VUID.getConceptSequence() == conSequence || MetaData.SCTID.getConceptSequence() == conSequence 
-									|| MetaData.CODE.getConceptSequence() == conSequence)
+							//TODO add a sememe on all static sememes so we can identify them.  For now, we handle static 'identifier' sememes 
+							//along with dynamic sememes... (But still miss refsets, etc)
+							boolean dynamic = Frills.definesDynamicSememe(conSequence); 
+							if (dynamic)
 							{
 								return true;
 							}
-							return Frills.definesDynamicSememe(conSequence);
+							else
+							{
+								return Frills.definesIdentifierSememe(conSequence);
+							}
 						}
 						return false;
 					});
