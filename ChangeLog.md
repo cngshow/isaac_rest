@@ -6,6 +6,7 @@ API version number, not the release version number.
 * 2017/08/?? - 4.22 - PENDING
     * Fix a bug where one could not attach an SCTID to a concept when you were using a database that doesn't currently contain any SCTIDs, such 
         as VETs.
+    * Fix a bug where update description didn't work if language wasn't passed (even though language was documented as optional)
 
 * 2017/08/21 - 4.21
     * Fix 575255 - Change ListValueSetContents web service to use Issac MetaData instead of VHAT.
