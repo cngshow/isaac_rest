@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>gov.vha.isaac.ochre</groupId>
 		<artifactId>isaac-parent</artifactId>
-		<version>4.20-SNAPSHOT</version>
+		<version>4.21-SNAPSHOT</version>
 	</parent>
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>4.22-SNAPSHOT</version>
+	<version>4.23-SNAPSHOT</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
@@ -24,7 +24,7 @@
 	</scm>
 
 	<properties>
-		<isaac.version>4.20-SNAPSHOT</isaac.version>
+		<isaac.version>4.21-SNAPSHOT</isaac.version>
 		<jersey.version>2.23</jersey.version>
 		<!-- Hacked version of enunciate, source here https://github.com/VA-CTT/enunciate -->
 		<!-- Primary bug is  https://github.com/stoicflame/enunciate/issues/417-->
