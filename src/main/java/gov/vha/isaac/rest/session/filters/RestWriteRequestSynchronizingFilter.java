@@ -27,6 +27,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +39,7 @@ import org.apache.logging.log4j.Logger;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-//@WebFilter(filterName="restWriteRequestSynchronizingFilter", urlPatterns="/write/*") // TODO test this
+@WebFilter(filterName="restWriteRequestSynchronizingFilter", urlPatterns="/write/*") // TODO test this
 public class RestWriteRequestSynchronizingFilter implements Filter {
 	private final static Logger LOG = LogManager.getLogger(RestWriteRequestSynchronizingFilter.class);
 	

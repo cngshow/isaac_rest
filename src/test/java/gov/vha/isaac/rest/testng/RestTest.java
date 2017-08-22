@@ -2302,11 +2302,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
 		Assert.assertEquals(matchingVersion.descriptionExtendedTypeConcept.sequence.intValue(), newDescriptionExtendedTypeConcept);
 
-		// TEST PASSING NULL descriptionExtendedType
+		// TEST PASSING NULL descriptionExtendedType and newLanguageConcept
 		newDescriptionData =
 				new RestSememeDescriptionUpdate(
 						newCaseSignificanceConceptSequence + "",
-						newLanguageConceptSequence + "",
+						null,
 						newDescriptionText,
 						initialDescriptionTypeConceptSequence + "",
 						true,
@@ -2345,7 +2345,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence.intValue(), newCaseSignificanceConceptSequence);
 		Assert.assertEquals(matchingVersion.text, newDescriptionText);
 		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
-		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
+		//Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
 		//Assert.assertNull(matchingVersion.descriptionExtendedTypeConcept); // TODO fix bug causing either deactivate or retrieval to behave incorrectly
 		
@@ -2387,7 +2387,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.caseSignificanceConcept.sequence.intValue(), newCaseSignificanceConceptSequence);
 		Assert.assertEquals(matchingVersion.text, newDescriptionText);
 		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
-		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
+		//Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), newLanguageConceptSequence);
 		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
 		Assert.assertEquals(matchingVersion.getSememeVersion().getState(), new RestStateType(State.INACTIVE));
 	}
