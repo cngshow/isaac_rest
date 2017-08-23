@@ -475,7 +475,7 @@ public class SememeAPIs
 		}
 		else if (Frills.definesIdentifierSememe(conceptSequence))
 		{
-			return new RestDynamicSememeDefinition(DynamicSememeUsageDescriptionImpl.mockIdentifierType());
+			return new RestDynamicSememeDefinition(DynamicSememeUsageDescriptionImpl.mockIdentifierType(conceptSequence));
 		}
 		else
 		{
