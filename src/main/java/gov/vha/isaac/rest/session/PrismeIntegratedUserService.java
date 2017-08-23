@@ -83,7 +83,15 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 				Optional<User> user = LookupService.getService(UserProvider.class).get(userId);
 				if (user.isPresent())
 				{
-					return user;
+					if (user.get().rolesStillValid())
+					{
+						log.debug("User cache hit, roles still valid, skipping prisme lookup");
+						return user;
+					}
+					else 
+					{
+						log.debug("User cache hit, but roles expired - last read at {} now {}", user.get().rolesCheckedAt(), System.currentTimeMillis());
+					}
 				}
 			}
 			
