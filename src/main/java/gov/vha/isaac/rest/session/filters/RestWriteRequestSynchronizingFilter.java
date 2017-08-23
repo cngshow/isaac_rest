@@ -55,6 +55,7 @@ public class RestWriteRequestSynchronizingFilter implements Filter {
 	 */
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
+		LOG.debug("{} initialized", getClass().getSimpleName());
 	}
 
 	/* (non-Javadoc)
@@ -62,7 +63,7 @@ public class RestWriteRequestSynchronizingFilter implements Filter {
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		LOG.debug(getClass().getSimpleName() + " handling write request " + request.getServletContext().getContextPath());
+		LOG.debug("{} handling write request {}", getClass().getSimpleName(), request.getServletContext().getContextPath());
 		synchronized(OBJECT) {
 			chain.doFilter(request, response);
 		}
@@ -73,5 +74,6 @@ public class RestWriteRequestSynchronizingFilter implements Filter {
 	 */
 	@Override
 	public void destroy() {
+		LOG.debug("{} destroyed", getClass().getSimpleName());
 	}
 }
