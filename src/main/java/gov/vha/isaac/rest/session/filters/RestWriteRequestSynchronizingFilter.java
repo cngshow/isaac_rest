@@ -20,6 +20,8 @@
 package gov.vha.isaac.rest.session.filters;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -28,9 +30,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.mahout.math.Arrays;
 
 /**
  * 
@@ -39,7 +43,7 @@ import org.apache.logging.log4j.Logger;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-@WebFilter(filterName="restWriteRequestSynchronizingFilter", urlPatterns="/write/*") // TODO test this
+@WebFilter(filterName="restWriteRequestSynchronizingFilter", urlPatterns="/*") // TODO test this
 public class RestWriteRequestSynchronizingFilter implements Filter {
 	private final static Logger LOG = LogManager.getLogger(RestWriteRequestSynchronizingFilter.class);
 	
@@ -58,14 +62,44 @@ public class RestWriteRequestSynchronizingFilter implements Filter {
 		LOG.debug("{} initialized", getClass().getSimpleName());
 	}
 
+	private static String toString(Map<String, String[]> parameterMap) {
+		Map<String, String> map = new HashMap<>();
+		for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+			map.put(entry.getKey(), Arrays.toString(entry.getValue()));
+		}
+		
+		return map.toString();
+	}
+	
 	/* (non-Javadoc)
 	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse, javax.servlet.FilterChain)
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		LOG.debug("{} handling write request {}", getClass().getSimpleName(), request.getServletContext().getContextPath());
-		synchronized(OBJECT) {
-			chain.doFilter(request, response);
+		String parameters = toString(request.getParameterMap());
+		if (request instanceof HttpServletRequest) {
+			String uri = ((HttpServletRequest)request).getRequestURI().toString();
+
+			if (uri.toLowerCase().contains("/write/")) {
+				LOG.debug("{} handling write request for {} with params {}", getClass().getSimpleName(), uri, parameters);
+				
+				// This is a write API, so synchronize
+				synchronized(OBJECT) {
+					chain.doFilter(request, response);
+				}
+			} else {
+				LOG.debug("{} handling read request for {} with params {}", getClass().getSimpleName(), uri, parameters);
+				
+				// This is a read API, so do not synchronize
+				chain.doFilter(request, response);
+			}
+		} else {
+			LOG.error("{}.doFilter() passed a {} not a HttpServletRequest, so cannot determine whether read or write request. Synchronizing as if write request. (params={})", this.getClass().getName(), request.getClass().getSimpleName(), parameters);
+
+			// Don't assume this is a read API, so synchronize
+			synchronized(OBJECT) {
+				chain.doFilter(request, response);
+			}
 		}
 	}
 
