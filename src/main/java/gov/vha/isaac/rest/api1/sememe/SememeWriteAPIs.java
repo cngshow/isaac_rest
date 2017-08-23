@@ -381,9 +381,8 @@ public class SememeWriteAPIs
 					extendedDescriptionTypeSememeChronology =
 							Frills.getAnnotationSememe(Get.identifierService().getSememeNid(sememeChronology.getNid()), 
 									DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence()).get();
-					ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, extendedDescriptionTypeSememeChronology.getNid() + "");
-					// TODO determine why this addUncommitted() after resetStateWithNoCommit() is creating an uncommitted version, but not a persisted inactive version after commit
-					Get.commitService().addUncommitted(extendedDescriptionTypeSememeChronology).get();
+					SememeChronology sc = (SememeChronology)ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, extendedDescriptionTypeSememeChronology.getNid() + "");
+					Get.commitService().addUncommitted(sc).get();
 				}
 				else if (currentExtendedType == -1)
 				{

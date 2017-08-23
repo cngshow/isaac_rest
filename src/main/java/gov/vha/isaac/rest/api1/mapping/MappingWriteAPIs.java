@@ -628,8 +628,8 @@ public class MappingWriteAPIs
 		} else {
 			if (mapSetFields == null || mapSetFields.size() == 0) {
 				// If no field passed in update then retire the sememe
-				ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, mapSetFieldsSememe.get().getPrimordialUuid() + "");
-				return mapSetFieldsSememe.get();
+				SememeChronology sc = (SememeChronology)ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, mapSetFieldsSememe.get().getPrimordialUuid() + "");
+				return sc;
 			} else {
 				DynamicSememeData[] updatedData = new DynamicSememeData[1];
 				updatedData[0] = getDynamicSememeArrayImplFromMapSetFields(mapSetFields);

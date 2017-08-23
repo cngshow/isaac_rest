@@ -4,7 +4,8 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.23 - PENDING
-    *
+    * Fix a bug with retirement or activation of extended description types on descriptions
+    * Fix a bug with retirement of mapset sememes
 
 * 2017/08/22 - 4.22
     * Fix a bug where one could not attach an SCTID to a concept when you were using a database that doesn't currently contain any SCTIDs, such 
