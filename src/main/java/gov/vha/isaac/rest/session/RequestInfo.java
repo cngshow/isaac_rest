@@ -76,6 +76,7 @@ public class RequestInfo
 
 	private Optional<User> user_ = null;
 	private EditToken editToken_ = null;
+	private long createTime_;
 
 	private EditCoordinate editCoordinate_ = null;
 
@@ -110,10 +111,13 @@ public class RequestInfo
 
 	private RequestInfo()
 	{
+		createTime_ = System.currentTimeMillis();
 	}
 
-	public static void remove() {
+	public static RequestInfo remove() {
+		RequestInfo ri = requestInfo.get();
 		requestInfo.remove();
+		return ri;
 	}
 
 	public RequestInfo readExpandables(Map<String, List<String>> parameters) throws RestException
@@ -563,5 +567,10 @@ public class RequestInfo
 			}
 		}
 		return wfp_;
+	}
+	
+	public long getCreateTime()
+	{
+		return createTime_;
 	}
 }

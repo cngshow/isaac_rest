@@ -7,6 +7,7 @@ API version number, not the release version number.
     * Fix a bug with retirement or activation of extended description types on descriptions
     * Fix a bug with retirement of mapset sememes
     * Fix a bug with the design of the ssoToken handling, which was causing excessive prisme lookups for user / role information.
+    * cleanup of logging output to reduce noise, add request processing timers to log.
 
 * 2017/08/23 - 4.23
     * Added tests and documentation
