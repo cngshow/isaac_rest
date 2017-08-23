@@ -114,12 +114,16 @@ public class UserProvider implements UserService {
 
 	@Override
 	public Optional<User> get(UUID userId) {
-		return Optional.ofNullable(USERS.get(Get.identifierService().getConceptSequenceForUuids(userId)));
+		Optional<User> temp = Optional.ofNullable(USERS.get(Get.identifierService().getConceptSequenceForUuids(userId)));
+		log.debug("User Cache " + (temp.isPresent() ? "hit" : "miss") + " for user " + userId);
+		return temp;
 	}
 
 	@Override
 	public Optional<User> get(int userId) {
-		return Optional.ofNullable(USERS.get(userId));
+		Optional<User> temp = Optional.ofNullable(USERS.get(Get.identifierService().getConceptSequence(userId)));
+		log.debug("User Cache " + (temp.isPresent() ? "hit" : "miss") + " for user " + userId);
+		return temp;
 	}
 	
 	public static UUID getUuidFromUserName(String fsn) 
