@@ -40,7 +40,7 @@
 	
 	<filter-mapping>
 		<filter-name>restWriteRequestSynchronizingFilter</filter-name> 
-		<url-pattern>/write/*</url-pattern>
+		<url-pattern>/*</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 		<dispatcher>FORWARD</dispatcher>
 		<dispatcher>INCLUDE</dispatcher>
