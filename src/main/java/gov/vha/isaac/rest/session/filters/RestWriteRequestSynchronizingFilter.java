@@ -62,44 +62,36 @@ public class RestWriteRequestSynchronizingFilter implements Filter {
 		LOG.debug("{} initialized", getClass().getSimpleName());
 	}
 
-	private static String toString(Map<String, String[]> parameterMap) {
-		Map<String, String> map = new HashMap<>();
-		for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-			map.put(entry.getKey(), Arrays.toString(entry.getValue()));
-		}
-		
-		return map.toString();
-	}
-	
 	/* (non-Javadoc)
 	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse, javax.servlet.FilterChain)
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		String parameters = toString(request.getParameterMap());
 		if (request instanceof HttpServletRequest) {
 			String uri = ((HttpServletRequest)request).getRequestURI().toString();
 
 			if (uri.toLowerCase().contains("/write/")) {
-				LOG.debug("{} handling write request for {} with params {}", getClass().getSimpleName(), uri, parameters);
+				LOG.trace("Entering global write sync block");
 				
 				// This is a write API, so synchronize
 				synchronized(OBJECT) {
 					chain.doFilter(request, response);
 				}
+				LOG.trace("Exited global write sync block");
 			} else {
-				LOG.debug("{} handling read request for {} with params {}", getClass().getSimpleName(), uri, parameters);
-				
 				// This is a read API, so do not synchronize
 				chain.doFilter(request, response);
 			}
 		} else {
-			LOG.error("{}.doFilter() passed a {} not a HttpServletRequest, so cannot determine whether read or write request. Synchronizing as if write request. (params={})", this.getClass().getName(), request.getClass().getSimpleName(), parameters);
+			LOG.fatal("{}.doFilter() passed a {} not a HttpServletRequest, so cannot determine whether read or write request.", 
+					this.getClass().getName(), request.getClass().getSimpleName());
 
 			// Don't assume this is a read API, so synchronize
+			LOG.trace("Entering global write sync block");
 			synchronized(OBJECT) {
 				chain.doFilter(request, response);
 			}
+			LOG.trace("Exited global write sync block");
 		}
 	}
 
