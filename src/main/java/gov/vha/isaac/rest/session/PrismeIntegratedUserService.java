@@ -22,24 +22,22 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import javax.inject.Singleton;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-
 import gov.vha.isaac.ochre.api.LookupService;
+import gov.vha.isaac.ochre.api.PrismeRole;
 import gov.vha.isaac.ochre.api.User;
 import gov.vha.isaac.rest.api.exceptions.RestException;
-import gov.vha.isaac.ochre.api.PrismeRole;
 
 /**
  * The Class PrismeIntegratedUserService
@@ -54,7 +52,16 @@ import gov.vha.isaac.ochre.api.PrismeRole;
 public class PrismeIntegratedUserService implements PrismeUserService {
 	private static Logger log = LogManager.getLogger(PrismeIntegratedUserService.class);
 	
-	//private Properties prismeProperties_ = null;
+	Map<String, UUID> ssoTokenCache = new LinkedHashMap<String, UUID>(5000,.75F, true)
+	{
+		private static final long serialVersionUID = 1L;
+
+		public boolean removeEldestEntry(Map.Entry<String, UUID> eldest)
+		{
+			return size() > 5000;
+		}
+	};
+
 
 	protected PrismeIntegratedUserService() {
 		//for HK2
@@ -68,9 +75,36 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	@Override
 	public Optional<User> getUser(String ssoToken) {
 		if (usePrismeForRolesByToken()) {
-			try {
-				return getUserFromPrisme(ssoToken);
-			} catch (IOException e) {
+			
+			UUID userId = ssoTokenCache.get(ssoToken);
+			if (userId != null)
+			{
+				log.debug("SSOToken cache hit for token " + ssoToken);
+				Optional<User> user = LookupService.getService(UserProvider.class).get(userId);
+				if (user.isPresent())
+				{
+					if (user.get().rolesStillValid())
+					{
+						log.debug("User cache hit, roles still valid, skipping prisme lookup");
+						return user;
+					}
+					else 
+					{
+						log.debug("User cache hit, but roles expired - last read at {} now {}", user.get().rolesCheckedAt(), System.currentTimeMillis());
+					}
+				}
+			}
+			
+			try 
+			{
+				Optional<User> user = getUserFromPrisme(ssoToken);
+				if (user.isPresent())
+				{
+					ssoTokenCache.put(ssoToken, user.get().getId());
+				}
+				return user;
+			} catch (IOException e) 
+			{
 				throw new RuntimeException(e);
 			}
 		} else {
@@ -95,8 +129,7 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 		try {
 			return Optional.of(getToken(id, password));
 		} catch (Exception e) {
-			System.err.println(e);
-			e.printStackTrace();
+			log.error("Unexpected error in getSafeToken", e);
 			return Optional.empty();
 		} 
 	}
@@ -112,7 +145,12 @@ public class PrismeIntegratedUserService implements PrismeUserService {
 	@Override
 	public User getUser(UUID userId)
 	{
-		return LookupService.getService(UserProvider.class).get(userId).get();
+		Optional<User> user = LookupService.getService(UserProvider.class).get(userId);
+		if (!user.isPresent())
+		{
+			throw new RuntimeException("User '" + userId + "' not present in role-checked cache!");
+		}
+		return user.get();
 	}
 
 	/* (non-Javadoc)

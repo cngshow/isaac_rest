@@ -20,6 +20,8 @@
 package gov.vha.isaac.rest.session.filters;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -28,9 +30,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.mahout.math.Arrays;
 
 /**
  * 
@@ -39,7 +43,7 @@ import org.apache.logging.log4j.Logger;
  * @author <a href="mailto:joel.kniaz.list@gmail.com">Joel Kniaz</a>
  *
  */
-@WebFilter(filterName="restWriteRequestSynchronizingFilter", urlPatterns="/write/*") // TODO test this
+@WebFilter(filterName="restWriteRequestSynchronizingFilter", urlPatterns="/*") // TODO test this
 public class RestWriteRequestSynchronizingFilter implements Filter {
 	private final static Logger LOG = LogManager.getLogger(RestWriteRequestSynchronizingFilter.class);
 	
@@ -63,9 +67,31 @@ public class RestWriteRequestSynchronizingFilter implements Filter {
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		LOG.debug("{} handling write request {}", getClass().getSimpleName(), request.getServletContext().getContextPath());
-		synchronized(OBJECT) {
-			chain.doFilter(request, response);
+		if (request instanceof HttpServletRequest) {
+			String uri = ((HttpServletRequest)request).getRequestURI().toString();
+
+			if (uri.toLowerCase().contains("/write/")) {
+				LOG.trace("Entering global write sync block");
+				
+				// This is a write API, so synchronize
+				synchronized(OBJECT) {
+					chain.doFilter(request, response);
+				}
+				LOG.trace("Exited global write sync block");
+			} else {
+				// This is a read API, so do not synchronize
+				chain.doFilter(request, response);
+			}
+		} else {
+			LOG.fatal("{}.doFilter() passed a {} not a HttpServletRequest, so cannot determine whether read or write request.", 
+					this.getClass().getName(), request.getClass().getSimpleName());
+
+			// Don't assume this is a read API, so synchronize
+			LOG.trace("Entering global write sync block");
+			synchronized(OBJECT) {
+				chain.doFilter(request, response);
+			}
+			LOG.trace("Exited global write sync block");
 		}
 	}
 

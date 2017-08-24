@@ -20,13 +20,11 @@
 package gov.vha.isaac.rest.session.filters;
 
 import java.io.IOException;
-
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.rest.session.RequestInfo;
@@ -55,7 +53,8 @@ public class ThreadLocalCleanupContainerResponseFilter implements ContainerRespo
 		log.debug("Removing RequestInfo state in ThreadLocal after server response to client request...");
 		try
 		{
-			RequestInfo.remove();
+			RequestInfo ri = RequestInfo.remove();
+			log.info("Request took {} ms for {}", System.currentTimeMillis() - ri.getCreateTime(), requestContext.getUriInfo().getPath(true));
 		}
 		catch (Throwable e)
 		{

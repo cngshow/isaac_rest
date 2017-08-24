@@ -48,6 +48,12 @@
 		<logger name="gov.va.legoEdit" level="TRACE" />
 		<logger name="org.ihtsdo" level="INFO" />
 		<logger name="gov.vha" level="TRACE" />
+		<logger name="gov.vha.isaac.ochre.api.LookupService" level="INFO" />
+		<logger name="gov.vha.isaac.rest.session.filters.ThreadLocalCleanupContainerResponseFilter" level="INFO" />
+		<logger name="gov.vha.isaac.ochre.api.util.TimeFlushBufferedOutputStream" level="INFO" />
+		<logger name="gov.vha.isaac.taxonomy.TaxonomyProvider" level="DEBUG" />
+		<logger name="gov.vha.isaac.ochre.api.collections.UuidIntMapMap" level="DEBUG" />
+		
 		<logger name="com.mchange.v2.c3p0" level="INFO"/>
 		<Logger name="org.jvnet.hk2.logger" level="OFF"/>  <!-- HK2 is logging a debug message that is being mis-translated into an error by LOG4J2 https://issues.apache.org/jira/browse/LOG4J2-1003 -->
 	</Loggers>

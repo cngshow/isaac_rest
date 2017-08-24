@@ -89,7 +89,9 @@ public class RestContainerRequestFilter implements ContainerRequestFilter {
 	 */
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		LOG.debug("Running CONTAINER REQUEST FILTER {} on request {} {}", this.getClass().getName(), requestContext.getRequest().getMethod(), requestContext.getUriInfo().getPath(true));
+		LOG.debug("Running CONTAINER REQUEST FILTER {} on request {} {}", 
+				this.getClass().getName(), requestContext.getRequest().getMethod(), requestContext.getUriInfo().getPath(true));
+		RequestInfo.get();  //Just setting the start time of the request
 		if (requestContext.getUriInfo().getPathParameters().size() > 0) {
 			LOG.debug("Path parameters: {}", requestContext.getUriInfo().getPathParameters().keySet());
 			for (Map.Entry<String, List<String>> parameter : requestContext.getUriInfo().getPathParameters().entrySet()) 
