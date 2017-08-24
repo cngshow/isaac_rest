@@ -346,8 +346,8 @@ public class RequestInfo
 					{
 						if (userService.usePrismeForRolesByToken()) 
 						{
-							log.info("Rechecking roles for user '{}' because its '{}' and roles were last checked at '{}' " 
-									+ userFromPassedEditToken.getName(), System.currentTimeMillis(), userFromPassedEditToken.rolesCheckedAt());
+							log.info("Rechecking roles for user '{}' because its '{}' and roles were last checked at '{}' ", 
+									userFromPassedEditToken.getName(), System.currentTimeMillis(), userFromPassedEditToken.rolesCheckedAt());
 							try
 							{
 								//we don't need to call updateRoles here, because prismeServiceUtils updates the user cache, when it does a prisme read.
