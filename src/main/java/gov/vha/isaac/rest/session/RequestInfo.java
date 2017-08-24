@@ -76,6 +76,7 @@ public class RequestInfo
 
 	private Optional<User> user_ = null;
 	private EditToken editToken_ = null;
+	private long createTime_;
 
 	private EditCoordinate editCoordinate_ = null;
 
@@ -110,10 +111,13 @@ public class RequestInfo
 
 	private RequestInfo()
 	{
+		createTime_ = System.currentTimeMillis();
 	}
 
-	public static void remove() {
+	public static RequestInfo remove() {
+		RequestInfo ri = requestInfo.get();
 		requestInfo.remove();
+		return ri;
 	}
 
 	public RequestInfo readExpandables(Map<String, List<String>> parameters) throws RestException
@@ -335,14 +339,19 @@ public class RequestInfo
 					}
 					
 					passedEditToken.updateValues(module, path, workflowProcessid);
-					if (!passedEditToken.getUser().rolesStillValid())
+					
+					User userFromPassedEditToken = passedEditToken.getUser();
+					
+					if (!userFromPassedEditToken.rolesStillValid())
 					{
 						if (userService.usePrismeForRolesByToken()) 
 						{
-							log.info("Rechecking roles for user " + passedEditToken.getUser().getName());
+							log.info("Rechecking roles for user '{}' because its '{}' and roles were last checked at '{}' ", 
+									userFromPassedEditToken.getName(), System.currentTimeMillis(), userFromPassedEditToken.rolesCheckedAt());
 							try
 							{
-								passedEditToken.getUser().updateRoles(userService.getUser(passedEditToken.getUser().getSSOToken().get()).get().getRoles().toArray(new PrismeRole[0]));
+								//we don't need to call updateRoles here, because prismeServiceUtils updates the user cache, when it does a prisme read.
+								userService.getUser(userFromPassedEditToken.getSSOToken().get());
 								log.debug("Roles updated: " + passedEditToken.getUser().toString());
 							}
 							catch (Exception e)
@@ -449,7 +458,7 @@ public class RequestInfo
 							workflowProcessid);
 				}
 
-				log.debug("Created EditToken \"{}\"", requestInfo.get().editToken_);
+				log.debug("Populated EditToken '{}' into RequestInfo", editToken_);
 			} catch (RestException e) {
 				throw e;
 			} catch (RuntimeException e) {
@@ -563,5 +572,10 @@ public class RequestInfo
 			}
 		}
 		return wfp_;
+	}
+	
+	public long getCreateTime()
+	{
+		return createTime_;
 	}
 }

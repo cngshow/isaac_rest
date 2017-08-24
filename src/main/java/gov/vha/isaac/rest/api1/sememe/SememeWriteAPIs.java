@@ -291,19 +291,23 @@ public class SememeWriteAPIs
 		int passedExtendedType = -1;
 		int currentExtendedType = -1;
 		
-		try {
+		int passedCaseSignificanceConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", 
+				descriptionSememeUpdateData.caseSignificanceConcept);
+		int passedLanguageConcept = StringUtils.isBlank(descriptionSememeUpdateData.languageConcept) ? MetaData.ENGLISH_LANGUAGE.getConceptSequence() :
+			RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.languageConcept", descriptionSememeUpdateData.languageConcept);
+		int passedDescriptionTypeConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.descriptionTypeConcept", 
+				descriptionSememeUpdateData.descriptionTypeConcept);
+		State passedState = (descriptionSememeUpdateData.active == null || descriptionSememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
+		
+		try 
+		{
 			// This code short-circuits update if passed data are identical to current relevant version
 			@SuppressWarnings({ "unchecked" })
 			Optional<DescriptionSememeImpl> currentVersion = LatestVersionUtils.getLatestVersionForUpdate((SememeChronology<DescriptionSememeImpl>)sememeChronology, 
 					DescriptionSememeImpl.class);
 			
-			if (currentVersion.isPresent()) {
-				int passedCaseSignificanceConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", descriptionSememeUpdateData.caseSignificanceConcept);
-				int passedLanguageConcept = StringUtils.isBlank(descriptionSememeUpdateData.languageConcept) ? MetaData.ENGLISH_LANGUAGE.getConceptSequence() :
-					RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.languageConcept", descriptionSememeUpdateData.languageConcept);
-				int passedDescriptionTypeConcept = RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.descriptionTypeConcept", descriptionSememeUpdateData.descriptionTypeConcept);
-				State passedState = (descriptionSememeUpdateData.active == null || descriptionSememeUpdateData.active) ? State.ACTIVE : State.INACTIVE;
-				
+			if (currentVersion.isPresent()) 
+			{
 				if (passedCaseSignificanceConcept == currentVersion.get().getCaseSignificanceConceptSequence()
 						&& passedLanguageConcept == currentVersion.get().getLanguageConceptSequence()
 						&& passedDescriptionTypeConcept == currentVersion.get().getDescriptionTypeConceptSequence()
@@ -340,31 +344,29 @@ public class SememeWriteAPIs
 					return new RestWriteResponse(RequestInfo.get().getEditToken(), currentVersion.get().getPrimordialUuid(), RestWriteResponseEnumeratedDetails.UNCHANGED);
 				}
 				
-			} else {
+			} else 
+			{
 				log.warn("Failed retrieving latest version of object " + id + ". Unconditionally performing update");
 			}
-		} catch (Exception e) {
+		} catch (Exception e) 
+		{
 			log.warn("Failed checking update against current object " + id + " version. Unconditionally performing update", e);
 		}
 		
-		try {
-
+		try 
+		{
 			if (updateDescriptionRequired)
 			{
 				@SuppressWarnings({ "rawtypes", "unchecked" })
 				DescriptionSememeImpl mutableVersion =
-				(DescriptionSememeImpl)((SememeChronology)sememeChronology).createMutableVersion(
-						DescriptionSememeImpl.class, (descriptionSememeUpdateData.active == null || descriptionSememeUpdateData.active ? State.ACTIVE : State.INACTIVE),
+				(DescriptionSememeImpl)((SememeChronology)sememeChronology).createMutableVersion(DescriptionSememeImpl.class, passedState, 
 						RequestInfo.get().getEditCoordinate());
 		
-				mutableVersion.setCaseSignificanceConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.caseSignificanceConcept", 
-						descriptionSememeUpdateData.caseSignificanceConcept));
-				mutableVersion.setLanguageConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.languageConcept", 
-						descriptionSememeUpdateData.languageConcept));
+				mutableVersion.setCaseSignificanceConceptSequence(passedCaseSignificanceConcept);
+				mutableVersion.setLanguageConceptSequence(passedLanguageConcept);
 				mutableVersion.setText(descriptionSememeUpdateData.text);
 				//TODO this needs a validator in isaac, to ensure it is a proper type
-				mutableVersion.setDescriptionTypeConceptSequence(RequestInfoUtils.getConceptSequenceFromParameter("RestSememeDescriptionUpdate.descriptionTypeConcept", 
-						descriptionSememeUpdateData.descriptionTypeConcept));
+				mutableVersion.setDescriptionTypeConceptSequence(passedDescriptionTypeConcept);
 				Get.commitService().addUncommitted(sememeChronology).get();
 			}
 			
@@ -379,9 +381,8 @@ public class SememeWriteAPIs
 					extendedDescriptionTypeSememeChronology =
 							Frills.getAnnotationSememe(Get.identifierService().getSememeNid(sememeChronology.getNid()), 
 									DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence()).get();
-					ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, extendedDescriptionTypeSememeChronology.getNid() + "");
-					// TODO determine why this addUncommitted() after resetStateWithNoCommit() is creating an uncommitted version, but not a persisted inactive version after commit
-					Get.commitService().addUncommitted(extendedDescriptionTypeSememeChronology).get();
+					SememeChronology sc = (SememeChronology)ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, extendedDescriptionTypeSememeChronology.getNid() + "");
+					Get.commitService().addUncommitted(sc).get();
 				}
 				else if (currentExtendedType == -1)
 				{
@@ -415,7 +416,9 @@ public class SememeWriteAPIs
 				LookupService.getService(WorkflowUpdater.class).addCommitRecordToWorkflow(RequestInfo.get().getActiveWorkflowProcessId(), commitRecord);
 			}
 		} catch (Exception e) {
-			throw new RuntimeException("Failed updating description " + id + " with " + descriptionSememeUpdateData + ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
+			log.error("unexpected description update failure", e);
+			throw new RuntimeException("Failed updating description " + id + " with " + descriptionSememeUpdateData + ". Caught " 
+					+ e.getClass().getName() + " " + e.getLocalizedMessage());
 		}
 
 		return new RestWriteResponse(RequestInfo.get().getEditToken(), sememeChronology.getPrimordialUuid());

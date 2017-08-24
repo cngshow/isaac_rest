@@ -18,6 +18,7 @@
  */
 package gov.vha.isaac.rest;
 
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -28,6 +29,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
@@ -48,6 +51,7 @@ import gov.vha.isaac.rest.session.RequestParameters;
 public class Util
 {
 	public static final DateTimeFormatter ISO_DATE_TIME_FORMATTER = DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneId.systemDefault());
+	private static Logger log = LogManager.getLogger();
 	
 	public static int convertToConceptSequence(String conceptId) throws RestException
 	{
@@ -334,5 +338,41 @@ public class Util
 				return Date.from(Instant.from(ISO_DATE_TIME_FORMATTER.parse(dateString))).getTime();
 			}
 		}
+	}
+	
+	public static InputStream getTerminologyConfigData()
+	{
+		//Prisme injects this into the war file, at deployment time.
+		log.debug("Looking for TerminologyConfig.xml from prisme");
+		InputStream is = Util.class.getClassLoader().getResourceAsStream("/prisme_files/TerminologyConfig.xml");
+		if (is == null)
+		{
+			log.warn("Failed to find TerminologyConfig.xml from prisme!  Using embedded default config!");
+			//this file comes from the vhat-constants module
+			is = Util.class.getClassLoader().getResourceAsStream("/TerminologyConfigDefault.xml");
+		}
+		if (is == null)
+		{
+			throw new RuntimeException("Unable to find Terminology Config!");
+		}
+		return is;
+	}
+	
+	public static InputStream getTerminologyConfigSchema()
+	{
+		//Prisme injects this into the war file, at deployment time.
+		log.debug("Looking for TerminologyConfig.xsd from prisme");
+		InputStream is = Util.class.getClassLoader().getResourceAsStream("/prisme_files/TerminologyConfig.xsd");
+		if (is == null)
+		{
+			log.warn("Failed to find TerminologyConfig.xsd from prisme!  Using embedded default config!");
+			//this file comes from the vhat-constants module
+			is = Util.class.getClassLoader().getResourceAsStream("/TerminologyConfig.xsd.hidden");
+		}
+		if (is == null)
+		{
+			throw new RuntimeException("Unable to find Terminology Config Schema!!");
+		}
+		return is;
 	}
 }

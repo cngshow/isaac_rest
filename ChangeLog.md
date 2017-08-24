@@ -3,8 +3,23 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/08/?? - 4.21 - PENDING
-    *
+* 2017/08/?? - 4.24 - PENDING
+    * Fix a bug with retirement or activation of extended description types on descriptions
+    * Fix a bug with retirement of mapset sememes
+    * Fix a bug with the design of the ssoToken handling, which was causing excessive prisme lookups for user / role information.
+    * cleanup of logging output to reduce noise, add request processing timers to log.
+
+* 2017/08/23 - 4.23
+    * Added tests and documentation
+    * Updates to align with ISAAC API changes
+
+* 2017/08/22 - 4.22
+    * Fix a bug where one could not attach an SCTID to a concept when you were using a database that doesn't currently contain any SCTIDs, such 
+        as VETs.
+    * Fix a bug where update description didn't work if language wasn't passed (even though language was documented as optional)
+
+* 2017/08/21 - 4.21
+    * Fix 575255 - Change ListValueSetContents web service to use Issac MetaData instead of VHAT.
 
 * 2017/08/17 - 4.20
     * Changes to web services to handle missing and incorrect input values for ListMapEntriesFromSource.

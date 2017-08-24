@@ -1,5 +1,22 @@
 package gov.vha.isaac.soap.services.dao;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.input.SAXBuilder;
+import org.xml.sax.SAXException;
+import gov.va.med.term.services.exception.STSException;
+import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.soap.services.dto.config.CodeSystemConfig;
 import gov.vha.isaac.soap.services.dto.config.DependentSubsetRule;
 import gov.vha.isaac.soap.services.dto.config.DesignationConfig;
@@ -9,32 +26,6 @@ import gov.vha.isaac.soap.services.dto.config.PropertyConfig;
 import gov.vha.isaac.soap.services.dto.config.RelationshipConfig;
 import gov.vha.isaac.soap.services.dto.config.StateConfig;
 import gov.vha.isaac.soap.services.dto.config.SubsetConfig;
-import gov.va.med.term.services.exception.STSException;
-import gov.vha.isaac.soap.CommonTerminology;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jdom2.Document;
-import org.jdom2.Element;
-import org.jdom2.input.SAXBuilder;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 public class TerminologyConfigHelper {
 	private static Logger log = LogManager.getLogger(TerminologyConfigHelper.class);
@@ -66,12 +57,6 @@ public class TerminologyConfigHelper {
 	private static final String SOURCE_TYPE = "SourceType";
 	private static final String TARGET_TYPE = "TargetType";
 	private static final String MAPSET_TYPE = "ConceptCode";
-
-	// Default XML File and Schema
-	//replace fileRootDirectory with file path in prisme
-	private static String fileRootDirectory = "D:/VA/ISAAC-rest/src/test/resources/";
-	private static String configFileName = "TerminologyConfig.xml";
-	private static String schemaFileName = "TerminologyConfig.xsd.hidden";
 
 	// instance variables
 	private static List<DomainConfig> publisherDomains = new ArrayList<DomainConfig>();
@@ -373,19 +358,14 @@ public class TerminologyConfigHelper {
 
 	private static Element getTerminologyConfigRootElement() throws Exception {
 		SAXBuilder builder = new SAXBuilder();
-		validateXMLAgainstSchema(fileRootDirectory + configFileName, fileRootDirectory + schemaFileName);
-		File xml = new File(fileRootDirectory + configFileName);
-		if (xml == null) {
-			throw new FileNotFoundException("Unable to locate file: " + fileRootDirectory + configFileName);
-		} else {
-			log.warn("Using " + fileRootDirectory + configFileName + " file!");
-		}
-		Document document = builder.build(xml);
+		validateXMLAgainstSchema(Util.getTerminologyConfigSchema(), Util.getTerminologyConfigData());
+
+		Document document = builder.build(Util.getTerminologyConfigData());
 
 		return document.getRootElement();
 	}
 
-	private static boolean validateXMLAgainstSchema(String xsdPath, String xmlPath) throws Exception {
+	private static boolean validateXMLAgainstSchema(InputStream xsd, InputStream xml) throws Exception {
 
 		try {
 			// create a SchemaFactory capable of understanding WXS schemas
@@ -394,7 +374,7 @@ public class TerminologyConfigHelper {
 			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 	
 			// load a WXS schema, represented by a Schema instance
-			Source schemaFile = new StreamSource(new File(xsdPath));
+			Source schemaFile = new StreamSource(xsd);
 			Schema schema = factory.newSchema(schemaFile);
 	
 			// create a Validator instance, which can be used to validate an
@@ -402,7 +382,7 @@ public class TerminologyConfigHelper {
 			Validator validator = schema.newValidator();
 
 			// validate the DOM tree
-			validator.validate(new StreamSource(new File(xmlPath)));
+			validator.validate(new StreamSource(xml));
 			return true;
 			
 		} catch (SAXException e) {
