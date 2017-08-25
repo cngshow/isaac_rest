@@ -28,7 +28,6 @@ import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.rest.Util;
 import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 
 /**
@@ -37,10 +36,10 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
  *
  * @author <a href="mailto:daniel.armbrust.list@gmail.com">Dan Armbrust</a>
  */
-@XmlSeeAlso ({RestDynamicSememeNid.class, RestDynamicSememeSequence.class, RestDynamicSememeUUID.class, 
-	RestDynamicSememeNid[].class, RestDynamicSememeSequence[].class, RestDynamicSememeUUID[].class})
-@JsonSeeAlso ({RestDynamicSememeNid.class, RestDynamicSememeSequence.class, RestDynamicSememeUUID.class, 
-	RestDynamicSememeNid[].class, RestDynamicSememeSequence[].class, RestDynamicSememeUUID[].class})
+@XmlSeeAlso ({RestDynamicSememeNid.class, RestDynamicSememeUUID.class, 
+	RestDynamicSememeNid[].class, RestDynamicSememeUUID[].class})
+@JsonSeeAlso ({RestDynamicSememeNid.class, RestDynamicSememeUUID.class, 
+	RestDynamicSememeNid[].class, RestDynamicSememeUUID[].class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @XmlRootElement
 public abstract class RestDynamicSememeIdentifiedData extends RestDynamicSememeData

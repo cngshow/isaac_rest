@@ -14,6 +14,9 @@ parameter.  However, any change that will break KOMET code - such as changing th
 Bug fixes should not be documented here, rather, than should be documented in the changelog file.
 
 *** Don't forget to update the value in the class RestSystemInfo ***
+* 2018/08/25 - 1.16.4
+    * Removed RestDynamicSememeSequence data type to align with upstream ISAAC changes.  To my knowledge, this data type was 
+        never used, so there should be no impact.
 * 2017/08/15 - 1.16.3
     * All search APIs (except for nidReferences) now pay attention to the coordToken during search.  The search specifically takes into account 
         the 'modules' and 'path' components of the coordToken (or of individual 'modules' or 'path' parameters to restrict the search to matching 
