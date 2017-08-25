@@ -4234,9 +4234,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	@Test
 	public void testSearchExpandsUUID()
 	{
-		//Make sure it contains a random (type 4) UUID with this pattern...
-		//<uuids>12604572-254c-49d2-8d9f-39d485af0fa0</uuids>
-		final Pattern pXml = Pattern.compile(".*uuids.{9}-.{4}-4.{3}-.{4}-.{14}uuids.*", Pattern.DOTALL);
+		//Dan notes, we no longer generate metadata with any random uuids...
+		//Make sure it contains a (type 5) UUID with this pattern...
+		//<uuids>12604572-254c-59d2-8d9f-39d485af0fa0</uuids>
+		final Pattern pXml = Pattern.compile(".*uuids.{9}-.{4}-5.{3}-.{4}-.{14}uuids.*", Pattern.DOTALL);
 
 		//Test expand uuid on/off for each search type
 
@@ -4295,9 +4296,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertFalse(pXml.matcher(result).matches());
 
 		//Spot check for JSON return support:
-		//Make sure it contains a random (type 4) UUID with this pattern...
+		//Make sure it contains a (type 5) UUID with this pattern...
 		// "uuids" : [ "bcf22234-a736-5f6b-9ce3-d016594ca5cd" ]
-		final Pattern pJson = Pattern.compile(".*uuids.{15}-.{4}-4.{3}-.{4}-.{12}.*", Pattern.DOTALL);
+		final Pattern pJson = Pattern.compile(".*uuids.{15}-.{4}-5.{3}-.{4}-.{12}.*", Pattern.DOTALL);
 		result = checkFail(target(prefixSearchRequestPath)
 				.queryParam(RequestParameters.query,"dynamic")
 				.queryParam(RequestParameters.expand, "uuid")
