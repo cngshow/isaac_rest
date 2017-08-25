@@ -39,7 +39,6 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeInteger;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeLong;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeSequence;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeArrayImpl;
@@ -50,7 +49,6 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeFloatImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeNidImpl;
-import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeSequenceImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
 import gov.vha.isaac.rest.api.exceptions.RestException;
@@ -62,7 +60,6 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeFloat;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 
@@ -187,8 +184,6 @@ public abstract class RestDynamicSememeData
 				return new RestDynamicSememeLong(columnNumber, ((DynamicSememeLong)data).getDataLong());
 			case NID:
 				return new RestDynamicSememeNid(columnNumber, ((DynamicSememeNid)data).getDataNid());
-			case SEQUENCE:
-				return new RestDynamicSememeSequence(columnNumber, ((DynamicSememeSequence)data).getDataSequence());
 			case STRING:
 				return new RestDynamicSememeString(columnNumber, ((DynamicSememeString)data).getDataString());
 			case UUID:
@@ -345,10 +340,6 @@ public abstract class RestDynamicSememeData
 		else if (data instanceof RestDynamicSememeNid)
 		{
 			return new DynamicSememeNidImpl(((RestDynamicSememeNid)data).getNid());
-		}
-		else if (data instanceof RestDynamicSememeSequence)
-		{
-			return new DynamicSememeSequenceImpl(((RestDynamicSememeSequence)data).getSequence());
 		}
 		else if (data instanceof RestDynamicSememeString)
 		{

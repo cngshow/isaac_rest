@@ -95,7 +95,6 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeInteger;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeLong;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeNid;
-import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeSequence;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
@@ -192,7 +191,6 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeFloat;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
@@ -618,10 +616,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		case NID:
 			on.put("@class", RestDynamicSememeNid.class.getName());
 			on.put("data", ((DynamicSememeNid)data).getDataNid());
-			break;
-		case SEQUENCE:
-			on.put("@class", RestDynamicSememeSequence.class.getName());
-			on.put("data", ((DynamicSememeSequence)data).getDataSequence());
 			break;
 		case STRING:
 			on.put("@class", RestDynamicSememeString.class.getName());

@@ -4,7 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 4.25 - PENDING
-    *
+    * ISAAC API alignment
 
 * 2017/08/24 - 4.24
     * Fix a bug with retirement or activation of extended description types on descriptions
