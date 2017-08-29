@@ -18,10 +18,12 @@
  */
 package gov.vha.isaac.rest.api1.system;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,15 +32,21 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import gov.vha.isaac.MetaData;
 import gov.vha.isaac.ochre.api.Get;
 import gov.vha.isaac.ochre.api.PrismeRoleConstants;
+import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
+import gov.vha.isaac.ochre.api.collections.ConceptSequenceSet;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.tree.Tree;
 import gov.vha.isaac.ochre.api.util.NumericUtils;
 import gov.vha.isaac.ochre.api.util.UUIDUtil;
 import gov.vha.isaac.ochre.impl.utility.Frills;
+import gov.vha.isaac.ochre.model.concept.ConceptVersionImpl;
 import gov.vha.isaac.ochre.model.configuration.LanguageCoordinates;
 import gov.vha.isaac.ochre.model.configuration.StampCoordinates;
 import gov.vha.isaac.ochre.model.configuration.TaxonomyCoordinates;
@@ -51,6 +59,7 @@ import gov.vha.isaac.rest.api1.concept.ConceptAPIs;
 import gov.vha.isaac.rest.api1.data.RestSystemInfo;
 import gov.vha.isaac.rest.api1.data.RestUserInfo;
 import gov.vha.isaac.rest.api1.data.concept.RestConceptChronology;
+import gov.vha.isaac.rest.api1.data.concept.RestConceptVersion;
 import gov.vha.isaac.rest.api1.data.concept.RestTerminologyConcept;
 import gov.vha.isaac.rest.api1.data.enumerations.RestConcreteDomainOperatorsType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestDynamicSememeDataType;
@@ -61,6 +70,7 @@ import gov.vha.isaac.rest.api1.data.enumerations.RestSememeType;
 import gov.vha.isaac.rest.api1.data.enumerations.RestSupportedIdType;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeChronology;
 import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
+import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.session.SecurityUtils;
@@ -76,6 +86,8 @@ import gov.vha.isaac.rest.session.SecurityUtils;
 	PrismeRoleConstants.REVIEWER, PrismeRoleConstants.APPROVER, PrismeRoleConstants.DEPLOYMENT_MANAGER})
 public class SystemAPIs
 {
+	private static Logger log = LogManager.getLogger();
+	
 	@Context
 	private SecurityContext securityContext;
 
@@ -510,6 +522,62 @@ public class SystemAPIs
 
 		return terminologies.toArray(new RestTerminologyConcept[terminologies.size()]);
 	}
+	
+	/**
+	 * Return the taxonomy tree, rooted at the metadata concept MODULE, of the available modules in this 
+	 * current database.  
+	 * 
+	 * @param availableOnly - if missing or true, only return modules that have content in this instance.  If false, 
+	 * return all module types present in the metadata, whether any content exists or not.
+	 * 
+	 * This is determined by whether or not there is a module concept that extends from one of the children of the {@link MetaData#MODULE} concepts. 
+	 */
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Path(RestPaths.modules)
+	public RestConceptVersion getAvailableModules(
+			@QueryParam(RequestParameters.availableOnly) @DefaultValue("true") String availableOnly) throws RestException
+	{
+		SecurityUtils.validateRole(securityContext, getClass());
+
+		RequestParameters.validateParameterNamesAgainstSupportedNames(
+				RequestInfo.get().getParameters(),
+				RequestParameters.coordToken,
+				RequestParameters.availableOnly);
+		
+		Optional<LatestVersion<ConceptVersionImpl>> cv = ((ConceptChronology)Get.conceptService().getConcept(MetaData.MODULE.getConceptSequence()))
+				.getLatestVersion(ConceptVersionImpl.class, StampCoordinates.getDevelopmentLatest());
+		
+		if (cv.isPresent())
+		{
+			RestConceptVersion rcv = new RestConceptVersion(cv.get().value(), true, false, false, true, true, true, false, false, null);
+			Tree tree = Get.taxonomyService().getTaxonomyTree(TaxonomyCoordinates
+					.getStatedTaxonomyCoordinate(StampCoordinates.getDevelopmentLatest(), LanguageCoordinates.getUsEnglishLanguageFullySpecifiedNameCoordinate()));
+			
+			//TODO there is a bug here - the addChildren reads coords from the RequestInfo, if they pass in weird coords, it will mess up this call.
+			TaxonomyAPIs.addChildren(MetaData.MODULE.getConceptSequence(), rcv, tree, true, false, 3, false, false, new ConceptSequenceSet(), null, 1, 500);
+			
+			if (availableOnly == null || Boolean.parseBoolean(availableOnly))
+			{
+				ArrayList<RestConceptVersion> filteredResults = new ArrayList<>();
+				//Trim out any 2nd level tree items that don't have children.
+				for (RestConceptVersion x : rcv.children.results)
+				{
+					if (x.getChildCount() > 0)
+					{
+						filteredResults.add(x);
+					}
+				}
+				rcv.children.results = filteredResults.toArray(new RestConceptVersion[filteredResults.size()]);
+				rcv.children.paginationData.approximateTotal = filteredResults.size();
+			}
+			return rcv;
+		}
+		
+		log.error("Couldn't find MODULE??");
+		throw new RestException("Unexpected internal error");
+	}
+	
 	
 	/**
 	 * Return the (sorted) extended description types that are allowable by a particular terminology.  

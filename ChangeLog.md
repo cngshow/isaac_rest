@@ -4,7 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/08/?? - 5.01 - PENDING
-    *
+    * Adding a new system API which can be utilized to improve the module dropdowns in komet.
 
 * 2017/08/25 - 5.00
     * ISAAC API alignment
