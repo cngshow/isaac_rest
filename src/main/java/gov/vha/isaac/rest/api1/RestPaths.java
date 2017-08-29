@@ -55,6 +55,7 @@ public class RestPaths
 	public static final String userComponent = "user/";
 	public static final String vetsXMLComponent = "vetsXML/";
 	public static final String terminologyTypes = "terminologyTypes/";
+	public static final String modules = "modules/";
 	public static final String extendedDescriptionTypes = "extendedDescriptionTypes/";
 
 	// Workflow Based Calls

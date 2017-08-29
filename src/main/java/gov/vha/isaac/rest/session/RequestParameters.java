@@ -119,6 +119,8 @@ public class RequestParameters {
 	
 	public final static String objType = "objType";
 	
+	public final static String availableOnly = "availableOnly";
+	
 	// Expandables
 	public final static String expand = "expand";
 	public final static String returnExpandableLinks = "expandables";
