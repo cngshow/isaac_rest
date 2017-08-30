@@ -5,6 +5,7 @@ API version number, not the release version number.
 
 * 2017/08/?? - 5.01 - PENDING
     * Adding a new system API which can be utilized to improve the module dropdowns in komet.
+    * Fix 572778 - change designation type and value set type to use EnglishLanguagePreferredTerm. 
 
 * 2017/08/25 - 5.00
     * ISAAC API alignment
