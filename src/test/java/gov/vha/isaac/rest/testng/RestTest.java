@@ -4051,7 +4051,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				foundSctIdConcept = true;
 			} else if (retrievedIdConceptNid == MetaData.VUID.getNid()) {
 				foundVuidConcept = true;
-			} else if (retrievedIdConceptNid == MetaData.GENERATED_UUID.getNid()) {
+			} else if (retrievedIdConceptNid == MetaData.UUID.getNid()) {
 				foundGeneratedUuidConcept = true;
 			}
 		}
