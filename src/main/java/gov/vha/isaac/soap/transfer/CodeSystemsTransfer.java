@@ -22,29 +22,26 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "MapEntryValueList")
-@XmlType(propOrder = { "totalNumberOfRecords", "mapEntryDetailTransfers" })
-public class MapEntryValueListTransfer {
-	private Long totalNumberOfRecords;
-	private List<MapEntryValueTransfer> mapEntryValueTransfers;
+@XmlRootElement(name = "CodeSystems")
+public class CodeSystemsTransfer {
+	private List<CodeSystemTransfer> codeSystems;
 
-	@XmlElement(name = "TotalNumberOfRecords")
-	public Long getTotalNumberOfRecords() {
-		return totalNumberOfRecords;
+	public CodeSystemsTransfer() {
+		super();
 	}
 
-	public void setTotalNumberOfRecords(Long totalNumberOfRecords) {
-		this.totalNumberOfRecords = totalNumberOfRecords;
+	public CodeSystemsTransfer(List<CodeSystemTransfer> codeSystems) {
+		super();
+		this.codeSystems = codeSystems;
 	}
 
-	@XmlElement(name = "MapEntryValues", required = false, nillable = true)
-	public List<MapEntryValueTransfer> getMapEntryDetailTransfers() {
-		return mapEntryValueTransfers;
+	@XmlElement(name = "CodeSystem", required = true, nillable = false)
+	public List<CodeSystemTransfer> getCodeSystems() {
+		return codeSystems;
 	}
 
-	public void setMapEntryValueTransfers(List<MapEntryValueTransfer> mapEntryValueTransfers) {
-		this.mapEntryValueTransfers = mapEntryValueTransfers;
+	public void setCodeSystems(List<CodeSystemTransfer> codeSystems) {
+		this.codeSystems = codeSystems;
 	}
 }

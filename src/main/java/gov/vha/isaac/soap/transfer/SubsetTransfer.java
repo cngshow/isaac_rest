@@ -18,33 +18,37 @@
  */
 package gov.vha.isaac.soap.transfer;
 
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "MapEntryValueList")
-@XmlType(propOrder = { "totalNumberOfRecords", "mapEntryDetailTransfers" })
-public class MapEntryValueListTransfer {
-	private Long totalNumberOfRecords;
-	private List<MapEntryValueTransfer> mapEntryValueTransfers;
+@XmlRootElement(name = "DomainBinding")
+public class SubsetTransfer {
+	private String name;
+	private String vuid;
 
-	@XmlElement(name = "TotalNumberOfRecords")
-	public Long getTotalNumberOfRecords() {
-		return totalNumberOfRecords;
+	public SubsetTransfer() {
 	}
 
-	public void setTotalNumberOfRecords(Long totalNumberOfRecords) {
-		this.totalNumberOfRecords = totalNumberOfRecords;
+	public SubsetTransfer(String name) {
+		setName(name);
 	}
 
-	@XmlElement(name = "MapEntryValues", required = false, nillable = true)
-	public List<MapEntryValueTransfer> getMapEntryDetailTransfers() {
-		return mapEntryValueTransfers;
+	@XmlElement(name = "Name", required = true, nillable = false)
+	public String getName() {
+		return name;
 	}
 
-	public void setMapEntryValueTransfers(List<MapEntryValueTransfer> mapEntryValueTransfers) {
-		this.mapEntryValueTransfers = mapEntryValueTransfers;
+	public void setName(String name) {
+		this.name = name;
 	}
+
+	public String getVuid() {
+		return vuid;
+	}
+
+	@XmlElement(name = "VUID", required = true, nillable = false)
+	public void setVuid(String vuid) {
+		this.vuid = vuid;
+	}
+
 }
