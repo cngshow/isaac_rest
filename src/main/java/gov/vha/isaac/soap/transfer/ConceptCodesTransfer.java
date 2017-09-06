@@ -23,16 +23,16 @@ import java.util.Collection;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "Source")
-public class SourcesTransfer {
-	private Collection<String> sources;
+@XmlRootElement(name = "ConceptCodes")
+public class ConceptCodesTransfer {
+	private Collection<String> conceptCodes;
 
-	@XmlElement(name = "Source", required = true, nillable = false)
-	public Collection<String> getSources() {
-		return sources;
+	@XmlElement(name = "ConceptCode", required = true, nillable = false)
+	public Collection<String> getConceptCodes() {
+		return conceptCodes;
 	}
 
-	public void setSources(Collection<String> sources) {
-		this.sources = sources;
+	public void setConceptCodes(Collection<String> conceptCodes) {
+		this.conceptCodes = conceptCodes;
 	}
 }

@@ -18,51 +18,42 @@
  */
 package gov.vha.isaac.soap.transfer;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "Association")
-@XmlType(propOrder = { "name", "type", "code", "status" })
-public class RelationshipTransfer {
-	protected String name;
-	protected String type;
-	protected String code;
-	protected String status;
+@XmlRootElement(name = "Concepts")
+@XmlType(propOrder = { "totalNumberOfRecords", "concepts" })
+public class CodeSystemConceptsTransfer {
+	private List<CodeSystemConceptTransfer> concepts;
+	private Long totalNumberOfRecords;
 
-	@XmlElement(name = "Name", required = true, nillable = false)
-	public String getName() {
-		return name;
+	public CodeSystemConceptsTransfer() {
+
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public CodeSystemConceptsTransfer(List<CodeSystemConceptTransfer> concepts) {
+		super();
+		this.concepts = concepts;
 	}
 
-	@XmlElement(name = "Type", required = true, nillable = false)
-	public String getType() {
-		return type;
+	@XmlElement(name = "Concept", required = true, nillable = false)
+	public List<CodeSystemConceptTransfer> getConcepts() {
+		return concepts;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setConceptCode(List<CodeSystemConceptTransfer> concepts) {
+		this.concepts = concepts;
 	}
 
-	@XmlElement(name = "Code", required = false, nillable = false)
-	public String getCode() {
-		return code;
+	@XmlElement(name = "TotalNumberOfRecords", required = true, nillable = false)
+	public Long getTotalNumberOfRecords() {
+		return totalNumberOfRecords;
 	}
 
-	public void setCode(String code) {
-		this.code = code;
-	}
-
-	@XmlElement(name = "Status", required = true, nillable = false)
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
+	public void setTotalNumberOfRecords(Long totalNumberOfRecords) {
+		this.totalNumberOfRecords = totalNumberOfRecords;
 	}
 }

@@ -23,16 +23,17 @@ import java.util.Collection;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "Source")
-public class SourcesTransfer {
-	private Collection<String> sources;
+@XmlRootElement(name = "Paths")
+public class PathsTransfer {
+	private Collection<String> paths;
 
-	@XmlElement(name = "Source", required = true, nillable = false)
-	public Collection<String> getSources() {
-		return sources;
+	@XmlElement(name = "Path", required = true, nillable = false)
+
+	public Collection<String> getPaths() {
+		return paths;
 	}
 
-	public void setSources(Collection<String> sources) {
-		this.sources = sources;
+	public void setPaths(Collection<String> paths) {
+		this.paths = paths;
 	}
 }
