@@ -9,7 +9,7 @@
 
 	<groupId>gov.vha.isaac.rest</groupId>
 	<artifactId>isaac-rest</artifactId>
-	<version>5.04</version>
+	<version>5.05-SNAPSHOT</version>
 	<packaging>war</packaging>
 	
 	<name>ISAAC REST Server</name>
