@@ -3,6 +3,9 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/09/?? - 5.05 - PENDING
+    *
+
 * 2017/09/07 - 5.04
     * Release to pick up ISAAC changes
     
