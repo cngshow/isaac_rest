@@ -2341,7 +2341,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(matchingVersion.descriptionTypeConcept.sequence.intValue(), initialDescriptionTypeConceptSequence);
 		Assert.assertEquals(matchingVersion.languageConcept.sequence.intValue(), MetaData.ENGLISH_LANGUAGE.getConceptSequence());
 		Assert.assertEquals(matchingVersion.getSememeChronology().referencedComponent.nid.intValue(), referencedConceptNid);
-		Assert.assertNull(matchingVersion.descriptionExtendedTypeConcept);
+		//updateDescriptionSememe will return inactive descriptions
+		Assert.assertEquals(matchingVersion.descriptionExtendedTypeConcept.sequence.intValue(), newDescriptionExtendedTypeConcept);
 		
 		// Attempt to deactivate description as read_only user
 		Response deactivateDescriptionResponse = target(RestPaths.writePathComponent + RestPaths.apiVersionComponent +  RestPaths.componentComponent

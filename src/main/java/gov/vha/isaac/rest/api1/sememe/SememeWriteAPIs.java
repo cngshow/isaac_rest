@@ -320,7 +320,7 @@ public class SememeWriteAPIs
 				
 				
 				Optional<UUID> descriptionExtendedTypeOptional = Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), 
-						currentVersion.get().getNid());
+						currentVersion.get().getNid(), false);
 				if (descriptionExtendedTypeOptional.isPresent()) 
 				{
 					currentExtendedType = Get.identifierService().getConceptSequenceForUuids(descriptionExtendedTypeOptional.get());
