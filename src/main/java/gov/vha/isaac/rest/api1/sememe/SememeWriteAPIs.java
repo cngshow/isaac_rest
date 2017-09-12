@@ -320,7 +320,7 @@ public class SememeWriteAPIs
 				
 				
 				Optional<UUID> descriptionExtendedTypeOptional = Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), 
-						currentVersion.get().getNid());
+						currentVersion.get().getNid(), true);
 				if (descriptionExtendedTypeOptional.isPresent()) 
 				{
 					currentExtendedType = Get.identifierService().getConceptSequenceForUuids(descriptionExtendedTypeOptional.get());
@@ -334,8 +334,18 @@ public class SememeWriteAPIs
 				
 				if (passedExtendedType == currentExtendedType)
 				{
-					updateExtendedTypeRequired = false;
-					log.debug("Not updating extended description type because data unchanged");
+					// If the extended designation types are the same, need to check if the designation was
+					// reactivated. Check that a previous extended designation type exists. If this check
+					// returns null/empty, then make the update. If it doesn't come back empty, and the
+					// value is the same, that is the only time not to make the update.
+					if (Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), 
+							currentVersion.get().getNid(), false).isPresent()
+							&& descriptionSememeUpdateData.text.equals(currentVersion.get().getText())) 
+					{
+						updateExtendedTypeRequired = false;
+						log.debug("Not updating extended description type because data unchanged");
+					}
+					
 				}
 				
 				if (!updateDescriptionRequired && !updateExtendedTypeRequired)

@@ -686,8 +686,8 @@ public class CommonTerminology {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			Optional<LatestVersion<DescriptionSememe<?>>> latestVersion = ((SememeChronology) sememeChronology)
 					.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
-			if (latestVersion.isPresent() && VHATConstants.VHAT_PREFERRED_NAME.getPrimordialUuid().equals(Frills
-					.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeChronology.getNid()).orElse(null))) {
+			if (latestVersion.isPresent() && VHATConstants.VHAT_PREFERRED_NAME.getPrimordialUuid().equals(
+					Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeChronology.getNid(), false).orElse(null))) {
 				if (latestVersion.get().value().getState() == State.ACTIVE) {
 					descriptions.add(latestVersion.get().value().getText());
 				} else {
@@ -970,7 +970,7 @@ public class CommonTerminology {
 	
 	private static String getPreferredTermNameType(int sememeNid) {
 		
-		Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeNid);
+		Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeNid, false);
 		
 		if (descType.isPresent())
 		{
