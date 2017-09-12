@@ -332,10 +332,10 @@ public class SememeWriteAPIs
 							descriptionSememeUpdateData.extendedDescriptionTypeConcept);
 				}
 				
-				if (passedExtendedType == currentExtendedType)
+				if (passedExtendedType == currentExtendedType && passedState == currentVersion.get().getState())
 				{
 					updateExtendedTypeRequired = false;
-					log.debug("Not updating extended description type because data unchanged");
+					log.debug("Not updating extended description type because data and state are unchanged");
 				}
 				
 				if (!updateDescriptionRequired && !updateExtendedTypeRequired)
