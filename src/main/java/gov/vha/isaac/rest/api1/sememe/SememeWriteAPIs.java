@@ -332,10 +332,20 @@ public class SememeWriteAPIs
 							descriptionSememeUpdateData.extendedDescriptionTypeConcept);
 				}
 				
-				if (passedExtendedType == currentExtendedType && passedState == currentVersion.get().getState())
+				if (passedExtendedType == currentExtendedType)
 				{
-					updateExtendedTypeRequired = false;
-					log.debug("Not updating extended description type because data and state are unchanged");
+					// If the extended designation types are the same, need to check if the designation was
+					// reactivated. Check that a previous extended designation type exists. If this check
+					// returns null/empty, then make the update. If it doesn't come back empty, and the
+					// value is the same, that is the only time not to make the update.
+					if (Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), 
+							currentVersion.get().getNid(), false).isPresent()
+							&& descriptionSememeUpdateData.text.equals(currentVersion.get().getText())) 
+					{
+						updateExtendedTypeRequired = false;
+						log.debug("Not updating extended description type because data unchanged");
+					}
+					
 				}
 				
 				if (!updateDescriptionRequired && !updateExtendedTypeRequired)
