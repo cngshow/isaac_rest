@@ -36,7 +36,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.rest.api.exceptions.RestException;
 import gov.vha.isaac.rest.api1.RestPaths;
-import gov.vha.isaac.rest.session.SecurityUtils;
+import gov.vha.isaac.rest.utils.SecurityUtils;
 
 
 /**

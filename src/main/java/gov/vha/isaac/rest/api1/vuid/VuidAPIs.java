@@ -44,7 +44,7 @@ import gov.vha.isaac.rest.api1.data.RestIdentifiedObject;
 import gov.vha.isaac.rest.api1.data.RestOptionalIdentifiedObject;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
-import gov.vha.isaac.rest.session.SecurityUtils;
+import gov.vha.isaac.rest.utils.SecurityUtils;
 import gov.vha.isaac.rest.session.VuidService;
 
 /**

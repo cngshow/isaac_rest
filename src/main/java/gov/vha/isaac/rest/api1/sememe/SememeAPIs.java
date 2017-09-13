@@ -70,7 +70,7 @@ import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersion;
 import gov.vha.isaac.rest.api1.data.sememe.RestSememeVersionPage;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
-import gov.vha.isaac.rest.session.SecurityUtils;
+import gov.vha.isaac.rest.utils.SecurityUtils;
 
 
 /**

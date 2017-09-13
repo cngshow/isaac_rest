@@ -49,7 +49,7 @@ import gov.vha.isaac.rest.api1.data.comment.RestCommentVersion;
 import gov.vha.isaac.rest.api1.sememe.SememeAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
-import gov.vha.isaac.rest.session.SecurityUtils;
+import gov.vha.isaac.rest.utils.SecurityUtils;
 
 
 /**

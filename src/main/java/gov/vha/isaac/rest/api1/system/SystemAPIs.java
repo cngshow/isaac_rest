@@ -73,7 +73,7 @@ import gov.vha.isaac.rest.api1.data.systeminfo.RestIdentifiedObjectsResult;
 import gov.vha.isaac.rest.api1.taxonomy.TaxonomyAPIs;
 import gov.vha.isaac.rest.session.RequestInfo;
 import gov.vha.isaac.rest.session.RequestParameters;
-import gov.vha.isaac.rest.session.SecurityUtils;
+import gov.vha.isaac.rest.utils.SecurityUtils;
 
 
 /**
