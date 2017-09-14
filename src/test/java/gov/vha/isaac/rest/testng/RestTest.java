@@ -2983,17 +2983,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
 					&& displayField.id.equals(MetaData.VUID.getPrimordialUuid().toString())) {
 				Assert.assertEquals(((RestMappingItemComputedDisplayField)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_VUID);
-//				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.VUID.getNid());
+				Assert.assertEquals(UUID.fromString(displayField.id), MetaData.VUID.getPrimordialUuid());
 				foundSourceVuidDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
 					&& displayField.id.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
 				Assert.assertEquals(((RestMappingItemComputedDisplayField)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_SCTID);
-//				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
+				Assert.assertEquals(UUID.fromString(displayField.id), MetaData.SCTID.getPrimordialUuid());
 				foundSourceSctIdDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
 					&& displayField.id.equals(MetaData.CODE.getPrimordialUuid().toString())) {
 				Assert.assertEquals(((RestMappingItemComputedDisplayField)displayField).value, ITEM_SOURCE_CONCEPT_FAKE_CODE);
-//				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.CODE.getNid());
+				Assert.assertEquals(UUID.fromString(displayField.id), MetaData.CODE.getPrimordialUuid());
 				foundSourceCodeDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.SOURCE))
 					&& displayField.id.equals(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid().toString())) {
@@ -3005,17 +3005,17 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
 					&& displayField.id.equals(MetaData.VUID.getPrimordialUuid().toString())) {
 				Assert.assertEquals(((RestMappingItemComputedDisplayField)displayField).value, ITEM_TARGET_CONCEPT_FAKE_VUID);
-//				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.VUID.getNid());
+				Assert.assertEquals(UUID.fromString(displayField.id), MetaData.VUID.getPrimordialUuid());
 				foundTargetVuidDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
 					&& displayField.id.equals(MetaData.SCTID.getPrimordialUuid().toString())) {
 				Assert.assertEquals(((RestMappingItemComputedDisplayField)displayField).value, ITEM_TARGET_CONCEPT_FAKE_SCTID);
-//				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.SCTID.getNid());
+				Assert.assertEquals(UUID.fromString(displayField.id), MetaData.SCTID.getPrimordialUuid());
 				foundTargetSctIdDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
 					&& displayField.id.equals(MetaData.CODE.getPrimordialUuid().toString())) {
 				Assert.assertEquals(((RestMappingItemComputedDisplayField)displayField).value, ITEM_TARGET_CONCEPT_FAKE_CODE);
-//				Assert.assertEquals(displayField.fieldNameConceptIdentifiers.nid.intValue(), MetaData.CODE.getNid());
+				Assert.assertEquals(UUID.fromString(displayField.id), MetaData.CODE.getPrimordialUuid());
 				foundTargetCodeDisplayField = true;
 			} else if (displayField.componentType.equals(new RestMapSetItemComponentType(MapSetItemComponent.TARGET))
 					&& displayField.id.equals(IsaacMappingConstants.get().MAPPING_CODE_DESCRIPTION.getPrimordialUuid().toString())) {
