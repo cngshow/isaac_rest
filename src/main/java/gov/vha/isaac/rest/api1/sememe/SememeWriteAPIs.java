@@ -44,6 +44,7 @@ import gov.vha.isaac.ochre.api.LookupService;
 import gov.vha.isaac.ochre.api.PrismeRoleConstants;
 import gov.vha.isaac.ochre.api.State;
 import gov.vha.isaac.ochre.api.bootstrap.TermAux;
+import gov.vha.isaac.ochre.api.chronicle.ObjectChronology;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
 import gov.vha.isaac.ochre.api.commit.CommitRecord;
@@ -391,8 +392,11 @@ public class SememeWriteAPIs
 					extendedDescriptionTypeSememeChronology =
 							Frills.getAnnotationSememe(Get.identifierService().getSememeNid(sememeChronology.getNid()), 
 									DynamicSememeConstants.get().DYNAMIC_SEMEME_EXTENDED_DESCRIPTION_TYPE.getConceptSequence()).get();
-					SememeChronology sc = (SememeChronology)ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, extendedDescriptionTypeSememeChronology.getNid() + "");
-					Get.commitService().addUncommitted(sc).get();
+					Optional<ObjectChronology> sc = ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, extendedDescriptionTypeSememeChronology.getNid() + "");
+					if (sc.isPresent())  //sc can be null, if no change was required to make it inactive.
+					{
+						Get.commitService().addUncommitted((SememeChronology)sc.get()).get();
+					}
 				}
 				else if (currentExtendedType == -1)
 				{
