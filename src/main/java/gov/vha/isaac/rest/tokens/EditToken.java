@@ -151,6 +151,10 @@ public class EditToken
 	{
 		try {
 			long time = System.currentTimeMillis();
+			if (encodedData.length() < encodedHashLength)
+			{
+				throw new RestException("Invalid edit token");
+			}
 			String readHash = encodedData.substring(0, encodedHashLength);
 			String calculatedHash = PasswordHasher.hash(encodedData.substring(encodedHashLength, encodedData.length()), getSecret(), hashRounds, hashLength);
 

@@ -618,18 +618,19 @@ public class MappingWriteAPIs
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	private static SememeChronology updateMapSetFieldsSememe(
+	private static Optional<SememeChronology> updateMapSetFieldsSememe(
 			int mapSetConceptNid,
 			List<RestMappingSetDisplayFieldCreate> mapSetFields,
 			EditCoordinate editCoord) throws RestException {
 		Optional<SememeChronology<? extends SememeVersion<?>>> mapSetFieldsSememe = Frills.getAnnotationSememe(mapSetConceptNid, IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_DISPLAY_FIELDS.getSequence());
 		if (! mapSetFieldsSememe.isPresent()) {
-			return buildNewMapSetFieldsSememe(mapSetConceptNid, mapSetFields, editCoord);
+			return Optional.of(buildNewMapSetFieldsSememe(mapSetConceptNid, mapSetFields, editCoord));
 		} else {
 			if (mapSetFields == null || mapSetFields.size() == 0) {
 				// If no field passed in update then retire the sememe
-				SememeChronology sc = (SememeChronology)ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, mapSetFieldsSememe.get().getPrimordialUuid() + "");
-				return sc;
+				Optional<ObjectChronology> sc = (Optional<ObjectChronology>)ComponentWriteAPIs
+						.resetStateWithNoCommit(State.INACTIVE, mapSetFieldsSememe.get().getPrimordialUuid() + "");
+				return sc.isPresent() ? Optional.of((SememeChronology)sc.get()) : Optional.empty();  //cast nonesense
 			} else {
 				DynamicSememeData[] updatedData = new DynamicSememeData[1];
 				updatedData[0] = getDynamicSememeArrayImplFromMapSetFields(mapSetFields);
@@ -651,7 +652,7 @@ public class MappingWriteAPIs
 				DynamicSememeImpl mutableVersion = (DynamicSememeImpl)((SememeChronology)mapSetFieldsSememe.get()).createMutableVersion(DynamicSememeImpl.class, State.ACTIVE, editCoord);
 				mutableVersion.setData(updatedData);
 
-				return mutableVersion.getChronology();
+				return Optional.of(mutableVersion.getChronology());
 			}
 		}
 	}
@@ -987,7 +988,8 @@ public class MappingWriteAPIs
 						// This corresponds to an existing extension value
 						if (update.active != null && ! update.active) {
 							// Deactivate/retire this extension value
-							sememeToCommit = (SememeChronology<?>)ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, existingDynamicSememe.getNid() + "");
+							Optional<ObjectChronology> oc = ComponentWriteAPIs.resetStateWithNoCommit(State.INACTIVE, existingDynamicSememe.getNid() + ""); 
+							sememeToCommit = oc.isPresent() ? (SememeChronology)oc.get() : null;
 						} else {
 							RestDynamicSememeData existingData = getData(existingDynamicSememe);
 							RestDynamicSememeData updatedData = update.extensionValue;
@@ -1037,9 +1039,9 @@ public class MappingWriteAPIs
 			}
 
 			@SuppressWarnings("rawtypes")
-			SememeChronology updatedMapSetFieldSememe = updateMapSetFieldsSememe(mappingConcept.getNid(), mapSetFields, editCoord);
-			if (updatedMapSetFieldSememe != null) {
-				objectsToAdd.add(updatedMapSetFieldSememe);
+			Optional<SememeChronology> updatedMapSetFieldSememe = updateMapSetFieldsSememe(mappingConcept.getNid(), mapSetFields, editCoord);
+			if (updatedMapSetFieldSememe.isPresent()) {
+				objectsToAdd.add(updatedMapSetFieldSememe.get());
 			}
 			
 			if (updatedConcept || objectsToAdd.size() > 0) {

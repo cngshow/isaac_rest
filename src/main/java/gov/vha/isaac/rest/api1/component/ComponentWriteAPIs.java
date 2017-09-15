@@ -115,7 +115,7 @@ public class ComponentWriteAPIs
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static ObjectChronology resetStateWithNoCommit(State state, String id) throws RestException {
+	public static Optional<ObjectChronology> resetStateWithNoCommit(State state, String id) throws RestException {
 		final int nid = RequestInfoUtils.getNidFromUuidOrNidParameter(RequestParameters.id, id);
 
 		//Figure out which read coordinate we should pass.
@@ -139,27 +139,29 @@ public class ComponentWriteAPIs
 
 	@SuppressWarnings("rawtypes")
 	public static RestWriteResponse resetState(State state, String id) throws RestException {
-		ObjectChronology objectToCommit = resetStateWithNoCommit(state, id);
+		Optional<ObjectChronology> objectToCommit = resetStateWithNoCommit(state, id);
 		
-		if (objectToCommit != null)
+		if (objectToCommit.isPresent())
 		{
-			if (objectToCommit.getOchreObjectType() == OchreExternalizableObjectType.CONCEPT) {
+			if (objectToCommit.get().getOchreObjectType() == OchreExternalizableObjectType.CONCEPT) {
 				try {
-					Get.commitService().addUncommitted((ConceptChronology)objectToCommit).get();
+					Get.commitService().addUncommitted((ConceptChronology)objectToCommit.get()).get();
 				} catch (InterruptedException | ExecutionException e) {
 					throw new RuntimeException("Cannot addUncommitted() for commit concept with id=" + id, e);
 				}
-			} else if (objectToCommit.getOchreObjectType() == OchreExternalizableObjectType.SEMEME) {
+			} else if (objectToCommit.get().getOchreObjectType() == OchreExternalizableObjectType.SEMEME) {
 				try {
-					Get.commitService().addUncommitted((SememeChronology)objectToCommit).get();
+					Get.commitService().addUncommitted((SememeChronology)objectToCommit.get()).get();
 				} catch (InterruptedException | ExecutionException e) {
 					throw new RuntimeException("Cannot addUncommitted() for commit sememe with id=" + id, e);
 				}
 			} else {
-				throw new RuntimeException("Cannot addUncommitted() for commit object with id=" + id + " of unsupported OchreObjectType " + objectToCommit.getOchreObjectType());
+				throw new RuntimeException("Cannot addUncommitted() for commit object with id=" + id + " of unsupported OchreObjectType " 
+						+ objectToCommit.get().getOchreObjectType());
 			}
 
-			Task<Optional<CommitRecord>> commitTask = Get.commitService().commit("updating " + objectToCommit.getOchreObjectType() + " with id " + id + " to " + state);
+			Task<Optional<CommitRecord>> commitTask = Get.commitService().commit("updating " + objectToCommit.get().getOchreObjectType() + " with id " + id 
+					+ " to " + state);
 
 			try {
 				if (RequestInfo.get().getActiveWorkflowProcessId() != null)
@@ -172,11 +174,11 @@ public class ComponentWriteAPIs
 				throw re;
 			} catch (Exception e) {
 				log.error("Unexpected", e);
-				throw new RestException("Failed updating " + objectToCommit.getOchreObjectType() + " " + id + " state to " + state + ". Caught " + e.getClass().getName() 
-						+ " " + e.getLocalizedMessage());
+				throw new RestException("Failed updating " + objectToCommit.get().getOchreObjectType() + " " + id + " state to " + state 
+						+ ". Caught " + e.getClass().getName() + " " + e.getLocalizedMessage());
 			}
 
-			return new RestWriteResponse(RequestInfo.get().getEditToken(), objectToCommit.getPrimordialUuid());
+			return new RestWriteResponse(RequestInfo.get().getEditToken(), objectToCommit.get().getPrimordialUuid());
 		} else {
 			log.debug("Not committing update of " + id + " with unchanged state (" + state + ")");
 			return new RestWriteResponse(RequestInfo.get().getEditToken(), 

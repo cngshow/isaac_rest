@@ -3,6 +3,11 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
+* 2017/09/15 - 5.08 - R5 release build v3
+    * Fix a bug with trying to re-retire something that was already retired, which lead to a null pointer, which deadlocked the system
+        from any further writes (sigh)
+    * Pick up ISAAC updates which fix other bugs with xml import
+    
 * 2017/09/13 - 5.07 - R5 release build v2
     * Picking up a new release of isaac with some fixes for vhat delta import
 
