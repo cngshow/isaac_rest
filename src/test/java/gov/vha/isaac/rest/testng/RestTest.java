@@ -1396,6 +1396,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertEquals(newEditToken.getActiveWorkflowProcessId(), retrievedEditToken.getActiveWorkflowProcessId());
 	}
 
+	// TODO implement testExport()
 	//	@Test
 	//	public void testExport()
 	//	{
@@ -1715,7 +1716,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
 		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
 
-		//NUNO
+		// TODO NUNO uncomment or remove
 		//		RestWriteResponse newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponse.class, newConceptSequenceWrapperXml);
 		//		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		//		// Confirm returned sequence is valid
@@ -1729,7 +1730,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//		getProcessResponseResult = checkFail(getProcessResponse).readEntity(String.class);
 		//		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
 		//		Assert.assertNotNull(process);
-
+		//
 		// Get list of components in process
 		//		Set<Integer> componentsInProcessBeforeRemovingComponent = new HashSet<>();
 		//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
@@ -1757,6 +1758,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
 		Assert.assertNotNull(process);
 
+		// TODO NUNO uncomment or remove
 		//		Set<Integer> componentsInProcessAfterRemovingComponent = new HashSet<>();
 		//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 		//			componentsInProcessAfterRemovingComponent.add(restWorkflowComponentToStampMapEntry.getKey());
@@ -1772,6 +1774,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		process = XMLUtils.unmarshalObject(RestWorkflowProcess.class, getProcessResponseResult);
 		Assert.assertNotNull(process);
 		boolean foundCreatedConceptNidInProcess = false;
+		
+		// TODO NUNO uncomment or remove
 		//		for (RestWorkflowComponentToStampMapEntry restWorkflowComponentToStampMapEntry : process.getComponentToStampMap()) {
 		//			if (restWorkflowComponentToStampMapEntry.getKey() == newConceptNid) {
 		//				foundCreatedConceptNidInProcess = true;
@@ -1826,7 +1830,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		Assert.assertTrue(availableActions.length > 0);
 		final String qaFailsAction = "QA Fails";
 		boolean foundQaFailsAction = false;
-		//final String cancelWorkflowAction = "cancelWorkflowAction";
 		foundCancelWorkflowAction = false;
 		final String qaPassesAction = "QA Passes";
 		boolean foundQaPassesAction = false;
@@ -2156,30 +2159,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final int initialDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String initialDescriptionText = "An initial description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 		final int initialExtendedDescriptionTypeConceptSequence = MetaData.CHINESE_LANGUAGE.getConceptSequence();
-		
-		//		final int referencedConceptNid = MetaData.AMT_MODULE.getNid();
-		//		final int initialCaseSignificanceConceptSequence = MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence();
-		//		final int initialLanguageConceptSequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
-		//		final int initialDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
-		//		final String initialDescriptionText = "An initial description text for AMT_MODULE (" + randomUuid + ")";
-		/*
-		 * int caseSignificanceConceptSequence,
-			int languageConceptSequence,
-			String text,
-			int descriptionTypeConceptSequence,
-//			Integer extendedDescriptionTypeConceptSequence,
-			Collection<Integer> preferredInDialectAssemblagesIds,
-			Collection<Integer> acceptableInDialectAssemblagesIds,
-			int referencedComponentNid
-		 */
 		RestSememeDescriptionCreate initialDescriptionData =
 				new RestSememeDescriptionCreate(
 						initialCaseSignificanceConceptSequence + "",
 						initialLanguageConceptSequence + "",
 						initialDescriptionText,
 						initialDescriptionTypeConceptSequence + "",
-						null,
-						null,
+						null, // preferredInDialectAssemblagesIds
+						null, // acceptableInDialectAssemblagesIds
 						referencedConceptNid,
 						initialExtendedDescriptionTypeConceptSequence + "");
 		String xml = null;
@@ -2231,7 +2218,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		// Construct description update data object
 		final int newCaseSignificanceConceptSequence = MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence();
 		final int newLanguageConceptSequence = MetaData.FRENCH_LANGUAGE.getConceptSequence();
-		//final int newDescriptionTypeConceptSequence = MetaData.SYNONYM.getConceptSequence();
 		final String newDescriptionText = "A new description text for SNOROCKET_CLASSIFIER (" + randomUuid + ")";
 		final int newDescriptionExtendedTypeConcept = MetaData.LITHUANIAN_LANGUAGE.getConceptSequence();
 
@@ -2241,7 +2227,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 						newLanguageConceptSequence + "",
 						newDescriptionText,
 						initialDescriptionTypeConceptSequence + "",
-						true,
+						true, // active
 						newDescriptionExtendedTypeConcept + "");
 		xml = null;
 		try {
@@ -2300,11 +2286,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		newDescriptionData =
 				new RestSememeDescriptionUpdate(
 						newCaseSignificanceConceptSequence + "",
-						null,
+						null, // languageConceptSequence
 						newDescriptionText,
 						initialDescriptionTypeConceptSequence + "",
-						true,
-						null);
+						true, // active
+						null); // extendedDescriptionTypeConceptSequence
 		xml = null;
 		try {
 			xml = XMLUtils.marshallObject(newDescriptionData);
@@ -2429,7 +2415,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestConceptCreateData newConceptData = new RestConceptCreateData(
 				parentIds,
 				fsn,
-				true,
+				true, // createSemanticTag
 				requiredDescriptionsLanguageSequence + "",
 				requiredDescriptionsExtendedTypeSequence + "",
 				preferredDialects);
@@ -2529,23 +2515,23 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(foundGbEnglishDialect, "GB English dialect not found");
 		}
 
-		//		// Retrieve new concept and validate fields (Preferred Term in description)
-		//		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
-		//				.queryParam(RequestParameters.includeParents, true)
-		//				.queryParam(RequestParameters.descriptionTypePrefs, "synonym,definition,fsn")
-		//				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
-		//				.request()
-		//				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-		//		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
-		//		newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
-		//		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), pt);
-		//		Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
-		//		Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
-		//		Assert.assertTrue(
-		//				(newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent1Sequence
-		//				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent2Sequence)
-		//				|| (newConceptVersionObject.getParents().get(0).getConChronology().getConceptSequence() == parent2Sequence
-		//				&& newConceptVersionObject.getParents().get(1).getConChronology().getConceptSequence() == parent1Sequence));
+				// Retrieve new concept and validate fields (Preferred Term in description)
+//				getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+//						.queryParam(RequestParameters.includeParents, true)
+//						.queryParam(RequestParameters.descriptionTypePrefs, "synonym,definition,fsn")
+//						.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+//						.request()
+//						.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+//				conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+//				newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+//				Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), pt);
+//				Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
+//				Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
+//				Assert.assertTrue(
+//						(newConceptVersionObject.getParents().get(0).getConChronology().getIdentifiers().sequence == parent1Sequence
+//						&& newConceptVersionObject.getParents().get(1).getConChronology().getIdentifiers().sequence == parent2Sequence)
+//						|| (newConceptVersionObject.getParents().get(0).getConChronology().getIdentifiers().sequence == parent2Sequence
+//						&& newConceptVersionObject.getParents().get(1).getConChronology().getIdentifiers().sequence == parent1Sequence));
 
 		// Find new concept in taxonomy with restrictive (module-specific) stamp coordinate modules parameter
 		Response taxonomyResponse = target(taxonomyRequestPath)
@@ -3181,7 +3167,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				null, // newMappingSetInverseName
 				null, // newMappingSetDescription
 				null, // newMappingSetPurpose
-				null);
+				null); // active
 
 		xml = null;
 		try {
@@ -3210,7 +3196,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Attempt to retrieve newly-created clone mapping set
 		Response getCloneMappingSetVersionResponse = target(RestPaths.mappingSetAppPathComponent + cloneMappingSetUUID)
-				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingSetVersionResult = checkFail(getCloneMappingSetVersionResponse).readEntity(String.class);
@@ -3252,7 +3237,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Get clone target mapping items
 		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + clonedMappingSetUuid)
-				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
@@ -3261,7 +3245,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Get clone mapping items
 		getMappingItemsResponse = target(RestPaths.mappingItemsAppPathComponent + cloneMappingSetUUID)
-				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
 		retrievedMappingItemsResult = checkFail(getMappingItemsResponse).readEntity(String.class);
@@ -3350,7 +3333,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		//Read back
 
 		result = checkFail(target(RestPaths.mappingSetAppPathComponent + createdMapSetId.uuid.toString())
-				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 
@@ -3446,11 +3428,9 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 
 		// Retrieve mapping item and validate fields
 		Response getNewMappingItemVersionResponse = target(RestPaths.mappingItemAppPathComponent + newMappingItemUUID)
-				//.queryParam(RequestParameters.modules, RequestInfo.getDefaultEditCoordinate().getModuleSequence())
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_JSON).get();
 		String retrievedMappingItemVersionResult = checkFail(getNewMappingItemVersionResponse).readEntity(String.class);
-		//RestMappingItemVersion retrievedMappingItemVersion = XMLUtils.unmarshalObject(RestMappingItemVersion.class, retrievedMappingItemVersionResult);
 		RestMappingItemVersion retrievedMappingItemVersion = new ObjectMapper().readValue(retrievedMappingItemVersionResult, RestMappingItemVersion.class);
 		Assert.assertEquals(retrievedMappingItemVersion.identifiers.sequence.intValue(), newMappingItemSequenceWrapper.sequence.intValue());
 		Assert.assertTrue(MetaData.COMMITTED_STATE_FOR_CHRONICLE.getConceptSequence() == retrievedMappingItemVersion.sourceConcept.sequence);
@@ -3521,7 +3501,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		Assert.assertTrue(expectFail(createNewMappingItemResponse).contains("does not pass the assigned validator"));
-
 	}
 
 	@Test
@@ -4438,6 +4417,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.request().header(Header.Accept.toString(), MediaType.APPLICATION_XML).get())
 				.readEntity(String.class);
 
+		// TODO change this to use objects instead of regular expression matching 
 		String[] temp = result.split("<restSememeDescriptionVersion>");
 		//[0] is header junk
 		//[1] is the first dialect
@@ -4482,35 +4462,26 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(description.dialects.size() > 0);
 
 			//Validate that the important bit of the description sememe are put together properly
-			//Assert.assertTrue(preDialect.contains("<assemblageSequence>" + MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence() + "</assemblageSequence>"), "Wrong language");
 			Assert.assertEquals(description.getSememeChronology().assemblage.sequence.intValue(), MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence(), "Wrong language");
 
 			//Assert.assertTrue(preDialect.contains("<referencedComponentNid>" + MetaData.USER.getNid() + "</referencedComponentNid>"), "Wrong concept");
 			Assert.assertEquals(description.getSememeChronology().referencedComponent.nid.intValue(), MetaData.USER.getNid(), "Wrong concept");
 
 			//Assert.assertTrue(preDialect.contains("<caseSignificanceConceptSequence>" + MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence()
-			//+ "</caseSignificanceConceptSequence>"), "Wrong case sentivity");
 			Assert.assertEquals(description.caseSignificanceConcept.sequence.intValue(), MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence(), "Wrong case sentivity");
 
 			//Assert.assertTrue(preDialect.contains("<languageConceptSequence>" + MetaData.ENGLISH_LANGUAGE.getConceptSequence()
-			//+ "</languageConceptSequence>"), "Wrong language");
 			Assert.assertEquals(description.languageConcept.sequence.intValue(), MetaData.ENGLISH_LANGUAGE.getConceptSequence(), "Wrong language");
 
-			//Assert.assertTrue((preDialect.contains("<text>user</text>") || preDialect.contains("<text>user (ISAAC)</text>")), "Wrong text " + preDialect);
 			Assert.assertTrue(description.text.equals("user") || description.text.equals("user (ISAAC)"), "Wrong text" + description.text);
 
-			//Assert.assertTrue((preDialect.contains("<descriptionTypeConceptSequence>" + MetaData.SYNONYM.getConceptSequence() + "</descriptionTypeConceptSequence>")
-			//		|| preDialect.contains("<descriptionTypeConceptSequence>" + MetaData.FULLY_SPECIFIED_NAME.getConceptSequence() + "</descriptionTypeConceptSequence>")),
-			//		"Wrong description type");
 			Assert.assertTrue(description.descriptionTypeConcept.sequence == MetaData.SYNONYM.getConceptSequence()
 					|| description.descriptionTypeConcept.sequence == MetaData.FULLY_SPECIFIED_NAME.getConceptSequence(),
 					"Wrong description type");
 
 			//validate that the dialect bits are put together properly
-			//Assert.assertTrue(dialect.contains("<assemblageSequence>" + MetaData.US_ENGLISH_DIALECT.getConceptSequence() + "</assemblageSequence>"), "Wrong dialect");
 			Assert.assertEquals(description.getSememeChronology().assemblage.sequence.intValue(), MetaData.ENGLISH_DESCRIPTION_ASSEMBLAGE.getConceptSequence(), "Wrong dialect");
 
-			//Assert.assertTrue(dialect.contains("<data xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xsi:type=\"xs:int\">" + MetaData.PREFERRED.getNid() + "</data>"), "Wrong value");
 			boolean foundPreferredDialect = false;
 			boolean foundUsEnglishDialect = false;
 			for (RestDynamicSememeVersion dialect : description.dialects) {
@@ -4709,7 +4680,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			long stampCoordinateTime = Long.parseLong(node.getTextContent());
 			Assert.assertTrue(stampCoordinateTime == 123456789);
 			xpath = "/restStampCoordinate/modules/sequence";
-			//xpath = "/restStampCoordinate/modules";
 			List<Integer> stampCoordinateModules = new ArrayList<>();
 			node = null;
 			nodeList = XMLUtils.getNodeSetFromXml(result, xpath);
@@ -4939,6 +4909,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					.readEntity(String.class);
 			systemInfo = XMLUtils.unmarshalObject(RestSystemInfo.class, result);
 			Assert.assertTrue(systemInfo.getSupportedAPIVersions().length > 0 && ! StringUtils.isBlank(systemInfo.getSupportedAPIVersions()[0]));
+			// TODO find a way to fully test systemInfoComponent with non-test configuration
 			//			Assert.assertTrue(! StringUtils.isBlank(systemInfo.apiImplementationVersion));
 			//			Assert.assertTrue(! StringUtils.isBlank(systemInfo.isaacVersion));
 			//			Assert.assertTrue(! StringUtils.isBlank(systemInfo.scmUrl));
@@ -5508,8 +5479,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			{
 				Assert.assertNull(createdSememeType.columnInfo[i].columnDefaultData);
 			}
+			
+			// TODO fix or remove these comments
 			//Assert.assertEquals("", createdSememe.columnInfo[i].columnDescription);  //I think this is read from the preferred description?
 			//Assert.assertEquals(Get.conceptDescriptionText(i + 1), createdSememeType.columnInfo[i].columnName);  //TODO align the way we pick descriptions on these
+
 			Assert.assertEquals((i + 1 > 3 ? false : true), createdSememeType.columnInfo[i].columnRequired);
 
 			if (t == DynamicSememeDataType.INTEGER)
