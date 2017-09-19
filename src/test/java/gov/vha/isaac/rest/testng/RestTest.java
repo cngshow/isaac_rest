@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -78,12 +79,17 @@ import gov.vha.isaac.ochre.api.bootstrap.TermAux;
 import gov.vha.isaac.ochre.api.chronicle.LatestVersion;
 import gov.vha.isaac.ochre.api.chronicle.ObjectChronologyType;
 import gov.vha.isaac.ochre.api.commit.ChangeCheckerMode;
+import gov.vha.isaac.ochre.api.commit.CommitRecord;
 import gov.vha.isaac.ochre.api.commit.CommitService;
 import gov.vha.isaac.ochre.api.component.concept.ConceptChronology;
 import gov.vha.isaac.ochre.api.component.concept.ConceptSpecification;
 import gov.vha.isaac.ochre.api.component.concept.ConceptVersion;
+import gov.vha.isaac.ochre.api.component.sememe.SememeBuilder;
+import gov.vha.isaac.ochre.api.component.sememe.SememeBuilderService;
 import gov.vha.isaac.ochre.api.component.sememe.SememeChronology;
+import gov.vha.isaac.ochre.api.component.sememe.version.DescriptionSememe;
 import gov.vha.isaac.ochre.api.component.sememe.version.LogicGraphSememe;
+import gov.vha.isaac.ochre.api.component.sememe.version.SememeVersion;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeDataType;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeValidatorType;
@@ -98,6 +104,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeString;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.dataTypes.DynamicSememeUUID;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.EditCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.PremiseType;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
@@ -117,6 +124,7 @@ import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeIntegerImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeLongImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeStringImpl;
 import gov.vha.isaac.ochre.model.sememe.dataTypes.DynamicSememeUUIDImpl;
+import gov.vha.isaac.ochre.model.sememe.version.DescriptionSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.DynamicSememeImpl;
 import gov.vha.isaac.ochre.model.sememe.version.LogicGraphSememeImpl;
 import gov.vha.isaac.ochre.modules.vhat.VHATConstants;
@@ -201,6 +209,7 @@ import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessAdvancementData;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessBaseCreate;
 import gov.vha.isaac.rest.api1.data.workflow.RestWorkflowProcessHistory;
 import gov.vha.isaac.rest.session.RequestInfo;
+import gov.vha.isaac.rest.session.RequestInfoUtils;
 import gov.vha.isaac.rest.session.RequestParameters;
 import gov.vha.isaac.rest.tokens.CoordinatesToken;
 import gov.vha.isaac.rest.tokens.CoordinatesTokens;
@@ -270,6 +279,10 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		RestCoordinatesToken coordinatesToken = XMLUtils.unmarshalObject(RestCoordinatesToken.class, editCoordinatesTokenXml);
 
 		return CoordinatesTokens.getOrCreate(coordinatesToken.token);
+	}
+
+	private EditCoordinate getEditCoordinateFromSsoToken(String ssoToken) throws Exception {
+		return EditToken.read(getEditTokenString(ssoToken)).getEditCoordinate();
 	}
 
 	@Override
@@ -891,7 +904,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final UUID randomUuid = UUID.randomUUID();
 
 		final String fsn = "fsn for testVHATHasParentAssociationSynchronization test concept " + randomUuid.toString();
-		final String pt = "preferred term for testVHATHasParentAssociationSynchronization test concept " + randomUuid.toString();
+		//final String pt = "preferred term for testVHATHasParentAssociationSynchronization test concept " + randomUuid.toString();
 
 		final List<String> parentIds = new ArrayList<>();
 		parentIds.add(parent1.getConceptSequence() + "");
@@ -1685,7 +1698,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final UUID randomUuid = UUID.randomUUID();
 
 		final String fsn = "fsn for test concept " + randomUuid.toString();
-		final String pt = "preferred term for test concept " + randomUuid.toString();
+		//final String pt = "preferred term for test concept " + randomUuid.toString();
 
 		final List<String> parentIds = new ArrayList<>();
 		parentIds.add(parent1Sequence + "");
@@ -2373,7 +2386,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 	}
 
 	@Test
-	public void testConceptAPIs() throws JsonProcessingException, IOException
+	public void testConceptAPIs() throws IllegalStateException, InterruptedException, ExecutionException, Exception
 	{
 		final int parent1Sequence = MetaData.SNOROCKET_CLASSIFIER.getConceptSequence();
 		final int parent2Sequence = MetaData.ENGLISH_LANGUAGE.getConceptSequence();
@@ -2402,7 +2415,8 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final UUID randomUuid = UUID.randomUUID();
 
 		final String fsn = "fsn for test concept " + randomUuid.toString();
-		final String pt = "preferred term for test concept " + randomUuid.toString();
+		final String synonym = "synonym for test concept " + randomUuid.toString();
+		final String definition = "definition for test concept " + randomUuid.toString();
 
 		final List<String> parentIds = new ArrayList<>();
 		parentIds.add(parent1Sequence + "");
@@ -2442,6 +2456,51 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		int newConceptSequence = newConceptSequenceWrapper.sequence;
 		// Confirm returned sequence is valid
 		Assert.assertTrue(newConceptSequence > 0);
+		
+		// Add definition in order to test descriptionTypePrefs behavior
+		SememeBuilderService<? extends SememeChronology<? extends SememeVersion<?>>> sememeBuilderService
+				= Get.sememeBuilderService();
+		SememeBuilder<? extends SememeChronology<? extends DescriptionSememe<?>>> definitionDescriptionBuilder
+				= sememeBuilderService.getDescriptionSememeBuilder(
+						MetaData.DESCRIPTION_NOT_CASE_SENSITIVE.getConceptSequence(),
+						MetaData.ENGLISH_LANGUAGE.getConceptSequence(),
+						MetaData.DEFINITION_DESCRIPTION_TYPE.getConceptSequence(),
+						definition,
+						newConceptSequenceWrapper.nid);
+		definitionDescriptionBuilder.setState(State.ACTIVE);
+		SememeChronology<? extends DescriptionSememe<?>> newDefinitionDescription = definitionDescriptionBuilder.build(EditToken.read(getEditTokenString(TEST_SSO_TOKEN)).getEditCoordinate(),
+				ChangeCheckerMode.ACTIVE).get();
+		sememeBuilderService.getComponentSememeBuilder(TermAux.PREFERRED.getNid(), newDefinitionDescription.getNid(), MetaData.US_ENGLISH_DIALECT.getConceptSequence()).build(
+				getEditCoordinateFromSsoToken(TEST_SSO_TOKEN), ChangeCheckerMode.ACTIVE).getNoThrow();
+		sememeBuilderService.getComponentSememeBuilder(TermAux.ACCEPTABLE.getNid(), newDefinitionDescription.getNid(), MetaData.GB_ENGLISH_DIALECT.getConceptSequence()).build(
+				getEditCoordinateFromSsoToken(TEST_SSO_TOKEN), ChangeCheckerMode.ACTIVE).getNoThrow();
+
+		Get.commitService().addUncommitted(newDefinitionDescription).get();
+		Get.commitService().commit("committing new definition description for test concept " + randomUuid.toString()).get();
+
+		// Reset synonym value in order to test descriptionTypePrefs behavior
+		boolean foundAndResetSynonym = false;
+		for (Iterator<SememeChronology<? extends DescriptionSememe<?>>> iter = Get.sememeService().getDescriptionsForComponent(newConceptSequenceWrapper.nid).iterator(); iter.hasNext();) {
+			SememeChronology<? extends DescriptionSememe<?>> descriptionSememeChronology = iter.next();
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Optional<LatestVersion<DescriptionSememe>> descriptionOptionalLatestVersion = (Optional<LatestVersion<DescriptionSememe>>)((SememeChronology)descriptionSememeChronology).getLatestVersion(SememeVersion.class, RequestInfo.get().getStampCoordinate());
+			DescriptionSememe<?> description = descriptionOptionalLatestVersion.get().value();
+			if (description.getDescriptionTypeConceptSequence() == MetaData.SYNONYM.getConceptSequence()) {
+				@SuppressWarnings("unchecked")
+				DescriptionSememeImpl mutableDescription = ((SememeChronology<DescriptionSememeImpl>)descriptionSememeChronology).createMutableVersion(DescriptionSememeImpl.class, State.ACTIVE, getEditCoordinateFromSsoToken(TEST_SSO_TOKEN));
+				mutableDescription.setText(synonym);
+				mutableDescription.setAuthorSequence(description.getAuthorSequence());
+				mutableDescription.setCaseSignificanceConceptSequence(description.getCaseSignificanceConceptSequence());
+				mutableDescription.setDescriptionTypeConceptSequence(description.getDescriptionTypeConceptSequence());
+				mutableDescription.setLanguageConceptSequence(description.getLanguageConceptSequence());
+				mutableDescription.setModuleSequence(description.getModuleSequence());
+				mutableDescription.setPathSequence(description.getPathSequence());
+				foundAndResetSynonym = true;
+				Get.commitService().addUncommitted(descriptionSememeChronology).get();
+				Get.commitService().commit("Committing reset of synonym to \"" + synonym + "\"").get();
+			}
+		};
+		Assert.assertTrue(foundAndResetSynonym);
 
 		// Retrieve new concept with restrictive module specification and validate fields (FSN in description)
 		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
@@ -2515,23 +2574,27 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Assert.assertTrue(foundGbEnglishDialect, "GB English dialect not found");
 		}
 
-				// Retrieve new concept and validate fields (Preferred Term in description)
-//				getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
-//						.queryParam(RequestParameters.includeParents, true)
-//						.queryParam(RequestParameters.descriptionTypePrefs, "synonym,definition,fsn")
-//						.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
-//						.request()
-//						.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
-//				conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
-//				newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
-//				Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), pt);
-//				Assert.assertEquals(newConceptVersionObject.getConVersion().getState(), new RestStateType(State.ACTIVE));
-//				Assert.assertTrue(newConceptVersionObject.getParents().size() == 2);
-//				Assert.assertTrue(
-//						(newConceptVersionObject.getParents().get(0).getConChronology().getIdentifiers().sequence == parent1Sequence
-//						&& newConceptVersionObject.getParents().get(1).getConChronology().getIdentifiers().sequence == parent2Sequence)
-//						|| (newConceptVersionObject.getParents().get(0).getConChronology().getIdentifiers().sequence == parent2Sequence
-//						&& newConceptVersionObject.getParents().get(1).getConChronology().getIdentifiers().sequence == parent1Sequence));
+		// Retrieve new concept and validate fields (synonym description)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, true)
+				.queryParam(RequestParameters.descriptionTypePrefs, "synonym,definition,fsn")
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), synonym);
+		
+		// Retrieve new concept and validate fields (definition description)
+		getConceptVersionResponse = target(RestPaths.conceptVersionAppPathComponent.replaceFirst(RestPaths.appPathComponent, "") + newConceptSequence)
+				.queryParam(RequestParameters.includeParents, true)
+				.queryParam(RequestParameters.descriptionTypePrefs, "definition,synonym,fsn")
+				.queryParam(RequestParameters.expand, ExpandUtil.descriptionsExpandable + "," + ExpandUtil.chronologyExpandable)
+				.request()
+				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).get();
+		conceptVersionResult = checkFail(getConceptVersionResponse).readEntity(String.class);
+		newConceptVersionObject = XMLUtils.unmarshalObject(RestConceptVersion.class, conceptVersionResult);
+		Assert.assertEquals(newConceptVersionObject.getConChronology().getDescription(), definition);
 
 		// Find new concept in taxonomy with restrictive (module-specific) stamp coordinate modules parameter
 		Response taxonomyResponse = target(taxonomyRequestPath)
