@@ -397,14 +397,14 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return map.entrySet().iterator().next();
 	}
 
-	private static String getCaughtParameterValidationExceptionMessage(String badParamName, String badParamValue, Throwable t) {
+	private static Optional<String> getCaughtParameterValidationExceptionMessage(String badParamName, String badParamValue, Throwable t) {
 		for (Throwable ex : getAllExceptionsAndCauses(t)) {
 			if (ex.getLocalizedMessage().contains("The parameter '" + badParamName + "' with value '[" + badParamValue + "]'  resulted in the error: Invalid or unsupported parameter name")) {
-				return ex.getLocalizedMessage();
+				return Optional.of(ex.getLocalizedMessage());
 			}
 		}
 
-		return null;
+		return Optional.empty();
 	}
 
 	private static List<Throwable> getAllExceptionsAndCauses(Throwable t) {
@@ -421,6 +421,11 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return list;
 	}
 
+	/**
+	 * @param uuid
+	 * @param outputType parsable individual or comma-delimited list of IdType enum values: i.e.: uuid, nid, conceptSequence, sememeSequence, sctid, vuid
+	 * @return
+	 */
 	private int getIntegerIdForUuid(UUID uuid, String outputType) {
 		final String url = RestPaths.idAPIsPathComponent + RestPaths.idTranslateComponent +
 				uuid.toString();
@@ -512,7 +517,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		return writeResponse;
 	}
 
-	public int createConcept(
+	public RestWriteResponseConceptCreate createConcept(
 			Collection<String> parentConceptIds,
 			String fsn,
 			boolean createSemanticTag,
@@ -521,7 +526,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			Collection<String> descriptionsPreferredDialects) {
 		return createConcept(parentConceptIds, fsn, createSemanticTag, descriptionsLanguageConceptId, descriptionsExtendedTypeId, descriptionsPreferredDialects, getEditTokenString(TEST_SSO_TOKEN));
 	}
-	public int createConcept(
+	public RestWriteResponseConceptCreate createConcept(
 			Collection<String> parentConceptIds,
 			String fsn,
 			boolean createSemanticTag,
@@ -548,13 +553,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.queryParam(RequestParameters.editToken, editTokenString)
 				.request()
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.xml(xml));
-		String newConceptSequenceWrapperXml = createConceptResponse.readEntity(String.class);
-		RestWriteResponseConceptCreate newConceptSequenceWrapper = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptSequenceWrapperXml);
-		int newConceptSequence = newConceptSequenceWrapper.sequence;
+		String newConceptCreateResponseXml = createConceptResponse.readEntity(String.class);
+		RestWriteResponseConceptCreate newConceptCreateResponse = XMLUtils.unmarshalObject(RestWriteResponseConceptCreate.class, newConceptCreateResponseXml);
+
 		// Confirm returned sequence is valid
-		Assert.assertTrue(newConceptSequence > 0);
-		
-		return newConceptSequence;
+		Assert.assertTrue(newConceptCreateResponse.sequence > 0);
+
+		return newConceptCreateResponse;
 	}
 
 	// VHAT-specific metadata
@@ -690,7 +695,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				MetaData.ENGLISH_LANGUAGE.getNid() + "",
 				null,
 				Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""),
-				vhatEditToken.renewToken().getSerialized());
+				vhatEditToken.renewToken().getSerialized()).sequence;
 		final ConceptChronology<? extends ConceptVersion<?>> testConcept1 = Get.conceptService().getConcept(testConcept1Sequence);
 		
 		final String testVuid = "123456"; // No validation in test
@@ -709,7 +714,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 				.header(Header.Accept.toString(), MediaType.APPLICATION_XML).post(Entity.json(toJson(root)));
 		String result = checkFail(createSememeResponse).readEntity(String.class);
 
-		RestWriteResponse createdFirstVuidSememeWriteResponse = XMLUtils.unmarshalObject(RestWriteResponse.class, result);
+		/* RestWriteResponse createdFirstVuidSememeWriteResponse = */ XMLUtils.unmarshalObject(RestWriteResponse.class, result);
 
 		Assert.assertEquals(Frills.getVuidSememeNidsForVUID(Long.parseLong(testVuid)).size(), 1, "Should be exactly 1 hit on vuid 123456");
 
@@ -725,7 +730,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 					MetaData.ENGLISH_LANGUAGE.getNid() + "",
 					null,
 					Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""),
-					vhatEditToken.renewToken().getSerialized());
+					vhatEditToken.renewToken().getSerialized()).sequence;
 			final ConceptChronology<? extends ConceptVersion<?>> anotherConcept = Get.conceptService().getConcept(anotherConceptSequence);
 
 			root = jfn.objectNode();
@@ -1223,7 +1228,6 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final int retiredSememeNid = changedThirdHasParentAssociationItemResponse.nid;
 		
 		// loading and updating the existing logic graph sememe
-		@SuppressWarnings("unchecked")
 		LogicGraphSememeImpl newLogicGraphSememeVersion = ((SememeChronology<LogicGraphSememeImpl>)(conceptLogicGraphSememeChronology))
 			.createMutableVersion(LogicGraphSememeImpl.class, State.ACTIVE, vhatEditToken.getEditCoordinate());
 		newLogicGraphSememeVersion.setGraphData(Frills.createConceptParentLogicalExpression(parent1.getConceptSequence(), parent2.getConceptSequence(), parent3.getConceptSequence()).getData(DataTarget.INTERNAL));
@@ -1282,7 +1286,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		final String parentFSN = randomTestString + ":Parent";
 		
 		// First, create concept
-		final int parentConceptSequence = createConcept(
+		final RestWriteResponseConceptCreate parentConcept = createConcept(
 				Arrays.asList(MetaData.SNOROCKET_CLASSIFIER.getConceptSequence() + ""),
 				parentFSN,
 				false,
@@ -1295,19 +1299,19 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (int i = 0; i < childSequences.length; ++i) {
 			final String childFSN = randomTestString + ":" + (i + 1);
 			final int childConceptSequence = createConcept(
-					Arrays.asList(parentConceptSequence + ""),
+					Arrays.asList(parentConcept.sequence + ""),
 					childFSN,
 					false,
 					MetaData.ENGLISH_LANGUAGE.getNid() + "",
 					null,
-					Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + ""));
+					Arrays.asList(MetaData.GB_ENGLISH_DIALECT.getConceptSequence() + "")).sequence;
 			childSequences[i] = childConceptSequence;
 		}
 		
 		// Test request for all children
 		Response taxonomyResponse = target(taxonomyRequestPath)
 				.queryParam(RequestParameters.modules, getEditCoordinateFromSsoToken(TEST_SSO_TOKEN).getModuleSequence())
-				.queryParam(RequestParameters.id, parentConceptSequence)
+				.queryParam(RequestParameters.id, parentConcept.sequence)
 				.queryParam(RequestParameters.parentHeight, 1)
 				.queryParam(RequestParameters.childDepth, 10)
 				.queryParam(RequestParameters.pageNum, 1)
@@ -1331,7 +1335,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		for (int i = 0; i < childSequences.length; ++i) {
 			Response childTaxonomyResponse = target(taxonomyRequestPath)
 					.queryParam(RequestParameters.modules, getEditCoordinateFromSsoToken(TEST_SSO_TOKEN).getModuleSequence())
-					.queryParam(RequestParameters.id, parentConceptSequence)
+					.queryParam(RequestParameters.id, parentConcept.sequence)
 					.queryParam(RequestParameters.parentHeight, 1)
 					.queryParam(RequestParameters.childDepth, 10)
 					.queryParam(RequestParameters.pageNum, i + 1)
@@ -5068,7 +5072,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 		WebTarget target = null;
 		String result = null;
 		String requestUrl = null;
-		String caughtExceptionMessage = null;
+		Optional<String> caughtExceptionMessage = Optional.empty();
 		try {
 			// Test any call with valid parameters
 			result = checkFail(
@@ -5096,13 +5100,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			} catch (Throwable t) {
 				caughtExceptionMessage = getCaughtParameterValidationExceptionMessage(badParamName, badParamValue, t);
 			}
-			Assert.assertNotNull(caughtExceptionMessage);
+			Assert.assertTrue(caughtExceptionMessage.isPresent());
 
 			// Test same call with a valid parameter made uppercase when IGNORE_CASE_VALIDATING_PARAM_NAMES == false
 			badParamName = RequestParameters.maxPageSize.toUpperCase();
 			badParamValue = "1";
 			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = false;
-			caughtExceptionMessage = null;
+			caughtExceptionMessage = Optional.empty();
 			try {
 				result = checkFail(
 						(target = target(
@@ -5115,13 +5119,13 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			} catch (Throwable t) {
 				caughtExceptionMessage = getCaughtParameterValidationExceptionMessage(badParamName, badParamValue, t);
 			}
-			Assert.assertNotNull(caughtExceptionMessage);
+			Assert.assertTrue(caughtExceptionMessage.isPresent());
 
 			// Test same call with a valid parameter made uppercase when IGNORE_CASE_VALIDATING_PARAM_NAMES == true
 			badParamName = RequestParameters.maxPageSize.toUpperCase();
 			badParamValue = "1";
 			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = true;
-			caughtExceptionMessage = null;
+			caughtExceptionMessage = Optional.empty();
 			try {
 				result = checkFail(
 						(target = target(
@@ -5134,7 +5138,7 @@ public class RestTest extends JerseyTestNg.ContainerPerClassTest
 			} catch (Throwable t) {
 				caughtExceptionMessage = getCaughtParameterValidationExceptionMessage(badParamName, badParamValue, t);
 			}
-			Assert.assertNull(caughtExceptionMessage);
+			Assert.assertTrue(! caughtExceptionMessage.isPresent());
 			RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES = RequestParameters.IGNORE_CASE_VALIDATING_PARAM_NAMES_DEFAULT;
 
 		} catch (Throwable error) {
