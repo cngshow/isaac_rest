@@ -4,6 +4,7 @@ This changelog summarizes changes and fixes which are a part of each revision.  
 API version number, not the release version number.
 
 * 2017/09/?? - 6.00 - PENDING
+	* Fix two web services bugs when no vuid or bad vuid is entered. Defect numbers 590294 and 590350.
 
 * 2017/09/15 - 5.08 - R5 release build v3
     * Fix a bug with trying to re-retire something that was already retired, which lead to a null pointer, which deadlocked the system
@@ -24,7 +25,7 @@ API version number, not the release version number.
     * Release to pick up ISAAC changes
     
 * 2017/09/06 - 5.03
-    * Updated web wervice code
+    * Updated web service code
 
 * 2017/09/01 - 5.02
     * Release to pick up ISAAC changes

@@ -131,7 +131,7 @@ public class CommonTerminology {
 		SememeService sememeService = Get.sememeService();
 
 		// get code system by codeSystemVUID
-		Integer codeSystemNid = Frills.getNidForVUID(codeSystemVuid).orElse(null);
+		Integer codeSystemNid = Frills.getNidForVUID(codeSystemVuid).orElse(0);
 		log.debug("codeSystemNid:" + codeSystemNid);
 		Optional<? extends ConceptChronology<? extends ConceptVersion<?>>> codeSystemConcept = conceptService
 				.getOptionalConcept(Get.identifierService().getConceptNid(codeSystemNid));
@@ -347,8 +347,11 @@ public class CommonTerminology {
 	 * @param subsetVuid
 	 * @return
 	 */
-	private static Long validateSubsetVuid(Long subsetVuid) {
-		// TODO Auto-generated method stub
+	private static Long validateSubsetVuid(Long subsetVuid) throws STSException{
+		
+		if (subsetVuid == null) {
+			throw new STSException("Subset vuid is a required parameter");
+		}
 		return subsetVuid;
 	}
 
