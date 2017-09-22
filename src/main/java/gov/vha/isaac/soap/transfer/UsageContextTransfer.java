@@ -22,13 +22,19 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "Association")
-@XmlType(propOrder = { "name", "type", "code", "status" })
-public class RelationshipTransfer {
+@XmlRootElement(name = "UsageContext")
+@XmlType(propOrder = { "name", "vuid" })
+public class UsageContextTransfer {
 	protected String name;
-	protected String type;
-	protected String code;
-	protected String status;
+	protected String vuid;
+
+	public UsageContextTransfer() {
+	}
+
+	public UsageContextTransfer(String name, String vuid) {
+		this.name = name;
+		this.vuid = vuid;
+	}
 
 	@XmlElement(name = "Name", required = true, nillable = false)
 	public String getName() {
@@ -39,30 +45,13 @@ public class RelationshipTransfer {
 		this.name = name;
 	}
 
-	@XmlElement(name = "Type", required = true, nillable = false)
-	public String getType() {
-		return type;
+	@XmlElement(name = "VUID", required = false, nillable = false)
+	public String getVuid() {
+		return vuid;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setVuid(String vuid) {
+		this.vuid = vuid;
 	}
 
-	@XmlElement(name = "Code", required = false, nillable = false)
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
-	}
-
-	@XmlElement(name = "Status", required = true, nillable = false)
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
 }

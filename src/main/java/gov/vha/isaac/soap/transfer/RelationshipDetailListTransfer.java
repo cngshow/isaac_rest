@@ -18,17 +18,18 @@
  */
 package gov.vha.isaac.soap.transfer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "MapEntryValueList")
-@XmlType(propOrder = { "totalNumberOfRecords", "mapEntryDetailTransfers" })
-public class MapEntryValueListTransfer {
+@XmlRootElement(name = "RelationshipDetailList")
+@XmlType(propOrder = { "totalNumberOfRecords", "relationshipDetailListTransfers" })
+public class RelationshipDetailListTransfer {
 	private Long totalNumberOfRecords;
-	private List<MapEntryValueTransfer> mapEntryValueTransfers;
+	private List<RelationshipDetailTransfer> relationshipDetailListTransfers = new ArrayList<RelationshipDetailTransfer>();
 
 	@XmlElement(name = "TotalNumberOfRecords")
 	public Long getTotalNumberOfRecords() {
@@ -39,12 +40,13 @@ public class MapEntryValueListTransfer {
 		this.totalNumberOfRecords = totalNumberOfRecords;
 	}
 
-	@XmlElement(name = "MapEntryValues", required = false, nillable = true)
-	public List<MapEntryValueTransfer> getMapEntryDetailTransfers() {
-		return mapEntryValueTransfers;
+	@XmlElement(name = "Associations", required = false, nillable = true)
+	public List<RelationshipDetailTransfer> getRelationshipDetailListTransfers() {
+		return relationshipDetailListTransfers;
 	}
 
-	public void setMapEntryValueTransfers(List<MapEntryValueTransfer> mapEntryValueTransfers) {
-		this.mapEntryValueTransfers = mapEntryValueTransfers;
+	public void setRelationshipDetailListTransfers(List<RelationshipDetailTransfer> relationshipDetailListTransfers) {
+		this.relationshipDetailListTransfers = relationshipDetailListTransfers;
 	}
+
 }

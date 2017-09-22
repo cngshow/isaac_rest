@@ -18,33 +18,30 @@
  */
 package gov.vha.isaac.soap.transfer;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement(name = "MapEntryValueList")
-@XmlType(propOrder = { "totalNumberOfRecords", "mapEntryDetailTransfers" })
-public class MapEntryValueListTransfer {
-	private Long totalNumberOfRecords;
-	private List<MapEntryValueTransfer> mapEntryValueTransfers;
+@XmlRootElement(name = "DomainBindings")
+public class SubsetsTransfer {
+	private Collection<SubsetTransfer> Subsets;
 
-	@XmlElement(name = "TotalNumberOfRecords")
-	public Long getTotalNumberOfRecords() {
-		return totalNumberOfRecords;
+	public SubsetsTransfer() {
+		super();
 	}
 
-	public void setTotalNumberOfRecords(Long totalNumberOfRecords) {
-		this.totalNumberOfRecords = totalNumberOfRecords;
+	public SubsetsTransfer(Collection<SubsetTransfer> Subsets) {
+		super();
+		this.Subsets = Subsets;
 	}
 
-	@XmlElement(name = "MapEntryValues", required = false, nillable = true)
-	public List<MapEntryValueTransfer> getMapEntryDetailTransfers() {
-		return mapEntryValueTransfers;
+	@XmlElement(name = "DomainBinding", required = true, nillable = false)
+	public Collection<SubsetTransfer> getSubsets() {
+		return Subsets;
 	}
 
-	public void setMapEntryValueTransfers(List<MapEntryValueTransfer> mapEntryValueTransfers) {
-		this.mapEntryValueTransfers = mapEntryValueTransfers;
+	public void setSubsets(Collection<SubsetTransfer> Subsets) {
+		this.Subsets = Subsets;
 	}
 }

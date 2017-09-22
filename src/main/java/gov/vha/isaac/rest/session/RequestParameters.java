@@ -119,6 +119,8 @@ public class RequestParameters {
 	
 	public final static String objType = "objType";
 	
+	public final static String availableOnly = "availableOnly";
+	
 	// Expandables
 	public final static String expand = "expand";
 	public final static String returnExpandableLinks = "expandables";
@@ -159,6 +161,7 @@ public class RequestParameters {
 	public final static String includeChildren = "includeChildren";
 	
 	// IdAPIs
+	// Parsable individual or comma-delimited list of IdType enum values: i.e.: uuid, nid, conceptSequence, sememeSequence, sctid, vuid
 	public final static String inputType = "inputType";
 	public final static String outputType = "outputType";
 

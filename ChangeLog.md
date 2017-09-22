@@ -3,7 +3,41 @@ ISAAC-rest Changelog
 This changelog summarizes changes and fixes which are a part of each revision.  For more details on the fixes, refer tracking numbers where provided, and the git commit history.  Note that this is not the same as the API Changelog.md.  This file will contain information on all changes - including bug fixes.  The API Changelog will only contain documentation on changes of the API - and those are tied to the 
 API version number, not the release version number.
 
-* 2017/08/?? - 4.24 - PENDING
+* 2017/09/?? - 6.00 - PENDING
+
+* 2017/09/15 - 5.08 - R5 release build v3
+    * Fix a bug with trying to re-retire something that was already retired, which lead to a null pointer, which deadlocked the system
+        from any further writes (sigh)
+    * Pick up ISAAC updates which fix other bugs with xml import
+    
+* 2017/09/13 - 5.07 - R5 release build v2
+    * Picking up a new release of isaac with some fixes for vhat delta import
+
+* 2017/09/12 - 5.06
+    * Changes to allow activating a previously inactive designation with an extended designation type
+    * Official R5 release build
+
+* 2017/09/08 - 5.05
+    * Release to pick up ISAAC changes
+
+* 2017/09/07 - 5.04
+    * Release to pick up ISAAC changes
+    
+* 2017/09/06 - 5.03
+    * Updated web wervice code
+
+* 2017/09/01 - 5.02
+    * Release to pick up ISAAC changes
+
+* 2017/08/31 - 5.01
+    * Adding a new system API which can be utilized to improve the module dropdowns in komet.
+    * Fix 572778 - change designation type and value set type to use EnglishLanguagePreferredTerm. 
+
+* 2017/08/25 - 5.00
+    * ISAAC API alignment
+    * Release 5 build
+
+* 2017/08/24 - 4.24
     * Fix a bug with retirement or activation of extended description types on descriptions
     * Fix a bug with retirement of mapset sememes
     * Fix a bug with the design of the ssoToken handling, which was causing excessive prisme lookups for user / role information.

@@ -34,7 +34,6 @@ import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeFloat;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeInteger;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeLong;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeNid;
-import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeSequence;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeString;
 import gov.vha.isaac.rest.api1.data.sememe.dataTypes.RestDynamicSememeUUID;
 
@@ -91,9 +90,6 @@ public class RestDynamicSememeDataType extends Enumeration
 				break;
 			case NID:
 				classType = RestDynamicSememeNid.class.getName();
-				break;
-			case SEQUENCE:
-				classType = RestDynamicSememeSequence.class.getName();
 				break;
 			case STRING:
 				classType = RestDynamicSememeString.class.getName();

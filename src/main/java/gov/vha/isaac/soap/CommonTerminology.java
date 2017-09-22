@@ -51,6 +51,7 @@ import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSem
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeData;
 import gov.vha.isaac.ochre.api.component.sememe.version.dynamicSememe.DynamicSememeUtility;
 import gov.vha.isaac.ochre.api.constants.DynamicSememeConstants;
+import gov.vha.isaac.ochre.api.coordinate.LanguageCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampCoordinate;
 import gov.vha.isaac.ochre.api.coordinate.StampPrecedence;
 import gov.vha.isaac.ochre.api.index.SearchResult;
@@ -75,6 +76,7 @@ import gov.vha.isaac.soap.transfer.RelationshipTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetContentsListTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetContentsTransfer;
 import gov.vha.isaac.soap.transfer.ValueSetTransfer;
+import javassist.runtime.Desc;
 
 public class CommonTerminology {
 	private static final int DEFAULT_PAGE_SIZE = 1000;
@@ -170,36 +172,6 @@ public class CommonTerminology {
 			log.debug("count: " + ochreSearchResults.size());
 
 			sememe = sememeService.getOptionalSememe(ochreSearchResults.get(0).getNid());
-
-			// int count = 0;
-			//
-			// for (SearchResult sr : ochreSearchResults) {
-			// if (count < 5) {
-			// log.warn("score " + sr.getNid() + " " + sr.getScore());
-			//
-			// Optional<? extends SememeChronology<? extends SememeVersion<?>>>
-			// sv = sememeService
-			// .getOptionalSememe(sr.getNid());
-			//
-			// Optional<? extends ConceptChronology<? extends
-			// ConceptVersion<?>>> c1 = conceptService
-			// .getOptionalConcept(
-			// Get.identifierService().getConceptNid(sv.get().getReferencedComponentNid()));
-			//
-			// if (c1.isPresent()) {
-			// log.warn("codesystem {} : concept {}",
-			// codeSystemConcept.get().getConceptSequence(),
-			// c1.get().getConceptSequence());
-			// }
-			// if (c1.isPresent() && Frills.getTerminologyTypes(c1.get(), null)
-			// .contains(codeSystemConcept.get().getConceptSequence())) {
-			// log.warn("YYYYYYYYYYYYY " + count++ + "");
-			// break;
-			// }
-			//
-			// count++;
-			// }
-			// }
 
 			concept = conceptService.getOptionalConcept(
 					Get.identifierService().getConceptNid(sememe.get().getReferencedComponentNid()));
@@ -319,16 +291,8 @@ public class CommonTerminology {
 							}
 
 							valueSet.setDesignationName(ds.getText());
-							valueSet.setDesignationStatus(ds.getState() == State.ACTIVE ? "active" : "inactive");
-
-							Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
-									ds.getNid());
-							if (descType.isPresent()) {
-								Optional<String> desc = Frills.getDescription(descType.get());
-								if (desc.isPresent()) {
-									valueSet.setDesignationType(desc.get());
-								}
-							}
+							valueSet.setDesignationStatus(ds.getState() == State.ACTIVE ? "active" : "inactive");							
+							valueSet.setDesignationType(getPreferredTermNameType(ds.getNid()));
 							valueSet.setMembershipStatus(status);
 
 							if (!StringUtils.isNullOrEmpty(valueSet.getDesignationName())
@@ -557,61 +521,50 @@ public class CommonTerminology {
 		Get.sememeService().getSememesForComponent(concept.getNid())
 				.filter(s -> s.getSememeType() == SememeType.DESCRIPTION).forEach(sememe -> {
 
-					if (sememe.getSememeType() == SememeType.DESCRIPTION) {
-						@SuppressWarnings({ "unchecked", "rawtypes" })
-						Optional<LatestVersion<DescriptionSememe>> descriptionVersion = ((SememeChronology) sememe)
-								.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
-						if (descriptionVersion.isPresent()) {
-							DesignationDetailTransfer d = new DesignationDetailTransfer();
+					@SuppressWarnings({ "unchecked", "rawtypes" })
+					Optional<LatestVersion<DescriptionSememe>> descriptionVersion = ((SememeChronology) sememe)
+							.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
+					if (descriptionVersion.isPresent()) {
+						DesignationDetailTransfer d = new DesignationDetailTransfer();
 
-							d.setCode(getCodeFromNid(sememe.getNid()));
-							d.setName(descriptionVersion.get().value().getText());
-							d.setStatus(convertStateToString(descriptionVersion.get().value().getState()));
+						d.setCode(getCodeFromNid(sememe.getNid()));
+						d.setName(descriptionVersion.get().value().getText());
+						d.setStatus(convertStateToString(descriptionVersion.get().value().getState()));
+						d.setType(getPreferredTermNameType(sememe.getNid()));
+						
+						List<PropertyTransfer> properties = new ArrayList<>();
+						List<ValueSetTransfer> subsets = new ArrayList<>();
 
-							// Get the extended type
-							Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES,
-									sememe.getNid());
-							if (descType.isPresent()) {
-								Optional<String> desc = Frills.getDescription(descType.get());
-								if (desc.isPresent()) {
-									d.setType(desc.get());
+						Get.sememeService().getSememesForComponent(sememe.getNid()).forEach((nestedSememe) -> {
+
+							// skip code and vuid properties - they are
+							// handled already
+							if (nestedSememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
+									&& nestedSememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence()) {
+								if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
+										VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
+									PropertyTransfer property = buildProperty(nestedSememe);
+									if (property != null) {
+										properties.add(property);
+									}
+								}
+
+								// a refset that doesn't represent a mapset
+								else if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
+										VHATConstants.VHAT_REFSETS.getNid())
+										&& !ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
+												IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE
+														.getNid())) {
+									ValueSetTransfer subset = buildSubsetMembership(nestedSememe);
+									if (subset != null) {
+										subsets.add(subset);
+									}
 								}
 							}
-
-							List<PropertyTransfer> properties = new ArrayList<>();
-							List<ValueSetTransfer> subsets = new ArrayList<>();
-
-							Get.sememeService().getSememesForComponent(sememe.getNid()).forEach((nestedSememe) -> {
-
-								// skip code and vuid properties - they are
-								// handled already
-								if (nestedSememe.getAssemblageSequence() != MetaData.VUID.getConceptSequence()
-										&& nestedSememe.getAssemblageSequence() != MetaData.CODE.getConceptSequence()) {
-									if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
-											VHATConstants.VHAT_ATTRIBUTE_TYPES.getNid())) {
-										PropertyTransfer property = buildProperty(nestedSememe);
-										if (property != null) {
-											properties.add(property);
-										}
-									}
-
-									// a refset that doesn't represent a mapset
-									else if (ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
-											VHATConstants.VHAT_REFSETS.getNid())
-											&& !ts.wasEverKindOf(nestedSememe.getAssemblageSequence(),
-													IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_SEMEME_TYPE
-															.getNid())) {
-										ValueSetTransfer subset = buildSubsetMembership(nestedSememe);
-										if (subset != null) {
-											subsets.add(subset);
-										}
-									}
-								}
-							});
-							d.setProperties(properties);
-							d.setSubsets(subsets);
-							designations.add(d);
-						}
+						});
+						d.setProperties(properties);
+						d.setSubsets(subsets);
+						designations.add(d);
 					}
 				});
 		return designations;
@@ -733,8 +686,8 @@ public class CommonTerminology {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			Optional<LatestVersion<DescriptionSememe<?>>> latestVersion = ((SememeChronology) sememeChronology)
 					.getLatestVersion(DescriptionSememe.class, STAMP_COORDINATES);
-			if (latestVersion.isPresent() && VHATConstants.VHAT_PREFERRED_NAME.getPrimordialUuid().equals(Frills
-					.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeChronology.getNid()).orElse(null))) {
+			if (latestVersion.isPresent() && VHATConstants.VHAT_PREFERRED_NAME.getPrimordialUuid().equals(
+					Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeChronology.getNid(), false).orElse(null))) {
 				if (latestVersion.get().value().getState() == State.ACTIVE) {
 					descriptions.add(latestVersion.get().value().getText());
 				} else {
@@ -791,8 +744,6 @@ public class CommonTerminology {
 			}
 
 			subset.setStatus(sememe.isLatestVersionActive(STAMP_COORDINATES) ? "Active" : "Inactive");
-
-			// subset.setVersionNames(versionNames);
 
 			return subset;
 		} else {
@@ -989,7 +940,6 @@ public class CommonTerminology {
 											IsaacMappingConstants.get().DYNAMIC_SEMEME_MAPPING_STRING_EXTENSION
 													.getConceptSequence())
 									.forEach(mappingStrExt -> {
-										@SuppressWarnings({ "unchecked", "rawtypes" })
 										Optional<LatestVersion<? extends DynamicSememe>> mappingStrExtVersion = ((SememeChronology) mappingStrExt)
 												.getLatestVersion(DynamicSememe.class, STAMP_COORDINATES);
 
@@ -1017,5 +967,22 @@ public class CommonTerminology {
 
 		return mapEntryValueTransferList;
 	}
-
+	
+	private static String getPreferredTermNameType(int sememeNid) {
+		
+		Optional<UUID> descType = Frills.getDescriptionExtendedTypeConcept(STAMP_COORDINATES, sememeNid, false);
+		
+		if (descType.isPresent())
+		{
+			LanguageCoordinate lang = Get.coordinateFactory().getUsEnglishLanguagePreferredTermCoordinate();
+			return Frills.getDescription(descType.get(), STAMP_COORDINATES, lang).orElse(null);
+		}
+		else
+		{
+			return null;
+		}
+		
+		
+	}
+	
 }

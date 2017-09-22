@@ -118,7 +118,7 @@ public class RestSememeDescriptionVersion extends RestSememeVersion
 		descriptionTypeConcept = new RestIdentifiedObject(dsv.getDescriptionTypeConceptSequence(), ObjectChronologyType.CONCEPT);
 
 		// populate descriptionExtendedTypeConceptSequence
-		Optional<UUID> descriptionExtendedTypeOptional = Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), dsv.getNid());
+		Optional<UUID> descriptionExtendedTypeOptional = Frills.getDescriptionExtendedTypeConcept(RequestInfo.get().getStampCoordinate(), dsv.getNid(), false);
 		if (descriptionExtendedTypeOptional.isPresent()) {
 			descriptionExtendedTypeConcept = new RestIdentifiedObject(descriptionExtendedTypeOptional.get());
 		}
