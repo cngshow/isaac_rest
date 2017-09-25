@@ -89,10 +89,10 @@ public class VuidServiceUtils {
 					throw new RestException(rer.conciseMessage);
 				}
 			} catch (IOException e) {
-				log.error("FAILED deserializing RestExceptionResponse \"" + responseString + "\"", e);
+				String errMsg = "VUID service request failed with status code of " + response.getStatus() + "(" + response.getStatusInfo().getReasonPhrase() + "): " + targetWithPath.toString();
+				log.warn(errMsg, e);
+				throw new RestException("VUID service request failed with status code of " + response.getStatus() + "(" + response.getStatusInfo().getReasonPhrase() + ")");
 			}
-
-			throw new RestException(response.getStatusInfo().getReasonPhrase());
 		}
 
 		String responseJson = response.readEntity(String.class);

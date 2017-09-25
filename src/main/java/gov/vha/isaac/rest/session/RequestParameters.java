@@ -161,6 +161,7 @@ public class RequestParameters {
 	public final static String includeChildren = "includeChildren";
 	
 	// IdAPIs
+	// Parsable individual or comma-delimited list of IdType enum values: i.e.: uuid, nid, conceptSequence, sememeSequence, sctid, vuid
 	public final static String inputType = "inputType";
 	public final static String outputType = "outputType";
 

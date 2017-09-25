@@ -77,7 +77,7 @@ public interface VuidService {
 	 */
 	Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken) throws RestException;
 	
-	String getVuidValidateServiceUrl();
+	Optional<String> getVuidValidateServiceUrl();
 
-	String getVuidAllocateServiceUrl();
+	Optional<String> getVuidAllocateServiceUrl();
 }

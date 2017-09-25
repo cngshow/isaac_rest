@@ -84,9 +84,9 @@ public class VuidServiceImpl implements VuidService {
 	 * @return true, if the VUID is valid, false if it's certain conditions aren't met, an exception is thrown for a bad VUID
 	 */
 	public boolean isVuidValid(long vuidToValidate) throws RestException {
-		String vuidServiceUrl = getVuidValidateServiceUrl();
+		Optional<String> vuidServiceUrl = getVuidValidateServiceUrl();
 
-		if (StringUtils.isBlank(vuidServiceUrl)) {
+		if (! vuidServiceUrl.isPresent() || StringUtils.isBlank(vuidServiceUrl.get())) {
 			if (ApplicationConfig.getInstance().isDebugDeploy())
 			{
 				log.warn("Cannot validate VUID due to missing validation service URL");
@@ -99,7 +99,7 @@ public class VuidServiceImpl implements VuidService {
 		}
 		URL url = null;
 		try {
-			url = new URL(vuidServiceUrl);
+			url = new URL(vuidServiceUrl.get());
 		} catch (MalformedURLException e) {
 			if (ApplicationConfig.getInstance().isDebugDeploy())
 			{
@@ -173,14 +173,14 @@ public class VuidServiceImpl implements VuidService {
 	 */
 	@Override
 	public Optional<RestVuidBlockData> allocate(int blockSize, String reason, String ssoToken) throws RestException {
-		String vuidServiceUrl = getVuidAllocateServiceUrl();
+		Optional<String> vuidServiceUrl = getVuidAllocateServiceUrl();
 
-		if (StringUtils.isBlank(vuidServiceUrl)) {
+		if (! vuidServiceUrl.isPresent() || StringUtils.isBlank(vuidServiceUrl.get())) {
 			return Optional.empty();
 		}
 		URL url = null;
 		try {
-			url = new URL(vuidServiceUrl);
+			url = new URL(vuidServiceUrl.get());
 		} catch (MalformedURLException e) {
 			log.error("Malformed VUID Service URL \"" + vuidServiceUrl + "\"", e);
 			if (ApplicationConfig.getInstance().isDebugDeploy())
@@ -243,24 +243,24 @@ public class VuidServiceImpl implements VuidService {
 		}
 	}
 
-	public String getVuidValidateServiceUrl() {
+	public Optional<String> getVuidValidateServiceUrl() {
 		String prismeRootUrl =  PrismeServiceUtils.getPrismeProperties().getProperty("prisme_root");
 		if (StringUtils.isBlank(prismeRootUrl)) {
-			return null;
+			return Optional.empty();
 		}
 
 		//http://localhost:8181/vuid-rest/1/vuids/validate
 		String prismeWebServer = prismeRootUrl.replace("rails_prisme", "vuid-rest/1/vuids/validate");
-		return prismeWebServer;
+		return Optional.of(prismeWebServer);
 	}
-	public String getVuidAllocateServiceUrl() {
+	public Optional<String> getVuidAllocateServiceUrl() {
 		String prismeRootUrl =  PrismeServiceUtils.getPrismeProperties().getProperty("prisme_root");
 		if (StringUtils.isBlank(prismeRootUrl)) {
-			return null;
+			return Optional.empty();
 		}
 
 		//http://localhost:8181/vuid-rest/write/1/vuids/allocate
 		String prismeWebServer = prismeRootUrl.replace("rails_prisme", "vuid-rest/write/1/vuids/allocate");
-		return prismeWebServer;
+		return Optional.of(prismeWebServer);
 	}
 }

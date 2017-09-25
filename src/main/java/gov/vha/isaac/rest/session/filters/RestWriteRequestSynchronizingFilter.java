@@ -88,10 +88,13 @@ public class RestWriteRequestSynchronizingFilter implements Filter {
 
 			// Don't assume this is a read API, so synchronize
 			LOG.trace("Entering global write sync block");
-			synchronized(OBJECT) {
-				chain.doFilter(request, response);
+			try {
+				synchronized(OBJECT) {
+					chain.doFilter(request, response);
+				}
+			} finally {
+				LOG.trace("Exited global write sync block");
 			}
-			LOG.trace("Exited global write sync block");
 		}
 	}
 
